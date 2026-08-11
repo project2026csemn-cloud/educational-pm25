@@ -993,16 +993,51 @@ function parseDate(value){
     }
 
     /*
-    MySQL datetime:
-    2026-08-09 08:40:13
+    D1 CURRENT_TIMESTAMP เก็บเป็น UTC
 
-    แปลงให้ Browser เข้าใจแน่นอน
+    ตัวอย่าง:
+    2026-08-11 03:34:49
+
+    เติม Z เพื่อบอก JavaScript ว่า
+    เวลานี้เป็น UTC
     */
 
-    return new Date(
-        value.replace(" ","T")
+    const date = new Date(
+        value.replace(" ", "T") + "Z"
     );
 
+    if(isNaN(date.getTime())){
+        return null;
+    }
+
+    return date;
+}
+
+
+// =====================================================
+// แสดงเวลาเป็นเวลาไทย
+// =====================================================
+function formatThaiDate(value){
+
+    const date = parseDate(value);
+
+    if(!date){
+        return "-";
+    }
+
+    return date.toLocaleString(
+        "th-TH",
+        {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        }
+    );
 }
 
 
