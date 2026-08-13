@@ -10,166 +10,9 @@
 
 <title>PM2.5 Monitoring Dashboard</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="css/style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-
-    font-family:
-        Inter,
-        system-ui,
-        "Noto Sans Thai",
-        sans-serif;
-
-    background:
-        radial-gradient(
-            circle at 10% 0%,
-            rgba(14,165,233,.13),
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 95% 8%,
-            rgba(16,185,129,.10),
-            transparent 28%
-        ),
-        #07111f;
-
-    color:#eaf2f8;
-}
-
-.glass{
-    background:rgba(13,27,45,.88);
-
-    border:1px solid
-        rgba(148,163,184,.16);
-
-    box-shadow:
-        0 14px 40px
-        rgba(0,0,0,.22);
-}
-
-.soft{
-    background:#091827;
-}
-
-.card{
-    border-radius:22px;
-}
-
-.node{
-    position:relative;
-    overflow:hidden;
-}
-
-.node:before{
-    content:"";
-
-    position:absolute;
-
-    inset:0 auto 0 0;
-
-    width:4px;
-
-    background:#22c55e;
-}
-
-.node.offline:before{
-    background:#64748b;
-}
-
-.metric{
-    position:relative;
-
-    overflow:hidden;
-
-    transition:.2s;
-}
-
-.metric:hover{
-    transform:translateY(-2px);
-
-    border-color:
-        rgba(34,211,238,.35);
-}
-
-.metric:after{
-    content:"";
-
-    position:absolute;
-
-    width:120px;
-    height:120px;
-
-    border-radius:50%;
-
-    right:-45px;
-    top:-50px;
-
-    background:
-        rgba(34,211,238,.07);
-}
-
-.live{
-    font-size:11px;
-
-    color:#67e8f9;
-
-    letter-spacing:.12em;
-}
-
-.badge{
-    border:
-        1px solid
-        rgba(148,163,184,.18);
-
-    background:#102338;
-}
-
-select,
-.range{
-    background:#102338;
-
-    color:#eaf2f8;
-
-    border:
-        1px solid
-        rgba(148,163,184,.2);
-}
-
-.range.active{
-    background:#0e7490;
-
-    border-color:#22d3ee;
-
-    color:white;
-}
-
-canvas{
-    max-height:300px;
-}
-
-.status-online{
-    color:#34d399;
-}
-
-.status-offline{
-    color:#64748b;
-}
-
-.status-error{
-    color:#f87171;
-}
-
-</style>
-
+<script src="chart.js"></script>
 </head>
 
 
@@ -186,8 +29,10 @@ HEADER
 
     <div class="flex items-center gap-4">
 
-        <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center text-2xl shrink-0">
-            ◉
+        <div>
+            <img src="img/โลโกวิลัย.png" alt="Logo" class="w-20 h-20 rounded-xl">
+                
+            
         </div>
 
         <div>
@@ -951,9 +796,8 @@ FORECAST + AI
 
             <span
                 id="forecastBadge"
-                class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
-            >
-                PREVIEW
+                 class="badge rounded-full px-3 py-1 text-xs text-cyan-300">
+                     PREVIEW
             </span>
 
         </div>
@@ -976,7 +820,7 @@ FORECAST + AI
     <div class="glass card p-5">
 
         <h2 class="text-xl font-black">
-            🤖 AI วิเคราะห์สถานการณ์
+            AI วิเคราะห์สถานการณ์
         </h2>
 
 
