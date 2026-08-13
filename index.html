@@ -10,14 +10,17 @@
 
 <title>PM2.5 Monitoring Dashboard</title>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 
 <script src="chart.js"></script>
+<script src="xlsx.full.min.js"></script>
+
 </head>
 
 
 <body>
 
+    
 <div class="max-w-[1800px] mx-auto p-4 md:p-6">
 
 
@@ -30,7 +33,7 @@ HEADER
     <div class="flex items-center gap-4">
 
         <div>
-            <img src="โลโก.png" alt="Logo" class="w-20 h-20 rounded-xl">
+            <img src="img/โลโกวิลัย.png" alt="Logo" class="w-20 h-20 rounded-xl">
                 
             
         </div>
@@ -54,40 +57,56 @@ HEADER
                 ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
 
             </div>
-
+        
         </div>
 
     </div>
+<!-- CLOCK -->
 
+        <div class="text-right hidden md:block">
 
-    <div class="flex flex-wrap items-center justify-end gap-3">
-
-
-        <!-- OVERALL -->
-
-        <div class="badge rounded-2xl px-4 py-3 min-w-[180px]">
-
-            <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                Overall Air Status
+            <div id="clock" class="font-bold" >
+                --
             </div>
 
-            <div class="flex items-center gap-2 mt-1">
-
-                <span
-                    id="overallDot"
-                    class="w-2.5 h-2.5 rounded-full bg-slate-500">
-                </span>
-
-                <b id="overallStatus">
-                    รอข้อมูล
-                </b>
-
-            </div>
+            
 
         </div>
 
+   
 
-        <!-- SYSTEM -->
+</header>
+
+
+
+<!-- =========================================================
+NODES + AI
+========================================================= -->
+
+<section class="grid xl:grid-cols-4 gap-4 mb-4">
+
+
+    <div class="glass card p-4 xl:col-span-3">
+
+        <div class="flex justify-between items-center mb-0">
+
+            <div>
+
+                <h2 class="text-xl font-black">
+                    📡 Monitoring Nodes
+                </h2>
+
+                <p class="text-xs text-slate-400">
+                    ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
+                </p>
+
+
+            </div>
+             <div class="flex flex-wrap items-center justify-end gap-1">
+    </div>
+            
+
+             <!-- SYSTEM -->
 
         <div class="badge rounded-2xl px-4 py-3 min-w-[180px]">
 
@@ -111,60 +130,6 @@ HEADER
 
         </div>
 
-
-        <!-- CLOCK -->
-
-        <div class="text-right hidden md:block">
-
-            <div id="clock" class="font-bold">
-                --
-            </div>
-
-            <div class="text-xs text-slate-400 mt-1">
-
-                Last update
-
-                <span id="lastUpdate">
-                    --
-                </span>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</header>
-
-
-
-<!-- =========================================================
-NODES + AI
-========================================================= -->
-
-<section class="grid xl:grid-cols-4 gap-4 mb-4">
-
-
-    <div class="glass card p-4 xl:col-span-3">
-
-        <div class="flex justify-between items-center mb-3">
-
-            <div>
-
-                <h2 class="text-xl font-black">
-                    📡 Monitoring Nodes
-                </h2>
-
-                <p class="text-xs text-slate-400">
-                    ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
-                </p>
-
-            </div>
-
-            <span class="badge rounded-full px-3 py-1 text-xs">
-                ESP-NOW
-            </span>
-
         </div>
 
 
@@ -183,17 +148,23 @@ NODES + AI
                     <b class="text-xl">
                         อุปกรณ์ 1
                     </b>
-
+                
                     <span
                         id="n1status"
                         class="text-slate-500 text-xs font-bold"
                     >
                         ● OFFLINE
                     </span>
-
                 </div>
+                <div class="text-xs text-slate-400 mt-1">
 
+                Last update
 
+                <span id="lastUpdate">
+                    --
+                </span>
+                </div>
+                
                 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
                     <span class="text-slate-400">
@@ -253,7 +224,14 @@ NODES + AI
                     </span>
 
                 </div>
+<div class="text-xs text-slate-400 mt-1">
 
+                Last update
+
+                <span id="lastUpdate">
+                    --
+                </span>
+                </div>
 
                 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
@@ -314,7 +292,14 @@ NODES + AI
                     </span>
 
                 </div>
+<div class="text-xs text-slate-400 mt-1">
 
+                Last update
+
+                <span id="lastUpdate">
+                    --
+                </span>
+                </div>
 
                 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
@@ -396,139 +381,6 @@ NODES + AI
 
 
 
-<!-- =========================================================
-HERO METRICS
-========================================================= -->
-
-<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            PM 1.0
-        </div>
-
-        <b id="heroPM1" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            PM 2.5
-        </div>
-
-        <b id="heroPM25" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            PM 10
-        </div>
-
-        <b id="heroPM10" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            อุณหภูมิ
-        </div>
-
-        <b id="heroTemp" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            °C
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            ความชื้น
-        </div>
-
-        <b id="heroHum" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            %
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-
-    <div class="glass card metric p-5">
-
-        <div class="text-slate-400 text-sm">
-            แสง
-        </div>
-
-        <b id="heroLight" class="text-4xl mt-4 block">
-            --
-        </b>
-
-        <div class="text-xs text-slate-500 mt-1">
-            lux
-        </div>
-
-        <div class="live mt-4">
-            ● LIVE
-        </div>
-
-    </div>
-
-</section>
 
 
 
@@ -700,18 +552,22 @@ HISTORICAL TREND
 
             <button
                 class="range rounded-xl px-3 py-2 text-xs"
-                data-range="7d"
-            >
+                data-range="7d">
                 7 วัน
             </button>
 
 
             <button
                 class="range rounded-xl px-3 py-2 text-xs"
-                data-range="30d"
-            >
+                data-range="30d">
                 30 วัน
             </button>
+            <button
+    id="exportExcel"
+    class="range"
+    type="button">
+    Export
+</button>
 
         </div>
 
