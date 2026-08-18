@@ -695,9 +695,12 @@
     <section class="glass card p-5 mb-4">
 
 
-        <!-- HEADER + CONTROLS -->
+        <!-- =====================================================
+        HEADER + CONTROLS
+        ===================================================== -->
 
-        <div class="flex flex-col lg:flex-row justify-between gap-4">
+        <div class="flex flex-col xl:flex-row justify-between gap-4">
+
 
             <div>
 
@@ -798,7 +801,7 @@
                 <!-- EXPORT -->
 
                 <button
-                    id="exportBtn"
+                    id="exportButton"
                     type="button"
                     class="rounded-xl px-4 py-2 text-sm font-bold"
                 >
@@ -820,204 +823,211 @@
         <div class="soft rounded-2xl p-4 mt-5">
 
 
-            <!-- AVERAGE -->
+            <!-- AVERAGE HEADER -->
 
-            <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
 
-                <div class="text-sm text-slate-400 lg:min-w-[150px]">
+                <div class="text-sm font-bold">
 
-                    📊 ค่าเฉลี่ย
+                    📊 ค่าเฉลี่ยข้อมูล
+
+                </div>
+
+                <div class="text-xs text-slate-400">
+
+                    ช่วงที่เลือก:
+
+                    <b
+                        id="selectedRangeLabel"
+                        class="text-cyan-300"
+                    >
+                        24 ชั่วโมง
+                    </b>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+            ALL VARIABLE AVERAGES
+            ================================================= -->
+
+            <div
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3"
+            >
+
+
+                <!-- PM1 -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
+
+                    <span class="text-xs text-slate-400">
+                        PM 1.0
+                    </span>
+
+                    <b
+                        id="averagePM1"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
 
                     <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
+                    </div>
 
-                        ช่วงที่เลือก:
-
-                        <b
-                            id="selectedRangeLabel"
-                            class="text-cyan-300"
-                        >
-                            24 ชั่วโมง
-                        </b>
-
+                    <div
+                        id="averagePM1Status"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
                     </div>
 
                 </div>
 
 
-                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 flex-1">
+                <!-- PM2.5 -->
 
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
-                    <!-- PM1 -->
+                    <span class="text-xs text-slate-400">
+                        PM 2.5
+                    </span>
 
-                    <div class="soft rounded-xl p-3">
+                    <b
+                        id="averagePM25"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
 
-                        <span class="text-xs text-slate-400">
-                            PM 1.0
-                        </span>
-
-                        <b
-                            id="averagePM1"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
-
-                        <div class="text-xs text-slate-500">
-                            µg/m³
-                        </div>
-
-                        <div
-                            id="averagePM1Status"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
-
+                    <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
                     </div>
 
-
-                    <!-- PM2.5 -->
-
-                    <div class="soft rounded-xl p-3">
-
-                        <span class="text-xs text-slate-400">
-                            PM 2.5
-                        </span>
-
-                        <b
-                            id="averagePM25"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
-
-                        <div class="text-xs text-slate-500">
-                            µg/m³
-                        </div>
-
-                        <div
-                            id="averagePM25Status"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
-
+                    <div
+                        id="averagePM25Status"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
                     </div>
 
+                </div>
 
-                    <!-- PM10 -->
 
-                    <div class="soft rounded-xl p-3">
+                <!-- PM10 -->
 
-                        <span class="text-xs text-slate-400">
-                            PM 10
-                        </span>
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
-                        <b
-                            id="averagePM10"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
+                    <span class="text-xs text-slate-400">
+                        PM 10
+                    </span>
 
-                        <div class="text-xs text-slate-500">
-                            µg/m³
-                        </div>
+                    <b
+                        id="averagePM10"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
 
-                        <div
-                            id="averagePM10Status"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
-
+                    <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
                     </div>
 
-
-                    <!-- TEMP -->
-
-                    <div class="soft rounded-xl p-3">
-
-                        <span class="text-xs text-slate-400">
-                            อุณหภูมิ
-                        </span>
-
-                        <b
-                            id="averageTemp"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
-
-                        <div class="text-xs text-slate-500">
-                            °C
-                        </div>
-
-                        <div
-                            id="averageTempStatus"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
-
+                    <div
+                        id="averagePM10Status"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
                     </div>
 
+                </div>
 
-                    <!-- HUMIDITY -->
 
-                    <div class="soft rounded-xl p-3">
+                <!-- TEMP -->
 
-                        <span class="text-xs text-slate-400">
-                            ความชื้น
-                        </span>
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
-                        <b
-                            id="averageHum"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
+                    <span class="text-xs text-slate-400">
+                        อุณหภูมิ
+                    </span>
 
-                        <div class="text-xs text-slate-500">
-                            %
-                        </div>
+                    <b
+                        id="averageTemp"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
 
-                        <div
-                            id="averageHumStatus"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
-
+                    <div class="text-xs text-slate-500 mt-1">
+                        °C
                     </div>
 
+                    <div
+                        id="averageTempStatus"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
+                    </div>
 
-                    <!-- LIGHT -->
+                </div>
 
-                    <div class="soft rounded-xl p-3">
 
-                        <span class="text-xs text-slate-400">
-                            แสง
-                        </span>
+                <!-- HUMIDITY -->
 
-                        <b
-                            id="averageLight"
-                            class="block text-xl mt-1"
-                        >
-                            --
-                        </b>
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
-                        <div class="text-xs text-slate-500">
-                            lux
-                        </div>
+                    <span class="text-xs text-slate-400">
+                        ความชื้น
+                    </span>
 
-                        <div
-                            id="averageLightStatus"
-                            class="text-[11px] text-cyan-300 mt-2"
-                        >
-                            ● รอข้อมูล
-                        </div>
+                    <b
+                        id="averageHum"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
 
+                    <div class="text-xs text-slate-500 mt-1">
+                        %
+                    </div>
+
+                    <div
+                        id="averageHumStatus"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- LIGHT -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
+
+                    <span class="text-xs text-slate-400">
+                        แสง
+                    </span>
+
+                    <b
+                        id="averageLight"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        lux
+                    </div>
+
+                    <div
+                        id="averageLightStatus"
+                        class="text-xs text-cyan-300 mt-2"
+                    >
+                        ● รอข้อมูล
                     </div>
 
                 </div>
@@ -1026,12 +1036,18 @@
 
 
 
-            <!-- STATISTICS + TREND SAME ROW -->
+            <!-- =================================================
+            SELECTED METRIC STATISTICS
+            ================================================= -->
 
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4"
+            >
 
 
-                <div class="soft rounded-xl p-3">
+                <!-- AVERAGE -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
                     <span class="text-xs text-slate-400">
                         ค่าเฉลี่ย
@@ -1039,15 +1055,21 @@
 
                     <b
                         id="trendAvg"
-                        class="block text-lg mt-1"
+                        class="block text-xl mt-2"
                     >
                         --
                     </b>
 
+                    <div class="text-xs text-slate-500 mt-1">
+                        ตัวแปรที่เลือก
+                    </div>
+
                 </div>
 
 
-                <div class="soft rounded-xl p-3">
+                <!-- MAX -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
                     <span class="text-xs text-slate-400">
                         ค่าสูงสุด
@@ -1055,15 +1077,21 @@
 
                     <b
                         id="trendMax"
-                        class="block text-lg mt-1"
+                        class="block text-xl mt-2"
                     >
                         --
                     </b>
 
+                    <div class="text-xs text-slate-500 mt-1">
+                        ตัวแปรที่เลือก
+                    </div>
+
                 </div>
 
 
-                <div class="soft rounded-xl p-3">
+                <!-- MIN -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
                     <span class="text-xs text-slate-400">
                         ค่าต่ำสุด
@@ -1071,15 +1099,21 @@
 
                     <b
                         id="trendMin"
-                        class="block text-lg mt-1"
+                        class="block text-xl mt-2"
                     >
                         --
                     </b>
 
+                    <div class="text-xs text-slate-500 mt-1">
+                        ตัวแปรที่เลือก
+                    </div>
+
                 </div>
 
 
-                <div class="soft rounded-xl p-3">
+                <!-- LAST -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
                     <span class="text-xs text-slate-400">
                         ค่าล่าสุด
@@ -1087,15 +1121,21 @@
 
                     <b
                         id="trendLast"
-                        class="block text-lg mt-1"
+                        class="block text-xl mt-2"
                     >
                         --
                     </b>
 
+                    <div class="text-xs text-slate-500 mt-1">
+                        ตัวแปรที่เลือก
+                    </div>
+
                 </div>
 
 
-                <div class="soft rounded-xl p-3">
+                <!-- TREND -->
+
+                <div class="rounded-xl p-3 bg-slate-900/30">
 
                     <span class="text-xs text-slate-400">
                         Trend
@@ -1103,10 +1143,14 @@
 
                     <b
                         id="trend"
-                        class="block text-lg mt-1"
+                        class="block text-xl mt-2"
                     >
                         รอข้อมูล
                     </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        แนวโน้ม
+                    </div>
 
                 </div>
 
@@ -1117,10 +1161,14 @@
 
 
         <!-- =====================================================
-        CHART
+        HISTORY CHART
         ===================================================== -->
 
         <div class="soft rounded-xl p-4 mt-4">
+
+            <div class="text-xs text-slate-400 mb-3">
+                Historical Trend
+            </div>
 
             <canvas id="historyChart"></canvas>
 
@@ -1247,6 +1295,10 @@
     let forecastChart = null;
 
     let metric = "pm25";
+
+    /*
+    ค่าเริ่มต้นเปลี่ยนจาก 6h -> 24h
+    */
 
     let averageRange = "24h";
 
@@ -1379,6 +1431,14 @@
         }
 
 
+        /*
+        D1 CURRENT_TIMESTAMP
+
+        2026-08-18 00:39:13
+
+        ถือเป็น UTC
+        */
+
         if(
             /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
                 .test(text)
@@ -1396,6 +1456,10 @@
 
         }
 
+
+        /*
+        ISO
+        */
 
         if(
             /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
@@ -3571,7 +3635,7 @@
 
 
     /* =========================================================
-    EXPORT ALL DATA
+    EXPORT CSV
     ========================================================= */
 
     function exportSelectedData(){
@@ -3582,26 +3646,23 @@
             .sort(
                 (a,b) => {
 
-                    const dateA =
+                    const da =
                         parseDate(
                             a.timestamp
                         );
 
-
-                    const dateB =
+                    const db =
                         parseDate(
                             b.timestamp
                         );
 
-
-                    if(!dateA || !dateB){
+                    if(!da || !db){
                         return 0;
                     }
 
-
                     return (
-                        dateA.getTime() -
-                        dateB.getTime()
+                        da.getTime() -
+                        db.getTime()
                     );
 
                 }
@@ -3619,22 +3680,24 @@
         }
 
 
+        /*
+        ส่งออกข้อมูลทุกตัวแปร
+
+        ไม่ว่าจะเลือก Metric อะไร
+        */
+
         const headers = [
 
             "Timestamp",
+            "Device ID",
+            "Status",
 
-            "Device",
+            "PM1.0 (ug/m3)",
+            "PM2.5 (ug/m3)",
+            "PM10 (ug/m3)",
 
-            "PM1.0 (µg/m³)",
-
-            "PM2.5 (µg/m³)",
-
-            "PM10 (µg/m³)",
-
-            "Temperature (°C)",
-
+            "Temperature (C)",
             "Humidity (%)",
-
             "Light (lux)"
 
         ];
@@ -3650,27 +3713,29 @@
 
                     record.device_id || "",
 
-                    exportValue(
+                    record.status || "",
+
+                    exportNumber(
                         record.pm1
                     ),
 
-                    exportValue(
+                    exportNumber(
                         record.pm25
                     ),
 
-                    exportValue(
+                    exportNumber(
                         record.pm10
                     ),
 
-                    exportValue(
+                    exportNumber(
                         record.temperature
                     ),
 
-                    exportValue(
+                    exportNumber(
                         record.humidity
                     ),
 
-                    exportValue(
+                    exportNumber(
                         record.light
                     )
 
@@ -3678,31 +3743,38 @@
             );
 
 
-        const csvRows = [
+        const csvRows = [];
 
-            headers,
 
-            ...rows
+        csvRows.push(
+            headers.map(
+                csvEscape
+            ).join(",")
+        );
 
-        ];
 
+        rows.forEach(
+            row => {
+
+                csvRows.push(
+                    row
+                    .map(
+                        csvEscape
+                    )
+                    .join(",")
+                );
+
+            }
+        );
+
+
+        /*
+        BOM ทำให้ Excel อ่านภาษาไทยได้ถูกต้อง
+        */
 
         const csv =
             "\uFEFF" +
-
-            csvRows
-            .map(
-                row =>
-                    row
-                    .map(
-                        value =>
-                            csvEscape(
-                                value
-                            )
-                    )
-                    .join(",")
-            )
-            .join("\r\n");
+            csvRows.join("\r\n");
 
 
         const blob =
@@ -3727,27 +3799,45 @@
             );
 
 
-        link.href =
-            url;
-
-
         const now =
             new Date();
 
 
         const dateText =
-            now
-            .toLocaleDateString(
-                "en-CA",
+            now.toLocaleDateString(
+                "th-TH",
                 {
+
                     timeZone:
-                        "Asia/Bangkok"
+                        "Asia/Bangkok",
+
+                    year:
+                        "numeric",
+
+                    month:
+                        "2-digit",
+
+                    day:
+                        "2-digit"
+
                 }
+            )
+            .replaceAll(
+                "/",
+                "-"
             );
 
 
+        link.href =
+            url;
+
+
         link.download =
-            `PM25_Historical_${averageRange}_${dateText}.csv`;
+            "PM25_Historical_" +
+            averageRange +
+            "_" +
+            dateText +
+            ".csv";
 
 
         document.body.appendChild(
@@ -3772,10 +3862,10 @@
 
 
     /* =========================================================
-    EXPORT VALUE
+    EXPORT HELPERS
     ========================================================= */
 
-    function exportValue(value){
+    function exportNumber(value){
 
         if(
             value === null ||
@@ -3789,26 +3879,25 @@
         }
 
 
-        return Number(value).toFixed(2);
+        return Number(value)
+            .toFixed(2);
 
     }
 
 
 
-    /* =========================================================
-    EXPORT DATE
-    ========================================================= */
-
-    function formatExportDate(
-        value
-    ){
+    function formatExportDate(value){
 
         const date =
-            parseDate(value);
+            parseDate(
+                value
+            );
 
 
         if(!date){
+
             return "";
+
         }
 
 
@@ -3847,36 +3936,20 @@
 
 
 
-    /* =========================================================
-    CSV ESCAPE
-    ========================================================= */
-
     function csvEscape(value){
 
         const text =
-            String(
-                value ?? ""
-            );
+            value == null
+                ? ""
+                : String(value);
 
 
-        if(
-            text.includes(",") ||
-            text.includes('"') ||
-            text.includes("\n") ||
-            text.includes("\r")
-        ){
-
-            return '"' +
-                text.replaceAll(
-                    '"',
-                    '""'
-                ) +
-                '"';
-
-        }
-
-
-        return text;
+        return '"' +
+            text.replaceAll(
+                '"',
+                '""'
+            ) +
+            '"';
 
     }
 
@@ -3908,6 +3981,9 @@
 
             /*
             LOAD HISTORY
+
+            API จะเลือกช่วงขั้นต่ำให้เอง
+            ตาม RANGE_CONFIG
             */
 
             const newHistory =
@@ -4647,6 +4723,10 @@
                     e.target.value;
 
 
+                /*
+                โหลดข้อมูลใหม่ตามช่วงที่ต้องใช้
+                */
+
                 await load();
 
             }
@@ -4658,14 +4738,10 @@
     EXPORT BUTTON
     ========================================================= */
 
-    $("exportBtn")
+    $("exportButton")
         .addEventListener(
             "click",
-            () => {
-
-                exportSelectedData();
-
-            }
+            exportSelectedData
         );
 
 
