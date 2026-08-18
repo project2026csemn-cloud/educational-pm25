@@ -664,55 +664,25 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   01. COLLEGE IMAGE
+   COLLEGE + DEPARTMENT IMAGE
    ===================================================== */
 
-/*
-   วิทยาลัย:
-   ขยายโลโก้ให้ใหญ่ขึ้น
-*/
-
-.credit-college .credit-icon img {
+.credit-college .credit-icon img,
+.credit-department .credit-icon img {
 
     width: 100% !important;
 
     height: 100% !important;
 
-    padding: 1px !important;
+    padding: 3px !important;
 
     object-fit: contain !important;
 
     border-radius: 12px !important;
 
 }
-
-
 /* =====================================================
-   02. DEPARTMENT IMAGE
-   ===================================================== */
-
-/*
-   แผนก:
-   คงขนาดเดิม
-*/
-
-.credit-department .credit-icon img {
-
-    width: 100%;
-
-    height: 100%;
-
-    padding: 6px;
-
-    object-fit: contain;
-
-    border-radius: 12px;
-
-}
-
-
-/* =====================================================
-   03-04. DEVELOPER IMAGE
+   DEVELOPER IMAGE
    ===================================================== */
 
 /*
