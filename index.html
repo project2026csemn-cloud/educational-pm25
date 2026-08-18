@@ -4829,7 +4829,7 @@ function updateTrendStatistics(){
 
     </script>
 <!-- =====================================================
-     CREDIT BAR
+     PREMIUM CREDIT BAR
      ===================================================== -->
 
 <footer class="credit-bar">
@@ -4838,7 +4838,13 @@ function updateTrendStatistics(){
     <div class="credit-glow credit-glow-1"></div>
     <div class="credit-glow credit-glow-2"></div>
 
+
+    <!-- =================================================
+         CREDIT CONTENT
+         ================================================= -->
+
     <div class="credit-inner">
+
 
         <!-- =================================================
              01. COLLEGE
@@ -4846,19 +4852,29 @@ function updateTrendStatistics(){
 
         <div class="credit-box credit-college">
 
-            <div class="credit-icon">
-    <img src="โลโก.png" alt="โลโก้วิทยาลัย">
+            <div
+                class="credit-icon credit-image-button"
+                onclick="openCreditImage('โลโก.png', 'โลโก้วิทยาลัย')"
+            >
+
+                <img
+                    src="โลโก.png"
+                    alt="โลโก้วิทยาลัย"
+                >
+
             </div>
+
 
             <div class="credit-content">
 
                 <div class="credit-label">
-                    College
+                    COLLEGE
                 </div>
 
                 <div class="credit-title">
                     วิทยาลัยเสริมทักษะพระภิกษุ สามเณร
                 </div>
+
 
                 <div class="credit-links">
 
@@ -4868,9 +4884,17 @@ function updateTrendStatistics(){
                         rel="noopener noreferrer"
                         class="credit-link"
                     >
-                        <span>เว็บไซต์วิทยาลัย</span>
-                        <span class="credit-arrow">↗</span>
+
+                        <span>
+                            เว็บไซต์วิทยาลัย
+                        </span>
+
+                        <span class="credit-arrow">
+                            ↗
+                        </span>
+
                     </a>
+
 
                     <a
                         href="https://www.facebook.com/spscollege.ac.th?locale=th_TH"
@@ -4878,8 +4902,15 @@ function updateTrendStatistics(){
                         rel="noopener noreferrer"
                         class="credit-link facebook-link"
                     >
-                        <span>Facebook</span>
-                        <span class="credit-arrow">↗</span>
+
+                        <span>
+                            Facebook
+                        </span>
+
+                        <span class="credit-arrow">
+                            ↗
+                        </span>
+
                     </a>
 
                 </div>
@@ -4889,15 +4920,25 @@ function updateTrendStatistics(){
         </div>
 
 
+
         <!-- =================================================
              02. DEPARTMENT
              ================================================= -->
 
         <div class="credit-box credit-department">
 
-            <div class="credit-icon">
-    <img src="ICT.jpg" alt="โลโก้แผนก">
+            <div
+                class="credit-icon credit-image-button"
+                onclick="openCreditImage('ICT.jpg', 'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร')"
+            >
+
+                <img
+                    src="ICT.jpg"
+                    alt="โลโก้แผนก"
+                >
+
             </div>
+
 
             <div class="credit-content">
 
@@ -4909,6 +4950,7 @@ function updateTrendStatistics(){
                     แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร
                 </div>
 
+
                 <div class="credit-links">
 
                     <a
@@ -4917,8 +4959,15 @@ function updateTrendStatistics(){
                         rel="noopener noreferrer"
                         class="credit-link facebook-link"
                     >
-                        <span>Facebook แผนก</span>
-                        <span class="credit-arrow">↗</span>
+
+                        <span>
+                            Facebook แผนก
+                        </span>
+
+                        <span class="credit-arrow">
+                            ↗
+                        </span>
+
                     </a>
 
                 </div>
@@ -4928,15 +4977,33 @@ function updateTrendStatistics(){
         </div>
 
 
+
         <!-- =================================================
              03. DEVELOPER 1
              ================================================= -->
 
         <div class="credit-box credit-developer">
 
-            <div class="credit-icon">
-                👨‍💻
+            <div
+                class="credit-icon credit-image-button credit-placeholder"
+                onclick="openCreditImage('person1.jpg', 'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา')"
+            >
+
+                <!--
+                    ตอนมีรูปแล้วให้เปลี่ยนส่วนนี้เป็น:
+
+                    <img
+                        src="person1.jpg"
+                        alt="สามเณร ธรรมปพน"
+                    >
+                -->
+
+                <span>
+                    👨‍💻
+                </span>
+
             </div>
+
 
             <div class="credit-content">
 
@@ -4957,15 +5024,33 @@ function updateTrendStatistics(){
         </div>
 
 
+
         <!-- =================================================
              04. DEVELOPER 2
              ================================================= -->
 
         <div class="credit-box credit-developer">
-            
-            <div class="credit-icon">
-                👨‍💻
+
+            <div
+                class="credit-icon credit-image-button credit-placeholder"
+                onclick="openCreditImage('person2.jpg', 'สามเณร รัฐภูมิ สร้อยคำ')"
+            >
+
+                <!--
+                    ตอนมีรูปแล้วให้เปลี่ยนส่วนนี้เป็น:
+
+                    <img
+                        src="person2.jpg"
+                        alt="สามเณร รัฐภูมิ"
+                    >
+                -->
+
+                <span>
+                    👨‍💻
+                </span>
+
             </div>
+
 
             <div class="credit-content">
 
@@ -4985,10 +5070,15 @@ function updateTrendStatistics(){
 
         </div>
 
+
     </div>
 
 
-    <!-- Bottom system line -->
+
+    <!-- =================================================
+         BOTTOM SYSTEM STATUS
+         ================================================= -->
+
     <div class="credit-bottom">
 
         <span class="credit-status-dot"></span>
@@ -5006,6 +5096,65 @@ function updateTrendStatistics(){
     </div>
 
 </footer>
+
+
+
+<!-- =====================================================
+     CREDIT IMAGE LIGHTBOX
+     ===================================================== -->
+
+<div
+    id="creditImageModal"
+    class="credit-image-modal"
+>
+
+
+    <!-- Dark background -->
+
+    <div
+        class="credit-image-backdrop"
+        onclick="closeCreditImage()"
+    ></div>
+
+
+
+    <!-- Close button -->
+
+    <button
+        type="button"
+        class="credit-image-close"
+        onclick="closeCreditImage()"
+        aria-label="ปิดรูป"
+    >
+
+        &times;
+
+    </button>
+
+
+
+    <!-- Image viewer -->
+
+    <div
+        class="credit-image-viewer"
+    >
+
+        <img
+            id="creditFullImage"
+            class="credit-full-image"
+            src=""
+            alt=""
+        >
+
+
+        <div
+            id="creditImageCaption"
+            class="credit-image-caption"
+        ></div>
+
+    </div>
+
+</div>
 </body>
 
 </html>
