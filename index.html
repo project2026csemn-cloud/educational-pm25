@@ -2754,59 +2754,164 @@ HISTORICAL DATA & TREND
 
 
     /* =========================================================
-    UPDATE SELECTED STATISTICS
-    ========================================================= */
+UPDATE SELECTED STATISTICS
+========================================================= */
 
-    function updateTrendStatistics(){
+function updateTrendStatistics(){
 
-        const data =
-            getRecordsInSelectedRange();
+    const data =
+        getRecordsInSelectedRange();
 
 
-        const stats =
-            calculateStatistics(
-                data,
-                metric
+    const stats =
+        calculateStatistics(
+            data,
+            metric
+        );
+
+
+    /*
+    ============================================================
+    AVERAGE
+    ============================================================
+    */
+
+    $("trendAvg").textContent =
+        stats.average === null
+            ? "--"
+            : fmt(stats.average);
+
+
+    /*
+    ============================================================
+    MAX
+    ============================================================
+    */
+
+    $("trendMax").textContent =
+        stats.max === null
+            ? "--"
+            : fmt(stats.max);
+
+
+    /*
+    ============================================================
+    MIN
+    ============================================================
+    */
+
+    $("trendMin").textContent =
+        stats.min === null
+            ? "--"
+            : fmt(stats.min);
+
+    let latestMetricRecord = null;
+
+    const allRecords =
+        Array.isArray(records)
+            ? records.slice()
+            : [];
+
+    if(latestRecord){
+
+        const alreadyExists =
+            allRecords.some(
+                record =>
+
+                    record &&
+                    latestRecord &&
+                    record.id != null &&
+                    latestRecord.id != null &&
+                    record.id === latestRecord.id
             );
 
 
-        $("trendAvg").textContent =
-            stats.average === null
-                ? "--"
-                : fmt(stats.average);
+        if(!alreadyExists){
+
+            allRecords.push(
+                latestRecord
+            );
+
+        }
+
+    }
 
 
-        $("trendMax").textContent =
-            stats.max === null
-                ? "--"
-                : fmt(stats.max);
+    for(
+        const record of allRecords
+    ){
+
+        if(
+            !record ||
+            !record.timestamp
+        ){
+
+            continue;
+
+        }
 
 
-        $("trendMin").textContent =
-            stats.min === null
-                ? "--"
-                : fmt(stats.min);
+        const value =
+            record[metric];
+
+        if(
+            value === null ||
+            value === undefined ||
+            value === "" ||
+            isNaN(
+                Number(value)
+            )
+        ){
+
+            continue;
+
+        }
 
 
-        const latestValue =
-    latestRecord &&
-    latestRecord[metric] !== null &&
-    latestRecord[metric] !== undefined &&
-    !isNaN(
-        Number(
-            latestRecord[metric]
-        )
-    )
-        ? Number(
-            latestRecord[metric]
-        )
-        : null;
+        const date =
+            parseDate(
+                record.timestamp
+            );
 
 
-$("trendLast").textContent =
-    latestValue === null
-        ? "--"
-        : fmt(latestValue);
+        if(!date){
+
+            continue;
+
+        }
+
+        if(
+            latestMetricRecord === null ||
+            date.getTime() >
+            parseDate(
+                latestMetricRecord.timestamp
+            ).getTime()
+        ){
+
+            latestMetricRecord =
+                record;
+
+        }
+
+    }
+
+    if(latestMetricRecord){
+
+        $("trendLast").textContent =
+            fmt(
+                Number(
+                    latestMetricRecord[metric]
+                )
+            );
+
+    }
+
+    else{
+
+        $("trendLast").textContent =
+            "--";
+
+    }
 
         updateSelectedMetricLabel();
 
