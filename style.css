@@ -475,7 +475,7 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   ICON / IMAGE
+   ICON
    ===================================================== */
 
 .credit-icon {
@@ -543,14 +543,10 @@ canvas { max-height: 300px; }
     border-radius: 12px;
 
     transition:
-        transform 0.3s ease;
+        transform 0.25s ease;
 
 }
 
-
-/* =====================================================
-   CLICKABLE IMAGE
-   ===================================================== */
 
 .credit-image-button {
 
@@ -562,18 +558,19 @@ canvas { max-height: 300px; }
 .credit-image-button:hover img {
 
     transform:
-        scale(1.08);
+        scale(1.06);
 
 }
 
 
 /* =====================================================
-   IMAGE VIEW LABEL
+   VIEW IMAGE LABEL
    ===================================================== */
 
 .credit-image-button::after {
 
-    content: "ดูรูป";
+    content:
+        "ดูรูป";
 
     position: absolute;
 
@@ -592,7 +589,7 @@ canvas { max-height: 300px; }
         5px;
 
     background:
-        rgba(8, 47, 73, 0.95);
+        rgba(8, 47, 73, 0.96);
 
     color:
         #67e8f9;
@@ -609,7 +606,8 @@ canvas { max-height: 300px; }
     pointer-events: none;
 
     transition:
-        all 0.2s ease;
+        opacity 0.2s ease,
+        transform 0.2s ease;
 
 }
 
@@ -633,7 +631,7 @@ canvas { max-height: 300px; }
     font-size: 21px;
 
     transition:
-        transform 0.3s ease;
+        transform 0.25s ease;
 
 }
 
@@ -641,7 +639,7 @@ canvas { max-height: 300px; }
 .credit-placeholder:hover span {
 
     transform:
-        scale(1.12);
+        scale(1.10);
 
 }
 
@@ -969,7 +967,10 @@ canvas { max-height: 300px; }
         rgba(34, 211, 238, 0.75);
 
     animation:
-        credit-pulse 2s ease-in-out infinite;
+        credit-pulse
+        2s
+        ease-in-out
+        infinite;
 
 }
 
@@ -1015,16 +1016,27 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   IMAGE LIGHTBOX
+   IMAGE MODAL
    ===================================================== */
 
 .credit-image-modal {
+
+    display: none;
 
     position: fixed;
 
     inset: 0;
 
-    z-index: 99999;
+    width: 100vw;
+
+    height: 100vh;
+
+    z-index: 999999;
+
+}
+
+
+.credit-image-modal.active {
 
     display: flex;
 
@@ -1032,70 +1044,61 @@ canvas { max-height: 300px; }
 
     justify-content: center;
 
-    padding: 30px;
-
-    background:
-        rgba(2, 6, 23, 0.90);
-
-    backdrop-filter:
-        blur(10px);
-
-    opacity: 0;
-
-    visibility: hidden;
-
-    pointer-events: none;
-
-    transition:
-        opacity 0.25s ease,
-        visibility 0.25s ease;
-
-}
-
-
-.credit-image-modal.active {
-
-    opacity: 1;
-
-    visibility: visible;
-
-    pointer-events: auto;
-
 }
 
 
 /* =====================================================
-   BACKDROP
+   MODAL OVERLAY
    ===================================================== */
 
-.credit-image-backdrop {
+.credit-image-overlay {
 
     position: absolute;
 
     inset: 0;
 
+    width: 100%;
+
+    height: 100%;
+
+    background:
+        rgba(2, 6, 23, 0.90);
+
+    backdrop-filter:
+        blur(8px);
+
 }
 
 
 /* =====================================================
-   IMAGE VIEWER
+   IMAGE WINDOW
    ===================================================== */
 
-.credit-image-viewer {
+.credit-image-window {
 
     position: relative;
 
     z-index: 2;
 
-    max-width: 90vw;
+    display: flex;
 
-    max-height: 88vh;
+    flex-direction: column;
 
-    padding: 8px;
+    align-items: center;
+
+    justify-content: center;
+
+    width: auto;
+
+    max-width: 82vw;
+
+    max-height: 82vh;
+
+    padding: 10px;
 
     border:
         1px solid
-        rgba(34, 211, 238, 0.40);
+        rgba(34, 211, 238, 0.35);
 
     border-radius:
         16px;
@@ -1108,26 +1111,16 @@ canvas { max-height: 300px; }
         );
 
     box-shadow:
-        0 0 60px
-        rgba(34, 211, 238, 0.16),
+        0 0 45px
+        rgba(34, 211, 238, 0.12),
 
-        0 25px 80px
-        rgba(0, 0, 0, 0.65);
+        0 25px 70px
+        rgba(0, 0, 0, 0.60);
 
-    transform:
-        scale(0.90);
-
-    transition:
-        transform 0.25s ease;
-
-}
-
-
-.credit-image-modal.active
-.credit-image-viewer {
-
-    transform:
-        scale(1);
+    animation:
+        creditImageOpen
+        0.22s
+        ease-out;
 
 }
 
@@ -1140,13 +1133,13 @@ canvas { max-height: 300px; }
 
     display: block;
 
-    max-width: 85vw;
-
-    max-height: 78vh;
-
     width: auto;
 
     height: auto;
+
+    max-width: 78vw;
+
+    max-height: 70vh;
 
     object-fit: contain;
 
@@ -1162,17 +1155,23 @@ canvas { max-height: 300px; }
 
 .credit-image-caption {
 
+    width: 100%;
+
+    margin-top: 8px;
+
     padding:
-        10px 8px 4px;
+        5px 8px 2px;
 
     text-align: center;
-
-    color:
-        #67e8f9;
 
     font-size: 11px;
 
     font-weight: 700;
+
+    line-height: 1.4;
+
+    color:
+        #67e8f9;
 
 }
 
@@ -1187,9 +1186,9 @@ canvas { max-height: 300px; }
 
     top: 22px;
 
-    right: 25px;
+    right: 24px;
 
-    z-index: 100000;
+    z-index: 1000000;
 
     width: 44px;
 
@@ -1201,27 +1200,33 @@ canvas { max-height: 300px; }
 
     justify-content: center;
 
+    padding: 0;
+
     border:
         1px solid
-        rgba(103, 232, 249, 0.40);
+        rgba(103, 232, 249, 0.45);
 
-    border-radius:
-        50%;
+    border-radius: 50%;
 
     background:
-        rgba(8, 47, 73, 0.92);
+        rgba(8, 47, 73, 0.96);
 
     color:
         #cffafe;
 
     font-size: 29px;
 
+    font-weight: 300;
+
     line-height: 1;
 
     cursor: pointer;
 
     transition:
-        all 0.2s ease;
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 
 }
 
@@ -1243,6 +1248,33 @@ canvas { max-height: 300px; }
     box-shadow:
         0 0 20px
         rgba(34, 211, 238, 0.20);
+
+}
+
+
+/* =====================================================
+   IMAGE OPEN ANIMATION
+   ===================================================== */
+
+@keyframes creditImageOpen {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            scale(0.90);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            scale(1);
+
+    }
 
 }
 
@@ -1370,20 +1402,24 @@ canvas { max-height: 300px; }
     }
 
 
-    .credit-image-viewer {
+    .credit-image-window {
 
-        max-width: 94vw;
+        max-width: 90vw;
 
-        max-height: 82vh;
+        max-height: 78vh;
+
+        padding: 7px;
+
+        border-radius: 13px;
 
     }
 
 
     .credit-full-image {
 
-        max-width: 90vw;
+        max-width: 86vw;
 
-        max-height: 70vh;
+        max-height: 65vh;
 
     }
 
@@ -1399,6 +1435,13 @@ canvas { max-height: 300px; }
         height: 40px;
 
         font-size: 25px;
+
+    }
+
+
+    .credit-image-caption {
+
+        font-size: 10px;
 
     }
 
@@ -1427,8 +1470,6 @@ canvas { max-height: 300px; }
 
         height: 38px;
 
-        font-size: 16px;
-
     }
 
 
@@ -1448,13 +1489,13 @@ canvas { max-height: 300px; }
 
     }
 
-}
 
-}
-.credit-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 6px;
-    border-radius: 12px;
+    .credit-full-image {
+
+        max-width: 84vw;
+
+        max-height: 60vh;
+
+    }
+
 }
