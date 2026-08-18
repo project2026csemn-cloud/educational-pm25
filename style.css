@@ -732,7 +732,7 @@ canvas { max-height: 300px; }
 
     object-fit: cover !important;
 
-    object-position: center 15% !important;
+    object-position: center 10% !important;
 
     border-radius: 14px !important;
 
