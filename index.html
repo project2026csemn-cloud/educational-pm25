@@ -692,523 +692,505 @@
     HISTORICAL DATA & TREND
     ========================================================= -->
 
-    <section class="glass card p-5 mb-4">
+<section class="glass card p-5 mb-4">
 
-
-        <!-- =====================================================
+    <!-- =====================================================
         HEADER + CONTROLS
         ===================================================== -->
 
-        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
 
+        <!-- TITLE -->
 
-            <!-- TITLE -->
+        <div>
 
-            <div>
+            <h2 class="text-2xl font-black">
+                📈 Historical Data & Trend
+            </h2>
 
-                <h2 class="text-2xl font-black">
-                    📈 Historical Data & Trend
-                </h2>
-
-                <p class="text-xs text-slate-400 mt-1">
-                    วิเคราะห์ข้อมูลย้อนหลัง ค่าเฉลี่ย และแนวโน้มในช่วงเวลาที่เลือก
-                </p>
-
-            </div>
-
-
-            <!-- =================================================
-            CONTROLS
-            อยู่มุมขวาบน
-            ================================================= -->
-
-            <div class="flex flex-wrap gap-2 items-center justify-end">
-
-
-                <!-- METRIC -->
-
-                <select
-                    id="metric"
-                    class="rounded-xl px-3 py-2 text-sm font-medium"
-                >
-
-                    <option value="pm25">
-                        PM2.5
-                    </option>
-
-                    <option value="pm1">
-                        PM1.0
-                    </option>
-
-                    <option value="pm10">
-                        PM10
-                    </option>
-
-                    <option value="temperature">
-                        อุณหภูมิ
-                    </option>
-
-                    <option value="humidity">
-                        ความชื้น
-                    </option>
-
-                    <option value="light">
-                        แสง
-                    </option>
-
-                </select>
-
-
-                <!-- RANGE -->
-
-                <select
-                    id="historyRange"
-                    class="rounded-xl px-3 py-2 text-sm font-medium"
-                >
-
-                    <option value="30m">
-                        30 นาที
-                    </option>
-
-                    <option value="1h">
-                        1 ชั่วโมง
-                    </option>
-
-                    <option value="3h">
-                        3 ชั่วโมง
-                    </option>
-
-                    <option value="6h">
-                        6 ชั่วโมง
-                    </option>
-
-                    <option value="12h">
-                        12 ชั่วโมง
-                    </option>
-
-                    <option value="24h" selected>
-                        24 ชั่วโมง
-                    </option>
-
-                    <option value="3d">
-                        3 วัน
-                    </option>
-
-                    <option value="7d">
-                        7 วัน
-                    </option>
-
-                    <option value="30d">
-                        30 วัน
-                    </option>
-
-                </select>
-
-
-                <!-- EXPORT -->
-
-                <button
-                    id="exportButton"
-                    type="button"
-                    class="rounded-xl px-4 py-2 text-sm font-bold"
-                >
-
-                    📥 ส่งออกข้อมูล
-
-                </button>
-
-            </div>
+            <p class="text-xs text-slate-400 mt-1">
+                วิเคราะห์ข้อมูลย้อนหลัง ค่าเฉลี่ย และแนวโน้มในช่วงเวลาที่เลือก
+            </p>
 
         </div>
 
 
+        <!-- CONTROLS -->
 
-        <!-- =====================================================
+        <div class="flex flex-wrap gap-2 items-center justify-end">
+
+            <!-- METRIC -->
+
+            <select
+                id="metric"
+                class="rounded-xl px-4 py-2 text-sm font-bold"
+            >
+
+                <option value="pm25">
+                    PM2.5
+                </option>
+
+                <option value="pm1">
+                    PM1.0
+                </option>
+
+                <option value="pm10">
+                    PM10
+                </option>
+
+                <option value="temperature">
+                    อุณหภูมิ
+                </option>
+
+                <option value="humidity">
+                    ความชื้น
+                </option>
+
+                <option value="light">
+                    แสง
+                </option>
+
+            </select>
+
+
+            <!-- RANGE -->
+
+            <select
+                id="historyRange"
+                class="rounded-xl px-4 py-2 text-sm font-bold"
+            >
+
+                <option value="30m">
+                    30 นาที
+                </option>
+
+                <option value="1h">
+                    1 ชั่วโมง
+                </option>
+
+                <option value="3h">
+                    3 ชั่วโมง
+                </option>
+
+                <option value="6h">
+                    6 ชั่วโมง
+                </option>
+
+                <option value="12h">
+                    12 ชั่วโมง
+                </option>
+
+                <option value="24h" selected>
+                    24 ชั่วโมง
+                </option>
+
+                <option value="3d">
+                    3 วัน
+                </option>
+
+                <option value="7d">
+                    7 วัน
+                </option>
+
+                <option value="30d">
+                    30 วัน
+                </option>
+
+            </select>
+
+
+            <!-- EXPORT -->
+
+            <button
+                id="exportButton"
+                type="button"
+                class="rounded-xl px-4 py-2 text-sm font-bold"
+            >
+                EXPORT
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
         BAR 1
         OVERALL AVERAGE
         ===================================================== -->
 
-        <div class="soft rounded-2xl p-4 mt-5">
+    <div class="soft rounded-2xl p-4 mt-5">
 
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
 
-                <div>
-
-                    <div class="text-sm font-bold">
-                        📊 ค่าเฉลี่ยรวม
-                    </div>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        ค่าเฉลี่ยของทุกตัวแปรในช่วงเวลาที่เลือก
-                    </div>
-
+                <div class="text-sm font-bold">
+                    📊 ค่าเฉลี่ยรวม
                 </div>
 
-
-                <div class="text-xs text-slate-400">
-
-                    ช่วงที่เลือก:
-
-                    <b
-                        id="selectedRangeLabel"
-                        class="text-cyan-300"
-                    >
-                        24 ชั่วโมง
-                    </b>
-
+                <div class="text-xs text-slate-500 mt-1">
+                    ค่าเฉลี่ยของทุกตัวแปรในช่วงเวลาที่เลือก
                 </div>
 
             </div>
 
 
+            <div class="text-xs text-slate-400">
 
-            <!-- =================================================
-            HORIZONTAL AVERAGE BAR
-            ================================================= -->
+                ช่วงที่เลือก:
 
-            <div
-                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
-            >
-
-
-                <!-- PM1 -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        PM 1.0
-                    </div>
-
-                    <b
-                        id="averagePM1"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        µg/m³
-                    </div>
-
-                    <div
-                        id="averagePM1Status"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
-
-
-                <!-- PM2.5 -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        PM 2.5
-                    </div>
-
-                    <b
-                        id="averagePM25"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        µg/m³
-                    </div>
-
-                    <div
-                        id="averagePM25Status"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
-
-
-                <!-- PM10 -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        PM 10
-                    </div>
-
-                    <b
-                        id="averagePM10"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        µg/m³
-                    </div>
-
-                    <div
-                        id="averagePM10Status"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
-
-
-                <!-- TEMP -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        อุณหภูมิ
-                    </div>
-
-                    <b
-                        id="averageTemp"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        °C
-                    </div>
-
-                    <div
-                        id="averageTempStatus"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
-
-
-                <!-- HUMIDITY -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        ความชื้น
-                    </div>
-
-                    <b
-                        id="averageHum"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        %
-                    </div>
-
-                    <div
-                        id="averageHumStatus"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
-
-
-                <!-- LIGHT -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <div class="text-xs text-slate-400">
-                        แสง
-                    </div>
-
-                    <b
-                        id="averageLight"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        lux
-                    </div>
-
-                    <div
-                        id="averageLightStatus"
-                        class="text-xs text-cyan-300 mt-2 truncate"
-                    >
-                        ● รอข้อมูล
-                    </div>
-
-                </div>
+                <b
+                    id="selectedRangeLabel"
+                    class="text-cyan-300"
+                >
+                    24 ชั่วโมง
+                </b>
 
             </div>
 
         </div>
 
 
+        <!-- =================================================
+            6 VALUES — HORIZONTAL
+            ================================================= -->
 
-        <!-- =====================================================
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+
+
+            <!-- PM1 -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    PM 1.0
+                </div>
+
+                <b
+                    id="averagePM1"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    µg/m³
+                </div>
+
+                <div
+                    id="averagePM1Status"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+
+            <!-- PM2.5 -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    PM 2.5
+                </div>
+
+                <b
+                    id="averagePM25"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    µg/m³
+                </div>
+
+                <div
+                    id="averagePM25Status"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+
+            <!-- PM10 -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    PM 10
+                </div>
+
+                <b
+                    id="averagePM10"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    µg/m³
+                </div>
+
+                <div
+                    id="averagePM10Status"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+
+            <!-- TEMPERATURE -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    อุณหภูมิ
+                </div>
+
+                <b
+                    id="averageTemp"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    °C
+                </div>
+
+                <div
+                    id="averageTempStatus"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+
+            <!-- HUMIDITY -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    ความชื้น
+                </div>
+
+                <b
+                    id="averageHum"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    %
+                </div>
+
+                <div
+                    id="averageHumStatus"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+
+            <!-- LIGHT -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <div class="text-xs text-slate-400">
+                    แสง
+                </div>
+
+                <b
+                    id="averageLight"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    lux
+                </div>
+
+                <div
+                    id="averageLightStatus"
+                    class="text-xs text-cyan-300 mt-2 truncate"
+                >
+                    ● รอข้อมูล
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
         BAR 2
         SELECTED VARIABLE
         ===================================================== -->
 
-        <div class="soft rounded-2xl p-4 mt-4">
+    <div class="soft rounded-2xl p-4 mt-4">
 
+        <div class="flex items-center justify-between gap-3 mb-4">
 
-            <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
 
-                <div>
-
-                    <div class="text-sm font-bold">
-
-                        📈 ข้อมูลตามตัวแปรที่เลือก
-
-                    </div>
-
-                    <div class="text-xs text-slate-500 mt-1">
-
-                        ตัวแปร:
-
-                        <b
-                            id="selectedMetricLabel"
-                            class="text-cyan-300"
-                        >
-                            PM2.5
-                        </b>
-
-                    </div>
-
+                <div class="text-sm font-bold">
+                    📈 ข้อมูลตามตัวแปรที่เลือก
                 </div>
 
-            </div>
+                <div class="text-xs text-slate-500 mt-1">
 
-
-
-            <!-- =================================================
-            HORIZONTAL SELECTED METRIC BAR
-            ================================================= -->
-
-            <div
-                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
-            >
-
-
-                <!-- AVERAGE -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <span class="text-xs text-slate-400">
-                        ค่าเฉลี่ย
-                    </span>
+                    ตัวแปร:
 
                     <b
-                        id="trendAvg"
-                        class="block text-2xl mt-2"
+                        id="selectedMetricLabel"
+                        class="text-cyan-300"
                     >
-                        --
+                        PM2.5
                     </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        ตัวแปรที่เลือก
-                    </div>
-
-                </div>
-
-
-                <!-- MAX -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <span class="text-xs text-slate-400">
-                        ค่าสูงสุด
-                    </span>
-
-                    <b
-                        id="trendMax"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        ตัวแปรที่เลือก
-                    </div>
-
-                </div>
-
-
-                <!-- MIN -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <span class="text-xs text-slate-400">
-                        ค่าต่ำสุด
-                    </span>
-
-                    <b
-                        id="trendMin"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        ตัวแปรที่เลือก
-                    </div>
-
-                </div>
-
-
-                <!-- LAST -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <span class="text-xs text-slate-400">
-                        ค่าล่าสุด
-                    </span>
-
-                    <b
-                        id="trendLast"
-                        class="block text-2xl mt-2"
-                    >
-                        --
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        ตัวแปรที่เลือก
-                    </div>
-
-                </div>
-
-
-                <!-- TREND -->
-
-                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
-
-                    <span class="text-xs text-slate-400">
-                        Trend
-                    </span>
-
-                    <b
-                        id="trend"
-                        class="block text-2xl mt-2"
-                    >
-                        รอข้อมูล
-                    </b>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        แนวโน้ม
-                    </div>
 
                 </div>
 
             </div>
 
         </div>
+
+
+        <!-- =================================================
+            5 VALUES — HORIZONTAL
+            ================================================= -->
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+
+
+            <!-- AVERAGE -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <span class="text-xs text-slate-400">
+                    ค่าเฉลี่ย
+                </span>
+
+                <b
+                    id="trendAvg"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    ตัวแปรที่เลือก
+                </div>
+
+            </div>
+
+
+            <!-- MAX -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <span class="text-xs text-slate-400">
+                    ค่าสูงสุด
+                </span>
+
+                <b
+                    id="trendMax"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    ตัวแปรที่เลือก
+                </div>
+
+            </div>
+
+
+            <!-- MIN -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <span class="text-xs text-slate-400">
+                    ค่าต่ำสุด
+                </span>
+
+                <b
+                    id="trendMin"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    ตัวแปรที่เลือก
+                </div>
+
+            </div>
+
+
+            <!-- LAST -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <span class="text-xs text-slate-400">
+                    ค่าล่าสุด
+                </span>
+
+                <b
+                    id="trendLast"
+                    class="block text-2xl mt-2"
+                >
+                    --
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    ตัวแปรที่เลือก
+                </div>
+
+            </div>
+
+
+            <!-- TREND -->
+
+            <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
+
+                <span class="text-xs text-slate-400">
+                    Trend
+                </span>
+
+                <b
+                    id="trend"
+                    class="block text-2xl mt-2"
+                >
+                    รอข้อมูล
+                </b>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    แนวโน้ม
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
 
