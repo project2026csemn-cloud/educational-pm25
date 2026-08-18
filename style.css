@@ -330,21 +330,27 @@ canvas { max-height: 300px; }
     position: absolute;
     width: 260px;
     height: 260px;
+
     border-radius: 50%;
+
     pointer-events: none;
+
     filter: blur(70px);
+
     opacity: 0.10;
 }
 
 .credit-glow-1 {
     top: -170px;
     left: 5%;
+
     background: #06b6d4;
 }
 
 .credit-glow-2 {
     right: 5%;
     bottom: -190px;
+
     background: #0ea5e9;
 }
 
@@ -403,10 +409,6 @@ canvas { max-height: 300px; }
 .credit-icon {
     position: relative;
 
-    /*
-     * FIX:
-     * กำหนดขนาดกรอบตายตัวให้ทุกช่อง
-     */
     flex: 0 0 52px;
 
     width: 52px;
@@ -419,12 +421,13 @@ canvas { max-height: 300px; }
     max-height: 52px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     /*
      * สำคัญ:
-     * ทุกกรอบต้อง clip รูปให้อยู่ในกรอบ
+     * ตัดส่วนของรูปที่เกินกรอบ
      */
     overflow: hidden;
 
@@ -476,9 +479,6 @@ canvas { max-height: 300px; }
 
     padding: 4px;
 
-    /*
-     * ป้องกันรูปไปดันขนาดกรอบ
-     */
     box-sizing: border-box;
 
     transition:
@@ -494,55 +494,26 @@ canvas { max-height: 300px; }
     cursor: pointer;
 }
 
+
+/*
+ * เมื่อเอาเมาส์ชี้รูป
+ * ให้ขยายรูปเล็กน้อยเท่านั้น
+ *
+ * ไม่มีคำว่า "ดูรูป"
+ * มาทับรูปอีกแล้ว
+ */
+
 .credit-image-button:hover img {
     transform: scale(1.06);
 }
 
+
+/*
+ * ลบป้าย "ดูรูป" เดิมออก
+ */
+
 .credit-image-button::after {
-    content: "ดูรูป";
-
-    position: absolute;
-
-    right: -8px;
-    bottom: -8px;
-
-    z-index: 20;
-
-    padding: 3px 6px;
-
-    border:
-        1px solid rgba(34, 211, 238, 0.45);
-
-    border-radius: 6px;
-
-    background:
-        rgba(8, 47, 73, 0.98);
-
-    color: #67e8f9;
-
-    font-size: 7px;
-    font-weight: 700;
-    line-height: 1;
-
-    white-space: nowrap;
-
-    opacity: 0;
-
-    transform:
-        translateY(3px);
-
-    pointer-events: none;
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
-}
-
-.credit-image-button:hover::after {
-    opacity: 1;
-
-    transform:
-        translateY(0);
+    content: none;
 }
 
 
@@ -582,14 +553,6 @@ canvas { max-height: 300px; }
    DEVELOPER
    ===================================================== */
 
-/*
- * FIX:
- * เดิม developer ใช้ overflow: visible
- * ทำให้รูปที่ scale ใหญ่กว่ากรอบล้นออกมา
- *
- * ตอนนี้ใช้กรอบเดียวกับทุกช่อง
- */
-
 .credit-developer .credit-icon {
     overflow: hidden;
 
@@ -619,10 +582,6 @@ canvas { max-height: 300px; }
 
     border-radius: 13px;
 
-    /*
-     * ยังคงการ crop รูปคน
-     * แต่ไม่ทำให้กรอบขยาย
-     */
     transform: scale(1.12);
 
     box-sizing: border-box;
@@ -642,6 +601,7 @@ canvas { max-height: 300px; }
 
 .credit-content {
     min-width: 0;
+
     flex: 1;
 }
 
@@ -663,6 +623,7 @@ canvas { max-height: 300px; }
 .credit-title {
     font-size: 13px;
     font-weight: 700;
+
     line-height: 1.55;
 
     color: #e2e8f0;
@@ -1014,7 +975,6 @@ canvas { max-height: 300px; }
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     padding: 0;
@@ -1128,11 +1088,6 @@ canvas { max-height: 300px; }
     .credit-box:last-child {
         border-bottom: none;
     }
-
-    /*
-     * Mobile:
-     * ยังคงกรอบทุกอันเท่ากัน
-     */
 
     .credit-icon {
 
