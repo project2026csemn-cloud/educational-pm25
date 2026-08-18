@@ -1101,3 +1101,10 @@ canvas { max-height: 300px; }
     }
 
 }
+.credit-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+    border-radius: 12px;
+}
