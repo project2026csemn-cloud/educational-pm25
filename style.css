@@ -95,8 +95,26 @@ canvas { max-height: 300px; }
 .text-right { text-align: right; }
 .overflow-hidden { overflow: hidden; }
 
-.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* =========================================================
+   เพิ่มเฉพาะส่วนนี้
+   สำหรับ Historical Data & Trend
+   ========================================================= */
+
+.grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
 
 /* gaps */
 .gap-2 { gap: .5rem; }
@@ -209,6 +227,7 @@ canvas { max-height: 300px; }
 @media (max-width: 767px) {
     .text-right.hidden.md\:block { display: none; }
 }
+
 /* =========================
    Forecast Status Badge
    ========================= */
