@@ -699,8 +699,10 @@
         HEADER + CONTROLS
         ===================================================== -->
 
-        <div class="flex flex-col xl:flex-row justify-between gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
 
+
+            <!-- TITLE -->
 
             <div>
 
@@ -715,14 +717,19 @@
             </div>
 
 
-            <div class="flex flex-wrap gap-2 items-center">
+            <!-- =================================================
+            CONTROLS
+            อยู่มุมขวาบน
+            ================================================= -->
+
+            <div class="flex flex-wrap gap-2 items-center justify-end">
 
 
                 <!-- METRIC -->
 
                 <select
                     id="metric"
-                    class="rounded-xl px-3 py-2 text-sm"
+                    class="rounded-xl px-3 py-2 text-sm font-medium"
                 >
 
                     <option value="pm25">
@@ -756,7 +763,7 @@
 
                 <select
                     id="historyRange"
-                    class="rounded-xl px-3 py-2 text-sm"
+                    class="rounded-xl px-3 py-2 text-sm font-medium"
                 >
 
                     <option value="30m">
@@ -817,21 +824,27 @@
 
 
         <!-- =====================================================
-        COMBINED SUMMARY
+        BAR 1
+        OVERALL AVERAGE
         ===================================================== -->
 
         <div class="soft rounded-2xl p-4 mt-5">
 
 
-            <!-- AVERAGE HEADER -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
 
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                <div>
 
-                <div class="text-sm font-bold">
+                    <div class="text-sm font-bold">
+                        📊 ค่าเฉลี่ยรวม
+                    </div>
 
-                    📊 ค่าเฉลี่ยข้อมูล
+                    <div class="text-xs text-slate-500 mt-1">
+                        ค่าเฉลี่ยของทุกตัวแปรในช่วงเวลาที่เลือก
+                    </div>
 
                 </div>
+
 
                 <div class="text-xs text-slate-400">
 
@@ -851,21 +864,21 @@
 
 
             <!-- =================================================
-            ALL VARIABLE AVERAGES
+            HORIZONTAL AVERAGE BAR
             ================================================= -->
 
             <div
-                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3"
+                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
             >
 
 
                 <!-- PM1 -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         PM 1.0
-                    </span>
+                    </div>
 
                     <b
                         id="averagePM1"
@@ -880,7 +893,7 @@
 
                     <div
                         id="averagePM1Status"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
                     </div>
@@ -890,11 +903,11 @@
 
                 <!-- PM2.5 -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         PM 2.5
-                    </span>
+                    </div>
 
                     <b
                         id="averagePM25"
@@ -909,7 +922,7 @@
 
                     <div
                         id="averagePM25Status"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
                     </div>
@@ -919,11 +932,11 @@
 
                 <!-- PM10 -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         PM 10
-                    </span>
+                    </div>
 
                     <b
                         id="averagePM10"
@@ -938,7 +951,7 @@
 
                     <div
                         id="averagePM10Status"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
                     </div>
@@ -948,11 +961,11 @@
 
                 <!-- TEMP -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         อุณหภูมิ
-                    </span>
+                    </div>
 
                     <b
                         id="averageTemp"
@@ -967,7 +980,7 @@
 
                     <div
                         id="averageTempStatus"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
                     </div>
@@ -977,11 +990,11 @@
 
                 <!-- HUMIDITY -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         ความชื้น
-                    </span>
+                    </div>
 
                     <b
                         id="averageHum"
@@ -996,7 +1009,7 @@
 
                     <div
                         id="averageHumStatus"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
                     </div>
@@ -1006,11 +1019,11 @@
 
                 <!-- LIGHT -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
-                    <span class="text-xs text-slate-400">
+                    <div class="text-xs text-slate-400">
                         แสง
-                    </span>
+                    </div>
 
                     <b
                         id="averageLight"
@@ -1025,9 +1038,48 @@
 
                     <div
                         id="averageLightStatus"
-                        class="text-xs text-cyan-300 mt-2"
+                        class="text-xs text-cyan-300 mt-2 truncate"
                     >
                         ● รอข้อมูล
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+        BAR 2
+        SELECTED VARIABLE
+        ===================================================== -->
+
+        <div class="soft rounded-2xl p-4 mt-4">
+
+
+            <div class="flex items-center justify-between gap-3 mb-4">
+
+                <div>
+
+                    <div class="text-sm font-bold">
+
+                        📈 ข้อมูลตามตัวแปรที่เลือก
+
+                    </div>
+
+                    <div class="text-xs text-slate-500 mt-1">
+
+                        ตัวแปร:
+
+                        <b
+                            id="selectedMetricLabel"
+                            class="text-cyan-300"
+                        >
+                            PM2.5
+                        </b>
+
                     </div>
 
                 </div>
@@ -1037,17 +1089,17 @@
 
 
             <!-- =================================================
-            SELECTED METRIC STATISTICS
+            HORIZONTAL SELECTED METRIC BAR
             ================================================= -->
 
             <div
-                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4"
+                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
             >
 
 
                 <!-- AVERAGE -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
                     <span class="text-xs text-slate-400">
                         ค่าเฉลี่ย
@@ -1055,7 +1107,7 @@
 
                     <b
                         id="trendAvg"
-                        class="block text-xl mt-2"
+                        class="block text-2xl mt-2"
                     >
                         --
                     </b>
@@ -1069,7 +1121,7 @@
 
                 <!-- MAX -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
                     <span class="text-xs text-slate-400">
                         ค่าสูงสุด
@@ -1077,7 +1129,7 @@
 
                     <b
                         id="trendMax"
-                        class="block text-xl mt-2"
+                        class="block text-2xl mt-2"
                     >
                         --
                     </b>
@@ -1091,7 +1143,7 @@
 
                 <!-- MIN -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
                     <span class="text-xs text-slate-400">
                         ค่าต่ำสุด
@@ -1099,7 +1151,7 @@
 
                     <b
                         id="trendMin"
-                        class="block text-xl mt-2"
+                        class="block text-2xl mt-2"
                     >
                         --
                     </b>
@@ -1113,7 +1165,7 @@
 
                 <!-- LAST -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
                     <span class="text-xs text-slate-400">
                         ค่าล่าสุด
@@ -1121,7 +1173,7 @@
 
                     <b
                         id="trendLast"
-                        class="block text-xl mt-2"
+                        class="block text-2xl mt-2"
                     >
                         --
                     </b>
@@ -1135,7 +1187,7 @@
 
                 <!-- TREND -->
 
-                <div class="rounded-xl p-3 bg-slate-900/30">
+                <div class="rounded-xl p-4 bg-slate-900/30 min-w-0">
 
                     <span class="text-xs text-slate-400">
                         Trend
@@ -1143,7 +1195,7 @@
 
                     <b
                         id="trend"
-                        class="block text-xl mt-2"
+                        class="block text-2xl mt-2"
                     >
                         รอข้อมูล
                     </b>
@@ -1270,16 +1322,13 @@
         "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
 
 
-
     /* =========================================================
     CONFIG
     ========================================================= */
 
     const TOTAL_NODES = 3;
 
-
     const NODE_OFFLINE_AFTER_SECONDS = 30;
-
 
 
     /* =========================================================
@@ -1296,14 +1345,9 @@
 
     let metric = "pm25";
 
-    /*
-    ค่าเริ่มต้นเปลี่ยนจาก 6h -> 24h
-    */
-
     let averageRange = "24h";
 
     let apiConnectionOnline = false;
-
 
 
     /* =========================================================
@@ -1369,14 +1413,12 @@
     };
 
 
-
     /* =========================================================
     HELPER
     ========================================================= */
 
     const $ = id =>
         document.getElementById(id);
-
 
 
     /* =========================================================
@@ -1399,7 +1441,6 @@
         return Number(value).toFixed(1);
 
     }
-
 
 
     /* =========================================================
@@ -1431,14 +1472,6 @@
         }
 
 
-        /*
-        D1 CURRENT_TIMESTAMP
-
-        2026-08-18 00:39:13
-
-        ถือเป็น UTC
-        */
-
         if(
             /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
                 .test(text)
@@ -1456,10 +1489,6 @@
 
         }
 
-
-        /*
-        ISO
-        */
 
         if(
             /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
@@ -1489,7 +1518,6 @@
         return date;
 
     }
-
 
 
     /* =========================================================
@@ -1532,7 +1560,6 @@
     }
 
 
-
     /* =========================================================
     QUALITY
     ========================================================= */
@@ -1569,7 +1596,6 @@
         return "มีผลกระทบ";
 
     }
-
 
 
     /* =========================================================
@@ -1647,7 +1673,6 @@
     }
 
 
-
     /* =========================================================
     NODE ID NORMALIZER
     ========================================================= */
@@ -1681,7 +1706,6 @@
     }
 
 
-
     /* =========================================================
     IS SAME NODE
     ========================================================= */
@@ -1701,7 +1725,6 @@
             "node" + nodeNumber;
 
     }
-
 
 
     /* =========================================================
@@ -1743,7 +1766,6 @@
     }
 
 
-
     /* =========================================================
     NODE FRESH
     ========================================================= */
@@ -1761,7 +1783,6 @@
         );
 
     }
-
 
 
     /* =========================================================
@@ -1806,7 +1827,6 @@
         return "offline";
 
     }
-
 
 
     /* =========================================================
@@ -1880,7 +1900,6 @@
         return latest;
 
     }
-
 
 
     /* =========================================================
@@ -1963,7 +1982,6 @@
                 ) + " lux";
 
     }
-
 
 
     /* =========================================================
@@ -2079,7 +2097,6 @@
     }
 
 
-
     /* =========================================================
     COUNT ONLINE
     ========================================================= */
@@ -2102,7 +2119,6 @@
         ).length;
 
     }
-
 
 
     /* =========================================================
@@ -2225,7 +2241,6 @@
     }
 
 
-
     /* =========================================================
     HISTORY API RANGE
     ========================================================= */
@@ -2246,7 +2261,6 @@
         return config.apiRange;
 
     }
-
 
 
     /* =========================================================
@@ -2376,7 +2390,6 @@
     }
 
 
-
     /* =========================================================
     FORCE OFFLINE
     ========================================================= */
@@ -2456,7 +2469,6 @@
     }
 
 
-
     /* =========================================================
     GET SELECTED TIME WINDOW
     ========================================================= */
@@ -2491,7 +2503,6 @@
         };
 
     }
-
 
 
     /* =========================================================
@@ -2532,7 +2543,6 @@
         );
 
     }
-
 
 
     /* =========================================================
@@ -2577,7 +2587,6 @@
             values.length;
 
     }
-
 
 
     /* =========================================================
@@ -2650,7 +2659,6 @@
     }
 
 
-
     /* =========================================================
     AVERAGE STATUS TEXT
     ========================================================= */
@@ -2695,7 +2703,6 @@
             ].label;
 
     }
-
 
 
     /* =========================================================
@@ -2783,7 +2790,6 @@
     }
 
 
-
     /* =========================================================
     METRIC LABEL
     ========================================================= */
@@ -2820,6 +2826,25 @@
 
     }
 
+
+    /* =========================================================
+    UPDATE SELECTED METRIC LABEL
+    ========================================================= */
+
+    function updateSelectedMetricLabel(){
+
+        const element =
+            $("selectedMetricLabel");
+
+
+        if(element){
+
+            element.textContent =
+                metricLabel();
+
+        }
+
+    }
 
 
     /* =========================================================
@@ -2862,8 +2887,10 @@
                 ? "--"
                 : fmt(stats.last);
 
-    }
 
+        updateSelectedMetricLabel();
+
+    }
 
 
     /* =========================================================
@@ -2935,7 +2962,6 @@
             ).toFixed(1);
 
     }
-
 
 
     /* =========================================================
@@ -3299,7 +3325,6 @@
     }
 
 
-
     /* =========================================================
     FORECAST
     ========================================================= */
@@ -3338,7 +3363,6 @@
 
         const n =
             recent.length;
-
 
         let sumX = 0;
 
@@ -3633,7 +3657,6 @@
     }
 
 
-
     /* =========================================================
     EXPORT CSV
     ========================================================= */
@@ -3656,9 +3679,11 @@
                             b.timestamp
                         );
 
+
                     if(!da || !db){
                         return 0;
                     }
+
 
                     return (
                         da.getTime() -
@@ -3679,12 +3704,6 @@
 
         }
 
-
-        /*
-        ส่งออกข้อมูลทุกตัวแปร
-
-        ไม่ว่าจะเลือก Metric อะไร
-        */
 
         const headers = [
 
@@ -3767,10 +3786,6 @@
             }
         );
 
-
-        /*
-        BOM ทำให้ Excel อ่านภาษาไทยได้ถูกต้อง
-        */
 
         const csv =
             "\uFEFF" +
@@ -3860,7 +3875,6 @@
     }
 
 
-
     /* =========================================================
     EXPORT HELPERS
     ========================================================= */
@@ -3883,7 +3897,6 @@
             .toFixed(2);
 
     }
-
 
 
     function formatExportDate(value){
@@ -3935,7 +3948,6 @@
     }
 
 
-
     function csvEscape(value){
 
         const text =
@@ -3954,7 +3966,6 @@
     }
 
 
-
     /* =========================================================
     LOAD
     ========================================================= */
@@ -3967,10 +3978,6 @@
                 "กำลังโหลดข้อมูล...";
 
 
-            /*
-            LOAD LATEST
-            */
-
             const newLatest =
                 await loadLatest();
 
@@ -3978,13 +3985,6 @@
             apiConnectionOnline =
                 true;
 
-
-            /*
-            LOAD HISTORY
-
-            API จะเลือกช่วงขั้นต่ำให้เอง
-            ตาม RANGE_CONFIG
-            */
 
             const newHistory =
                 await loadHistory();
@@ -3997,10 +3997,6 @@
             records =
                 newHistory;
 
-
-            /*
-            เพิ่ม latest เข้า history
-            */
 
             if(
                 latestRecord &&
@@ -4022,10 +4018,6 @@
             }
 
 
-            /*
-            เฉพาะ timestamp ที่ถูกต้อง
-            */
-
             records =
                 records.filter(
                     record =>
@@ -4038,10 +4030,6 @@
 
                 );
 
-
-            /*
-            เรียงเก่า -> ใหม่
-            */
 
             records.sort(
                 (a,b) => {
@@ -4135,7 +4123,6 @@
     }
 
 
-
     /* =========================================================
     ESCAPE HTML
     ========================================================= */
@@ -4170,7 +4157,6 @@
             );
 
     }
-
 
 
     /* =========================================================
@@ -4235,10 +4221,6 @@
         );
 
 
-        /*
-        ONLINE COUNT
-        */
-
         const online =
             countOnlineNodes();
 
@@ -4248,11 +4230,6 @@
             " / " +
             TOTAL_NODES;
 
-
-
-        /*
-        LAST UPDATE
-        */
 
         $("lastUpdate1").textContent =
             n1
@@ -4277,11 +4254,6 @@
                 )
                 : "--";
 
-
-
-        /*
-        HERO
-        */
 
         $("heroPM1").textContent =
             fmt(
@@ -4325,11 +4297,6 @@
                 );
 
 
-
-        /*
-        QUALITY
-        */
-
         const pm25 =
             latestRecord.pm25;
 
@@ -4351,31 +4318,16 @@
         );
 
 
-
-        /*
-        ALERT
-        */
-
         updateAlerts(
             pm25
         );
 
-
-
-        /*
-        AI
-        */
 
         updateAI(
             latestRecord,
             q
         );
 
-
-
-        /*
-        AVERAGE
-        */
 
         renderAverages();
 
@@ -4386,15 +4338,9 @@
         updateTrendStatistics();
 
 
-
-        /*
-        CHART
-        */
-
         drawCharts();
 
     }
-
 
 
     /* =========================================================
@@ -4451,7 +4397,6 @@
         }
 
     }
-
 
 
     /* =========================================================
@@ -4533,7 +4478,6 @@
         }
 
     }
-
 
 
     /* =========================================================
@@ -4689,7 +4633,6 @@
     }
 
 
-
     /* =========================================================
     METRIC CHANGE
     ========================================================= */
@@ -4703,11 +4646,13 @@
                     e.target.value;
 
 
+                updateSelectedMetricLabel();
+
+
                 drawCharts();
 
             }
         );
-
 
 
     /* =========================================================
@@ -4723,15 +4668,10 @@
                     e.target.value;
 
 
-                /*
-                โหลดข้อมูลใหม่ตามช่วงที่ต้องใช้
-                */
-
                 await load();
 
             }
         );
-
 
 
     /* =========================================================
@@ -4743,7 +4683,6 @@
             "click",
             exportSelectedData
         );
-
 
 
     /* =========================================================
@@ -4782,13 +4721,11 @@
     );
 
 
-
     /* =========================================================
     INITIAL LOAD
     ========================================================= */
 
     load();
-
 
 
     /* =========================================================
@@ -4799,7 +4736,6 @@
         load,
         10000
     );
-
 
 
     /* =========================================================
