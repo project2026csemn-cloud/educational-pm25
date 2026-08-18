@@ -793,6 +793,20 @@
 
                 </select>
 
+
+                <!-- =================================================
+                EXPORT BUTTON
+                ================================================= -->
+
+                <button
+                    id="exportButton"
+                    type="button"
+                    class="rounded-xl px-4 py-2 text-sm font-bold export-button"
+                    title="ส่งออกข้อมูลทั้งหมดตามช่วงเวลาที่เลือก"
+                >
+                    📥 ส่งออกข้อมูล
+                </button>
+
             </div>
 
         </div>
@@ -3559,6 +3573,392 @@
 
 
     /* =========================================================
+    EXPORT CSV
+    ========================================================= */
+
+    function csvEscape(value){
+
+        if(
+            value === null ||
+            value === undefined
+        ){
+
+            return "";
+
+        }
+
+
+        const text =
+            String(value);
+
+
+        return '"' +
+            text.replaceAll(
+                '"',
+                '""'
+            ) +
+            '"';
+
+    }
+
+
+
+    /* =========================================================
+    EXPORT DATA
+    ========================================================= */
+
+    function exportData(){
+
+        /*
+        ใช้ข้อมูลตามช่วงเวลาที่ผู้ใช้เลือก
+        */
+
+        const data =
+            getRecordsInSelectedRange();
+
+
+        if(!data.length){
+
+            alert(
+                "ไม่มีข้อมูลในช่วงเวลาที่เลือก"
+            );
+
+            return;
+
+        }
+
+
+        /*
+        เรียงข้อมูลจากเก่า -> ใหม่
+        */
+
+        const exportRecords =
+            [...data].sort(
+                (a,b) => {
+
+                    const dateA =
+                        parseDate(
+                            a.timestamp
+                        );
+
+
+                    const dateB =
+                        parseDate(
+                            b.timestamp
+                        );
+
+
+                    if(!dateA || !dateB){
+                        return 0;
+                    }
+
+
+                    return (
+                        dateA.getTime() -
+                        dateB.getTime()
+                    );
+
+                }
+            );
+
+
+        /*
+        หัวตาราง
+
+        ส่งออกทุกตัวแปรเสมอ
+        ไม่ขึ้นกับ metric ที่เลือก
+        */
+
+        const headers = [
+
+            "วันที่/เวลา",
+
+            "อุปกรณ์",
+
+            "สถานะ",
+
+            "PM1.0 (µg/m³)",
+
+            "PM2.5 (µg/m³)",
+
+            "PM10 (µg/m³)",
+
+            "อุณหภูมิ (°C)",
+
+            "ความชื้น (%)",
+
+            "แสง (lux)"
+
+        ];
+
+
+        const rows = [
+            headers
+        ];
+
+
+        exportRecords.forEach(
+            record => {
+
+                const date =
+                    parseDate(
+                        record.timestamp
+                    );
+
+
+                /*
+                แสดงเวลาเป็นเวลาไทย
+                */
+
+                const thaiDateTime =
+                    date
+                        ? date.toLocaleString(
+                            "th-TH",
+                            {
+
+                                timeZone:
+                                    "Asia/Bangkok",
+
+                                year:
+                                    "numeric",
+
+                                month:
+                                    "2-digit",
+
+                                day:
+                                    "2-digit",
+
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit",
+
+                                second:
+                                    "2-digit",
+
+                                hour12:
+                                    false
+
+                            }
+                        )
+                        : "";
+
+
+                rows.push([
+
+                    thaiDateTime,
+
+                    record.device_id || "",
+
+                    record.status || "",
+
+                    record.pm1 == null
+                        ? ""
+                        : Number(
+                            record.pm1
+                        ).toFixed(1),
+
+                    record.pm25 == null
+                        ? ""
+                        : Number(
+                            record.pm25
+                        ).toFixed(1),
+
+                    record.pm10 == null
+                        ? ""
+                        : Number(
+                            record.pm10
+                        ).toFixed(1),
+
+                    record.temperature == null
+                        ? ""
+                        : Number(
+                            record.temperature
+                        ).toFixed(1),
+
+                    record.humidity == null
+                        ? ""
+                        : Number(
+                            record.humidity
+                        ).toFixed(1),
+
+                    record.light == null
+                        ? ""
+                        : Number(
+                            record.light
+                        ).toFixed(1)
+
+                ]);
+
+            }
+        );
+
+
+        /*
+        สร้าง CSV
+
+        ใช้ CRLF เพื่อให้ Excel
+        อ่านได้ถูกต้อง
+        */
+
+        const csv =
+            "\uFEFF" +
+
+            rows
+            .map(
+                row =>
+                    row
+                    .map(
+                        csvEscape
+                    )
+                    .join(",")
+            )
+            .join("\r\n");
+
+
+        /*
+        ตั้งชื่อไฟล์
+        */
+
+        const now =
+            new Date();
+
+
+        const datePart =
+            now.toLocaleDateString(
+                "sv-SE",
+                {
+                    timeZone:
+                        "Asia/Bangkok"
+                }
+            );
+
+
+        const timePart =
+            now.toLocaleTimeString(
+                "en-GB",
+                {
+
+                    timeZone:
+                        "Asia/Bangkok",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit",
+
+                    second:
+                        "2-digit"
+
+                }
+            )
+            .replaceAll(
+                ":",
+                "-"
+            );
+
+
+        const rangeLabel =
+            RANGE_CONFIG[
+                averageRange
+            ]
+            ?.label
+            .replaceAll(
+                " ",
+                ""
+            )
+            .replaceAll(
+                " ",
+                ""
+            ) ||
+            averageRange;
+
+
+        const fileName =
+            "PM25_Historical_" +
+            rangeLabel +
+            "_" +
+            datePart +
+            "_" +
+            timePart +
+            ".csv";
+
+
+        /*
+        สร้างไฟล์
+        */
+
+        const blob =
+            new Blob(
+                [csv],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+
+        /*
+        ดาวน์โหลด
+        */
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            fileName;
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        document.body.removeChild(
+            link
+        );
+
+
+        URL.revokeObjectURL(
+            url
+        );
+
+
+        /*
+        แจ้งจำนวนข้อมูล
+        */
+
+        console.log(
+            "Export completed:",
+            exportRecords.length,
+            "records",
+            "range:",
+            averageRange
+        );
+
+    }
+
+
+
+    /* =========================================================
     LOAD
     ========================================================= */
 
@@ -3584,9 +3984,6 @@
 
             /*
             LOAD HISTORY
-
-            API จะเลือกช่วงขั้นต่ำให้เอง
-            ตาม RANGE_CONFIG
             */
 
             const newHistory =
@@ -4333,6 +4730,18 @@
                 await load();
 
             }
+        );
+
+
+
+    /* =========================================================
+    EXPORT BUTTON EVENT
+    ========================================================= */
+
+    $("exportButton")
+        .addEventListener(
+            "click",
+            exportData
         );
 
 
