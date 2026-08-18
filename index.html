@@ -125,7 +125,7 @@
                             </span>
 
                             <span id="onlineCountTop">
-                                0/3
+                                0 / 3
                             </span>
 
                             Nodes
@@ -585,265 +585,6 @@
 
 
     <!-- =========================================================
-    AVERAGE DATA
-    ========================================================= -->
-
-    <section class="glass card p-5 mb-4">
-
-        <div class="flex flex-col lg:flex-row justify-between gap-4">
-
-            <div>
-
-                <h2 class="text-xl font-black">
-                    📊 ค่าเฉลี่ยข้อมูล
-                </h2>
-
-                <p class="text-xs text-slate-400 mt-1">
-                    เลือกช่วงเวลาสำหรับคำนวณค่าเฉลี่ย
-                </p>
-
-            </div>
-
-
-            <div>
-
-                <select
-                    id="averageRange"
-                    class="rounded-xl px-4 py-2 text-sm"
-                >
-
-                    <option value="30m">
-                        30 นาที
-                    </option>
-
-                    <option value="1h">
-                        1 ชั่วโมง
-                    </option>
-
-                    <option value="3h">
-                        3 ชั่วโมง
-                    </option>
-
-                    <option value="6h" selected>
-                        6 ชั่วโมง
-                    </option>
-
-                    <option value="12h">
-                        12 ชั่วโมง
-                    </option>
-
-                    <option value="24h">
-                        24 ชั่วโมง
-                    </option>
-
-                    <option value="3d">
-                        3 วัน
-                    </option>
-
-                    <option value="7d">
-                        7 วัน
-                    </option>
-
-                    <option value="30d">
-                        30 วัน
-                    </option>
-
-                </select>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mt-5">
-
-
-            <!-- PM1 -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    PM 1.0
-                </span>
-
-                <b
-                    id="avgPM1"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-
-                <div
-                    id="avgPM1Label"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-
-
-            <!-- PM2.5 -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    PM 2.5
-                </span>
-
-                <b
-                    id="avgPM25"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-
-                <div
-                    id="avgPM25Label"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-
-
-            <!-- PM10 -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    PM 10
-                </span>
-
-                <b
-                    id="avgPM10"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-
-                <div
-                    id="avgPM10Label"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-
-
-            <!-- Temperature -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    อุณหภูมิ
-                </span>
-
-                <b
-                    id="avgTemp"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    °C
-                </div>
-
-                <div
-                    id="avgTempLabel"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-
-
-            <!-- Humidity -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    ความชื้น
-                </span>
-
-                <b
-                    id="avgHum"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    %
-                </div>
-
-                <div
-                    id="avgHumLabel"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-
-
-            <!-- Light -->
-
-            <div class="soft rounded-xl p-4">
-
-                <span class="text-xs text-slate-400">
-                    แสง
-                </span>
-
-                <b
-                    id="avgLight"
-                    class="block text-2xl mt-2"
-                >
-                    --
-                </b>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    lux
-                </div>
-
-                <div
-                    id="avgLightLabel"
-                    class="text-xs text-cyan-400 mt-3"
-                >
-                    ● เฉลี่ย 6 ชม.
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================================
     QUALITY + ALERT
     ========================================================= -->
 
@@ -948,7 +689,7 @@
 
 
     <!-- =========================================================
-    HISTORICAL TREND
+    HISTORICAL DATA & TREND
     ========================================================= -->
 
     <section class="glass card p-5 mb-4">
@@ -960,11 +701,11 @@
             <div>
 
                 <h2 class="text-2xl font-black">
-                    📈 Historical Trend
+                    📈 Historical Data & Trend
                 </h2>
 
                 <p class="text-xs text-slate-400 mt-1">
-                    ดูแนวโน้มย้อนหลังของข้อมูลทุกตัวแปร
+                    วิเคราะห์ข้อมูลย้อนหลัง ค่าเฉลี่ย และแนวโน้มในช่วงเวลาที่เลือก
                 </p>
 
             </div>
@@ -972,6 +713,8 @@
 
             <div class="flex flex-wrap gap-2">
 
+
+                <!-- METRIC -->
 
                 <select
                     id="metric"
@@ -1005,36 +748,50 @@
                 </select>
 
 
-                <button
-                    class="range active rounded-xl px-3 py-2 text-xs"
-                    data-range="24h"
+                <!-- RANGE -->
+
+                <select
+                    id="historyRange"
+                    class="rounded-xl px-3 py-2 text-sm"
                 >
-                    24 ชม.
-                </button>
 
+                    <option value="30m">
+                        30 นาที
+                    </option>
 
-                <button
-                    class="range rounded-xl px-3 py-2 text-xs"
-                    data-range="7d"
-                >
-                    7 วัน
-                </button>
+                    <option value="1h">
+                        1 ชั่วโมง
+                    </option>
 
+                    <option value="3h">
+                        3 ชั่วโมง
+                    </option>
 
-                <button
-                    class="range rounded-xl px-3 py-2 text-xs"
-                    data-range="30d"
-                >
-                    30 วัน
-                </button>
+                    <option value="6h" selected>
+                        6 ชั่วโมง
+                    </option>
 
+                    <option value="12h">
+                        12 ชั่วโมง
+                    </option>
 
-                <button
-                    class="range rounded-xl px-3 py-2 text-xs"
-                    data-range=""
-                >
-                    ส่งออก
-                </button>
+                    <option value="24h">
+                        24 ชั่วโมง
+                    </option>
+
+                    <option value="3d">
+                        3 วัน
+                    </option>
+
+                    <option value="7d">
+                        7 วัน
+                    </option>
+
+                    <option value="30d">
+                        30 วัน
+                    </option>
+
+                </select>
 
             </div>
 
@@ -1042,20 +799,218 @@
 
 
 
-        <div class="grid md:grid-cols-3 gap-3 my-4">
+        <!-- =====================================================
+        AVERAGE SUMMARY
+        ===================================================== -->
 
+        <div class="mt-5">
 
-            <div class="soft rounded-xl p-4">
+            <div class="text-sm text-slate-400 mb-3">
 
-                <span class="text-xs text-slate-400">
-                    Trend
+                📊 ค่าเฉลี่ยข้อมูล
+
+                <span class="text-slate-500">
+                    —
+                    ช่วงเวลาที่เลือก:
                 </span>
 
-                <b id="trend" class="block text-xl mt-1">
-                    รอข้อมูล
+                <b
+                    id="selectedRangeLabel"
+                    class="text-cyan-300"
+                >
+                    6 ชั่วโมง
                 </b>
 
             </div>
+
+
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+
+
+                <!-- PM1 -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        PM 1.0
+                    </span>
+
+                    <b
+                        id="averagePM1"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
+                    </div>
+
+                    <div
+                        id="averagePM1Status"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- PM2.5 -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        PM 2.5
+                    </span>
+
+                    <b
+                        id="averagePM25"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
+                    </div>
+
+                    <div
+                        id="averagePM25Status"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- PM10 -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        PM 10
+                    </span>
+
+                    <b
+                        id="averagePM10"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        µg/m³
+                    </div>
+
+                    <div
+                        id="averagePM10Status"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- TEMP -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        อุณหภูมิ
+                    </span>
+
+                    <b
+                        id="averageTemp"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        °C
+                    </div>
+
+                    <div
+                        id="averageTempStatus"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- HUMIDITY -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        ความชื้น
+                    </span>
+
+                    <b
+                        id="averageHum"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        %
+                    </div>
+
+                    <div
+                        id="averageHumStatus"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+
+                <!-- LIGHT -->
+
+                <div class="soft rounded-xl p-4">
+
+                    <span class="text-xs text-slate-400">
+                        แสง
+                    </span>
+
+                    <b
+                        id="averageLight"
+                        class="block text-2xl mt-2"
+                    >
+                        --
+                    </b>
+
+                    <div class="text-xs text-slate-500 mt-1">
+                        lux
+                    </div>
+
+                    <div
+                        id="averageLightStatus"
+                        class="text-xs text-cyan-300 mt-3"
+                    >
+                        ● รอข้อมูล
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+        SELECTED METRIC STATISTICS
+        ===================================================== -->
+
+        <div class="grid md:grid-cols-4 gap-3 my-5">
 
 
             <div class="soft rounded-xl p-4">
@@ -1064,7 +1019,42 @@
                     ค่าเฉลี่ย
                 </span>
 
-                <b id="trendAvg" class="block text-xl mt-1">
+                <b
+                    id="trendAvg"
+                    class="block text-xl mt-1"
+                >
+                    --
+                </b>
+
+            </div>
+
+
+            <div class="soft rounded-xl p-4">
+
+                <span class="text-xs text-slate-400">
+                    ค่าสูงสุด
+                </span>
+
+                <b
+                    id="trendMax"
+                    class="block text-xl mt-1"
+                >
+                    --
+                </b>
+
+            </div>
+
+
+            <div class="soft rounded-xl p-4">
+
+                <span class="text-xs text-slate-400">
+                    ค่าต่ำสุด
+                </span>
+
+                <b
+                    id="trendMin"
+                    class="block text-xl mt-1"
+                >
                     --
                 </b>
 
@@ -1077,7 +1067,10 @@
                     ค่าล่าสุด
                 </span>
 
-                <b id="trendLast" class="block text-xl mt-1">
+                <b
+                    id="trendLast"
+                    class="block text-xl mt-1"
+                >
                     --
                 </b>
 
@@ -1085,6 +1078,28 @@
 
         </div>
 
+
+
+        <!-- TREND -->
+
+        <div class="soft rounded-xl p-4 mb-4">
+
+            <span class="text-xs text-slate-400">
+                Trend
+            </span>
+
+            <b
+                id="trend"
+                class="block text-xl mt-1"
+            >
+                รอข้อมูล
+            </b>
+
+        </div>
+
+
+
+        <!-- CHART -->
 
         <canvas id="historyChart"></canvas>
 
@@ -1184,15 +1199,16 @@
         "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
 
 
+
     /* =========================================================
     CONFIG
     ========================================================= */
 
     const TOTAL_NODES = 3;
 
+
     const NODE_OFFLINE_AFTER_SECONDS = 30;
 
-    let apiConnectionOnline = false;
 
 
     /* =========================================================
@@ -1207,22 +1223,76 @@
 
     let forecastChart = null;
 
-    let currentRange = "24h";
-
     let metric = "pm25";
 
-    let lastSuccessfulLoad = null;
-
-
-    /*
-    =========================================================
-    AVERAGE RANGE
-
-    ค่าเริ่มต้น 6 ชั่วโมง
-    =========================================================
-    */
-
     let averageRange = "6h";
+
+    let apiConnectionOnline = false;
+
+
+
+    /* =========================================================
+    RANGE CONFIG
+    ========================================================= */
+
+    const RANGE_CONFIG = {
+
+        "30m": {
+            label: "30 นาที",
+            minutes: 30,
+            apiRange: "24h"
+        },
+
+        "1h": {
+            label: "1 ชั่วโมง",
+            minutes: 60,
+            apiRange: "24h"
+        },
+
+        "3h": {
+            label: "3 ชั่วโมง",
+            minutes: 180,
+            apiRange: "24h"
+        },
+
+        "6h": {
+            label: "6 ชั่วโมง",
+            minutes: 360,
+            apiRange: "24h"
+        },
+
+        "12h": {
+            label: "12 ชั่วโมง",
+            minutes: 720,
+            apiRange: "24h"
+        },
+
+        "24h": {
+            label: "24 ชั่วโมง",
+            minutes: 1440,
+            apiRange: "24h"
+        },
+
+        "3d": {
+            label: "3 วัน",
+            minutes: 4320,
+            apiRange: "7d"
+        },
+
+        "7d": {
+            label: "7 วัน",
+            minutes: 10080,
+            apiRange: "7d"
+        },
+
+        "30d": {
+            label: "30 วัน",
+            minutes: 43200,
+            apiRange: "30d"
+        }
+
+    };
+
 
 
     /* =========================================================
@@ -1231,6 +1301,7 @@
 
     const $ = id =>
         document.getElementById(id);
+
 
 
     /* =========================================================
@@ -1255,6 +1326,7 @@
     }
 
 
+
     /* =========================================================
     PARSE DATE
     ========================================================= */
@@ -1265,6 +1337,7 @@
             return null;
         }
 
+
         if(value instanceof Date){
 
             return isNaN(value.getTime())
@@ -1273,12 +1346,23 @@
 
         }
 
+
         let text =
             String(value).trim();
+
 
         if(!text){
             return null;
         }
+
+
+        /*
+        D1 CURRENT_TIMESTAMP
+
+        2026-08-18 00:39:13
+
+        ถือเป็น UTC
+        */
 
         if(
             /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
@@ -1290,11 +1374,17 @@
                     text.replace(" ","T") + "Z"
                 );
 
+
             return isNaN(date.getTime())
                 ? null
                 : date;
 
         }
+
+
+        /*
+        ISO
+        */
 
         if(
             /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
@@ -1304,69 +1394,27 @@
             const date =
                 new Date(text + "Z");
 
+
             return isNaN(date.getTime())
                 ? null
                 : date;
 
         }
 
+
         const date =
             new Date(text);
+
 
         if(isNaN(date.getTime())){
             return null;
         }
 
+
         return date;
 
     }
 
-
-    /* =========================================================
-    THAI DATE
-    ========================================================= */
-
-    function formatThaiDate(value){
-
-        const date =
-            parseDate(value);
-
-        if(!date){
-            return "-";
-        }
-
-        return date.toLocaleString(
-            "th-TH",
-            {
-
-                timeZone:
-                    "Asia/Bangkok",
-
-                year:
-                    "numeric",
-
-                month:
-                    "2-digit",
-
-                day:
-                    "2-digit",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit",
-
-                hour12:
-                    false
-
-            }
-        );
-
-    }
 
 
     /* =========================================================
@@ -1378,9 +1426,11 @@
         const date =
             parseDate(value);
 
+
         if(!date){
             return "--";
         }
+
 
         return date.toLocaleTimeString(
             "th-TH",
@@ -1407,6 +1457,7 @@
     }
 
 
+
     /* =========================================================
     QUALITY
     ========================================================= */
@@ -1423,21 +1474,27 @@
 
         }
 
+
         value =
             Number(value);
+
 
         if(value <= 15)
             return "ดี";
 
+
         if(value <= 25)
             return "ปานกลาง";
+
 
         if(value <= 37.5)
             return "เริ่มมีผลกระทบ";
 
+
         return "มีผลกระทบ";
 
     }
+
 
 
     /* =========================================================
@@ -1449,6 +1506,7 @@
         if(!d){
             return null;
         }
+
 
         return {
 
@@ -1514,6 +1572,7 @@
     }
 
 
+
     /* =========================================================
     NODE ID NORMALIZER
     ========================================================= */
@@ -1524,13 +1583,16 @@
             return "";
         }
 
+
         const text =
             String(value)
             .trim()
             .toLowerCase();
 
+
         const match =
             text.match(/(\d+)/);
+
 
         if(match){
 
@@ -1538,9 +1600,11 @@
 
         }
 
+
         return text;
 
     }
+
 
 
     /* =========================================================
@@ -1557,14 +1621,16 @@
                 deviceId
             );
 
+
         return normalized ===
             "node" + nodeNumber;
 
     }
 
 
+
     /* =========================================================
-    NODE DATA AGE
+    NODE AGE
     ========================================================= */
 
     function getNodeAgeSeconds(node){
@@ -1573,14 +1639,17 @@
             return Infinity;
         }
 
+
         const date =
             parseDate(
                 node.timestamp
             );
 
+
         if(!date){
             return Infinity;
         }
+
 
         const age =
             (
@@ -1588,17 +1657,20 @@
                 date.getTime()
             ) / 1000;
 
+
         if(age < 0){
             return 0;
         }
+
 
         return age;
 
     }
 
 
+
     /* =========================================================
-    IS NODE FRESH
+    NODE FRESH
     ========================================================= */
 
     function isNodeFresh(node){
@@ -1607,17 +1679,18 @@
             return false;
         }
 
-        const age =
-            getNodeAgeSeconds(node);
 
-        return age <=
-            NODE_OFFLINE_AFTER_SECONDS;
+        return (
+            getNodeAgeSeconds(node) <=
+            NODE_OFFLINE_AFTER_SECONDS
+        );
 
     }
 
 
+
     /* =========================================================
-    GET NODE STATUS
+    NODE STATUS
     ========================================================= */
 
     function getNodeStatus(node){
@@ -1626,13 +1699,16 @@
             return "offline";
         }
 
+
         if(!node){
             return "offline";
         }
 
+
         if(!isNodeFresh(node)){
             return "offline";
         }
+
 
         const status =
             String(
@@ -1641,17 +1717,21 @@
             .trim()
             .toLowerCase();
 
+
         if(status === "online"){
             return "online";
         }
+
 
         if(status === "sleep"){
             return "sleep";
         }
 
+
         return "offline";
 
     }
+
 
 
     /* =========================================================
@@ -1671,43 +1751,61 @@
                     )
             );
 
+
         if(!list.length){
             return null;
         }
 
-        list.sort(
-            (a,b) => {
 
-                const da =
-                    parseDate(
-                        a.timestamp
-                    );
+        let latest = null;
 
-                const db =
-                    parseDate(
-                        b.timestamp
-                    );
 
-                if(!da && !db)
-                    return 0;
+        for(const record of list){
 
-                if(!da)
-                    return 1;
+            if(!record.timestamp){
+                continue;
+            }
 
-                if(!db)
-                    return -1;
 
-                return (
-                    db.getTime() -
-                    da.getTime()
-                );
+            if(!latest){
+
+                latest = record;
+
+                continue;
 
             }
-        );
 
-        return list[0];
+
+            const currentDate =
+                parseDate(
+                    record.timestamp
+                );
+
+
+            const latestDate =
+                parseDate(
+                    latest.timestamp
+                );
+
+
+            if(
+                currentDate &&
+                latestDate &&
+                currentDate.getTime() >
+                latestDate.getTime()
+            ){
+
+                latest = record;
+
+            }
+
+        }
+
+
+        return latest;
 
     }
+
 
 
     /* =========================================================
@@ -1728,6 +1826,7 @@
             "light"
         ];
 
+
         if(!data){
 
             fields.forEach(
@@ -1735,6 +1834,7 @@
 
                     const element =
                         $(prefix + field);
+
 
                     if(element){
 
@@ -1746,18 +1846,23 @@
                 }
             );
 
+
             return;
 
         }
 
+
         $(prefix+"pm1").textContent =
             fmt(data.pm1);
+
 
         $(prefix+"pm25").textContent =
             fmt(data.pm25);
 
+
         $(prefix+"pm10").textContent =
             fmt(data.pm10);
+
 
         $(prefix+"temp").textContent =
             data.temperature == null
@@ -1766,12 +1871,14 @@
                     data.temperature
                 ) + "°C";
 
+
         $(prefix+"hum").textContent =
             data.humidity == null
                 ? "--"
                 : fmt(
                     data.humidity
                 ) + "%";
+
 
         $(prefix+"light").textContent =
             data.light == null
@@ -1781,6 +1888,7 @@
                 ) + " lux";
 
     }
+
 
 
     /* =========================================================
@@ -1796,15 +1904,19 @@
         const statusElement =
             $(statusId);
 
+
         const cardElement =
             $(cardId);
+
 
         if(!statusElement || !cardElement){
             return;
         }
 
+
         const nodeStatus =
             getNodeStatus(node);
+
 
         if(nodeStatus === "online"){
 
@@ -1822,14 +1934,17 @@
 
             `;
 
+
             statusElement.className =
                 "status-online text-xs font-bold";
+
 
             cardElement
                 .classList
                 .remove("offline");
 
         }
+
 
         else if(nodeStatus === "sleep"){
 
@@ -1847,14 +1962,17 @@
 
             `;
 
+
             statusElement.className =
                 "status-sleep text-xs font-bold";
+
 
             cardElement
                 .classList
                 .remove("offline");
 
         }
+
 
         else{
 
@@ -1872,8 +1990,10 @@
 
             `;
 
+
             statusElement.className =
                 "status-offline text-xs font-bold";
+
 
             cardElement
                 .classList
@@ -1882,6 +2002,7 @@
         }
 
     }
+
 
 
     /* =========================================================
@@ -1898,6 +2019,7 @@
 
         ];
 
+
         return nodes.filter(
             node =>
                 getNodeStatus(node) ===
@@ -1907,8 +2029,9 @@
     }
 
 
+
     /* =========================================================
-    GET LATEST API
+    LOAD LATEST API
     ========================================================= */
 
     async function loadLatest(){
@@ -1939,6 +2062,7 @@
 
             );
 
+
         if(!response.ok){
 
             throw new Error(
@@ -1948,10 +2072,13 @@
 
         }
 
+
         const text =
             await response.text();
 
+
         let json;
+
 
         try{
 
@@ -1967,11 +2094,13 @@
                 text
             );
 
+
             throw new Error(
                 "get_latest.php ไม่ได้ส่ง JSON"
             );
 
         }
+
 
         if(
             !json ||
@@ -1984,6 +2113,7 @@
             );
 
         }
+
 
         if(
             json.data &&
@@ -1998,6 +2128,7 @@
 
         }
 
+
         if(
             Array.isArray(
                 json.data
@@ -2011,6 +2142,7 @@
 
         }
 
+
         throw new Error(
             "get_latest.php ไม่มีข้อมูล"
         );
@@ -2018,21 +2150,50 @@
     }
 
 
+
     /* =========================================================
-    HISTORY API
+    HISTORY API RANGE
+    ========================================================= */
+
+    function getApiRange(){
+
+        const config =
+            RANGE_CONFIG[
+                averageRange
+            ];
+
+
+        if(!config){
+            return "24h";
+        }
+
+
+        return config.apiRange;
+
+    }
+
+
+
+    /* =========================================================
+    LOAD HISTORY
     ========================================================= */
 
     async function loadHistory(){
+
+        const apiRange =
+            getApiRange();
+
 
         const url =
             HISTORY_API +
             "?range=" +
             encodeURIComponent(
-                currentRange
+                apiRange
             ) +
             "&limit=5000" +
             "&t=" +
             Date.now();
+
 
         const response =
             await fetch(
@@ -2058,6 +2219,7 @@
 
             );
 
+
         if(!response.ok){
 
             throw new Error(
@@ -2067,10 +2229,13 @@
 
         }
 
+
         const text =
             await response.text();
 
+
         let json;
+
 
         try{
 
@@ -2086,11 +2251,13 @@
                 text
             );
 
+
             throw new Error(
                 "get_history.php ไม่ได้ส่ง JSON"
             );
 
         }
+
 
         if(!json.success){
 
@@ -2100,6 +2267,7 @@
             );
 
         }
+
 
         if(
             !Array.isArray(
@@ -2113,12 +2281,18 @@
 
         }
 
+
         console.log(
             "History rows:",
             json.data.length,
             "API count:",
-            json.count
+            json.count,
+            "API range:",
+            apiRange,
+            "Selected range:",
+            averageRange
         );
+
 
         return json.data
             .map(normalize)
@@ -2127,48 +2301,43 @@
     }
 
 
+
     /* =========================================================
-    FORCE ALL NODES OFFLINE
+    FORCE OFFLINE
     ========================================================= */
 
     function forceAllNodesOffline(){
 
-        const nodeConfigs = [
+        const configs = [
 
             {
-                status:
-                    "n1status",
-
-                card:
-                    "nodeCard1"
+                status: "n1status",
+                card: "nodeCard1"
             },
 
             {
-                status:
-                    "n2status",
-
-                card:
-                    "nodeCard2"
+                status: "n2status",
+                card: "nodeCard2"
             },
 
             {
-                status:
-                    "n3status",
-
-                card:
-                    "nodeCard3"
+                status: "n3status",
+                card: "nodeCard3"
             }
 
         ];
 
-        nodeConfigs.forEach(
+
+        configs.forEach(
             config => {
 
                 const statusElement =
                     $(config.status);
 
+
                 const cardElement =
                     $(config.card);
+
 
                 if(statusElement){
 
@@ -2186,10 +2355,12 @@
 
                     `;
 
+
                     statusElement.className =
                         "status-offline text-xs font-bold";
 
                 }
+
 
                 if(cardElement){
 
@@ -2202,6 +2373,7 @@
             }
         );
 
+
         $("onlineCountTop").textContent =
             "0 / " +
             TOTAL_NODES;
@@ -2209,1052 +2381,332 @@
     }
 
 
-    /* =========================================================
-    AVERAGE RANGE TO MILLISECONDS
-    ========================================================= */
-
-    function getAverageRangeMs(){
-
-        const map = {
-
-            "30m":
-                30 * 60 * 1000,
-
-            "1h":
-                60 * 60 * 1000,
-
-            "3h":
-                3 * 60 * 60 * 1000,
-
-            "6h":
-                6 * 60 * 60 * 1000,
-
-            "12h":
-                12 * 60 * 60 * 1000,
-
-            "24h":
-                24 * 60 * 60 * 1000,
-
-            "3d":
-                3 * 24 * 60 * 60 * 1000,
-
-            "7d":
-                7 * 24 * 60 * 60 * 1000,
-
-            "30d":
-                30 * 24 * 60 * 60 * 1000
-
-        };
-
-        return map[averageRange] ||
-            map["6h"];
-
-    }
-
 
     /* =========================================================
-    AVERAGE RANGE LABEL
+    GET SELECTED TIME WINDOW
     ========================================================= */
 
-    function getAverageRangeLabel(){
+    function getSelectedTimeWindow(){
 
-        const map = {
-
-            "30m":
-                "30 นาที",
-
-            "1h":
-                "1 ชม.",
-
-            "3h":
-                "3 ชม.",
-
-            "6h":
-                "6 ชม.",
-
-            "12h":
-                "12 ชม.",
-
-            "24h":
-                "24 ชม.",
-
-            "3d":
-                "3 วัน",
-
-            "7d":
-                "7 วัน",
-
-            "30d":
-                "30 วัน"
-
-        };
-
-        return map[averageRange] ||
-            "6 ชม.";
-
-    }
+        const config =
+            RANGE_CONFIG[
+                averageRange
+            ];
 
 
-    /* =========================================================
-    CALCULATE AVERAGE
-
-    คำนวณจากข้อมูลจริงใน records
-
-    ========================================================= */
-
-    function calculateAverage(field){
-
-        if(!records.length){
+        if(!config){
             return null;
         }
 
-        const now =
-            Date.now();
 
-        const startTime =
-            now -
-            getAverageRangeMs();
+        const end =
+            new Date();
 
-        const values =
-            records
 
-            .filter(record => {
+        const start =
+            new Date(
+                end.getTime() -
+                config.minutes * 60 * 1000
+            );
 
-                if(!record){
-                    return false;
-                }
+
+        return {
+            start,
+            end
+        };
+
+    }
+
+
+
+    /* =========================================================
+    GET DATA IN SELECTED RANGE
+    ========================================================= */
+
+    function getRecordsInSelectedRange(){
+
+        const window =
+            getSelectedTimeWindow();
+
+
+        if(!window){
+            return [];
+        }
+
+
+        return records.filter(
+            record => {
 
                 const date =
                     parseDate(
                         record.timestamp
                     );
 
+
                 if(!date){
                     return false;
                 }
 
-                const time =
-                    date.getTime();
 
-                if(
-                    time < startTime ||
-                    time > now
-                ){
-                    return false;
-                }
-
-                const value =
-                    Number(
-                        record[field]
-                    );
-
-                return Number.isFinite(
-                    value
+                return (
+                    date >= window.start &&
+                    date <= window.end
                 );
 
-            })
+            }
+        );
+
+    }
+
+
+
+    /* =========================================================
+    CALCULATE AVERAGE
+    ========================================================= */
+
+    function calculateAverage(
+        data,
+        field
+    ){
+
+        const values =
+            data
 
             .map(
                 record =>
-                    Number(
-                        record[field]
-                    )
+                    record[field]
+            )
+
+            .filter(
+                value =>
+                    value !== null &&
+                    value !== undefined &&
+                    !isNaN(value)
             );
+
 
         if(!values.length){
             return null;
         }
 
-        const sum =
+
+        const total =
             values.reduce(
-                (total,value) =>
-                    total + value,
+                (sum,value) =>
+                    sum + Number(value),
                 0
             );
 
-        return sum /
+
+        return total /
             values.length;
 
     }
 
 
-    /* =========================================================
-    UPDATE AVERAGE METRICS
-
-    ========================================================= */
-
-    function updateAverageMetrics(){
-
-        const label =
-            "● เฉลี่ย " +
-            getAverageRangeLabel();
-
-        const avgPM1 =
-            calculateAverage(
-                "pm1"
-            );
-
-        const avgPM25 =
-            calculateAverage(
-                "pm25"
-            );
-
-        const avgPM10 =
-            calculateAverage(
-                "pm10"
-            );
-
-        const avgTemp =
-            calculateAverage(
-                "temperature"
-            );
-
-        const avgHum =
-            calculateAverage(
-                "humidity"
-            );
-
-        const avgLight =
-            calculateAverage(
-                "light"
-            );
-
-
-        /*
-        PM1
-        */
-
-        $("avgPM1").textContent =
-            avgPM1 == null
-                ? "--"
-                : avgPM1.toFixed(1);
-
-        $("avgPM1Label").textContent =
-            label;
-
-
-        /*
-        PM2.5
-        */
-
-        $("avgPM25").textContent =
-            avgPM25 == null
-                ? "--"
-                : avgPM25.toFixed(1);
-
-        $("avgPM25Label").textContent =
-            label;
-
-
-        /*
-        PM10
-        */
-
-        $("avgPM10").textContent =
-            avgPM10 == null
-                ? "--"
-                : avgPM10.toFixed(1);
-
-        $("avgPM10Label").textContent =
-            label;
-
-
-        /*
-        Temperature
-        */
-
-        $("avgTemp").textContent =
-            avgTemp == null
-                ? "--"
-                : avgTemp.toFixed(1);
-
-        $("avgTempLabel").textContent =
-            label;
-
-
-        /*
-        Humidity
-        */
-
-        $("avgHum").textContent =
-            avgHum == null
-                ? "--"
-                : avgHum.toFixed(1);
-
-        $("avgHumLabel").textContent =
-            label;
-
-
-        /*
-        Light
-        */
-
-        $("avgLight").textContent =
-            avgLight == null
-                ? "--"
-                : avgLight.toFixed(1);
-
-        $("avgLightLabel").textContent =
-            label;
-
-
-        /*
-        DEBUG
-
-        เปิด Console จะเห็นว่ามีข้อมูล
-        ในช่วงเวลาที่เลือกกี่แถว
-        */
-
-        console.log(
-            "Average:",
-            getAverageRangeLabel(),
-            {
-                PM1: avgPM1,
-                PM25: avgPM25,
-                PM10: avgPM10,
-                Temperature: avgTemp,
-                Humidity: avgHum,
-                Light: avgLight
-            }
-        );
-
-    }
-
 
     /* =========================================================
-    LOAD
+    CALCULATE STATISTICS
     ========================================================= */
 
-    async function load(){
-
-        try{
-
-            $("aiSummary").textContent =
-                "กำลังโหลดข้อมูล...";
-
-
-            const newLatest =
-                await loadLatest();
-
-
-            apiConnectionOnline = true;
-
-
-            const newHistory =
-                await loadHistory();
-
-
-            latestRecord =
-                newLatest;
-
-
-            records =
-                newHistory;
-
-
-            if(
-                latestRecord &&
-                !records.some(
-                    record =>
-
-                        record.id != null &&
-                        latestRecord.id != null &&
-                        record.id ===
-                        latestRecord.id
-
-                )
-            ){
-
-                records.push(
-                    latestRecord
-                );
-
-            }
-
-
-            records =
-                records.filter(
-                    record =>
-
-                        record &&
-                        record.timestamp &&
-                        parseDate(
-                            record.timestamp
-                        )
-
-                );
-
-
-            records.sort(
-                (a,b) => {
-
-                    return (
-
-                        parseDate(
-                            a.timestamp
-                        ).getTime()
-
-                        -
-
-                        parseDate(
-                            b.timestamp
-                        ).getTime()
-
-                    );
-
-                }
-            );
-
-
-            lastSuccessfulLoad =
-                new Date();
-
-
-            render();
-
-        }
-
-
-        catch(error){
-
-            console.error(
-                "Dashboard ERROR:",
-                error
-            );
-
-
-            apiConnectionOnline = false;
-
-
-            forceAllNodesOffline();
-
-
-            $("aiSummary").innerHTML =
-
-                `
-                <span class="text-red-400 font-bold">
-                    ⚠ ระบบออฟไลน์
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ข้อมูลได้
-                </span>
-
-                <br>
-
-                <span class="text-slate-500">
-                    ${escapeHtml(error.message)}
-                </span>
-                `;
-
-
-            $("aiDetails").innerHTML =
-
-                `
-                <span class="text-red-400 font-bold">
-                    ⚠ ระบบออฟไลน์
-                </span>
-
-                <br><br>
-
-                <span class="text-slate-400">
-                    Dashboard ไม่ได้รับข้อมูลใหม่
-                    จากระบบแม่
-                </span>
-
-                <br><br>
-
-                <span class="text-slate-500">
-                    ระบบจะลองเชื่อมต่อใหม่อัตโนมัติ
-                </span>
-                `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-    ESCAPE HTML
-    ========================================================= */
-
-    function escapeHtml(value){
-
-        return String(value)
-
-            .replaceAll(
-                "&",
-                "&amp;"
-            )
-
-            .replaceAll(
-                "<",
-                "&lt;"
-            )
-
-            .replaceAll(
-                ">",
-                "&gt;"
-            )
-
-            .replaceAll(
-                '"',
-                "&quot;"
-            )
-
-            .replaceAll(
-                "'",
-                "&#039;"
-            );
-
-    }
-
-
-    /* =========================================================
-    RENDER
-    ========================================================= */
-
-    function render(){
-
-        if(!latestRecord){
-            return;
-        }
-
-
-        const n1 =
-            getLatestNode(1);
-
-        const n2 =
-            getLatestNode(2);
-
-        const n3 =
-            getLatestNode(3);
-
-
-        setNode(
-            "n1",
-            n1
-        );
-
-        setNode(
-            "n2",
-            n2
-        );
-
-        setNode(
-            "n3",
-            n3
-        );
-
-
-        updateNodeStatus(
-            "n1status",
-            "nodeCard1",
-            n1
-        );
-
-        updateNodeStatus(
-            "n2status",
-            "nodeCard2",
-            n2
-        );
-
-        updateNodeStatus(
-            "n3status",
-            "nodeCard3",
-            n3
-        );
-
-
-        const online =
-            countOnlineNodes();
-
-
-        $("onlineCountTop").textContent =
-            online +
-            " / " +
-            TOTAL_NODES;
-
-
-        const lastUpdate1 =
-            $("lastUpdate1");
-
-        if(lastUpdate1){
-
-            lastUpdate1.textContent =
-                n1
-                    ? formatThaiTime(
-                        n1.timestamp
-                    )
-                    : "--";
-
-        }
-
-
-        const lastUpdate2 =
-            $("lastUpdate2");
-
-        if(lastUpdate2){
-
-            lastUpdate2.textContent =
-                n2
-                    ? formatThaiTime(
-                        n2.timestamp
-                    )
-                    : "--";
-
-        }
-
-
-        const lastUpdate3 =
-            $("lastUpdate3");
-
-        if(lastUpdate3){
-
-            lastUpdate3.textContent =
-                n3
-                    ? formatThaiTime(
-                        n3.timestamp
-                    )
-                    : "--";
-
-        }
-
-
-        /*
-        HERO
-        */
-
-        $("heroPM1").textContent =
-            fmt(
-                latestRecord.pm1
-            );
-
-        $("heroPM25").textContent =
-            fmt(
-                latestRecord.pm25
-            );
-
-        $("heroPM10").textContent =
-            fmt(
-                latestRecord.pm10
-            );
-
-        $("heroTemp").textContent =
-            latestRecord.temperature == null
-                ? "--"
-                : fmt(
-                    latestRecord.temperature
-                );
-
-        $("heroHum").textContent =
-            latestRecord.humidity == null
-                ? "--"
-                : fmt(
-                    latestRecord.humidity
-                );
-
-        $("heroLight").textContent =
-            latestRecord.light == null
-                ? "--"
-                : fmt(
-                    latestRecord.light
-                );
-
-
-        /*
-        QUALITY
-        */
-
-        const pm25 =
-            latestRecord.pm25;
-
-        const q =
-            quality(pm25);
-
-        $("qualityBadge").textContent =
-            q;
-
-        $("overallStatus").textContent =
-            q;
-
-        updateOverallDot(
-            pm25
-        );
-
-
-        /*
-        ALERT
-        */
-
-        updateAlerts(
-            pm25
-        );
-
-
-        /*
-        AI
-        */
-
-        updateAI(
-            latestRecord,
-            q
-        );
-
-
-        /*
-        STATISTICS
-        */
-
-        updateStatistics();
-
-
-        /*
-        AVERAGE
-
-        สำคัญ:
-        เรียกตรงนี้หลัง records ถูกโหลดแล้ว
-        */
-
-        updateAverageMetrics();
-
-
-        /*
-        CHART
-        */
-
-        drawCharts();
-
-    }
-
-
-    /* =========================================================
-    OVERALL DOT
-    ========================================================= */
-
-    function updateOverallDot(
-        pm25
+    function calculateStatistics(
+        data,
+        field
     ){
-
-        const dot =
-            $("overallDot");
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-slate-500";
-
-            return;
-
-        }
-
-        if(pm25 <= 15){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-emerald-400";
-
-        }
-
-        else if(pm25 <= 25){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-lime-400";
-
-        }
-
-        else if(pm25 <= 37.5){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-amber-400";
-
-        }
-
-        else{
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-red-500";
-
-        }
-
-    }
-
-
-    /* =========================================================
-    ALERTS
-    ========================================================= */
-
-    function updateAlerts(
-        pm25
-    ){
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            $("alerts").innerHTML =
-                `
-                <span class="text-slate-400">
-                    ยังไม่มีข้อมูล PM2.5
-                </span>
-                `;
-
-            return;
-
-        }
-
-        if(pm25 > 37.5){
-
-            $("alerts").innerHTML =
-                `
-                <span class="text-red-400 font-bold">
-                    ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรเฝ้าระวังและติดตามสถานการณ์
-                </span>
-                `;
-
-        }
-
-        else if(pm25 > 25){
-
-            $("alerts").innerHTML =
-                `
-                <span class="text-amber-400 font-bold">
-                    ⚠ PM2.5 เริ่มสูง
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรติดตามแนวโน้มอย่างต่อเนื่อง
-                </span>
-                `;
-
-        }
-
-        else{
-
-            $("alerts").innerHTML =
-                `
-                <span class="text-emerald-400 font-bold">
-                    ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
-                </span>
-                `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-    AI
-    ========================================================= */
-
-    function updateAI(
-        latest,
-        q
-    ){
-
-        const pm25 =
-            latest.pm25;
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            $("aiSummary").textContent =
-                "กำลังรอข้อมูลจากอุปกรณ์...";
-
-            $("aiDetails").textContent =
-                "ยังไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์";
-
-            return;
-
-        }
-
-        let recommendation;
-
-        if(pm25 <= 15){
-
-            recommendation =
-                "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
-
-        }
-
-        else if(pm25 <= 25){
-
-            recommendation =
-                "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
-
-        }
-
-        else if(pm25 <= 37.5){
-
-            recommendation =
-                "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
-
-        }
-
-        else{
-
-            recommendation =
-                "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
-
-        }
-
-
-        $("aiSummary").innerHTML =
-
-            `
-            <b class="text-cyan-300">
-                PM2.5 ${fmt(pm25)} µg/m³
-            </b>
-
-            <br>
-
-            สถานะ:
-
-            <b>
-                ${q}
-            </b>
-
-            <br>
-
-            ${recommendation}
-            `;
-
-
-        $("aiDetails").innerHTML =
-
-            `
-            <b class="text-white">
-                🤖 วิเคราะห์สถานการณ์
-            </b>
-
-            <br>
-
-            PM2.5 ล่าสุด:
-
-            <b class="text-cyan-300">
-                ${fmt(pm25)} µg/m³
-            </b>
-
-            <br>
-
-            อุณหภูมิ:
-
-            <b>
-                ${fmt(latest.temperature)} °C
-            </b>
-
-            <br>
-
-            ความชื้น:
-
-            <b>
-                ${fmt(latest.humidity)} %
-            </b>
-
-            <br>
-
-            แสง:
-
-            <b>
-                ${
-                    latest.light == null
-                        ? "--"
-                        : fmt(latest.light) +
-                        " lux"
-                }
-            </b>
-
-            <br><br>
-
-            <b class="text-white">
-                คำแนะนำ
-            </b>
-
-            <br>
-
-            ${recommendation}
-
-            <br><br>
-
-            <span class="text-xs text-slate-500">
-                * การวิเคราะห์นี้เป็นกฎพื้นฐานของระบบ
-                ยังไม่ใช่ AI/ML Model จริง
-            </span>
-            `;
-
-    }
-
-
-    /* =========================================================
-    STATISTICS
-    ========================================================= */
-
-    function updateStatistics(){
 
         const values =
-            records
+            data
+
             .map(
-                x =>
-                    x.pm25
+                record =>
+                    record[field]
             )
+
             .filter(
-                x =>
-                    x != null &&
-                    !isNaN(x)
+                value =>
+                    value !== null &&
+                    value !== undefined &&
+                    !isNaN(value)
+            )
+            .map(
+                Number
             );
+
 
         if(!values.length){
 
-            $("avgPM").textContent =
-                "--";
-
-            $("maxPM").textContent =
-                "--";
-
-            $("minPM").textContent =
-                "--";
-
-            return;
+            return {
+                average: null,
+                max: null,
+                min: null,
+                last: null
+            };
 
         }
 
-        const avg =
-            values.reduce(
-                (a,b) =>
-                    a + b,
-                0
-            ) /
-            values.length;
 
-        $("avgPM").textContent =
-            avg.toFixed(1);
+        return {
 
-        $("maxPM").textContent =
-            Math.max(
-                ...values
-            ).toFixed(1);
+            average:
+                values.reduce(
+                    (a,b) =>
+                        a + b,
+                    0
+                ) /
+                values.length,
 
-        $("minPM").textContent =
-            Math.min(
-                ...values
-            ).toFixed(1);
+            max:
+                Math.max(
+                    ...values
+                ),
+
+            min:
+                Math.min(
+                    ...values
+                ),
+
+            last:
+                values[
+                    values.length - 1
+                ]
+
+        };
 
     }
+
+
+
+    /* =========================================================
+    AVERAGE STATUS TEXT
+    ========================================================= */
+
+    function averageStatus(
+        value,
+        field
+    ){
+
+        if(
+            value === null ||
+            value === undefined ||
+            isNaN(value)
+        ){
+
+            return "● ไม่มีข้อมูล";
+
+        }
+
+
+        if(
+            field === "pm25"
+        ){
+
+            const q =
+                quality(value);
+
+
+            return "● เฉลี่ย " +
+                RANGE_CONFIG[
+                    averageRange
+                ].label +
+                " • " +
+                q;
+
+        }
+
+
+        return "● เฉลี่ย " +
+            RANGE_CONFIG[
+                averageRange
+            ].label;
+
+    }
+
+
+
+    /* =========================================================
+    RENDER AVERAGES
+    ========================================================= */
+
+    function renderAverages(){
+
+        const data =
+            getRecordsInSelectedRange();
+
+
+        $("selectedRangeLabel").textContent =
+            RANGE_CONFIG[
+                averageRange
+            ].label;
+
+
+        const configs = [
+
+            {
+                field: "pm1",
+                value: "averagePM1",
+                status: "averagePM1Status"
+            },
+
+            {
+                field: "pm25",
+                value: "averagePM25",
+                status: "averagePM25Status"
+            },
+
+            {
+                field: "pm10",
+                value: "averagePM10",
+                status: "averagePM10Status"
+            },
+
+            {
+                field: "temperature",
+                value: "averageTemp",
+                status: "averageTempStatus"
+            },
+
+            {
+                field: "humidity",
+                value: "averageHum",
+                status: "averageHumStatus"
+            },
+
+            {
+                field: "light",
+                value: "averageLight",
+                status: "averageLightStatus"
+            }
+
+        ];
+
+
+        configs.forEach(
+            config => {
+
+                const average =
+                    calculateAverage(
+                        data,
+                        config.field
+                    );
+
+
+                $(config.value).textContent =
+                    average === null
+                        ? "--"
+                        : fmt(average);
+
+
+                $(config.status).textContent =
+                    averageStatus(
+                        average,
+                        config.field
+                    );
+
+            }
+        );
+
+    }
+
 
 
     /* =========================================================
@@ -3285,6 +2737,7 @@
 
         };
 
+
         return (
             map[metric] ||
             metric
@@ -3293,14 +2746,132 @@
     }
 
 
+
     /* =========================================================
-    DRAW CHART
+    UPDATE SELECTED STATISTICS
+    ========================================================= */
+
+    function updateTrendStatistics(){
+
+        const data =
+            getRecordsInSelectedRange();
+
+
+        const stats =
+            calculateStatistics(
+                data,
+                metric
+            );
+
+
+        $("trendAvg").textContent =
+            stats.average === null
+                ? "--"
+                : fmt(stats.average);
+
+
+        $("trendMax").textContent =
+            stats.max === null
+                ? "--"
+                : fmt(stats.max);
+
+
+        $("trendMin").textContent =
+            stats.min === null
+                ? "--"
+                : fmt(stats.min);
+
+
+        $("trendLast").textContent =
+            stats.last === null
+                ? "--"
+                : fmt(stats.last);
+
+    }
+
+
+
+    /* =========================================================
+    UPDATE OLD QUALITY STATISTICS
+    ========================================================= */
+
+    function updateStatistics(){
+
+        const data =
+            getRecordsInSelectedRange();
+
+
+        const values =
+            data
+
+            .map(
+                x =>
+                    x.pm25
+            )
+
+            .filter(
+                x =>
+                    x != null &&
+                    !isNaN(x)
+            );
+
+
+        if(!values.length){
+
+            $("avgPM").textContent =
+                "--";
+
+
+            $("maxPM").textContent =
+                "--";
+
+
+            $("minPM").textContent =
+                "--";
+
+
+            return;
+
+        }
+
+
+        const avg =
+            values.reduce(
+                (a,b) =>
+                    a + b,
+                0
+            ) /
+            values.length;
+
+
+        $("avgPM").textContent =
+            avg.toFixed(1);
+
+
+        $("maxPM").textContent =
+            Math.max(
+                ...values
+            ).toFixed(1);
+
+
+        $("minPM").textContent =
+            Math.min(
+                ...values
+            ).toFixed(1);
+
+    }
+
+
+
+    /* =========================================================
+    DRAW CHARTS
     ========================================================= */
 
     function drawCharts(){
 
         const arr =
-            records
+            getRecordsInSelectedRange()
+
             .filter(
                 x =>
                     x &&
@@ -3311,6 +2882,7 @@
                         )
                     )
             )
+
             .sort(
                 (a,b) =>
                     parseDate(
@@ -3325,16 +2897,14 @@
             );
 
 
+        updateTrendStatistics();
+
+
         if(!arr.length){
 
             $("trend").textContent =
-                "ไม่มีข้อมูล";
+                "ไม่มีข้อมูลในช่วงเวลาที่เลือก";
 
-            $("trendAvg").textContent =
-                "--";
-
-            $("trendLast").textContent =
-                "--";
 
             if(historyChart){
 
@@ -3344,6 +2914,7 @@
 
             }
 
+
             if(forecastChart){
 
                 forecastChart.destroy();
@@ -3351,6 +2922,15 @@
                 forecastChart = null;
 
             }
+
+
+            $("forecastMessage").textContent =
+                "ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
+
+
+            $("forecastBadge").textContent =
+                "WAITING";
+
 
             return;
 
@@ -3366,8 +2946,8 @@
                             x.timestamp
                         );
 
-                    return d
 
+                    return d
                         ? d.toLocaleString(
                             "th-TH",
                             {
@@ -3405,29 +2985,14 @@
             );
 
 
-        const avg =
-            values.reduce(
-                (a,b) =>
-                    a + b,
-                0
-            ) /
-            values.length;
-
-
         const first =
             values[0];
+
 
         const last =
             values[
                 values.length - 1
             ];
-
-
-        $("trendAvg").textContent =
-            avg.toFixed(1);
-
-        $("trendLast").textContent =
-            fmt(last);
 
 
         if(values.length < 2){
@@ -3441,6 +3006,7 @@
 
             const difference =
                 last - first;
+
 
             const percentage =
                 first === 0
@@ -3484,6 +3050,11 @@
         }
 
 
+
+        /* =====================================================
+        HISTORY CHART
+        ===================================================== */
+
         if(historyChart){
 
             historyChart.destroy();
@@ -3499,36 +3070,45 @@
                     type:
                         "line",
 
+
                     data:{
 
                         labels:
                             labels,
+
 
                         datasets:[{
 
                             label:
                                 metricLabel(),
 
+
                             data:
                                 values,
+
 
                             borderColor:
                                 "#22d3ee",
 
+
                             backgroundColor:
                                 "rgba(34,211,238,.08)",
+
 
                             fill:
                                 true,
 
+
                             tension:
                                 .35,
+
 
                             pointRadius:
 
                                 values.length > 50
                                     ? 0
                                     : 3,
+
 
                             borderWidth:
                                 2
@@ -3537,23 +3117,28 @@
 
                     },
 
+
                     options:{
 
                         responsive:
                             true,
 
+
                         maintainAspectRatio:
                             true,
+
 
                         interaction:{
 
                             intersect:
                                 false,
 
+
                             mode:
                                 "index"
 
                         },
+
 
                         plugins:{
 
@@ -3563,6 +3148,7 @@
                                     false
 
                             },
+
 
                             tooltip:{
 
@@ -3584,12 +3170,14 @@
 
                         },
 
+
                         scales:{
 
                             y:{
 
                                 beginAtZero:
                                     false,
+
 
                                 grid:{
 
@@ -3600,6 +3188,7 @@
 
                             },
 
+
                             x:{
 
                                 grid:{
@@ -3608,6 +3197,7 @@
                                         false
 
                                 },
+
 
                                 ticks:{
 
@@ -3631,6 +3221,7 @@
         );
 
     }
+
 
 
     /* =========================================================
@@ -3659,8 +3250,10 @@
             $("forecastMessage").textContent =
                 "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีข้อมูลย้อนหลังเพิ่มเติม";
 
+
             $("forecastBadge").textContent =
                 "WAITING";
+
 
             return;
 
@@ -3669,6 +3262,7 @@
 
         const n =
             recent.length;
+
 
         let sumX = 0;
 
@@ -3688,17 +3282,22 @@
             const x =
                 i;
 
+
             const y =
                 recent[i];
+
 
             sumX +=
                 x;
 
+
             sumY +=
                 y;
 
+
             sumXY +=
                 x * y;
+
 
             sumXX +=
                 x * x;
@@ -3717,6 +3316,7 @@
                 ? 0
 
                 :
+
                 (
                     n * sumXY -
                     sumX * sumY
@@ -3743,6 +3343,7 @@
 
             const x =
                 n - 1 + i;
+
 
             forecast.push(
 
@@ -3809,6 +3410,7 @@
         $("forecastMessage").innerHTML =
 
             `
+
             แนวโน้มปัจจุบัน:
 
             <b class="text-cyan-300">
@@ -3841,6 +3443,7 @@
                 * เป็นการคาดการณ์จาก Linear Trend
                 ไม่ใช่ AI/ML Model จริง
             </span>
+
             `;
 
 
@@ -3856,33 +3459,42 @@
                     type:
                         "line",
 
+
                     data:{
 
                         labels:
                             labels,
+
 
                         datasets:[{
 
                             label:
                                 "Forecast",
 
+
                             data:
                                 forecast,
+
 
                             borderColor:
                                 "#34d399",
 
+
                             backgroundColor:
                                 "rgba(52,211,153,.08)",
+
 
                             borderDash:
                                 [6,5],
 
+
                             fill:
                                 true,
 
+
                             tension:
                                 .3,
+
 
                             pointRadius:
                                 4
@@ -3891,10 +3503,12 @@
 
                     },
 
+
                     options:{
 
                         responsive:
                             true,
+
 
                         plugins:{
 
@@ -3906,6 +3520,7 @@
                             }
 
                         },
+
 
                         scales:{
 
@@ -3919,6 +3534,7 @@
                                 }
 
                             },
+
 
                             x:{
 
@@ -3941,89 +3557,744 @@
     }
 
 
+
     /* =========================================================
-    RANGE BUTTONS
+    LOAD
     ========================================================= */
 
-    document
-        .querySelectorAll(
-            ".range"
-        )
-        .forEach(
-            button => {
+    async function load(){
 
-                button.addEventListener(
-                    "click",
-                    async () => {
+        try{
 
-                        if(
-                            button.dataset.range === ""
-                        ){
-
-                            return;
-
-                        }
+            $("aiSummary").textContent =
+                "กำลังโหลดข้อมูล...";
 
 
-                        document
-                            .querySelectorAll(
-                                ".range"
-                            )
-                            .forEach(
-                                x =>
-                                    x.classList
-                                        .remove(
-                                            "active"
-                                        )
-                            );
+            /*
+            LOAD LATEST
+            */
+
+            const newLatest =
+                await loadLatest();
 
 
-                        button
-                            .classList
-                            .add(
-                                "active"
-                            );
+            apiConnectionOnline =
+                true;
 
 
-                        currentRange =
-                            button.dataset.range;
+            /*
+            LOAD HISTORY
+
+            API จะเลือกช่วงขั้นต่ำให้เอง
+            ตาม RANGE_CONFIG
+            */
+
+            const newHistory =
+                await loadHistory();
 
 
-                        await load();
+            latestRecord =
+                newLatest;
 
-                    }
+
+            records =
+                newHistory;
+
+
+            /*
+            เพิ่ม latest เข้า history
+            */
+
+            if(
+                latestRecord &&
+                !records.some(
+                    record =>
+
+                        record.id != null &&
+                        latestRecord.id != null &&
+                        record.id ===
+                        latestRecord.id
+
+                )
+            ){
+
+                records.push(
+                    latestRecord
                 );
 
             }
-        );
+
+
+            /*
+            เฉพาะ timestamp ที่ถูกต้อง
+            */
+
+            records =
+                records.filter(
+                    record =>
+
+                        record &&
+                        record.timestamp &&
+                        parseDate(
+                            record.timestamp
+                        )
+
+                );
+
+
+            /*
+            เรียงเก่า -> ใหม่
+            */
+
+            records.sort(
+                (a,b) => {
+
+                    return (
+
+                        parseDate(
+                            a.timestamp
+                        ).getTime()
+
+                        -
+
+                        parseDate(
+                            b.timestamp
+                        ).getTime()
+
+                    );
+
+                }
+            );
+
+
+            render();
+
+        }
+
+
+        catch(error){
+
+            console.error(
+                "Dashboard ERROR:",
+                error
+            );
+
+
+            apiConnectionOnline =
+                false;
+
+
+            forceAllNodesOffline();
+
+
+            $("aiSummary").innerHTML =
+
+                `
+
+                <span class="text-red-400 font-bold">
+                    ⚠ ระบบออฟไลน์
+                </span>
+
+                <br>
+
+                <span class="text-slate-400">
+                    ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ข้อมูลได้
+                </span>
+
+                <br>
+
+                <span class="text-slate-500">
+                    ${escapeHtml(error.message)}
+                </span>
+
+                `;
+
+
+            $("aiDetails").innerHTML =
+
+                `
+
+                <span class="text-red-400 font-bold">
+                    ⚠ ระบบออฟไลน์
+                </span>
+
+                <br><br>
+
+                <span class="text-slate-400">
+                    Dashboard ไม่ได้รับข้อมูลใหม่
+                    จากระบบแม่
+                </span>
+
+                <br><br>
+
+                <span class="text-slate-500">
+                    ระบบจะลองเชื่อมต่อใหม่อัตโนมัติ
+                </span>
+
+                `;
+
+        }
+
+    }
+
 
 
     /* =========================================================
-    AVERAGE RANGE SELECTOR
-
+    ESCAPE HTML
     ========================================================= */
 
-    $("averageRange")
-        .addEventListener(
-            "change",
-            e => {
+    function escapeHtml(value){
 
-                averageRange =
-                    e.target.value;
+        return String(value)
 
-                /*
-                คำนวณใหม่ทันที
-                ไม่ต้องโหลด API ใหม่
-                */
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
 
-                updateAverageMetrics();
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
 
-            }
-        );
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    }
+
 
 
     /* =========================================================
-    METRIC
+    RENDER
+    ========================================================= */
+
+    function render(){
+
+        if(!latestRecord){
+            return;
+        }
+
+
+        const n1 =
+            getLatestNode(1);
+
+
+        const n2 =
+            getLatestNode(2);
+
+
+        const n3 =
+            getLatestNode(3);
+
+
+        setNode(
+            "n1",
+            n1
+        );
+
+
+        setNode(
+            "n2",
+            n2
+        );
+
+
+        setNode(
+            "n3",
+            n3
+        );
+
+
+        updateNodeStatus(
+            "n1status",
+            "nodeCard1",
+            n1
+        );
+
+
+        updateNodeStatus(
+            "n2status",
+            "nodeCard2",
+            n2
+        );
+
+
+        updateNodeStatus(
+            "n3status",
+            "nodeCard3",
+            n3
+        );
+
+
+        /*
+        ONLINE COUNT
+        */
+
+        const online =
+            countOnlineNodes();
+
+
+        $("onlineCountTop").textContent =
+            online +
+            " / " +
+            TOTAL_NODES;
+
+
+
+        /*
+        LAST UPDATE
+        */
+
+        $("lastUpdate1").textContent =
+            n1
+                ? formatThaiTime(
+                    n1.timestamp
+                )
+                : "--";
+
+
+        $("lastUpdate2").textContent =
+            n2
+                ? formatThaiTime(
+                    n2.timestamp
+                )
+                : "--";
+
+
+        $("lastUpdate3").textContent =
+            n3
+                ? formatThaiTime(
+                    n3.timestamp
+                )
+                : "--";
+
+
+
+        /*
+        HERO
+        */
+
+        $("heroPM1").textContent =
+            fmt(
+                latestRecord.pm1
+            );
+
+
+        $("heroPM25").textContent =
+            fmt(
+                latestRecord.pm25
+            );
+
+
+        $("heroPM10").textContent =
+            fmt(
+                latestRecord.pm10
+            );
+
+
+        $("heroTemp").textContent =
+            latestRecord.temperature == null
+                ? "--"
+                : fmt(
+                    latestRecord.temperature
+                );
+
+
+        $("heroHum").textContent =
+            latestRecord.humidity == null
+                ? "--"
+                : fmt(
+                    latestRecord.humidity
+                );
+
+
+        $("heroLight").textContent =
+            latestRecord.light == null
+                ? "--"
+                : fmt(
+                    latestRecord.light
+                );
+
+
+
+        /*
+        QUALITY
+        */
+
+        const pm25 =
+            latestRecord.pm25;
+
+
+        const q =
+            quality(pm25);
+
+
+        $("qualityBadge").textContent =
+            q;
+
+
+        $("overallStatus").textContent =
+            q;
+
+
+        updateOverallDot(
+            pm25
+        );
+
+
+
+        /*
+        ALERT
+        */
+
+        updateAlerts(
+            pm25
+        );
+
+
+
+        /*
+        AI
+        */
+
+        updateAI(
+            latestRecord,
+            q
+        );
+
+
+
+        /*
+        AVERAGE
+        */
+
+        renderAverages();
+
+
+        updateStatistics();
+
+
+        updateTrendStatistics();
+
+
+
+        /*
+        CHART
+        */
+
+        drawCharts();
+
+    }
+
+
+
+    /* =========================================================
+    OVERALL DOT
+    ========================================================= */
+
+    function updateOverallDot(
+        pm25
+    ){
+
+        const dot =
+            $("overallDot");
+
+
+        if(
+            pm25 == null ||
+            isNaN(pm25)
+        ){
+
+            dot.className =
+                "w-2.5 h-2.5 rounded-full bg-slate-500";
+
+            return;
+
+        }
+
+
+        if(pm25 <= 15){
+
+            dot.className =
+                "w-2.5 h-2.5 rounded-full bg-emerald-400";
+
+        }
+
+        else if(pm25 <= 25){
+
+            dot.className =
+                "w-2.5 h-2.5 rounded-full bg-lime-400";
+
+        }
+
+        else if(pm25 <= 37.5){
+
+            dot.className =
+                "w-2.5 h-2.5 rounded-full bg-amber-400";
+
+        }
+
+        else{
+
+            dot.className =
+                "w-2.5 h-2.5 rounded-full bg-red-500";
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+    ALERTS
+    ========================================================= */
+
+    function updateAlerts(
+        pm25
+    ){
+
+        if(
+            pm25 == null ||
+            isNaN(pm25)
+        ){
+
+            $("alerts").innerHTML =
+                `
+
+                <span class="text-slate-400">
+                    ยังไม่มีข้อมูล PM2.5
+                </span>
+
+                `;
+
+            return;
+
+        }
+
+
+        if(pm25 > 37.5){
+
+            $("alerts").innerHTML =
+                `
+
+                <span class="text-red-400 font-bold">
+                    ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
+                </span>
+
+                <br>
+
+                <span class="text-slate-400">
+                    ควรเฝ้าระวังและติดตามสถานการณ์
+                </span>
+
+                `;
+
+        }
+
+        else if(pm25 > 25){
+
+            $("alerts").innerHTML =
+                `
+
+                <span class="text-amber-400 font-bold">
+                    ⚠ PM2.5 เริ่มสูง
+                </span>
+
+                <br>
+
+                <span class="text-slate-400">
+                    ควรติดตามแนวโน้มอย่างต่อเนื่อง
+                </span>
+
+                `;
+
+        }
+
+        else{
+
+            $("alerts").innerHTML =
+                `
+
+                <span class="text-emerald-400 font-bold">
+                    ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
+                </span>
+
+                `;
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+    AI
+    ========================================================= */
+
+    function updateAI(
+        latest,
+        q
+    ){
+
+        const pm25 =
+            latest.pm25;
+
+
+        if(
+            pm25 == null ||
+            isNaN(pm25)
+        ){
+
+            $("aiSummary").textContent =
+                "กำลังรอข้อมูลจากอุปกรณ์...";
+
+
+            $("aiDetails").textContent =
+                "ยังไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์";
+
+
+            return;
+
+        }
+
+
+        let recommendation;
+
+
+        if(pm25 <= 15){
+
+            recommendation =
+                "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
+
+        }
+
+        else if(pm25 <= 25){
+
+            recommendation =
+                "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
+
+        }
+
+        else if(pm25 <= 37.5){
+
+            recommendation =
+                "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
+
+        }
+
+        else{
+
+            recommendation =
+                "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
+
+        }
+
+
+        $("aiSummary").innerHTML =
+
+            `
+
+            <b class="text-cyan-300">
+                PM2.5 ${fmt(pm25)} µg/m³
+            </b>
+
+            <br>
+
+            สถานะ:
+
+            <b>
+                ${q}
+            </b>
+
+            <br>
+
+            ${recommendation}
+
+            `;
+
+
+        $("aiDetails").innerHTML =
+
+            `
+
+            <b class="text-white">
+                🤖 วิเคราะห์สถานการณ์
+            </b>
+
+            <br>
+
+            PM2.5 ล่าสุด:
+
+            <b class="text-cyan-300">
+                ${fmt(pm25)} µg/m³
+            </b>
+
+            <br>
+
+            อุณหภูมิ:
+
+            <b>
+                ${fmt(latest.temperature)} °C
+            </b>
+
+            <br>
+
+            ความชื้น:
+
+            <b>
+                ${fmt(latest.humidity)} %
+            </b>
+
+            <br>
+
+            แสง:
+
+            <b>
+                ${
+                    latest.light == null
+                        ? "--"
+                        : fmt(latest.light) +
+                        " lux"
+                }
+            </b>
+
+            <br><br>
+
+            <b class="text-white">
+                คำแนะนำ
+            </b>
+
+            <br>
+
+            ${recommendation}
+
+            <br><br>
+
+            <span class="text-xs text-slate-500">
+                * การวิเคราะห์นี้เป็นกฎพื้นฐานของระบบ
+                ยังไม่ใช่ AI/ML Model จริง
+            </span>
+
+            `;
+
+    }
+
+
+
+    /* =========================================================
+    METRIC CHANGE
     ========================================================= */
 
     $("metric")
@@ -4034,10 +4305,36 @@
                 metric =
                     e.target.value;
 
+
                 drawCharts();
 
             }
         );
+
+
+
+    /* =========================================================
+    RANGE CHANGE
+    ========================================================= */
+
+    $("historyRange")
+        .addEventListener(
+            "change",
+            async e => {
+
+                averageRange =
+                    e.target.value;
+
+
+                /*
+                โหลดข้อมูลใหม่ตามช่วงที่ต้องใช้
+                */
+
+                await load();
+
+            }
+        );
+
 
 
     /* =========================================================
@@ -4076,6 +4373,7 @@
     );
 
 
+
     /* =========================================================
     INITIAL LOAD
     ========================================================= */
@@ -4083,10 +4381,9 @@
     load();
 
 
+
     /* =========================================================
     AUTO REFRESH
-
-    ทุก 10 วินาที
     ========================================================= */
 
     setInterval(
@@ -4095,10 +4392,9 @@
     );
 
 
+
     /* =========================================================
     STATUS REFRESH
-
-    ทุก 5 วินาที
     ========================================================= */
 
     setInterval(
@@ -4107,8 +4403,10 @@
             const n1 =
                 getLatestNode(1);
 
+
             const n2 =
                 getLatestNode(2);
+
 
             const n3 =
                 getLatestNode(3);
@@ -4148,7 +4446,6 @@
 
             }
 
-
             else{
 
                 forceAllNodesOffline();
@@ -4157,36 +4454,6 @@
 
         },
         5000
-    );
-
-
-    /*
-    =========================================================
-    AVERAGE REFRESH
-
-    สำคัญสำหรับช่วงเวลาแบบ 30 นาที / 1 ชั่วโมง
-
-    เพราะเวลาปัจจุบันเดินไปเรื่อย ๆ
-    ข้อมูลที่เคยอยู่ในช่วงเวลาอาจหลุดออกไป
-
-    จึงคำนวณใหม่ทุก 30 วินาที
-    =========================================================
-    */
-
-    setInterval(
-        () => {
-
-            if(
-                records &&
-                records.length
-            ){
-
-                updateAverageMetrics();
-
-            }
-
-        },
-        30000
     );
 
 
