@@ -360,6 +360,7 @@ canvas { max-height: 300px; }
     width: 100%;
 
     display: grid;
+
     grid-template-columns:
         1.35fr
         1.25fr
@@ -371,6 +372,7 @@ canvas { max-height: 300px; }
 
 .credit-box {
     position: relative;
+
     min-width: 0;
     min-height: 128px;
 
@@ -378,6 +380,7 @@ canvas { max-height: 300px; }
 
     display: flex;
     align-items: center;
+
     gap: 15px;
 
     border-right:
@@ -400,23 +403,34 @@ canvas { max-height: 300px; }
 .credit-icon {
     position: relative;
 
-    flex: 0 0 48px;
+    /*
+     * FIX:
+     * กำหนดขนาดกรอบตายตัวให้ทุกช่อง
+     */
+    flex: 0 0 52px;
 
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
 
-    min-width: 48px;
-    min-height: 48px;
-    max-width: 48px;
-    max-height: 48px;
+    min-width: 52px;
+    min-height: 52px;
+
+    max-width: 52px;
+    max-height: 52px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
+    /*
+     * สำคัญ:
+     * ทุกกรอบต้อง clip รูปให้อยู่ในกรอบ
+     */
     overflow: hidden;
 
-    border: 1px solid rgba(34, 211, 238, 0.25);
+    border:
+        1px solid rgba(34, 211, 238, 0.25);
+
     border-radius: 14px;
 
     background:
@@ -452,14 +466,23 @@ canvas { max-height: 300px; }
     max-width: 100%;
     max-height: 100%;
 
+    margin: 0;
+
     border: 0;
+
     border-radius: 12px;
 
     object-fit: contain;
 
-    padding: 5px;
+    padding: 4px;
 
-    transition: transform 0.25s ease;
+    /*
+     * ป้องกันรูปไปดันขนาดกรอบ
+     */
+    box-sizing: border-box;
+
+    transition:
+        transform 0.25s ease;
 }
 
 
@@ -479,16 +502,21 @@ canvas { max-height: 300px; }
     content: "ดูรูป";
 
     position: absolute;
+
     right: -8px;
     bottom: -8px;
+
     z-index: 20;
 
     padding: 3px 6px;
 
-    border: 1px solid rgba(34, 211, 238, 0.45);
+    border:
+        1px solid rgba(34, 211, 238, 0.45);
+
     border-radius: 6px;
 
-    background: rgba(8, 47, 73, 0.98);
+    background:
+        rgba(8, 47, 73, 0.98);
 
     color: #67e8f9;
 
@@ -499,7 +527,9 @@ canvas { max-height: 300px; }
     white-space: nowrap;
 
     opacity: 0;
-    transform: translateY(3px);
+
+    transform:
+        translateY(3px);
 
     pointer-events: none;
 
@@ -510,7 +540,9 @@ canvas { max-height: 300px; }
 
 .credit-image-button:hover::after {
     opacity: 1;
-    transform: translateY(0);
+
+    transform:
+        translateY(0);
 }
 
 
@@ -519,8 +551,14 @@ canvas { max-height: 300px; }
    ===================================================== */
 
 .credit-college .credit-icon img {
+    width: 100%;
+    height: 100%;
+
     padding: 2px;
+
     object-fit: contain;
+
+    box-sizing: border-box;
 }
 
 
@@ -529,8 +567,14 @@ canvas { max-height: 300px; }
    ===================================================== */
 
 .credit-department .credit-icon img {
-    padding: 5px;
+    width: 100%;
+    height: 100%;
+
+    padding: 4px;
+
     object-fit: contain;
+
+    box-sizing: border-box;
 }
 
 
@@ -538,12 +582,30 @@ canvas { max-height: 300px; }
    DEVELOPER
    ===================================================== */
 
+/*
+ * FIX:
+ * เดิม developer ใช้ overflow: visible
+ * ทำให้รูปที่ scale ใหญ่กว่ากรอบล้นออกมา
+ *
+ * ตอนนี้ใช้กรอบเดียวกับทุกช่อง
+ */
+
 .credit-developer .credit-icon {
-    overflow: visible;
+    overflow: hidden;
+
+    width: 52px;
+    height: 52px;
+
+    min-width: 52px;
+    min-height: 52px;
+
+    max-width: 52px;
+    max-height: 52px;
 }
 
 .credit-developer .credit-icon img {
     position: relative;
+
     z-index: 0;
 
     width: 100%;
@@ -552,18 +614,25 @@ canvas { max-height: 300px; }
     padding: 0;
 
     object-fit: cover;
+
     object-position: center 10%;
 
     border-radius: 13px;
 
-    transform: scale(1.18);
+    /*
+     * ยังคงการ crop รูปคน
+     * แต่ไม่ทำให้กรอบขยาย
+     */
+    transform: scale(1.12);
+
+    box-sizing: border-box;
 
     transition:
         transform 0.3s ease;
 }
 
 .credit-developer .credit-icon:hover img {
-    transform: scale(1.25);
+    transform: scale(1.18);
 }
 
 
@@ -598,19 +667,24 @@ canvas { max-height: 300px; }
 
     color: #e2e8f0;
 
-    transition: color 0.25s ease;
+    transition:
+        color 0.25s ease;
 }
 
 .credit-role {
     display: inline-flex;
 
     margin-top: 7px;
+
     padding: 3px 8px;
 
-    border: 1px solid rgba(34, 211, 238, 0.14);
+    border:
+        1px solid rgba(34, 211, 238, 0.14);
+
     border-radius: 5px;
 
-    background: rgba(34, 211, 238, 0.04);
+    background:
+        rgba(34, 211, 238, 0.04);
 
     font-family: "Courier New", monospace;
 
@@ -629,24 +703,32 @@ canvas { max-height: 300px; }
 
 .credit-links {
     display: flex;
+
     align-items: center;
+
     flex-wrap: wrap;
 
     gap: 6px;
+
     margin-top: 9px;
 }
 
 .credit-link {
     display: inline-flex;
+
     align-items: center;
+
     gap: 5px;
 
     padding: 4px 9px;
 
-    border: 1px solid rgba(34, 211, 238, 0.20);
+    border:
+        1px solid rgba(34, 211, 238, 0.20);
+
     border-radius: 7px;
 
-    background: rgba(34, 211, 238, 0.055);
+    background:
+        rgba(34, 211, 238, 0.055);
 
     color: #67e8f9;
 
@@ -655,30 +737,38 @@ canvas { max-height: 300px; }
 
     text-decoration: none;
 
-    transition: all 0.22s ease;
+    transition:
+        all 0.22s ease;
 }
 
 .credit-arrow {
     font-size: 11px;
+
     line-height: 1;
 
-    transition: transform 0.2s ease;
+    transition:
+        transform 0.2s ease;
 }
 
 .credit-link:hover {
-    background: rgba(34, 211, 238, 0.14);
-    border-color: rgba(34, 211, 238, 0.55);
+    background:
+        rgba(34, 211, 238, 0.14);
+
+    border-color:
+        rgba(34, 211, 238, 0.55);
 
     color: #cffafe;
 
     box-shadow:
         0 0 16px rgba(34, 211, 238, 0.10);
 
-    transform: translateY(-1px);
+    transform:
+        translateY(-1px);
 }
 
 .credit-link:hover .credit-arrow {
-    transform: translate(2px, -2px);
+    transform:
+        translate(2px, -2px);
 }
 
 
@@ -696,9 +786,11 @@ canvas { max-height: 300px; }
 }
 
 .credit-box:hover .credit-icon {
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
-    border-color: rgba(34, 211, 238, 0.50);
+    border-color:
+        rgba(34, 211, 238, 0.50);
 
     box-shadow:
         0 0 22px rgba(34, 211, 238, 0.12);
@@ -709,11 +801,13 @@ canvas { max-height: 300px; }
 }
 
 .credit-developer .credit-icon {
-    border-color: rgba(56, 189, 248, 0.20);
+    border-color:
+        rgba(56, 189, 248, 0.20);
 }
 
 .credit-developer:hover .credit-icon {
-    border-color: rgba(56, 189, 248, 0.50);
+    border-color:
+        rgba(56, 189, 248, 0.50);
 }
 
 
@@ -723,13 +817,17 @@ canvas { max-height: 300px; }
 
 .credit-bottom {
     position: relative;
+
     z-index: 3;
 
     min-height: 34px;
+
     padding: 0 22px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
     gap: 8px;
@@ -768,6 +866,7 @@ canvas { max-height: 300px; }
 }
 
 @keyframes credit-pulse {
+
     0%,
     100% {
         opacity: 0.45;
@@ -784,7 +883,8 @@ canvas { max-height: 300px; }
     width: 30px;
     height: 1px;
 
-    background: rgba(34, 211, 238, 0.25);
+    background:
+        rgba(34, 211, 238, 0.25);
 }
 
 
@@ -796,6 +896,7 @@ canvas { max-height: 300px; }
     display: none;
 
     position: fixed;
+
     inset: 0;
 
     width: 100vw;
@@ -806,39 +907,51 @@ canvas { max-height: 300px; }
 
 .credit-image-modal.active {
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 }
 
 .credit-image-overlay {
     position: absolute;
+
     inset: 0;
 
     width: 100%;
     height: 100%;
 
-    background: rgba(2, 6, 23, 0.90);
+    background:
+        rgba(2, 6, 23, 0.90);
 
-    backdrop-filter: blur(8px);
+    backdrop-filter:
+        blur(8px);
 }
 
 .credit-image-window {
     position: relative;
+
     z-index: 2;
 
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
+
     justify-content: center;
 
     width: auto;
 
     max-width: 82vw;
+
     max-height: 82vh;
 
     padding: 10px;
 
-    border: 1px solid rgba(34, 211, 238, 0.35);
+    border:
+        1px solid rgba(34, 211, 238, 0.35);
+
     border-radius: 16px;
 
     background:
@@ -874,12 +987,14 @@ canvas { max-height: 300px; }
     width: 100%;
 
     margin-top: 8px;
+
     padding: 5px 8px 2px;
 
     text-align: center;
 
     font-size: 11px;
     font-weight: 700;
+
     line-height: 1.4;
 
     color: #67e8f9;
@@ -897,20 +1012,26 @@ canvas { max-height: 300px; }
     height: 44px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
     padding: 0;
 
-    border: 1px solid rgba(103, 232, 249, 0.45);
+    border:
+        1px solid rgba(103, 232, 249, 0.45);
+
     border-radius: 50%;
 
-    background: rgba(8, 47, 73, 0.96);
+    background:
+        rgba(8, 47, 73, 0.96);
 
     color: #cffafe;
 
     font-size: 29px;
     font-weight: 300;
+
     line-height: 1;
 
     cursor: pointer;
@@ -923,19 +1044,23 @@ canvas { max-height: 300px; }
 }
 
 .credit-image-close:hover {
-    background: rgba(34, 211, 238, 0.18);
+    background:
+        rgba(34, 211, 238, 0.18);
 
-    border-color: rgba(103, 232, 249, 0.80);
+    border-color:
+        rgba(103, 232, 249, 0.80);
 
     color: #ffffff;
 
-    transform: rotate(90deg);
+    transform:
+        rotate(90deg);
 
     box-shadow:
         0 0 20px rgba(34, 211, 238, 0.20);
 }
 
 @keyframes creditImageOpen {
+
     from {
         opacity: 0;
         transform: scale(0.90);
@@ -1004,8 +1129,14 @@ canvas { max-height: 300px; }
         border-bottom: none;
     }
 
+    /*
+     * Mobile:
+     * ยังคงกรอบทุกอันเท่ากัน
+     */
+
     .credit-icon {
-        flex-basis: 42px;
+
+        flex: 0 0 42px;
 
         width: 42px;
         height: 42px;
@@ -1023,6 +1154,20 @@ canvas { max-height: 300px; }
         border-radius: 10px;
     }
 
+    .credit-developer .credit-icon {
+
+        width: 42px;
+        height: 42px;
+
+        min-width: 42px;
+        min-height: 42px;
+
+        max-width: 42px;
+        max-height: 42px;
+
+        overflow: hidden;
+    }
+
     .credit-title {
         font-size: 12px;
     }
@@ -1033,6 +1178,7 @@ canvas { max-height: 300px; }
         flex-wrap: wrap;
 
         font-size: 7px;
+
         line-height: 1.5;
     }
 
@@ -1078,11 +1224,13 @@ canvas { max-height: 300px; }
 
     .credit-box {
         padding: 16px 15px;
+
         gap: 11px;
     }
 
     .credit-icon {
-        flex-basis: 38px;
+
+        flex: 0 0 38px;
 
         width: 38px;
         height: 38px;
@@ -1100,12 +1248,27 @@ canvas { max-height: 300px; }
         border-radius: 9px;
     }
 
+    .credit-developer .credit-icon {
+
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+        min-height: 38px;
+
+        max-width: 38px;
+        max-height: 38px;
+
+        overflow: hidden;
+    }
+
     .credit-title {
         font-size: 11px;
     }
 
     .credit-link {
         font-size: 8px;
+
         padding: 4px 7px;
     }
 
