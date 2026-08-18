@@ -4834,13 +4834,16 @@ function updateTrendStatistics(){
 
 <footer class="credit-bar">
 
-    <!-- Background decoration -->
+    <!-- =================================================
+         BACKGROUND DECORATION
+         ================================================= -->
+
     <div class="credit-glow credit-glow-1"></div>
     <div class="credit-glow credit-glow-2"></div>
 
 
     <!-- =================================================
-         CREDIT CONTENT
+         CREDIT INNER
          ================================================= -->
 
     <div class="credit-inner">
@@ -4852,9 +4855,14 @@ function updateTrendStatistics(){
 
         <div class="credit-box credit-college">
 
+            <!-- College Logo -->
+
             <div
                 class="credit-icon credit-image-button"
-                onclick="openCreditImage('โลโก.png', 'โลโก้วิทยาลัย')"
+                onclick="openCreditImage(
+                    'โลโก.png',
+                    'โลโก้วิทยาลัย'
+                )"
             >
 
                 <img
@@ -4864,6 +4872,8 @@ function updateTrendStatistics(){
 
             </div>
 
+
+            <!-- College Content -->
 
             <div class="credit-content">
 
@@ -4877,6 +4887,8 @@ function updateTrendStatistics(){
 
 
                 <div class="credit-links">
+
+                    <!-- Website -->
 
                     <a
                         href="https://www.spscollege.ac.th/"
@@ -4895,6 +4907,8 @@ function updateTrendStatistics(){
 
                     </a>
 
+
+                    <!-- Facebook -->
 
                     <a
                         href="https://www.facebook.com/spscollege.ac.th?locale=th_TH"
@@ -4927,9 +4941,14 @@ function updateTrendStatistics(){
 
         <div class="credit-box credit-department">
 
+            <!-- Department Logo -->
+
             <div
                 class="credit-icon credit-image-button"
-                onclick="openCreditImage('ICT.jpg', 'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร')"
+                onclick="openCreditImage(
+                    'ICT.jpg',
+                    'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
+                )"
             >
 
                 <img
@@ -4939,6 +4958,8 @@ function updateTrendStatistics(){
 
             </div>
 
+
+            <!-- Department Content -->
 
             <div class="credit-content">
 
@@ -4984,13 +5005,21 @@ function updateTrendStatistics(){
 
         <div class="credit-box credit-developer">
 
+            <!-- Developer 1 Image -->
+
             <div
                 class="credit-icon credit-image-button credit-placeholder"
-                onclick="openCreditImage('person1.jpg', 'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา')"
+                onclick="openCreditImage(
+                    'person1.jpg',
+                    'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
+                )"
             >
 
                 <!--
-                    ตอนมีรูปแล้วให้เปลี่ยนส่วนนี้เป็น:
+                    ตอนนี้ยังไม่มีรูป
+                    จึงแสดง Placeholder
+
+                    เมื่อมีรูปแล้วให้เปลี่ยนเป็น:
 
                     <img
                         src="person1.jpg"
@@ -5004,6 +5033,8 @@ function updateTrendStatistics(){
 
             </div>
 
+
+            <!-- Developer 1 Content -->
 
             <div class="credit-content">
 
@@ -5031,13 +5062,21 @@ function updateTrendStatistics(){
 
         <div class="credit-box credit-developer">
 
+            <!-- Developer 2 Image -->
+
             <div
                 class="credit-icon credit-image-button credit-placeholder"
-                onclick="openCreditImage('person2.jpg', 'สามเณร รัฐภูมิ สร้อยคำ')"
+                onclick="openCreditImage(
+                    'person2.jpg',
+                    'สามเณร รัฐภูมิ สร้อยคำ'
+                )"
             >
 
                 <!--
-                    ตอนมีรูปแล้วให้เปลี่ยนส่วนนี้เป็น:
+                    ตอนนี้ยังไม่มีรูป
+                    จึงแสดง Placeholder
+
+                    เมื่อมีรูปแล้วให้เปลี่ยนเป็น:
 
                     <img
                         src="person2.jpg"
@@ -5051,6 +5090,8 @@ function updateTrendStatistics(){
 
             </div>
 
+
+            <!-- Developer 2 Content -->
 
             <div class="credit-content">
 
@@ -5100,43 +5141,51 @@ function updateTrendStatistics(){
 
 
 <!-- =====================================================
-     CREDIT IMAGE LIGHTBOX
+     CREDIT IMAGE VIEWER / LIGHTBOX
      ===================================================== -->
 
 <div
     id="creditImageModal"
     class="credit-image-modal"
+    aria-hidden="true"
 >
 
 
-    <!-- Dark background -->
+    <!-- =================================================
+         DARK BACKGROUND
+         ================================================= -->
 
     <div
-        class="credit-image-backdrop"
+        class="credit-image-overlay"
         onclick="closeCreditImage()"
     ></div>
 
 
 
-    <!-- Close button -->
+    <!-- =================================================
+         CLOSE BUTTON
+         ================================================= -->
 
     <button
         type="button"
         class="credit-image-close"
         onclick="closeCreditImage()"
-        aria-label="ปิดรูป"
+        aria-label="ปิดรูปภาพ"
     >
 
-        &times;
+        ×
 
     </button>
 
 
 
-    <!-- Image viewer -->
+    <!-- =================================================
+         IMAGE WINDOW
+         ================================================= -->
 
     <div
-        class="credit-image-viewer"
+        class="credit-image-window"
+        onclick="event.stopPropagation()"
     >
 
         <img
@@ -5156,68 +5205,144 @@ function updateTrendStatistics(){
 
 </div>
 
-    <script>
+
+
+<!-- =====================================================
+     CREDIT IMAGE JAVASCRIPT
+     ===================================================== -->
+
+<script>
 
 /* =====================================================
-   CREDIT IMAGE LIGHTBOX
+   OPEN CREDIT IMAGE
    ===================================================== */
 
 function openCreditImage(imageSrc, imageAlt) {
 
     const modal =
-        document.getElementById("creditImageModal");
+        document.getElementById(
+            "creditImageModal"
+        );
 
     const image =
-        document.getElementById("creditFullImage");
+        document.getElementById(
+            "creditFullImage"
+        );
 
     const caption =
-        document.getElementById("creditImageCaption");
+        document.getElementById(
+            "creditImageCaption"
+        );
 
+
+    /* ใส่รูป */
 
     image.src = imageSrc;
 
     image.alt = imageAlt;
 
+
+    /* ใส่คำอธิบาย */
+
     caption.textContent = imageAlt;
 
 
-    modal.classList.add("active");
+    /* เปิด Modal */
+
+    modal.classList.add(
+        "active"
+    );
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 
 
-    document.body.style.overflow = "hidden";
+    /* ป้องกันหน้าเว็บด้านหลังเลื่อน */
+
+    document.body.style.overflow =
+        "hidden";
 
 }
 
 
 /* =====================================================
-   CLOSE LIGHTBOX
+   CLOSE CREDIT IMAGE
    ===================================================== */
 
 function closeCreditImage() {
 
     const modal =
-        document.getElementById("creditImageModal");
+        document.getElementById(
+            "creditImageModal"
+        );
 
 
-    modal.classList.remove("active");
+    /* ปิด Modal */
+
+    modal.classList.remove(
+        "active"
+    );
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
 
 
-    document.body.style.overflow = "";
+    /* คืนการเลื่อนหน้าเว็บ */
+
+    document.body.style.overflow =
+        "";
+
+
+    /* ล้างรูป */
+
+    setTimeout(
+        function() {
+
+            const image =
+                document.getElementById(
+                    "creditFullImage"
+                );
+
+            image.src = "";
+
+        },
+        200
+    );
 
 }
 
 
 /* =====================================================
-   ESC KEY
+   ESC KEY TO CLOSE
    ===================================================== */
 
 document.addEventListener(
     "keydown",
     function(event) {
 
-        if (event.key === "Escape") {
+        if (
+            event.key === "Escape"
+        ) {
 
-            closeCreditImage();
+            const modal =
+                document.getElementById(
+                    "creditImageModal"
+                );
+
+
+            if (
+                modal.classList.contains(
+                    "active"
+                )
+            ) {
+
+                closeCreditImage();
+
+            }
 
         }
 
