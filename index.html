@@ -2788,11 +2788,25 @@ HISTORICAL DATA & TREND
                 : fmt(stats.min);
 
 
-        $("trendLast").textContent =
-            stats.last === null
-                ? "--"
-                : fmt(stats.last);
+        const latestValue =
+    latestRecord &&
+    latestRecord[metric] !== null &&
+    latestRecord[metric] !== undefined &&
+    !isNaN(
+        Number(
+            latestRecord[metric]
+        )
+    )
+        ? Number(
+            latestRecord[metric]
+        )
+        : null;
 
+
+$("trendLast").textContent =
+    latestValue === null
+        ? "--"
+        : fmt(latestValue);
 
         updateSelectedMetricLabel();
 
