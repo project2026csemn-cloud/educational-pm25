@@ -713,13 +713,6 @@ canvas { max-height: 300px; }
    03-04. DEVELOPER IMAGE
    ===================================================== */
 
-/*
-   รูปสามเณร:
-   - กรอบมน
-   - รูปเต็มกรอบ
-   - ซูมเข้ามา
-*/
-
 .credit-developer .credit-icon {
 
     overflow: hidden;
@@ -739,7 +732,7 @@ canvas { max-height: 300px; }
 
     object-fit: cover !important;
 
-    object-position: center center !important;
+    object-position: center 35% !important;
 
     border-radius: 14px !important;
 
