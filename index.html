@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="chart.js"></script>
+
 </head>
 
 
@@ -31,10 +32,19 @@
         <div class="flex items-center gap-4">
 
             <div>
-                <img src="โลโก.png" alt="Logo" class="w-20 h-20 rounded-xl">
-                <img src="ICT.jpg" alt="Logo" class="w-20 h-20 rounded-full">
+
+                <img src="โลโก.png"
+                     alt="Logo"
+                     class="w-20 h-20 rounded-xl">
+
+                <img src="ICT.jpg"
+                     alt="Logo"
+                     class="w-20 h-20 rounded-full">
+
             </div>
+
             <div>
+
                 <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
 
                     Educational Institution
@@ -42,73 +52,76 @@
                     <span class="text-cyan-400">
                         PM2.5
                     </span>
+
                     Dust Monitoring System
+
                 </div>
+
                 <div class="text-sm text-slate-400 mt-1">
+
                     ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
+
                 </div>
+
             </div>
+
         </div>
 
 
         <div class="flex flex-wrap items-center justify-end gap-3">
 
+            <!-- CLOCK -->
 
-            
-        
-                    <!-- CLOCK -->
+            <div class="text-right hidden md:block">
 
-                    <div class="text-right hidden md:block">
+                <div id="clock" class="font-bold">
+                    --
+                </div>
 
-                        <div id="clock" class="font-bold">
-                            --
-                        </div>
-
-                        <div class="text-xs text-slate-400 mt-1">
-
-                         
-
-                
-
-                        </div>
-
-                    </div>
+                <div class="text-xs text-slate-400 mt-1">
 
                 </div>
 
-            </header>
+            </div>
+
+        </div>
+
+    </header>
 
 
 
-            <!-- =========================================================
-            NODES + AI
-            ========================================================= -->
+    <!-- =========================================================
+    NODES + AI
+    ========================================================= -->
 
-            <section class="grid xl:grid-cols-4 gap-4 mb-4">
+    <section class="grid xl:grid-cols-4 gap-4 mb-4">
 
 
-                <div class="glass card p-4 xl:col-span-3">
+        <div class="glass card p-4 xl:col-span-3">
 
-                    <div class="flex justify-between items-center mb-3">
+            <div class="flex justify-between items-center mb-3">
 
-                        <div>
+                <div>
 
-                            <h2 class="text-xl font-black">
-                                📡 Monitoring Nodes
-                            </h2>
+                    <h2 class="text-xl font-black">
+                        📡 Monitoring Nodes
+                    </h2>
 
-                            <p class="text-xs text-slate-400">
-                                ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
-                            </p>
+                    <p class="text-xs text-slate-400">
+                        ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
+                    </p>
 
-                        </div>
-                        <div class="flex justify-center">
-            <!-- OVERALL -->
+                </div>
+
+
+                <div class="flex justify-center">
+
+                    <!-- OVERALL -->
+
                     <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
 
                         <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                            System Live                        
-
+                            System Live
                         </div>
 
                         <div class="font-bold mt-1">
@@ -126,8 +139,10 @@
                         </div>
 
                     </div>
+
+
                     <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
-                        
+
                         <div class="text-[11px] text-slate-400 uppercase tracking-wider">
                             Air Quality
                         </div>
@@ -146,17 +161,18 @@
                         </div>
 
                     </div>
-                    
 
                 </div>
-                        
+
             </div>
 
 
             <div class="grid md:grid-cols-3 gap-3">
 
 
-                <!-- NODE 1 -->
+                <!-- =================================================
+                NODE 1
+                ================================================= -->
 
                 <div
                     id="nodeCard1"
@@ -166,62 +182,103 @@
                     <div class="flex justify-between">
 
                         <b class="text-xl">
+
                             อุปกรณ์ 1
+
                             <div class="text-xs text-slate-400 mt-1">
 
-                            Last update
+                                Last update
 
-                            <span id="lastUpdate">
-                                --
-                            </span>
+                                <span id="lastUpdate1">
+                                    --
+                                </span>
 
                             </div>
-                            
+
                         </b>
+
 
                         <span
                             id="n1status"
                             class="text-slate-500 text-xs font-bold"
                         >
+
                             ● OFFLINE
+
                             <span class="badge rounded-full px-3 py-1 text-xs">
                                 ESP-NOW
                             </span>
+
                         </span>
-                        
+
                     </div>
 
 
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
                         <span class="text-slate-400">
+
                             PM1.0
-                            <b id="n1pm1" class="text-white ml-1">--</b>
+
+                            <b id="n1pm1" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM2.5
-                            <b id="n1pm25" class="text-white ml-1">--</b>
+
+                            <b id="n1pm25" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM10
-                            <b id="n1pm10" class="text-white ml-1">--</b>
+
+                            <b id="n1pm10" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Temp
-                            <b id="n1temp" class="text-white ml-1">--</b>
+
+                            <b id="n1temp" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Humidity
-                            <b id="n1hum" class="text-white ml-1">--</b>
+
+                            <b id="n1hum" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Light
-                            <b id="n1light" class="text-white ml-1">--</b>
+
+                            <b id="n1light" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
                     </div>
@@ -230,7 +287,9 @@
 
 
 
-                <!-- NODE 2 -->
+                <!-- =================================================
+                NODE 2
+                ================================================= -->
 
                 <div
                     id="nodeCard2"
@@ -240,26 +299,33 @@
                     <div class="flex justify-between">
 
                         <b class="text-xl">
+
                             อุปกรณ์ 2
+
                             <div class="text-xs text-slate-400 mt-1">
 
-                            Last update
+                                Last update
 
-                            <span id="lastUpdate">
-                                --
-                            </span>
+                                <span id="lastUpdate2">
+                                    --
+                                </span>
 
                             </div>
+
                         </b>
+
 
                         <span
                             id="n2status"
                             class="text-slate-500 text-xs font-bold"
                         >
+
                             ● OFFLINE
+
                             <span class="badge rounded-full px-3 py-1 text-xs">
                                 ESP-NOW
                             </span>
+
                         </span>
 
                     </div>
@@ -268,33 +334,68 @@
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
                         <span class="text-slate-400">
+
                             PM1.0
-                            <b id="n2pm1" class="text-white ml-1">--</b>
+
+                            <b id="n2pm1" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM2.5
-                            <b id="n2pm25" class="text-white ml-1">--</b>
+
+                            <b id="n2pm25" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM10
-                            <b id="n2pm10" class="text-white ml-1">--</b>
+
+                            <b id="n2pm10" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Temp
-                            <b id="n2temp" class="text-white ml-1">--</b>
+
+                            <b id="n2temp" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Humidity
-                            <b id="n2hum" class="text-white ml-1">--</b>
+
+                            <b id="n2hum" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Light
-                            <b id="n2light" class="text-white ml-1">--</b>
+
+                            <b id="n2light" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
                     </div>
@@ -303,7 +404,9 @@
 
 
 
-                <!-- NODE 3 -->
+                <!-- =================================================
+                NODE 3
+                ================================================= -->
 
                 <div
                     id="nodeCard3"
@@ -313,26 +416,33 @@
                     <div class="flex justify-between">
 
                         <b class="text-xl">
+
                             อุปกรณ์ 3
+
                             <div class="text-xs text-slate-400 mt-1">
 
-                            Last update
+                                Last update
 
-                            <span id="lastUpdate">
-                                --
-                            </span>
+                                <span id="lastUpdate3">
+                                    --
+                                </span>
 
                             </div>
+
                         </b>
+
 
                         <span
                             id="n3status"
                             class="text-slate-500 text-xs font-bold"
                         >
+
                             ● OFFLINE
+
                             <span class="badge rounded-full px-3 py-1 text-xs">
                                 ESP-NOW
                             </span>
+
                         </span>
 
                     </div>
@@ -341,33 +451,68 @@
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
                         <span class="text-slate-400">
+
                             PM1.0
-                            <b id="n3pm1" class="text-white ml-1">--</b>
+
+                            <b id="n3pm1" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM2.5
-                            <b id="n3pm25" class="text-white ml-1">--</b>
+
+                            <b id="n3pm25" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             PM10
-                            <b id="n3pm10" class="text-white ml-1">--</b>
+
+                            <b id="n3pm10" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Temp
-                            <b id="n3temp" class="text-white ml-1">--</b>
+
+                            <b id="n3temp" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Humidity
-                            <b id="n3hum" class="text-white ml-1">--</b>
+
+                            <b id="n3hum" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
+
                         <span class="text-slate-400">
+
                             Light
-                            <b id="n3light" class="text-white ml-1">--</b>
+
+                            <b id="n3light" class="text-white ml-1">
+                                --
+                            </b>
+
                         </span>
 
                     </div>
@@ -380,7 +525,9 @@
 
 
 
-        <!-- AI SUMMARY -->
+        <!-- =========================================================
+        AI SUMMARY
+        ========================================================= -->
 
         <div class="glass card p-5 flex flex-col justify-center">
 
@@ -409,7 +556,9 @@
                 id="aiSummary"
                 class="text-sm leading-6 text-slate-300 mt-4"
             >
+
                 กำลังรอข้อมูล...
+
             </div>
 
         </div>
@@ -582,7 +731,9 @@
                     id="qualityBadge"
                     class="rounded-full px-4 py-2 badge font-bold"
                 >
+
                     รอข้อมูล
+
                 </div>
 
             </div>
@@ -645,7 +796,9 @@
                 id="alerts"
                 class="text-sm text-slate-300 mt-4"
             >
+
                 กำลังตรวจสอบ...
+
             </div>
 
         </div>
@@ -734,12 +887,13 @@
                 >
                     30 วัน
                 </button>
+
+
                 <button
                     class="range rounded-xl px-3 py-2 text-xs"
                     data-range=""
                 >
                     ส่งออก
-                    
                 </button>
 
             </div>
@@ -825,8 +979,9 @@
 
                 <span
                     id="forecastBadge"
-                    class="badge rounded-full px-3 py-1 text-xs text-cyan-300">
-                        PREVIEW
+                    class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
+                >
+                    PREVIEW
                 </span>
 
             </div>
@@ -836,7 +991,9 @@
                 id="forecastMessage"
                 class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
             >
+
                 รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
+
             </div>
 
 
@@ -857,7 +1014,9 @@
                 id="aiDetails"
                 class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
             >
+
                 รอข้อมูลเพื่อวิเคราะห์
+
             </div>
 
         </div>
@@ -872,37 +1031,38 @@
 
     <script>
 
+
     /* =========================================================
     API
     ========================================================= */
 
     const API_URL =
-    "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
+        "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
+
 
     const HISTORY_API =
-    "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
+        "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
 
 
-    /*
-    เวลาที่ถือว่า Node Offline
 
-    ถ้าไม่มีข้อมูลใหม่เกิน 10 นาที
-    จะถือว่า Offline
-    */
-
-    const OFFLINE_MINUTES = 10;
-
+    /* =========================================================
+    CONFIG
+    ========================================================= */
 
     /*
-    จำนวน Node ในระบบ
+    ตอนนี้สถานะ Node จะใช้ status จาก D1 โดยตรง
+
+    ไม่ใช้ OFFLINE_MINUTES
+    เป็นตัวตัดสินสถานะอีกแล้ว
     */
 
     const TOTAL_NODES = 3;
 
 
-    /*
-    ตัวแปรหลัก
-    */
+
+    /* =========================================================
+    VARIABLES
+    ========================================================= */
 
     let latestRecord = null;
 
@@ -919,12 +1079,14 @@
     let lastSuccessfulLoad = null;
 
 
+
     /* =========================================================
     HELPER
     ========================================================= */
 
     const $ = id =>
         document.getElementById(id);
+
 
 
     /* =========================================================
@@ -939,12 +1101,16 @@
             value === "" ||
             isNaN(value)
         ){
+
             return "--";
+
         }
+
 
         return Number(value).toFixed(1);
 
     }
+
 
 
     /* =========================================================
@@ -957,14 +1123,19 @@
             return null;
         }
 
+
         if(value instanceof Date){
+
             return isNaN(value.getTime())
                 ? null
                 : value;
+
         }
+
 
         let text =
             String(value).trim();
+
 
         if(!text){
             return null;
@@ -972,15 +1143,18 @@
 
 
         /*
-        รูปแบบ:
-        2026-08-11 03:34:49
+        D1 CURRENT_TIMESTAMP
 
-        จากระบบของเรา CURRENT_TIMESTAMP
-        ให้ถือว่าเป็น UTC
+        ตัวอย่าง:
+
+        2026-08-18 00:39:13
+
+        ถือเป็น UTC
         */
 
         if(
-            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
+            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+                .test(text)
         ){
 
             const date =
@@ -988,6 +1162,7 @@
                     text.replace(" ","T") + "Z"
                 );
 
+
             return isNaN(date.getTime())
                 ? null
                 : date;
@@ -996,17 +1171,18 @@
 
 
         /*
-        รูปแบบ:
-        2026-08-11T03:34:49
+        ISO
         */
 
         if(
-            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(text)
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
+                .test(text)
         ){
 
             const date =
                 new Date(text + "Z");
 
+
             return isNaN(date.getTime())
                 ? null
                 : date;
@@ -1015,20 +1191,22 @@
 
 
         /*
-        ถ้ามี Z หรือ timezone อยู่แล้ว
-        ให้ JavaScript จัดการเอง
+        ถ้ามี timezone อยู่แล้ว
         */
 
         const date =
             new Date(text);
 
+
         if(isNaN(date.getTime())){
             return null;
         }
 
+
         return date;
 
     }
+
 
 
     /* =========================================================
@@ -1040,32 +1218,45 @@
         const date =
             parseDate(value);
 
+
         if(!date){
             return "-";
         }
 
+
         return date.toLocaleString(
             "th-TH",
             {
-                timeZone:"Asia/Bangkok",
 
-                year:"numeric",
+                timeZone:
+                    "Asia/Bangkok",
 
-                month:"2-digit",
+                year:
+                    "numeric",
 
-                day:"2-digit",
+                month:
+                    "2-digit",
 
-                hour:"2-digit",
+                day:
+                    "2-digit",
 
-                minute:"2-digit",
+                hour:
+                    "2-digit",
 
-                second:"2-digit",
+                minute:
+                    "2-digit",
 
-                hour12:false
+                second:
+                    "2-digit",
+
+                hour12:
+                    false
+
             }
         );
 
     }
+
 
 
     /* =========================================================
@@ -1077,26 +1268,36 @@
         const date =
             parseDate(value);
 
+
         if(!date){
             return "--";
         }
 
+
         return date.toLocaleTimeString(
             "th-TH",
             {
-                timeZone:"Asia/Bangkok",
 
-                hour:"2-digit",
+                timeZone:
+                    "Asia/Bangkok",
 
-                minute:"2-digit",
+                hour:
+                    "2-digit",
 
-                second:"2-digit",
+                minute:
+                    "2-digit",
 
-                hour12:false
+                second:
+                    "2-digit",
+
+                hour12:
+                    false
+
             }
         );
 
     }
+
 
 
     /* =========================================================
@@ -1110,7 +1311,9 @@
             value === undefined ||
             isNaN(value)
         ){
+
             return "รอข้อมูล";
+
         }
 
 
@@ -1135,6 +1338,7 @@
     }
 
 
+
     /* =========================================================
     NORMALIZE RECORD
     ========================================================= */
@@ -1157,7 +1361,25 @@
             device_id:
                 d.device_id == null
                     ? ""
-                    : String(d.device_id).trim(),
+                    : String(
+                        d.device_id
+                    ).trim(),
+
+
+            /*
+            =====================================================
+            STATUS จาก Cloudflare D1
+            =====================================================
+            */
+
+            status:
+                d.status == null
+                    ? "offline"
+                    : String(
+                        d.status
+                    )
+                    .trim()
+                    .toLowerCase(),
 
 
             pm1:
@@ -1207,6 +1429,7 @@
     }
 
 
+
     /* =========================================================
     NODE ID NORMALIZER
     ========================================================= */
@@ -1225,6 +1448,8 @@
 
 
         /*
+        รองรับ:
+
         Node1
         node1
         Number 1
@@ -1248,14 +1473,21 @@
     }
 
 
+
     /* =========================================================
     IS SAME NODE
     ========================================================= */
 
-    function isSameNode(deviceId,nodeNumber){
+    function isSameNode(
+        deviceId,
+        nodeNumber
+    ){
 
         const normalized =
-            normalizeNodeName(deviceId);
+            normalizeNodeName(
+                deviceId
+            );
+
 
         return normalized ===
             "node" + nodeNumber;
@@ -1263,11 +1495,137 @@
     }
 
 
+
     /* =========================================================
-    SET NODE
+    GET NODE STATUS
+    =========================================================
+
+    จุดสำคัญของระบบใหม่
+
+    อ่าน status จาก D1 โดยตรง
+
+    online
+    sleep
+    offline
+
     ========================================================= */
 
-    function setNode(prefix,data){
+    function getNodeStatus(node){
+
+        if(!node){
+
+            return "offline";
+
+        }
+
+
+        const status =
+            String(
+                node.status || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        if(status === "online"){
+            return "online";
+        }
+
+
+        if(status === "sleep"){
+            return "sleep";
+        }
+
+
+        if(status === "offline"){
+            return "offline";
+        }
+
+
+        /*
+        ถ้าไม่มี status
+        ให้ถือว่า offline
+        */
+
+        return "offline";
+
+    }
+
+
+
+    /* =========================================================
+    GET LATEST NODE
+    ========================================================= */
+
+    function getLatestNode(
+        nodeNumber
+    ){
+
+        const list =
+            records.filter(
+                record =>
+                    isSameNode(
+                        record.device_id,
+                        nodeNumber
+                    )
+            );
+
+
+        if(!list.length){
+            return null;
+        }
+
+
+        list.sort(
+            (a,b) => {
+
+                const da =
+                    parseDate(
+                        a.timestamp
+                    );
+
+
+                const db =
+                    parseDate(
+                        b.timestamp
+                    );
+
+
+                if(!da && !db)
+                    return 0;
+
+
+                if(!da)
+                    return 1;
+
+
+                if(!db)
+                    return -1;
+
+
+                return (
+                    db.getTime() -
+                    da.getTime()
+                );
+
+            }
+        );
+
+
+        return list[0];
+
+    }
+
+
+
+    /* =========================================================
+    SET NODE DATA
+    ========================================================= */
+
+    function setNode(
+        prefix,
+        data
+    ){
 
         const fields = [
             "pm1",
@@ -1287,13 +1645,17 @@
                     const element =
                         $(prefix + field);
 
+
                     if(element){
+
                         element.textContent =
                             "--";
+
                     }
 
                 }
             );
+
 
             return;
 
@@ -1315,115 +1677,186 @@
         $(prefix+"temp").textContent =
             data.temperature == null
                 ? "--"
-                : fmt(data.temperature) + "°C";
+                : fmt(
+                    data.temperature
+                ) + "°C";
 
 
         $(prefix+"hum").textContent =
             data.humidity == null
                 ? "--"
-                : fmt(data.humidity) + "%";
+                : fmt(
+                    data.humidity
+                ) + "%";
 
 
         $(prefix+"light").textContent =
             data.light == null
                 ? "--"
-                : fmt(data.light) + " lux";
+                : fmt(
+                    data.light
+                ) + " lux";
 
     }
+
 
 
     /* =========================================================
-    NODE ONLINE
+    UPDATE NODE STATUS
+    =========================================================
+
+    ใช้ status จาก D1 จริง
+
     ========================================================= */
 
-    function isNodeOnline(node){
+    function updateNodeStatus(
+        statusId,
+        cardId,
+        node
+    ){
 
-        if(
-            !node ||
-            !node.timestamp
-        ){
-            return false;
+        const statusElement =
+            $(statusId);
+
+
+        const cardElement =
+            $(cardId);
+
+
+        const nodeStatus =
+            getNodeStatus(node);
+
+
+        /*
+        =========================================================
+        ONLINE
+        =========================================================
+        */
+
+        if(nodeStatus === "online"){
+
+            statusElement.innerHTML = `
+
+                <span class="status-online-dot">
+                    ●
+                </span>
+
+                ONLINE
+
+                <span class="badge rounded-full px-3 py-1 text-xs">
+                    ESP-NOW
+                </span>
+
+            `;
+
+
+            statusElement.className =
+                "status-online text-xs font-bold";
+
+
+            cardElement
+                .classList
+                .remove("offline");
+
         }
 
 
-        const date =
-            parseDate(node.timestamp);
+        /*
+        =========================================================
+        SLEEP
+        =========================================================
+        */
+
+        else if(nodeStatus === "sleep"){
+
+            statusElement.innerHTML = `
+
+                <span class="status-sleep-dot">
+                    ●
+                </span>
+
+                SLEEP
+
+                <span class="badge rounded-full px-3 py-1 text-xs">
+                    ESP-NOW
+                </span>
+
+            `;
 
 
-        if(!date){
-            return false;
+            statusElement.className =
+                "status-sleep text-xs font-bold";
+
+
+            cardElement
+                .classList
+                .remove("offline");
+
         }
 
 
-        const age =
-            Date.now() -
-            date.getTime();
+        /*
+        =========================================================
+        OFFLINE
+        =========================================================
+        */
+
+        else{
+
+            statusElement.innerHTML = `
+
+                <span class="status-offline-dot">
+                    ●
+                </span>
+
+                OFFLINE
+
+                <span class="badge rounded-full px-3 py-1 text-xs">
+                    ESP-NOW
+                </span>
+
+            `;
 
 
-        return (
-            age >= 0 &&
-            age <=
-            OFFLINE_MINUTES *
-            60 *
-            1000
-        );
+            statusElement.className =
+                "status-offline text-xs font-bold";
+
+
+            cardElement
+                .classList
+                .add("offline");
+
+        }
 
     }
+
 
 
     /* =========================================================
-    LATEST NODE
+    GET NODE STATUS COUNTER
     ========================================================= */
 
-    function getLatestNode(nodeNumber){
+    function countOnlineNodes(){
 
-        const list =
-            records.filter(
-                record =>
-                    isSameNode(
-                        record.device_id,
-                        nodeNumber
-                    )
-            );
+        const nodes = [
 
+            getLatestNode(1),
 
-        if(!list.length){
-            return null;
-        }
+            getLatestNode(2),
+
+            getLatestNode(3)
+
+        ];
 
 
-        list.sort(
-            (a,b) => {
-
-                const da =
-                    parseDate(a.timestamp);
-
-                const db =
-                    parseDate(b.timestamp);
-
-
-                if(!da && !db)
-                    return 0;
-
-                if(!da)
-                    return 1;
-
-                if(!db)
-                    return -1;
-
-
-                return (
-                    db.getTime() -
-                    da.getTime()
-                );
-
-            }
-        );
-
-
-        return list[0];
+        return nodes.filter(
+            node =>
+                getNodeStatus(node) ===
+                "online"
+        ).length;
 
     }
+
 
 
     /* =========================================================
@@ -1434,19 +1867,28 @@
 
         const response =
             await fetch(
+
                 API_URL +
                 "?t=" +
                 Date.now(),
-                {
-                    method:"GET",
 
-                    cache:"no-store",
+                {
+
+                    method:
+                        "GET",
+
+                    cache:
+                        "no-store",
 
                     headers:{
+
                         "Accept":
                             "application/json"
+
                     }
+
                 }
+
             );
 
 
@@ -1472,12 +1914,15 @@
             json =
                 JSON.parse(text);
 
-        }catch(error){
+        }
+
+        catch(error){
 
             console.error(
                 "LATEST RAW:",
                 text
             );
+
 
             throw new Error(
                 "get_latest.php ไม่ได้ส่ง JSON"
@@ -1500,13 +1945,14 @@
 
 
         /*
-        API อาจส่ง:
-        data เป็น object
+        API ส่ง object
         */
 
         if(
             json.data &&
-            !Array.isArray(json.data)
+            !Array.isArray(
+                json.data
+            )
         ){
 
             return normalize(
@@ -1517,11 +1963,13 @@
 
 
         /*
-        เผื่อ API ส่ง Array
+        API ส่ง Array
         */
 
         if(
-            Array.isArray(json.data) &&
+            Array.isArray(
+                json.data
+            ) &&
             json.data.length
         ){
 
@@ -1539,6 +1987,7 @@
     }
 
 
+
     /* =========================================================
     HISTORY API
     ========================================================= */
@@ -1547,6 +1996,7 @@
 
         const response =
             await fetch(
+
                 HISTORY_API +
                 "?range=" +
                 encodeURIComponent(
@@ -1554,16 +2004,24 @@
                 ) +
                 "&t=" +
                 Date.now(),
-                {
-                    method:"GET",
 
-                    cache:"no-store",
+                {
+
+                    method:
+                        "GET",
+
+                    cache:
+                        "no-store",
 
                     headers:{
+
                         "Accept":
                             "application/json"
+
                     }
+
                 }
+
             );
 
 
@@ -1589,12 +2047,15 @@
             json =
                 JSON.parse(text);
 
-        }catch(error){
+        }
+
+        catch(error){
 
             console.error(
                 "HISTORY RAW:",
                 text
             );
+
 
             throw new Error(
                 "get_history.php ไม่ได้ส่ง JSON"
@@ -1631,6 +2092,7 @@
             .filter(Boolean);
 
     }
+
 
 
     /* =========================================================
@@ -1678,10 +2140,12 @@
                 latestRecord &&
                 !records.some(
                     record =>
+
                         record.id != null &&
                         latestRecord.id != null &&
                         record.id ===
                         latestRecord.id
+
                 )
             ){
 
@@ -1693,33 +2157,41 @@
 
 
             /*
-            เอาเฉพาะข้อมูลที่มี timestamp
+            เฉพาะข้อมูลที่มี timestamp
             */
 
             records =
                 records.filter(
                     record =>
+
                         record &&
                         record.timestamp &&
                         parseDate(
                             record.timestamp
                         )
+
                 );
 
 
             /*
-            เรียงจากเก่า -> ใหม่
+            เรียงเก่า -> ใหม่
             */
 
             records.sort(
                 (a,b) => {
 
                     return (
-                        parseDate(a.timestamp)
-                        .getTime() -
 
-                        parseDate(b.timestamp)
-                        .getTime()
+                        parseDate(
+                            a.timestamp
+                        ).getTime()
+
+                        -
+
+                        parseDate(
+                            b.timestamp
+                        ).getTime()
+
                     );
 
                 }
@@ -1732,8 +2204,10 @@
 
             render();
 
+        }
 
-        }catch(error){
+
+        catch(error){
 
             console.error(
                 "Dashboard ERROR:",
@@ -1781,6 +2255,7 @@
     }
 
 
+
     /* =========================================================
     ESCAPE HTML
     ========================================================= */
@@ -1788,13 +2263,34 @@
     function escapeHtml(value){
 
         return String(value)
-            .replaceAll("&","&amp;")
-            .replaceAll("<","&lt;")
-            .replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;")
-            .replaceAll("'","&#039;");
+
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
 
     }
+
 
 
     /* =========================================================
@@ -1809,14 +2305,18 @@
 
 
         /*
+        =========================================================
         NODE
+        =========================================================
         */
 
         const n1 =
             getLatestNode(1);
 
+
         const n2 =
             getLatestNode(2);
+
 
         const n3 =
             getLatestNode(3);
@@ -1827,16 +2327,22 @@
             n1
         );
 
+
         setNode(
             "n2",
             n2
         );
+
 
         setNode(
             "n3",
             n3
         );
 
+
+        /*
+        สถานะจาก D1
+        */
 
         updateNodeStatus(
             "n1status",
@@ -1859,16 +2365,14 @@
         );
 
 
+        /*
+        =========================================================
+        ONLINE COUNT
+        =========================================================
+        */
+
         const online =
-            [
-                n1,
-                n2,
-                n3
-            ]
-            .filter(
-                isNodeOnline
-            )
-            .length;
+            countOnlineNodes();
 
 
         $("onlineCountTop").textContent =
@@ -1877,25 +2381,91 @@
             TOTAL_NODES;
 
 
+
         /*
+        =========================================================
+        LAST UPDATE ของแต่ละ Node
+        =========================================================
+        */
+
+        const lastUpdate1 =
+            $("lastUpdate1");
+
+
+        if(lastUpdate1){
+
+            lastUpdate1.textContent =
+                n1
+                    ? formatThaiTime(
+                        n1.timestamp
+                    )
+                    : "--";
+
+        }
+
+
+        const lastUpdate2 =
+            $("lastUpdate2");
+
+
+        if(lastUpdate2){
+
+            lastUpdate2.textContent =
+                n2
+                    ? formatThaiTime(
+                        n2.timestamp
+                    )
+                    : "--";
+
+        }
+
+
+        const lastUpdate3 =
+            $("lastUpdate3");
+
+
+        if(lastUpdate3){
+
+            lastUpdate3.textContent =
+                n3
+                    ? formatThaiTime(
+                        n3.timestamp
+                    )
+                    : "--";
+
+        }
+
+
+
+        /*
+        =========================================================
         HERO
+        =========================================================
         */
 
         $("heroPM1").textContent =
-            fmt(latestRecord.pm1);
+            fmt(
+                latestRecord.pm1
+            );
 
 
         $("heroPM25").textContent =
-            fmt(latestRecord.pm25);
+            fmt(
+                latestRecord.pm25
+            );
 
 
         $("heroPM10").textContent =
-            fmt(latestRecord.pm10);
+            fmt(
+                latestRecord.pm10
+            );
 
 
         $("heroTemp").textContent =
             latestRecord.temperature == null
+
                 ? "--"
+
                 : fmt(
                     latestRecord.temperature
                 );
@@ -1903,7 +2473,9 @@
 
         $("heroHum").textContent =
             latestRecord.humidity == null
+
                 ? "--"
+
                 : fmt(
                     latestRecord.humidity
                 );
@@ -1911,14 +2483,19 @@
 
         $("heroLight").textContent =
             latestRecord.light == null
+
                 ? "--"
+
                 : fmt(
                     latestRecord.light
                 );
 
 
+
         /*
+        =========================================================
         QUALITY
+        =========================================================
         */
 
         const pm25 =
@@ -1942,8 +2519,11 @@
         );
 
 
+
         /*
+        =========================================================
         ALERT
+        =========================================================
         */
 
         updateAlerts(
@@ -1951,8 +2531,11 @@
         );
 
 
+
         /*
+        =========================================================
         AI
+        =========================================================
         */
 
         updateAI(
@@ -1961,25 +2544,34 @@
         );
 
 
+
         /*
+        =========================================================
         LAST UPDATE
+        =========================================================
         */
 
-        $("lastUpdate").textContent =
-            formatThaiTime(
-                latestRecord.timestamp
-            );
+        /*
+        ไม่ใช้ lastUpdate ตัวเดียวแล้ว
+        เพราะแต่ละ Node มีเวลาของตัวเอง
+        */
+
 
 
         /*
+        =========================================================
         STATISTICS
+        =========================================================
         */
 
         updateStatistics();
 
 
+
         /*
+        =========================================================
         CHART
+        =========================================================
         */
 
         drawCharts();
@@ -1987,84 +2579,14 @@
     }
 
 
-    /* =========================================================
-    NODE STATUS
-    ========================================================= */
-
-   function updateNodeStatus(
-statusId,
-cardId,
-node
-
-){
-
-const status =
-    $(statusId);
-
-
-const online =
-    isNodeOnline(node);
-
-
-if(online){
-
-    status.innerHTML = `
-        <span class="status-online-dot">
-            ●
-        </span>
-
-        ONLINE
-
-        <span class="badge rounded-full px-3 py-1 text-xs">
-            ESP-NOW
-        </span>
-    `;
-
-
-    status.className =
-        "status-online text-xs font-bold";
-
-
-    $(cardId)
-        .classList
-        .remove(
-            "offline"
-        );
-
-}else{
-
-    status.innerHTML = `
-        <span class="status-offline-dot">
-            ●
-        </span>
-
-        OFFLINE
-
-        <span class="badge rounded-full px-3 py-1 text-xs">
-            ESP-NOW
-        </span>
-    `;
-
-
-    status.className =
-        "status-offline text-xs font-bold";
-
-
-    $(cardId)
-        .classList
-        .add(
-            "offline"
-        );
-
-}
-
-}
 
     /* =========================================================
     OVERALL DOT
     ========================================================= */
 
-    function updateOverallDot(pm25){
+    function updateOverallDot(
+        pm25
+    ){
 
         const dot =
             $("overallDot");
@@ -2088,17 +2610,23 @@ if(online){
             dot.className =
                 "w-2.5 h-2.5 rounded-full bg-emerald-400";
 
-        }else if(pm25 <= 25){
+        }
+
+        else if(pm25 <= 25){
 
             dot.className =
                 "w-2.5 h-2.5 rounded-full bg-lime-400";
 
-        }else if(pm25 <= 37.5){
+        }
+
+        else if(pm25 <= 37.5){
 
             dot.className =
                 "w-2.5 h-2.5 rounded-full bg-amber-400";
 
-        }else{
+        }
+
+        else{
 
             dot.className =
                 "w-2.5 h-2.5 rounded-full bg-red-500";
@@ -2108,11 +2636,14 @@ if(online){
     }
 
 
+
     /* =========================================================
     ALERTS
     ========================================================= */
 
-    function updateAlerts(pm25){
+    function updateAlerts(
+        pm25
+    ){
 
         if(
             pm25 == null ||
@@ -2146,7 +2677,9 @@ if(online){
                 </span>
                 `;
 
-        }else if(pm25 > 25){
+        }
+
+        else if(pm25 > 25){
 
             $("alerts").innerHTML =
                 `
@@ -2161,7 +2694,9 @@ if(online){
                 </span>
                 `;
 
-        }else{
+        }
+
+        else{
 
             $("alerts").innerHTML =
                 `
@@ -2173,6 +2708,7 @@ if(online){
         }
 
     }
+
 
 
     /* =========================================================
@@ -2214,17 +2750,23 @@ if(online){
             recommendation =
                 "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
 
-        }else if(pm25 <= 25){
+        }
+
+        else if(pm25 <= 25){
 
             recommendation =
                 "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
 
-        }else if(pm25 <= 37.5){
+        }
+
+        else if(pm25 <= 37.5){
 
             recommendation =
                 "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
 
-        }else{
+        }
+
+        else{
 
             recommendation =
                 "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
@@ -2242,6 +2784,7 @@ if(online){
             <br>
 
             สถานะ:
+
             <b>
                 ${q}
             </b>
@@ -2262,6 +2805,7 @@ if(online){
             <br>
 
             PM2.5 ล่าสุด:
+
             <b class="text-cyan-300">
                 ${fmt(pm25)} µg/m³
             </b>
@@ -2269,6 +2813,7 @@ if(online){
             <br>
 
             อุณหภูมิ:
+
             <b>
                 ${fmt(latest.temperature)} °C
             </b>
@@ -2276,6 +2821,7 @@ if(online){
             <br>
 
             ความชื้น:
+
             <b>
                 ${fmt(latest.humidity)} %
             </b>
@@ -2283,6 +2829,7 @@ if(online){
             <br>
 
             แสง:
+
             <b>
                 ${
                     latest.light == null
@@ -2313,6 +2860,7 @@ if(online){
     }
 
 
+
     /* =========================================================
     STATISTICS
     ========================================================= */
@@ -2321,10 +2869,12 @@ if(online){
 
         const values =
             records
+
             .map(
                 x =>
                     x.pm25
             )
+
             .filter(
                 x =>
                     x != null &&
@@ -2337,11 +2887,14 @@ if(online){
             $("avgPM").textContent =
                 "--";
 
+
             $("maxPM").textContent =
                 "--";
 
+
             $("minPM").textContent =
                 "--";
+
 
             return;
 
@@ -2373,6 +2926,7 @@ if(online){
             ).toFixed(1);
 
     }
+
 
 
     /* =========================================================
@@ -2412,6 +2966,7 @@ if(online){
     }
 
 
+
     /* =========================================================
     DRAW CHART
     ========================================================= */
@@ -2420,6 +2975,7 @@ if(online){
 
         const arr =
             records
+
             .filter(
                 x =>
                     x &&
@@ -2430,11 +2986,15 @@ if(online){
                         )
                     )
             )
+
             .sort(
                 (a,b) =>
                     parseDate(
                         a.timestamp
-                    ).getTime() -
+                    ).getTime()
+
+                    -
+
                     parseDate(
                         b.timestamp
                     ).getTime()
@@ -2493,9 +3053,11 @@ if(online){
 
 
                     return d
+
                         ? d.toLocaleString(
                             "th-TH",
                             {
+
                                 timeZone:
                                     "Asia/Bangkok",
 
@@ -2510,8 +3072,10 @@ if(online){
 
                                 minute:
                                     "2-digit"
+
                             }
                         )
+
                         : "";
 
                 }
@@ -2567,20 +3131,19 @@ if(online){
             $("trend").textContent =
                 "ข้อมูลยังน้อย";
 
-        }else{
+        }
+
+        else{
 
             const difference =
                 last - first;
 
 
-            /*
-            ใช้เปอร์เซ็นต์
-            เพื่อดูแนวโน้มได้ดีขึ้น
-            */
-
             const percentage =
                 first === 0
+
                     ? 0
+
                     : (
                         difference /
                         Math.abs(first)
@@ -2588,21 +3151,26 @@ if(online){
 
 
             if(
-                Math.abs(percentage) <
-                1
+                Math.abs(
+                    percentage
+                ) < 1
             ){
 
                 $("trend").textContent =
                     "→ คงที่";
 
-            }else if(
+            }
+
+            else if(
                 difference > 0
             ){
 
                 $("trend").textContent =
                     "↑ เพิ่มขึ้น";
 
-            }else{
+            }
+
+            else{
 
                 $("trend").textContent =
                     "↓ ลดลง";
@@ -2612,8 +3180,11 @@ if(online){
         }
 
 
+
         /*
+        =========================================================
         HISTORY CHART
+        =========================================================
         */
 
         if(historyChart){
@@ -2628,35 +3199,51 @@ if(online){
                 $("historyChart"),
                 {
 
-                    type:"line",
+                    type:
+                        "line",
+
 
                     data:{
 
-                        labels:labels,
+                        labels:
+                            labels,
+
 
                         datasets:[{
 
                             label:
                                 metricLabel(),
 
-                            data:values,
+
+                            data:
+                                values,
+
 
                             borderColor:
                                 "#22d3ee",
 
+
                             backgroundColor:
                                 "rgba(34,211,238,.08)",
 
-                            fill:true,
 
-                            tension:.35,
+                            fill:
+                                true,
+
+
+                            tension:
+                                .35,
+
 
                             pointRadius:
+
                                 values.length > 50
                                     ? 0
                                     : 3,
 
-                            borderWidth:2
+
+                            borderWidth:
+                                2
 
                         }]
 
@@ -2665,16 +3252,22 @@ if(online){
 
                     options:{
 
-                        responsive:true,
+                        responsive:
+                            true,
+
 
                         maintainAspectRatio:
                             true,
 
+
                         interaction:{
 
-                            intersect:false,
+                            intersect:
+                                false,
 
-                            mode:"index"
+
+                            mode:
+                                "index"
 
                         },
 
@@ -2682,8 +3275,12 @@ if(online){
                         plugins:{
 
                             legend:{
-                                display:false
+
+                                display:
+                                    false
+
                             },
+
 
                             tooltip:{
 
@@ -2691,8 +3288,10 @@ if(online){
 
                                     label:
                                         context =>
+
                                             metricLabel() +
                                             ": " +
+
                                             Number(
                                                 context.raw
                                             ).toFixed(1)
@@ -2708,7 +3307,9 @@ if(online){
 
                             y:{
 
-                                beginAtZero:false,
+                                beginAtZero:
+                                    false,
+
 
                                 grid:{
 
@@ -2723,8 +3324,12 @@ if(online){
                             x:{
 
                                 grid:{
-                                    display:false
+
+                                    display:
+                                        false
+
                                 },
+
 
                                 ticks:{
 
@@ -2743,6 +3348,7 @@ if(online){
             );
 
 
+
         /*
         FORECAST
         */
@@ -2754,11 +3360,14 @@ if(online){
     }
 
 
+
     /* =========================================================
     FORECAST
     ========================================================= */
 
-    function drawForecast(values){
+    function drawForecast(
+        values
+    ){
 
         if(forecastChart){
 
@@ -2815,18 +3424,25 @@ if(online){
             i++
         ){
 
-            const x = i;
+            const x =
+                i;
+
 
             const y =
                 recent[i];
 
 
-            sumX += x;
+            sumX +=
+                x;
 
-            sumY += y;
+
+            sumY +=
+                y;
+
 
             sumXY +=
                 x * y;
+
 
             sumXX +=
                 x * x;
@@ -2841,7 +3457,9 @@ if(online){
 
         const slope =
             denominator === 0
+
                 ? 0
+
                 : (
                     n * sumXY -
                     sumX * sumY
@@ -2858,7 +3476,7 @@ if(online){
 
 
         /*
-        สร้างข้อมูล forecast
+        Forecast
         */
 
         const forecast = [];
@@ -2875,11 +3493,13 @@ if(online){
 
 
             forecast.push(
+
                 Math.max(
                     0,
                     intercept +
                     slope * x
                 )
+
             );
 
         }
@@ -2915,14 +3535,18 @@ if(online){
             direction =
                 "ค่อนข้างคงที่";
 
-        }else if(
+        }
+
+        else if(
             slope > 0
         ){
 
             direction =
                 "มีแนวโน้มเพิ่มขึ้น";
 
-        }else{
+        }
+
+        else{
 
             direction =
                 "มีแนวโน้มลดลง";
@@ -2934,6 +3558,7 @@ if(online){
 
             `
             แนวโน้มปัจจุบัน:
+
             <b class="text-cyan-300">
                 ${direction}
             </b>
@@ -2941,6 +3566,7 @@ if(online){
             <br>
 
             ค่าแนวโน้มล่าสุด:
+
             <b>
                 ${fmt(forecast[0])}
             </b>
@@ -2948,8 +3574,13 @@ if(online){
             <br>
 
             คาดการณ์ปลายช่วง:
+
             <b>
-                ${fmt(forecast[forecast.length - 1])}
+                ${fmt(
+                    forecast[
+                        forecast.length - 1
+                    ]
+                )}
             </b>
 
             <br><br>
@@ -2970,33 +3601,48 @@ if(online){
                 $("forecastChart"),
                 {
 
-                    type:"line",
+                    type:
+                        "line",
+
 
                     data:{
 
-                        labels:labels,
+                        labels:
+                            labels,
+
 
                         datasets:[{
 
                             label:
                                 "Forecast",
 
-                            data:forecast,
+
+                            data:
+                                forecast,
+
 
                             borderColor:
                                 "#34d399",
 
+
                             backgroundColor:
                                 "rgba(52,211,153,.08)",
+
 
                             borderDash:
                                 [6,5],
 
-                            fill:true,
 
-                            tension:.3,
+                            fill:
+                                true,
 
-                            pointRadius:4
+
+                            tension:
+                                .3,
+
+
+                            pointRadius:
+                                4
 
                         }]
 
@@ -3005,12 +3651,17 @@ if(online){
 
                     options:{
 
-                        responsive:true,
+                        responsive:
+                            true,
+
 
                         plugins:{
 
                             legend:{
-                                display:false
+
+                                display:
+                                    false
+
                             }
 
                         },
@@ -3033,7 +3684,10 @@ if(online){
                             x:{
 
                                 grid:{
-                                    display:false
+
+                                    display:
+                                        false
+
                                 }
 
                             }
@@ -3049,52 +3703,69 @@ if(online){
     }
 
 
+
     /* =========================================================
     RANGE BUTTONS
     ========================================================= */
 
     document
-    .querySelectorAll(
-        ".range"
-    )
-    .forEach(
-        button => {
+        .querySelectorAll(
+            ".range"
+        )
+        .forEach(
+            button => {
 
-            button.addEventListener(
-                "click",
-                async () => {
+                button.addEventListener(
+                    "click",
+                    async () => {
 
-                    document
-                    .querySelectorAll(
-                        ".range"
-                    )
-                    .forEach(
-                        x =>
-                            x.classList
-                            .remove(
-                                "active"
+
+                        /*
+                        ปุ่มส่งออกยังไม่ได้ทำระบบ Export
+                        จึงไม่เปลี่ยน range
+                        */
+
+                        if(
+                            button.dataset.range === ""
+                        ){
+
+                            return;
+
+                        }
+
+
+                        document
+                            .querySelectorAll(
+                                ".range"
                             )
-                    );
+                            .forEach(
+                                x =>
+                                    x.classList
+                                        .remove(
+                                            "active"
+                                        )
+                            );
 
 
-                    button
-                        .classList
-                        .add(
-                            "active"
-                        );
+                        button
+                            .classList
+                            .add(
+                                "active"
+                            );
 
 
-                    currentRange =
-                        button.dataset.range;
+                        currentRange =
+                            button.dataset.range;
 
 
-                    await load();
+                        await load();
 
-                }
-            );
+                    }
+                );
 
-        }
-    );
+            }
+        );
+
 
 
     /* =========================================================
@@ -3102,18 +3773,19 @@ if(online){
     ========================================================= */
 
     $("metric")
-    .addEventListener(
-        "change",
-        e => {
+        .addEventListener(
+            "change",
+            e => {
 
-            metric =
-                e.target.value;
+                metric =
+                    e.target.value;
 
 
-            drawCharts();
+                drawCharts();
 
-        }
-    );
+            }
+        );
+
 
 
     /* =========================================================
@@ -3124,19 +3796,21 @@ if(online){
 
         $("clock").textContent =
             new Date()
-            .toLocaleString(
-                "th-TH",
-                {
-                    timeZone:
-                        "Asia/Bangkok",
+                .toLocaleString(
+                    "th-TH",
+                    {
 
-                    dateStyle:
-                        "medium",
+                        timeZone:
+                            "Asia/Bangkok",
 
-                    timeStyle:
-                        "medium"
-                }
-            );
+                        dateStyle:
+                            "medium",
+
+                        timeStyle:
+                            "medium"
+
+                    }
+                );
 
     }
 
@@ -3150,12 +3824,22 @@ if(online){
     );
 
 
+
     /* =========================================================
-    AUTO REFRESH
+    INITIAL LOAD
     ========================================================= */
 
     load();
 
+
+
+    /* =========================================================
+    AUTO REFRESH
+    =========================================================
+
+    Dashboard จะโหลดข้อมูลใหม่ทุก 10 วินาที
+
+    ========================================================= */
 
     setInterval(
         load,
@@ -3163,15 +3847,16 @@ if(online){
     );
 
 
-    /* =========================================================
-    OFFLINE STATUS REFRESH
-    ========================================================= */
 
-    /*
-    ไม่ต้องรอ API ใหม่
-    ถ้าข้อมูลเก่าเกิน 10 นาที
-    หน้า Dashboard จะเปลี่ยนเป็น OFFLINE เอง
-    */
+    /* =========================================================
+    STATUS REFRESH
+    =========================================================
+
+    ตอนนี้ไม่ต้องคำนวณอายุข้อมูลแล้ว
+
+    ระบบใช้ status จาก D1 โดยตรง
+
+    ========================================================= */
 
     setInterval(
         () => {
@@ -3184,8 +3869,10 @@ if(online){
             const n1 =
                 getLatestNode(1);
 
+
             const n2 =
                 getLatestNode(2);
+
 
             const n3 =
                 getLatestNode(3);
@@ -3213,15 +3900,7 @@ if(online){
 
 
             const online =
-                [
-                    n1,
-                    n2,
-                    n3
-                ]
-                .filter(
-                    isNodeOnline
-                )
-                .length;
+                countOnlineNodes();
 
 
             $("onlineCountTop").textContent =
@@ -3232,6 +3911,7 @@ if(online){
         },
         5000
     );
+
 
     </script>
 
