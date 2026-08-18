@@ -449,6 +449,72 @@
 
 
     <!-- =========================================================
+    HERO AVERAGE RANGE
+    ========================================================= -->
+
+    <div class="glass card p-4 mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+
+        <div>
+
+            <div class="font-black">
+                📊 ค่าเฉลี่ยข้อมูล
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+                เลือกช่วงเวลาสำหรับคำนวณค่าเฉลี่ย
+            </div>
+
+        </div>
+
+
+        <select
+            id="heroAverageRange"
+            class="rounded-xl px-4 py-2 text-sm"
+        >
+
+            <option value="30m">
+                30 นาที
+            </option>
+
+            <option value="1h">
+                1 ชั่วโมง
+            </option>
+
+            <option value="3h">
+                3 ชั่วโมง
+            </option>
+
+            <option value="6h">
+                6 ชั่วโมง
+            </option>
+
+            <option value="12h">
+                12 ชั่วโมง
+            </option>
+
+            <option value="24h" selected>
+                24 ชั่วโมง
+            </option>
+
+            <option value="3d">
+                3 วัน
+            </option>
+
+            <option value="7d">
+                7 วัน
+            </option>
+
+            <option value="30d">
+                30 วัน
+            </option>
+
+        </select>
+
+    </div>
+
+
+
+    <!-- =========================================================
     HERO METRICS
     ========================================================= -->
 
@@ -469,8 +535,11 @@
                 µg/m³
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgPM1Label"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -490,8 +559,11 @@
                 µg/m³
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgPM25Label"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -511,8 +583,11 @@
                 µg/m³
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgPM10Label"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -532,8 +607,11 @@
                 °C
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgTempLabel"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -553,8 +631,11 @@
                 %
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgHumLabel"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -574,8 +655,11 @@
                 lux
             </div>
 
-            <div class="live mt-4">
-                ● LIVE
+            <div
+                id="heroAvgLightLabel"
+                class="live mt-4"
+            >
+                ● เฉลี่ย 24 ชม.
             </div>
 
         </div>
@@ -925,7 +1009,6 @@
         "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
 
 
-
     /* =========================================================
     CONFIG
     ========================================================= */
@@ -983,6 +1066,20 @@
     let metric = "pm25";
 
     let lastSuccessfulLoad = null;
+
+
+    /*
+    =========================================================
+    HERO AVERAGE RANGE
+    =========================================================
+
+    ใช้สำหรับกำหนดช่วงเวลาที่นำมาคำนวณ
+    ค่าเฉลี่ยบน Hero Metrics
+
+    ขั้นต่ำ 30 นาที
+    */
+
+    let heroAverageRange = "24h";
 
 
 
@@ -2427,6 +2524,367 @@
 
 
     /* =========================================================
+    HERO AVERAGE
+    ========================================================= */
+
+    function getHeroAverageMilliseconds(){
+
+        const range =
+            heroAverageRange;
+
+
+        const ranges = {
+
+            "30m":
+                30 * 60 * 1000,
+
+            "1h":
+                1 * 60 * 60 * 1000,
+
+            "3h":
+                3 * 60 * 60 * 1000,
+
+            "6h":
+                6 * 60 * 60 * 1000,
+
+            "12h":
+                12 * 60 * 60 * 1000,
+
+            "24h":
+                24 * 60 * 60 * 1000,
+
+            "3d":
+                3 * 24 * 60 * 60 * 1000,
+
+            "7d":
+                7 * 24 * 60 * 60 * 1000,
+
+            "30d":
+                30 * 24 * 60 * 60 * 1000
+
+        };
+
+
+        return (
+            ranges[range] ||
+            ranges["24h"]
+        );
+
+    }
+
+
+
+    /* =========================================================
+    HERO AVERAGE LABEL
+    ========================================================= */
+
+    function getHeroAverageLabel(){
+
+        const labels = {
+
+            "30m":
+                "30 นาที",
+
+            "1h":
+                "1 ชม.",
+
+            "3h":
+                "3 ชม.",
+
+            "6h":
+                "6 ชม.",
+
+            "12h":
+                "12 ชม.",
+
+            "24h":
+                "24 ชม.",
+
+            "3d":
+                "3 วัน",
+
+            "7d":
+                "7 วัน",
+
+            "30d":
+                "30 วัน"
+
+        };
+
+
+        return (
+            labels[
+                heroAverageRange
+            ] ||
+            "24 ชม."
+        );
+
+    }
+
+
+
+    /* =========================================================
+    CALCULATE HERO AVERAGES
+    ========================================================= */
+
+    function calculateHeroAverages(){
+
+        const now =
+            Date.now();
+
+
+        const rangeMilliseconds =
+            getHeroAverageMilliseconds();
+
+
+        const startTime =
+            now -
+            rangeMilliseconds;
+
+
+        const recentRecords =
+            records.filter(
+                record => {
+
+                    if(
+                        !record ||
+                        !record.timestamp
+                    ){
+
+                        return false;
+
+                    }
+
+
+                    const date =
+                        parseDate(
+                            record.timestamp
+                        );
+
+
+                    if(!date){
+
+                        return false;
+
+                    }
+
+
+                    const time =
+                        date.getTime();
+
+
+                    return (
+                        time >= startTime &&
+                        time <= now
+                    );
+
+                }
+            );
+
+
+        const metrics = [
+
+            "pm1",
+            "pm25",
+            "pm10",
+            "temperature",
+            "humidity",
+            "light"
+
+        ];
+
+
+        const averages = {};
+
+
+        metrics.forEach(
+            key => {
+
+                const values =
+                    recentRecords
+
+                    .map(
+                        record =>
+                            record[key]
+                    )
+
+                    .filter(
+                        value =>
+                            value != null &&
+                            !isNaN(value)
+                    )
+
+                    .map(
+                        Number
+                    );
+
+
+                if(!values.length){
+
+                    averages[key] =
+                        null;
+
+                    return;
+
+                }
+
+
+                const total =
+                    values.reduce(
+                        (sum,value) =>
+                            sum + value,
+                        0
+                    );
+
+
+                averages[key] =
+                    total /
+                    values.length;
+
+            }
+        );
+
+
+        return {
+
+            averages:
+
+                averages,
+
+            count:
+
+                recentRecords.length
+
+        };
+
+    }
+
+
+
+    /* =========================================================
+    UPDATE HERO AVERAGES
+    ========================================================= */
+
+    function updateHeroAverages(){
+
+        const result =
+            calculateHeroAverages();
+
+
+        const averages =
+            result.averages;
+
+
+        const label =
+            getHeroAverageLabel();
+
+
+        const fields = [
+
+            {
+                id:
+                    "heroAvgPM1Label",
+
+                value:
+                    averages.pm1
+            },
+
+            {
+                id:
+                    "heroAvgPM25Label",
+
+                value:
+                    averages.pm25
+            },
+
+            {
+                id:
+                    "heroAvgPM10Label",
+
+                value:
+                    averages.pm10
+            },
+
+            {
+                id:
+                    "heroAvgTempLabel",
+
+                value:
+                    averages.temperature
+            },
+
+            {
+                id:
+                    "heroAvgHumLabel",
+
+                value:
+                    averages.humidity
+            },
+
+            {
+                id:
+                    "heroAvgLightLabel",
+
+                value:
+                    averages.light
+            }
+
+        ];
+
+
+        fields.forEach(
+            field => {
+
+                const element =
+                    $(field.id);
+
+
+                if(!element){
+                    return;
+                }
+
+
+                if(
+                    field.value == null ||
+                    isNaN(field.value)
+                ){
+
+                    element.textContent =
+                        "● ไม่มีข้อมูล";
+
+                }
+
+                else{
+
+                    element.textContent =
+                        "● เฉลี่ย " +
+                        label;
+
+                }
+
+            }
+        );
+
+
+        console.log(
+            "Hero Average:",
+            {
+                range:
+                    label,
+
+                records:
+                    result.count,
+
+                averages:
+                    averages
+            }
+        );
+
+    }
+
+
+
+    /* =========================================================
     RENDER
     ========================================================= */
 
@@ -2602,6 +3060,17 @@
                 : fmt(
                     latestRecord.light
                 );
+
+
+        /*
+        =========================================================
+        HERO AVERAGES
+
+        เพิ่มเฉพาะส่วนนี้
+        =========================================================
+        */
+
+        updateHeroAverages();
 
 
 
@@ -3757,7 +4226,6 @@
                     }
 
                 }
-
             );
 
     }
@@ -3843,6 +4311,26 @@
 
 
     /* =========================================================
+    HERO AVERAGE RANGE
+    ========================================================= */
+
+    $("heroAverageRange")
+        .addEventListener(
+            "change",
+            e => {
+
+                heroAverageRange =
+                    e.target.value;
+
+
+                updateHeroAverages();
+
+            }
+        );
+
+
+
+    /* =========================================================
     CLOCK
     ========================================================= */
 
@@ -3889,7 +4377,6 @@
 
     /* =========================================================
     AUTO REFRESH
-    =========================================================
 
     โหลดใหม่ทุก 10 วินาที
 
@@ -3904,7 +4391,6 @@
 
     /* =========================================================
     STATUS REFRESH
-    =========================================================
 
     ตรวจสอบสถานะทุก 5 วินาที
 
@@ -3978,12 +4464,14 @@
 
             }
 
+
         },
         5000
     );
 
 
     </script>
+
 
 </body>
 
