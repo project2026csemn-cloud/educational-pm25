@@ -254,7 +254,7 @@ canvas { max-height: 300px; }
     box-sizing: border-box;
 }
 /* =====================================================
-   PREMIUM CREDIT BAR
+   CREDIT BAR
    ===================================================== */
 
 .credit-bar {
@@ -527,7 +527,7 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   IMAGE
+   CREDIT IMAGE
    ===================================================== */
 
 .credit-icon img {
@@ -542,11 +542,17 @@ canvas { max-height: 300px; }
 
     border-radius: 12px;
 
+    display: block;
+
     transition:
         transform 0.25s ease;
 
 }
 
+
+/* =====================================================
+   IMAGE BUTTON
+   ===================================================== */
 
 .credit-image-button {
 
@@ -623,8 +629,17 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   PLACEHOLDER
+   PLACEHOLDER / DEVELOPER ICON
    ===================================================== */
+
+.credit-placeholder {
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+}
+
 
 .credit-placeholder span {
 
@@ -640,6 +655,107 @@ canvas { max-height: 300px; }
 
     transform:
         scale(1.10);
+
+}
+
+
+/* =====================================================
+   01. COLLEGE IMAGE
+   ===================================================== */
+
+/*
+   วิทยาลัย:
+   ขยายโลโก้ให้ใหญ่ขึ้น
+   แต่ยังคงสัดส่วนเดิม
+*/
+
+.credit-college .credit-icon img {
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    padding: 1px !important;
+
+    object-fit: contain !important;
+
+    border-radius: 12px !important;
+
+}
+
+
+/* =====================================================
+   02. DEPARTMENT IMAGE
+   ===================================================== */
+
+/*
+   แผนก:
+   ใช้ค่าปกติเดิม
+   ไม่ขยายเพิ่ม
+*/
+
+.credit-department .credit-icon img {
+
+    width: 100%;
+
+    height: 100%;
+
+    padding: 6px;
+
+    object-fit: contain;
+
+    border-radius: 12px;
+
+}
+
+
+/* =====================================================
+   03-04. DEVELOPER IMAGE
+   ===================================================== */
+
+/*
+   รูปสามเณร:
+   - กรอบมน
+   - รูปเต็มกรอบ
+   - ซูมเข้ามา
+*/
+
+.credit-developer .credit-icon {
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+}
+
+
+.credit-developer .credit-icon img {
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    padding: 0 !important;
+
+    object-fit: cover !important;
+
+    object-position: center center !important;
+
+    border-radius: 14px !important;
+
+    transform:
+        scale(1.18) !important;
+
+    transition:
+        transform 0.3s ease !important;
+
+}
+
+
+.credit-developer .credit-icon:hover img {
+
+    transform:
+        scale(1.25) !important;
 
 }
 
@@ -1016,7 +1132,7 @@ canvas { max-height: 300px; }
 
 
 /* =====================================================
-   IMAGE MODAL
+   CREDIT IMAGE MODAL
    ===================================================== */
 
 .credit-image-modal {
@@ -1035,6 +1151,8 @@ canvas { max-height: 300px; }
 
 }
 
+
+/* เปิดเฉพาะตอนกดรูป */
 
 .credit-image-modal.active {
 
@@ -1352,109 +1470,7 @@ canvas { max-height: 300px; }
         border-bottom:
             1px solid
             rgba(148, 163, 184, 0.12);
-/* =====================================================
-   CREDIT IMAGE - CUSTOM SIZE
-   ===================================================== */
 
-
-/* =====================================================
-   01. ตราวิทยาลัย
-   ขยายรูปให้ใหญ่ขึ้นในกรอบ
-   ===================================================== */
-
-.credit-college .credit-icon img {
-
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: contain;
-
-    padding: 2px;
-
-    border-radius: 12px;
-
-}
-
-
-/* =====================================================
-   02. ตราแผนก
-   ไม่แก้
-   ===================================================== */
-
-
-/* =====================================================
-   03-04. รูปสามเณร
-   ให้เหมือนกรอบตราแผนก
-   + ซูมรูปเข้ามา
-   ===================================================== */
-
-.credit-developer .credit-icon {
-
-    overflow: hidden;
-
-    border-radius: 14px;
-
-}
-
-
-/* รูปสามเณร */
-
-.credit-developer .credit-icon img {
-
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: cover;
-
-    object-position: center;
-
-    padding: 0;
-
-    border-radius: 14px;
-
-    transform:
-        scale(1.18);
-
-    transition:
-        transform 0.3s ease;
-
-}
-
-
-/* ตอนเอาเมาส์ชี้ */
-
-.credit-developer .credit-icon:hover img {
-
-    transform:
-        scale(1.25);
-
-}
-
-
-/* =====================================================
-   ถ้าเป็นรูปสามเณรที่ยังใช้ Placeholder
-   ===================================================== */
-
-.credit-developer .credit-placeholder {
-
-    overflow: hidden;
-
-    border-radius: 14px;
-
-}
-
-
-/* =====================================================
-   ซ่อน emoji เมื่อเปลี่ยนเป็นรูปจริง
-   ===================================================== */
-
-.credit-developer .credit-placeholder img {
-
-    display: block;
-
-}
     }
 
 
@@ -1503,6 +1519,8 @@ canvas { max-height: 300px; }
 
     }
 
+
+    /* Modal */
 
     .credit-image-window {
 
