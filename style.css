@@ -253,3 +253,201 @@ canvas { max-height: 300px; }
 
     box-sizing: border-box;
 }
+/* =====================================================
+   CREDIT BAR
+   ===================================================== */
+
+.credit-bar {
+
+    width: 100%;
+
+    margin-top: 32px;
+
+    padding: 18px 24px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 0;
+
+    background:
+        rgba(15, 23, 42, 0.85);
+
+    border-top:
+        1px solid
+        rgba(148, 163, 184, 0.15);
+
+    border-bottom:
+        1px solid
+        rgba(148, 163, 184, 0.08);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+}
+
+
+/* =====================================================
+   CREDIT ITEM
+   ===================================================== */
+
+.credit-item {
+
+    min-width: 0;
+
+    padding:
+        4px 22px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    text-align: center;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    border-right:
+        1px solid
+        rgba(148, 163, 184, 0.12);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+/* เอาเส้นกั้นของอันสุดท้ายออก */
+
+.credit-item:last-child {
+
+    border-right: none;
+
+}
+
+
+/* =====================================================
+   TITLE
+   ===================================================== */
+
+.credit-title {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: #e2e8f0;
+
+    line-height: 1.5;
+
+}
+
+
+/* =====================================================
+   SUBTITLE
+   ===================================================== */
+
+.credit-subtitle {
+
+    margin-top: 4px;
+
+    font-size: 11px;
+
+    color: #64748b;
+
+    line-height: 1.4;
+
+}
+
+
+/* =====================================================
+   HOVER
+   ===================================================== */
+
+a.credit-item:hover {
+
+    background:
+        rgba(34, 211, 238, 0.05);
+
+}
+
+
+a.credit-item:hover .credit-title {
+
+    color: #67e8f9;
+
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+    .credit-bar {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 0;
+
+        padding: 14px 10px;
+
+    }
+
+
+    .credit-item {
+
+        padding:
+            10px 8px;
+
+        border-right: none;
+
+        border-bottom:
+            1px solid
+            rgba(148, 163, 184, 0.10);
+
+    }
+
+
+    .credit-item:nth-child(odd) {
+
+        border-right:
+            1px solid
+            rgba(148, 163, 184, 0.10);
+
+    }
+
+
+    .credit-item:nth-child(3),
+    .credit-item:nth-child(4) {
+
+        border-bottom: none;
+
+    }
+
+
+    .credit-title {
+
+        font-size: 11px;
+
+    }
+
+
+    .credit-subtitle {
+
+        font-size: 10px;
+
+    }
+
+}
