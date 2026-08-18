@@ -580,22 +580,24 @@ canvas { max-height: 300px; }
 
     position: absolute;
 
-    right: -6px;
+    right: -8px;
 
-    bottom: -6px;
+    bottom: -8px;
+
+    z-index: 20;
 
     padding:
         3px 6px;
 
     border:
         1px solid
-        rgba(34, 211, 238, 0.35);
+        rgba(34, 211, 238, 0.45);
 
     border-radius:
-        5px;
+        6px;
 
     background:
-        rgba(8, 47, 73, 0.96);
+        rgba(8, 47, 73, 0.98);
 
     color:
         #67e8f9;
@@ -603,6 +605,10 @@ canvas { max-height: 300px; }
     font-size: 7px;
 
     font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
 
     opacity: 0;
 
@@ -634,8 +640,6 @@ canvas { max-height: 300px; }
 
 .credit-placeholder {
 
-    overflow: hidden;
-
     border-radius: 14px;
 
 }
@@ -666,7 +670,6 @@ canvas { max-height: 300px; }
 /*
    วิทยาลัย:
    ขยายโลโก้ให้ใหญ่ขึ้น
-   แต่ยังคงสัดส่วนเดิม
 */
 
 .credit-college .credit-icon img {
@@ -690,8 +693,7 @@ canvas { max-height: 300px; }
 
 /*
    แผนก:
-   ใช้ค่าปกติเดิม
-   ไม่ขยายเพิ่ม
+   คงขนาดเดิม
 */
 
 .credit-department .credit-icon img {
@@ -713,16 +715,53 @@ canvas { max-height: 300px; }
    03-04. DEVELOPER IMAGE
    ===================================================== */
 
+/*
+   รูปสามเณร:
+   - ขอบมน
+   - ซูม
+   - เลื่อนภาพขึ้น
+   - ไม่ตัดคำว่า "ดูรูป"
+*/
+
 .credit-developer .credit-icon {
 
-    overflow: hidden;
+    overflow: visible;
 
     border-radius: 14px;
 
 }
 
 
+/*
+   สร้างพื้นที่ตัดรูปด้านใน
+   เพื่อให้รูปยังคงขอบมน
+   แต่ตัว ICON ไม่ตัดป้าย "ดูรูป"
+*/
+
+.credit-developer .credit-icon::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    border-radius: 14px;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+}
+
+
 .credit-developer .credit-icon img {
+
+    position: relative;
+
+    z-index: 0;
 
     width: 100% !important;
 
@@ -744,6 +783,10 @@ canvas { max-height: 300px; }
 
 }
 
+
+/* =====================================================
+   DEVELOPER HOVER
+   ===================================================== */
 
 .credit-developer .credit-icon:hover img {
 
@@ -1144,8 +1187,6 @@ canvas { max-height: 300px; }
 
 }
 
-
-/* เปิดเฉพาะตอนกดรูป */
 
 .credit-image-modal.active {
 
