@@ -1073,6 +1073,862 @@ canvas { max-height: 300px; }
 
 .credit-status-dot {
 
+    width: 6px;/* =====================================================
+   CREDIT BAR
+   ===================================================== */
+
+.credit-bar {
+
+    position: relative;
+
+    width: 100%;
+
+    margin-top: 38px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #07111f 0%,
+            #0b1728 45%,
+            #082536 100%
+        );
+
+    border-top:
+        1px solid
+        rgba(34, 211, 238, 0.38);
+
+    border-bottom:
+        1px solid
+        rgba(34, 211, 238, 0.24);
+
+    box-shadow:
+        0 -10px 35px
+        rgba(6, 182, 212, 0.10),
+
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.025);
+
+}
+
+
+/* =====================================================
+   BACKGROUND GRID
+   ===================================================== */
+
+.credit-bar::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    opacity: 0.18;
+
+    background-image:
+        linear-gradient(
+            rgba(34, 211, 238, 0.08) 1px,
+            transparent 1px
+        ),
+
+        linear-gradient(
+            90deg,
+            rgba(34, 211, 238, 0.08) 1px,
+            transparent 1px
+        );
+
+    background-size:
+        32px 32px;
+
+}
+
+
+/* =====================================================
+   TOP LIGHT LINE
+   ===================================================== */
+
+.credit-bar::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    left: 8%;
+
+    width: 84%;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(34, 211, 238, 0.75),
+            transparent
+        );
+
+    box-shadow:
+        0 0 12px
+        rgba(34, 211, 238, 0.55);
+
+}
+
+
+/* =====================================================
+   DECORATIVE GLOW
+   ===================================================== */
+
+.credit-glow {
+
+    position: absolute;
+
+    width: 260px;
+
+    height: 260px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    filter:
+        blur(70px);
+
+    opacity: 0.10;
+
+}
+
+
+.credit-glow-1 {
+
+    top: -170px;
+
+    left: 5%;
+
+    background:
+        #06b6d4;
+
+}
+
+
+.credit-glow-2 {
+
+    bottom: -190px;
+
+    right: 5%;
+
+    background:
+        #0ea5e9;
+
+}
+
+
+/* =====================================================
+   CREDIT INNER
+   ===================================================== */
+
+.credit-inner {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        1.35fr
+        1.25fr
+        1fr
+        1fr;
+
+    align-items: stretch;
+
+}
+
+
+/* =====================================================
+   CREDIT BOX
+   ===================================================== */
+
+.credit-box {
+
+    position: relative;
+
+    min-width: 0;
+
+    min-height: 128px;
+
+    padding:
+        22px 24px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    border-right:
+        1px solid
+        rgba(148, 163, 184, 0.13);
+
+    transition:
+        background 0.3s ease,
+        transform 0.3s ease;
+
+}
+
+
+.credit-box:last-child {
+
+    border-right: none;
+
+}
+
+
+/* =====================================================
+   ICON
+   ===================================================== */
+
+.credit-icon {
+
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 48px !important;
+
+    height: 48px !important;
+
+    min-width: 48px !important;
+
+    min-height: 48px !important;
+
+    max-width: 48px !important;
+
+    max-height: 48px !important;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(34, 211, 238, 0.25);
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(34, 211, 238, 0.12),
+            rgba(14, 165, 233, 0.04)
+        );
+
+    box-shadow:
+        inset 0 0 15px
+        rgba(34, 211, 238, 0.04),
+
+        0 0 18px
+        rgba(34, 211, 238, 0.04);
+
+    font-size: 21px;
+
+    overflow: visible;
+
+    transition:
+        transform 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+
+}
+
+
+/* =====================================================
+   CREDIT IMAGE
+   ===================================================== */
+
+.credit-icon img {
+
+    display: block;
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    padding: 6px;
+
+    border-radius: 12px;
+
+    transition:
+        transform 0.25s ease;
+
+}
+
+
+/* =====================================================
+   IMAGE BUTTON
+   ===================================================== */
+
+.credit-image-button {
+
+    cursor: pointer;
+
+}
+
+
+.credit-image-button:hover img {
+
+    transform:
+        scale(1.06);
+
+}
+
+
+/* =====================================================
+   VIEW IMAGE LABEL
+   ===================================================== */
+
+.credit-image-button::after {
+
+    content:
+        "ดูรูป";
+
+    position: absolute;
+
+    right: -8px;
+
+    bottom: -8px;
+
+    z-index: 20;
+
+    padding:
+        3px 6px;
+
+    border:
+        1px solid
+        rgba(34, 211, 238, 0.45);
+
+    border-radius:
+        6px;
+
+    background:
+        rgba(8, 47, 73, 0.98);
+
+    color:
+        #67e8f9;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    opacity: 0;
+
+    transform:
+        translateY(3px);
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.credit-image-button:hover::after {
+
+    opacity: 1;
+
+    transform:
+        translateY(0);
+
+}
+
+
+/* =====================================================
+   PLACEHOLDER / DEVELOPER ICON
+   ===================================================== */
+
+.credit-placeholder {
+
+    border-radius: 14px;
+
+}
+
+
+.credit-placeholder span {
+
+    font-size: 21px;
+
+    transition:
+        transform 0.25s ease;
+
+}
+
+
+.credit-placeholder:hover span {
+
+    transform:
+        scale(1.10);
+
+}
+
+
+/* =====================================================
+   COLLEGE + DEPARTMENT
+   ===================================================== */
+
+.credit-college .credit-icon,
+.credit-department .credit-icon {
+
+    width: 48px !important;
+
+    height: 48px !important;
+
+    min-width: 48px !important;
+
+    min-height: 48px !important;
+
+    max-width: 48px !important;
+
+    max-height: 48px !important;
+
+}
+
+
+/* =====================================================
+   COLLEGE IMAGE
+   ===================================================== */
+
+.credit-college .credit-icon img {
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    padding: 1px !important;
+
+    object-fit: contain !important;
+
+    border-radius: 12px !important;
+
+    transform:
+        scale(1) !important;
+
+}
+
+
+/* =====================================================
+   DEPARTMENT IMAGE
+   ===================================================== */
+
+.credit-department .credit-icon img {
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    padding: 6px !important;
+
+    object-fit: contain !important;
+
+    border-radius: 12px !important;
+
+    transform:
+        scale(1) !important;
+
+}
+
+
+/* =====================================================
+   DEVELOPER IMAGE
+   ===================================================== */
+
+.credit-developer .credit-icon {
+
+    overflow: visible;
+
+    border-radius: 14px;
+
+}
+
+
+.credit-developer .credit-icon::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    border-radius: 14px;
+
+    pointer-events: none;
+
+}
+
+
+.credit-developer .credit-icon img {
+
+    position: relative;
+
+    z-index: 0;
+
+    width: 100% !important;
+
+    height: 100% !important;
+
+    padding: 0 !important;
+
+    object-fit: cover !important;
+
+    object-position: center 10% !important;
+
+    border-radius: 14px !important;
+
+    transform:
+        scale(1.18) !important;
+
+    transition:
+        transform 0.3s ease !important;
+
+}
+
+
+.credit-developer .credit-icon:hover img {
+
+    transform:
+        scale(1.25) !important;
+
+}
+
+
+/* =====================================================
+   CONTENT
+   ===================================================== */
+
+.credit-content {
+
+    min-width: 0;
+
+    flex: 1;
+
+}
+
+
+/* =====================================================
+   LABEL
+   ===================================================== */
+
+.credit-label {
+
+    margin-bottom: 5px;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.8px;
+
+    color:
+        #22d3ee;
+
+    text-transform:
+        uppercase;
+
+}
+
+
+/* =====================================================
+   TITLE
+   ===================================================== */
+
+.credit-title {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    line-height: 1.55;
+
+    color:
+        #e2e8f0;
+
+    transition:
+        color 0.25s ease;
+
+}
+
+
+/* =====================================================
+   ROLE
+   ===================================================== */
+
+.credit-role {
+
+    display: inline-flex;
+
+    margin-top: 7px;
+
+    padding:
+        3px 8px;
+
+    border:
+        1px solid
+        rgba(34, 211, 238, 0.14);
+
+    border-radius:
+        5px;
+
+    background:
+        rgba(34, 211, 238, 0.04);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    color:
+        #64748b;
+
+}
+
+
+/* =====================================================
+   LINKS
+   ===================================================== */
+
+.credit-links {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 9px;
+
+}
+
+
+.credit-link {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding:
+        4px 9px;
+
+    border:
+        1px solid
+        rgba(34, 211, 238, 0.20);
+
+    border-radius:
+        7px;
+
+    background:
+        rgba(34, 211, 238, 0.055);
+
+    color:
+        #67e8f9;
+
+    font-size: 9px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        all 0.22s ease;
+
+}
+
+
+.credit-arrow {
+
+    font-size: 11px;
+
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease;
+
+}
+
+
+.credit-link:hover {
+
+    background:
+        rgba(34, 211, 238, 0.14);
+
+    border-color:
+        rgba(34, 211, 238, 0.55);
+
+    color:
+        #cffafe;
+
+    box-shadow:
+        0 0 16px
+        rgba(34, 211, 238, 0.10);
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.credit-link:hover .credit-arrow {
+
+    transform:
+        translate(2px, -2px);
+
+}
+
+
+/* =====================================================
+   BOX HOVER
+   ===================================================== */
+
+.credit-box:hover {
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(34, 211, 238, 0.055),
+            rgba(14, 165, 233, 0.018)
+        );
+
+}
+
+
+.credit-box:hover .credit-icon {
+
+    transform:
+        translateY(-2px);
+
+    border-color:
+        rgba(34, 211, 238, 0.50);
+
+    box-shadow:
+        0 0 22px
+        rgba(34, 211, 238, 0.12);
+
+}
+
+
+.credit-box:hover .credit-title {
+
+    color:
+        #67e8f9;
+
+}
+
+
+/* =====================================================
+   DEVELOPER ACCENT
+   ===================================================== */
+
+.credit-developer .credit-icon {
+
+    border-color:
+        rgba(56, 189, 248, 0.20);
+
+}
+
+
+.credit-developer:hover .credit-icon {
+
+    border-color:
+        rgba(56, 189, 248, 0.50);
+
+}
+
+
+/* =====================================================
+   BOTTOM SYSTEM STATUS
+   ===================================================== */
+
+.credit-bottom {
+
+    position: relative;
+
+    z-index: 3;
+
+    min-height: 34px;
+
+    padding:
+        0 22px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    border-top:
+        1px solid
+        rgba(148, 163, 184, 0.10);
+
+    background:
+        rgba(2, 6, 23, 0.32);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 8px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.8px;
+
+    color:
+        #475569;
+
+}
+
+
+/* =====================================================
+   STATUS DOT
+   ===================================================== */
+
+.credit-status-dot {
+
     width: 6px;
 
     height: 6px;
@@ -1487,11 +2343,37 @@ canvas { max-height: 300px; }
 
     .credit-icon {
 
-        width: 42px;
+        width: 42px !important;
 
-        height: 42px;
+        height: 42px !important;
+
+        min-width: 42px !important;
+
+        min-height: 42px !important;
+
+        max-width: 42px !important;
+
+        max-height: 42px !important;
 
         border-radius: 12px;
+
+    }
+
+
+    .credit-college .credit-icon,
+    .credit-department .credit-icon {
+
+        width: 42px !important;
+
+        height: 42px !important;
+
+        min-width: 42px !important;
+
+        min-height: 42px !important;
+
+        max-width: 42px !important;
+
+        max-height: 42px !important;
 
     }
 
@@ -1590,9 +2472,35 @@ canvas { max-height: 300px; }
 
     .credit-icon {
 
-        width: 38px;
+        width: 38px !important;
 
-        height: 38px;
+        height: 38px !important;
+
+        min-width: 38px !important;
+
+        min-height: 38px !important;
+
+        max-width: 38px !important;
+
+        max-height: 38px !important;
+
+    }
+
+
+    .credit-college .credit-icon,
+    .credit-department .credit-icon {
+
+        width: 38px !important;
+
+        height: 38px !important;
+
+        min-width: 38px !important;
+
+        min-height: 38px !important;
+
+        max-width: 38px !important;
+
+        max-height: 38px !important;
 
     }
 
