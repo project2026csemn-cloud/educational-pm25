@@ -5155,6 +5155,76 @@ function updateTrendStatistics(){
     </div>
 
 </div>
+
+    <script>
+
+/* =====================================================
+   CREDIT IMAGE LIGHTBOX
+   ===================================================== */
+
+function openCreditImage(imageSrc, imageAlt) {
+
+    const modal =
+        document.getElementById("creditImageModal");
+
+    const image =
+        document.getElementById("creditFullImage");
+
+    const caption =
+        document.getElementById("creditImageCaption");
+
+
+    image.src = imageSrc;
+
+    image.alt = imageAlt;
+
+    caption.textContent = imageAlt;
+
+
+    modal.classList.add("active");
+
+
+    document.body.style.overflow = "hidden";
+
+}
+
+
+/* =====================================================
+   CLOSE LIGHTBOX
+   ===================================================== */
+
+function closeCreditImage() {
+
+    const modal =
+        document.getElementById("creditImageModal");
+
+
+    modal.classList.remove("active");
+
+
+    document.body.style.overflow = "";
+
+}
+
+
+/* =====================================================
+   ESC KEY
+   ===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+
+            closeCreditImage();
+
+        }
+
+    }
+);
+
+</script>
 </body>
 
 </html>
