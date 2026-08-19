@@ -1190,7 +1190,7 @@ HISTORICAL DATA & TREND
 
     const TOTAL_NODES = 3;
 
-    const NODE_OFFLINE_AFTER_SECONDS = 30;
+    const NODE_OFFLINE_AFTER_SECONDS = 6 * 60;
 
 
     /* =========================================================
@@ -1198,6 +1198,18 @@ HISTORICAL DATA & TREND
     ========================================================= */
 
     let latestRecord = null;
+
+    /*
+     * LATEST NODE CACHE
+     * -----------------
+     * ข้อมูลของอุปกรณ์ 1/2/3 ต้องมาจาก Latest API เท่านั้น
+     * และต้องไม่ถูกเปลี่ยนตาม Historical Data & Trend
+     */
+    let latestNodes = {
+        1: null,
+        2: null,
+        3: null
+    };
 
     let records = [];
 
@@ -1657,16 +1669,9 @@ HISTORICAL DATA & TREND
             return "offline";
         }
 
-
         if(!node){
             return "offline";
         }
-
-
-        if(!isNodeFresh(node)){
-            return "offline";
-        }
-
 
         const status =
             String(
@@ -1675,18 +1680,101 @@ HISTORICAL DATA & TREND
             .trim()
             .toLowerCase();
 
-
-        if(status === "online"){
-            return "online";
-        }
-
-
+        /*
+         * SLEEP = สถานะที่ตัวแม่ประกาศอย่างตั้งใจ
+         * จึงห้ามใช้ timeout ไปทับเป็น OFFLINE
+         * เพราะระหว่าง sleep อุปกรณ์อาจไม่ส่งข้อมูลใหม่
+         */
         if(status === "sleep"){
             return "sleep";
         }
 
+        /*
+         * ถ้าตัวแม่ประกาศ OFFLINE ให้เชื่อตัวแม่โดยตรง
+         */
+        if(status === "offline"){
+            return "offline";
+        }
 
-        return "offline";
+        /*
+         * ONLINE ต้องมีข้อมูลสดตามเวลาที่กำหนด
+         * ถ้าเงียบเกิน timeout ให้เป็น OFFLINE
+         */
+        if(status === "online"){
+            return isNodeFresh(node)
+                ? "online"
+                : "offline";
+        }
+
+        /*
+         * สถานะไม่รู้จัก: ใช้ freshness เป็น fallback
+         */
+        return isNodeFresh(node)
+            ? "online"
+            : "offline";
+
+    }
+
+
+    /* =========================================================
+    UPDATE LATEST NODE CACHE
+    ========================================================= */
+
+    function updateLatestNodeCache(data){
+
+        const list =
+            Array.isArray(data)
+                ? data
+                : (data ? [data] : []);
+
+        for(const raw of list){
+
+            const record =
+                raw && raw.device_id != null
+                    ? raw
+                    : null;
+
+            if(!record){
+                continue;
+            }
+
+            const match =
+                String(record.device_id)
+                    .trim()
+                    .toLowerCase()
+                    .match(/(\d+)/);
+
+            if(!match){
+                continue;
+            }
+
+            const nodeNumber =
+                Number(match[1]);
+
+            if(![1,2,3].includes(nodeNumber)){
+                continue;
+            }
+
+            const current =
+                latestNodes[nodeNumber];
+
+            if(!current){
+                latestNodes[nodeNumber] = record;
+                continue;
+            }
+
+            const currentDate =
+                parseDate(current.timestamp);
+
+            const newDate =
+                parseDate(record.timestamp);
+
+            if(!currentDate ||
+               (newDate && newDate.getTime() >= currentDate.getTime())){
+                latestNodes[nodeNumber] = record;
+            }
+
+        }
 
     }
 
@@ -1699,67 +1787,7 @@ HISTORICAL DATA & TREND
         nodeNumber
     ){
 
-        const list =
-            records.filter(
-                record =>
-                    isSameNode(
-                        record.device_id,
-                        nodeNumber
-                    )
-            );
-
-
-        if(!list.length){
-            return null;
-        }
-
-
-        let latest = null;
-
-
-        for(const record of list){
-
-            if(!record.timestamp){
-                continue;
-            }
-
-
-            if(!latest){
-
-                latest = record;
-
-                continue;
-
-            }
-
-
-            const currentDate =
-                parseDate(
-                    record.timestamp
-                );
-
-
-            const latestDate =
-                parseDate(
-                    latest.timestamp
-                );
-
-
-            if(
-                currentDate &&
-                latestDate &&
-                currentDate.getTime() >
-                latestDate.getTime()
-            ){
-
-                latest = record;
-
-            }
-
-        }
-
-
-        return latest;
+        return latestNodes[nodeNumber] || null;
 
     }
 
@@ -2068,30 +2096,27 @@ HISTORICAL DATA & TREND
         }
 
 
-        if(
-            json.data &&
-            !Array.isArray(
-                json.data
-            )
-        ){
+        /*
+         * สำคัญ: ถ้า API ส่งหลาย node มา ต้องเก็บทุกตัว
+         * ห้ามเลือกเฉพาะ data[0] เพราะจะทำให้ node 2/3 หาย
+         */
+        if(Array.isArray(json.data)){
 
-            return normalize(
-                json.data
-            );
+            return json.data
+                .map(normalize)
+                .filter(Boolean);
 
         }
 
 
-        if(
-            Array.isArray(
-                json.data
-            ) &&
-            json.data.length
-        ){
+        if(json.data){
 
-            return normalize(
-                json.data[0]
-            );
+            const normalized =
+                normalize(json.data);
+
+            return normalized
+                ? [normalized]
+                : [];
 
         }
 
@@ -3590,36 +3615,48 @@ function updateTrendStatistics(){
                 true;
 
 
+            /*
+             * อัปเดต Device Cards จาก Latest API เท่านั้น
+             * ไม่ใช้ข้อมูลจาก Historical Range มาทับ cache นี้
+             */
+            updateLatestNodeCache(
+                newLatest
+            );
+
+
+            latestRecord =
+                Array.isArray(newLatest)
+                    ? newLatest.reduce(
+                        (latest, record) => {
+                            if(!latest){
+                                return record;
+                            }
+
+                            const latestDate =
+                                parseDate(latest.timestamp);
+
+                            const recordDate =
+                                parseDate(record.timestamp);
+
+                            return (
+                                recordDate &&
+                                (!latestDate ||
+                                 recordDate.getTime() > latestDate.getTime())
+                            )
+                                ? record
+                                : latest;
+                        },
+                        null
+                    )
+                    : newLatest;
+
+
             const newHistory =
                 await loadHistory();
 
 
-            latestRecord =
-                newLatest;
-
-
             records =
                 newHistory;
-
-
-            if(
-                latestRecord &&
-                !records.some(
-                    record =>
-
-                        record.id != null &&
-                        latestRecord.id != null &&
-                        record.id ===
-                        latestRecord.id
-
-                )
-            ){
-
-                records.push(
-                    latestRecord
-                );
-
-            }
 
 
             records =
