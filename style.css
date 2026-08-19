@@ -371,6 +371,7 @@ canvas { max-height: 300px; }
         1.35fr
         1.25fr
         1fr
+        1fr
         1fr;
 
     align-items: stretch;
@@ -425,10 +426,6 @@ canvas { max-height: 300px; }
     align-items: center;
     justify-content: center;
 
-    /*
-     * สำคัญ:
-     * ตัดส่วนของรูปที่เกินกรอบ
-     */
     overflow: hidden;
 
     border:
@@ -494,23 +491,9 @@ canvas { max-height: 300px; }
     cursor: pointer;
 }
 
-
-/*
- * เมื่อเอาเมาส์ชี้รูป
- * ให้ขยายรูปเล็กน้อยเท่านั้น
- *
- * ไม่มีคำว่า "ดูรูป"
- * มาทับรูปอีกแล้ว
- */
-
 .credit-image-button:hover img {
     transform: scale(1.06);
 }
-
-
-/*
- * ลบป้าย "ดูรูป" เดิมออก
- */
 
 .credit-image-button::after {
     content: none;
@@ -534,6 +517,7 @@ canvas { max-height: 300px; }
     transform: scale(1.20);
 }
 
+
 /* =====================================================
    DEPARTMENT
    ===================================================== */
@@ -550,6 +534,7 @@ canvas { max-height: 300px; }
 
     transform: scale(1.18);
 }
+
 
 /* =====================================================
    DEVELOPER
@@ -594,6 +579,62 @@ canvas { max-height: 300px; }
 
 .credit-developer .credit-icon:hover img {
     transform: scale(1.18);
+}
+
+
+/* =====================================================
+   ADVISOR
+   ===================================================== */
+
+.credit-advisor .credit-icon {
+    overflow: hidden;
+
+    width: 52px;
+    height: 52px;
+
+    min-width: 52px;
+    min-height: 52px;
+
+    max-width: 52px;
+    max-height: 52px;
+}
+
+.credit-advisor .credit-icon img {
+    position: relative;
+
+    z-index: 0;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 0;
+
+    object-fit: cover;
+
+    object-position: center center;
+
+    border-radius: 13px;
+
+    transform: scale(1.08);
+
+    box-sizing: border-box;
+
+    transition:
+        transform 0.3s ease;
+}
+
+.credit-advisor .credit-icon:hover img {
+    transform: scale(1.14);
+}
+
+.credit-advisor .credit-icon {
+    border-color:
+        rgba(34, 211, 238, 0.20);
+}
+
+.credit-advisor:hover .credit-icon {
+    border-color:
+        rgba(34, 211, 238, 0.50);
 }
 
 
@@ -1050,12 +1091,11 @@ canvas { max-height: 300px; }
         min-height: 115px;
     }
 
-    .credit-box:nth-child(2) {
+    .credit-box:nth-child(even) {
         border-right: none;
     }
 
-    .credit-box:nth-child(1),
-    .credit-box:nth-child(2) {
+    .credit-box:nth-child(-n+3) {
         border-bottom:
             1px solid rgba(148, 163, 184, 0.13);
     }
@@ -1123,6 +1163,25 @@ canvas { max-height: 300px; }
         max-height: 42px;
 
         overflow: hidden;
+    }
+
+    .credit-advisor .credit-icon {
+
+        width: 42px;
+        height: 42px;
+
+        min-width: 42px;
+        min-height: 42px;
+
+        max-width: 42px;
+        max-height: 42px;
+
+        overflow: hidden;
+    }
+
+    .credit-advisor .credit-icon img {
+        object-fit: cover;
+        object-position: center center;
     }
 
     .credit-title {
@@ -1217,6 +1276,25 @@ canvas { max-height: 300px; }
         max-height: 38px;
 
         overflow: hidden;
+    }
+
+    .credit-advisor .credit-icon {
+
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+        min-height: 38px;
+
+        max-width: 38px;
+        max-height: 38px;
+
+        overflow: hidden;
+    }
+
+    .credit-advisor .credit-icon img {
+        object-fit: cover;
+        object-position: center center;
     }
 
     .credit-title {
