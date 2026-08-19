@@ -1945,11 +1945,7 @@ select, .range {
     flex-wrap: wrap;
     align-items: center;
 }
-.range.active {
-    background: #0e7490;
-    border-color: #22d3ee;
-    color: white;
-}
+
 canvas { max-height: 300px; }
 .status-online { color: #34d399; }
 .status-offline { color: #64748b; }
