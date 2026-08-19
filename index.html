@@ -109,7 +109,7 @@
                 </div>
 
 
-                <div class="flex justify-center">
+                <div class=" flex md:grid-cols-2 gap-3"">
 
 
                     <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
@@ -133,7 +133,7 @@
                         </div>
 
                     </div>
-
+            
 
                     <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
 
@@ -445,223 +445,52 @@
         </div>
 
     </section>
-
-
-
-    <!-- =========================================================
-    HERO METRICS
+<!-- =========================================================
+    FORECAST + AI
     ========================================================= -->
 
-    <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
+    <section class="grid lg:grid-cols-2 gap-4 mb-4">
 
 
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                PM 1.0
-            </div>
-
-            <b id="heroPM1" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
+        <div class="glass card p-5">
 
 
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                PM 2.5
-            </div>
-
-            <b id="heroPM25" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                PM 10
-            </div>
-
-            <b id="heroPM10" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                อุณหภูมิ
-            </div>
-
-            <b id="heroTemp" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                °C
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                ความชื้น
-            </div>
-
-            <b id="heroHum" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                %
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                แสง
-            </div>
-
-            <b id="heroLight" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                lux
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================================
-    QUALITY + ALERT
-    ========================================================= -->
-
-    <section class="grid lg:grid-cols-3 gap-4 mb-4">
-
-
-        <div class="glass card p-5 lg:col-span-2">
-
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between">
 
                 <div>
 
                     <h2 class="text-xl font-black">
-                        คุณภาพอากาศปัจจุบัน
+                        🔮 Forecast
                     </h2>
 
                     <p class="text-xs text-slate-400 mt-1">
-                        ประเมินจากค่า PM2.5 ล่าสุด
+                        แนวโน้มจากข้อมูลย้อนหลัง
                     </p>
 
                 </div>
 
 
-                <div
-                    id="qualityBadge"
-                    class="rounded-full px-4 py-2 badge font-bold"
+                <span
+                    id="forecastBadge"
+                    class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
                 >
-
-                    รอข้อมูล
-
-                </div>
+                    PREVIEW
+                </span>
 
             </div>
 
 
-            <div class="grid grid-cols-3 gap-3 mt-5">
+            <div
+                id="forecastMessage"
+                class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
+            >
 
-
-                <div class="soft rounded-xl p-4">
-
-                    <span class="text-xs text-slate-400">
-                        เฉลี่ย PM2.5
-                    </span>
-
-                    <b id="avgPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
-
-
-                <div class="soft rounded-xl p-4">
-
-                    <span class="text-xs text-slate-400">
-                        สูงสุด
-                    </span>
-
-                    <b id="maxPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
-
-
-                <div class="soft rounded-xl p-4">
-
-                    <span class="text-xs text-slate-400">
-                        ต่ำสุด
-                    </span>
-
-                    <b id="minPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
+                รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
 
             </div>
+
+
+            <canvas id="forecastChart" class="mt-4"></canvas>
 
         </div>
 
@@ -670,21 +499,25 @@
         <div class="glass card p-5">
 
             <h2 class="text-xl font-black">
-                🚨 Alerts
+                AI วิเคราะห์สถานการณ์
             </h2>
 
+
             <div
-                id="alerts"
-                class="text-sm text-slate-300 mt-4"
+                id="aiDetails"
+                class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
             >
 
-                กำลังตรวจสอบ...
+                รอข้อมูลเพื่อวิเคราะห์
 
             </div>
 
         </div>
 
     </section>
+
+
+    
 
 
 
@@ -715,11 +548,12 @@ HISTORICAL DATA & TREND
 
         <!-- CONTROLS -->
 
-        <div class="flex flex-wrap gap-2 items-center justify-end">
+        <div class="rounded-xl px-3 py-2 text-sm font-medium">
 
             <select
                 id="metric"
                 class="rounded-xl px-3 py-2 text-sm font-medium"
+                type="select"
             >
 
                 <option value="pm25">PM2.5</option>
@@ -735,6 +569,7 @@ HISTORICAL DATA & TREND
             <select
                 id="historyRange"
                 class="rounded-xl px-3 py-2 text-sm font-medium"
+                type="select"
             >
 
                 <option value="30m">30 นาที</option>
@@ -751,12 +586,11 @@ HISTORICAL DATA & TREND
 
 
             <button
-                id="exportButton"
-                type="button"
-                class="rounded-xl px-4 py-2 text-sm font-bold"
-            >
-                EXPORT
-            </button>
+                         id="exportBtn"
+                           class="range rounded-xl px-3 py-2 text-xs"
+                             type="button">
+                            📤 ส่งออก
+                    </button>
 
         </div>
 
@@ -1136,77 +970,199 @@ HISTORICAL DATA & TREND
     </div>
 
 </section>
-    <!-- =========================================================
-    FORECAST + AI
-    ========================================================= -->
+    
+<!-- =========================================================
+     EXPORT MODAL
+     ซ่อนอยู่เป็นค่าเริ่มต้น
+========================================================= -->
 
-    <section class="grid lg:grid-cols-2 gap-4 mb-4">
+<div
+    id="exportModal"
+    class="export-modal"
+    aria-hidden="true"
+>
+
+    <!-- พื้นหลัง -->
+    <div
+        id="exportBackdrop"
+        class="export-modal-backdrop"
+    ></div>
 
 
-        <div class="glass card p-5">
+    <!-- หน้าต่าง -->
+    <div
+        class="export-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exportTitle"
+    >
 
+        <!-- HEADER -->
 
-            <div class="flex justify-between">
+        <div class="export-header">
 
-                <div>
+            <div>
 
-                    <h2 class="text-xl font-black">
-                        🔮 Forecast
-                    </h2>
-
-                    <p class="text-xs text-slate-400 mt-1">
-                        แนวโน้มจากข้อมูลย้อนหลัง
-                    </p>
-
+                <div
+                    id="exportTitle"
+                    class="export-title"
+                >
+                    📤 ส่งออกข้อมูล
                 </div>
 
+                <div class="export-subtitle">
+                    เลือกช่วงวันที่ที่ต้องการส่งออกข้อมูล
+                </div>
 
-                <span
-                    id="forecastBadge"
-                    class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
+            </div>
+
+
+            <button
+                id="exportClose"
+                class="export-close"
+                type="button"
+                aria-label="ปิด"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- DATE FILTER -->
+
+        <div class="export-filter">
+
+            <div class="export-date-group">
+
+                <label for="exportStartDate">
+                    วันที่เริ่มต้น
+                </label>
+
+                <input
+                    type="date"
+                    id="exportStartDate"
                 >
-                    PREVIEW
+
+            </div>
+
+
+            <div class="export-date-arrow">
+                →
+            </div>
+
+
+            <div class="export-date-group">
+
+                <label for="exportEndDate">
+                    วันที่สิ้นสุด
+                </label>
+
+                <input
+                    type="date"
+                    id="exportEndDate"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- SUMMARY -->
+
+        <div class="export-summary">
+
+            <div>
+
+                <span>
+                    จำนวนข้อมูล
                 </span>
 
-            </div>
-
-
-            <div
-                id="forecastMessage"
-                class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
-            >
-
-                รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
-
-            </div>
-
-
-            <canvas id="forecastChart" class="mt-4"></canvas>
-
-        </div>
-
-
-
-        <div class="glass card p-5">
-
-            <h2 class="text-xl font-black">
-                AI วิเคราะห์สถานการณ์
-            </h2>
-
-
-            <div
-                id="aiDetails"
-                class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
-            >
-
-                รอข้อมูลเพื่อวิเคราะห์
+                <strong id="exportCount">
+                    0
+                </strong>
 
             </div>
 
         </div>
 
-    </section>
 
+        <!-- PREVIEW -->
+
+        <div class="export-preview">
+
+            <div class="export-preview-title">
+                ตัวอย่างข้อมูล
+            </div>
+
+
+            <div class="export-table-wrapper">
+
+                <table class="export-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>วันที่ / เวลา</th>
+                            <th>อุปกรณ์</th>
+                            <th>PM1.0</th>
+                            <th>PM2.5</th>
+                            <th>PM10</th>
+                            <th>อุณหภูมิ</th>
+                            <th>ความชื้น</th>
+                            <th>แสง</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="exportTableBody">
+
+                        <tr>
+
+                            <td colspan="8">
+                                กรุณาเลือกช่วงวันที่
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="export-footer">
+
+            <button
+                id="exportCancel"
+                class="export-btn export-btn-cancel"
+                type="button"
+            >
+                ยกเลิก
+            </button>
+
+
+            <button
+                id="exportExcel"
+                class="export-btn export-btn-primary"
+                type="button"
+            >
+                📊 ดาวน์โหลด Excel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 
     </div>
@@ -2918,76 +2874,7 @@ function updateTrendStatistics(){
     }
 
 
-    /* =========================================================
-    UPDATE OLD QUALITY STATISTICS
-    ========================================================= */
-
-    function updateStatistics(){
-
-        const data =
-            getRecordsInSelectedRange();
-
-
-        const values =
-            data
-
-            .map(
-                x =>
-                    x.pm25
-            )
-
-            .filter(
-                x =>
-                    x != null &&
-                    !isNaN(x)
-            );
-
-
-        if(!values.length){
-
-            $("avgPM").textContent =
-                "--";
-
-
-            $("maxPM").textContent =
-                "--";
-
-
-            $("minPM").textContent =
-                "--";
-
-
-            return;
-
-        }
-
-
-        const avg =
-            values.reduce(
-                (a,b) =>
-                    a + b,
-                0
-            ) /
-            values.length;
-
-
-        $("avgPM").textContent =
-            avg.toFixed(1);
-
-
-        $("maxPM").textContent =
-            Math.max(
-                ...values
-            ).toFixed(1);
-
-
-        $("minPM").textContent =
-            Math.min(
-                ...values
-            ).toFixed(1);
-
-    }
-
+    
 
     /* =========================================================
     DRAW CHARTS
@@ -3682,314 +3569,6 @@ function updateTrendStatistics(){
     }
 
 
-    /* =========================================================
-    EXPORT CSV
-    ========================================================= */
-
-    function exportSelectedData(){
-
-        const data =
-            getRecordsInSelectedRange()
-            .slice()
-            .sort(
-                (a,b) => {
-
-                    const da =
-                        parseDate(
-                            a.timestamp
-                        );
-
-                    const db =
-                        parseDate(
-                            b.timestamp
-                        );
-
-
-                    if(!da || !db){
-                        return 0;
-                    }
-
-
-                    return (
-                        da.getTime() -
-                        db.getTime()
-                    );
-
-                }
-            );
-
-
-        if(!data.length){
-
-            alert(
-                "ไม่มีข้อมูลในช่วงเวลาที่เลือก"
-            );
-
-            return;
-
-        }
-
-
-        const headers = [
-
-            "Timestamp",
-            "Device ID",
-            "Status",
-
-            "PM1.0 (ug/m3)",
-            "PM2.5 (ug/m3)",
-            "PM10 (ug/m3)",
-
-            "Temperature (C)",
-            "Humidity (%)",
-            "Light (lux)"
-
-        ];
-
-
-        const rows =
-            data.map(
-                record => [
-
-                    formatExportDate(
-                        record.timestamp
-                    ),
-
-                    record.device_id || "",
-
-                    record.status || "",
-
-                    exportNumber(
-                        record.pm1
-                    ),
-
-                    exportNumber(
-                        record.pm25
-                    ),
-
-                    exportNumber(
-                        record.pm10
-                    ),
-
-                    exportNumber(
-                        record.temperature
-                    ),
-
-                    exportNumber(
-                        record.humidity
-                    ),
-
-                    exportNumber(
-                        record.light
-                    )
-
-                ]
-            );
-
-
-        const csvRows = [];
-
-
-        csvRows.push(
-            headers.map(
-                csvEscape
-            ).join(",")
-        );
-
-
-        rows.forEach(
-            row => {
-
-                csvRows.push(
-                    row
-                    .map(
-                        csvEscape
-                    )
-                    .join(",")
-                );
-
-            }
-        );
-
-
-        const csv =
-            "\uFEFF" +
-            csvRows.join("\r\n");
-
-
-        const blob =
-            new Blob(
-                [csv],
-                {
-                    type:
-                        "text/csv;charset=utf-8;"
-                }
-            );
-
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        const now =
-            new Date();
-
-
-        const dateText =
-            now.toLocaleDateString(
-                "th-TH",
-                {
-
-                    timeZone:
-                        "Asia/Bangkok",
-
-                    year:
-                        "numeric",
-
-                    month:
-                        "2-digit",
-
-                    day:
-                        "2-digit"
-
-                }
-            )
-            .replaceAll(
-                "/",
-                "-"
-            );
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            "PM25_Historical_" +
-            averageRange +
-            "_" +
-            dateText +
-            ".csv";
-
-
-        document.body.appendChild(
-            link
-        );
-
-
-        link.click();
-
-
-        document.body.removeChild(
-            link
-        );
-
-
-        URL.revokeObjectURL(
-            url
-        );
-
-    }
-
-
-    /* =========================================================
-    EXPORT HELPERS
-    ========================================================= */
-
-    function exportNumber(value){
-
-        if(
-            value === null ||
-            value === undefined ||
-            value === "" ||
-            isNaN(value)
-        ){
-
-            return "";
-
-        }
-
-
-        return Number(value)
-            .toFixed(2);
-
-    }
-
-
-    function formatExportDate(value){
-
-        const date =
-            parseDate(
-                value
-            );
-
-
-        if(!date){
-
-            return "";
-
-        }
-
-
-        return date.toLocaleString(
-            "th-TH",
-            {
-
-                timeZone:
-                    "Asia/Bangkok",
-
-                year:
-                    "numeric",
-
-                month:
-                    "2-digit",
-
-                day:
-                    "2-digit",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit",
-
-                hour12:
-                    false
-
-            }
-        );
-
-    }
-
-
-    function csvEscape(value){
-
-        const text =
-            value == null
-                ? ""
-                : String(value);
-
-
-        return '"' +
-            text.replaceAll(
-                '"',
-                '""'
-            ) +
-            '"';
-
-    }
-
 
     /* =========================================================
     LOAD
@@ -4184,188 +3763,7 @@ function updateTrendStatistics(){
     }
 
 
-    /* =========================================================
-    RENDER
-    ========================================================= */
-
-    function render(){
-
-        if(!latestRecord){
-            return;
-        }
-
-
-        const n1 =
-            getLatestNode(1);
-
-
-        const n2 =
-            getLatestNode(2);
-
-
-        const n3 =
-            getLatestNode(3);
-
-
-        setNode(
-            "n1",
-            n1
-        );
-
-
-        setNode(
-            "n2",
-            n2
-        );
-
-
-        setNode(
-            "n3",
-            n3
-        );
-
-
-        updateNodeStatus(
-            "n1status",
-            "nodeCard1",
-            n1
-        );
-
-
-        updateNodeStatus(
-            "n2status",
-            "nodeCard2",
-            n2
-        );
-
-
-        updateNodeStatus(
-            "n3status",
-            "nodeCard3",
-            n3
-        );
-
-
-        const online =
-            countOnlineNodes();
-
-
-        $("onlineCountTop").textContent =
-            online +
-            " / " +
-            TOTAL_NODES;
-
-
-        $("lastUpdate1").textContent =
-            n1
-                ? formatThaiTime(
-                    n1.timestamp
-                )
-                : "--";
-
-
-        $("lastUpdate2").textContent =
-            n2
-                ? formatThaiTime(
-                    n2.timestamp
-                )
-                : "--";
-
-
-        $("lastUpdate3").textContent =
-            n3
-                ? formatThaiTime(
-                    n3.timestamp
-                )
-                : "--";
-
-
-        $("heroPM1").textContent =
-            fmt(
-                latestRecord.pm1
-            );
-
-
-        $("heroPM25").textContent =
-            fmt(
-                latestRecord.pm25
-            );
-
-
-        $("heroPM10").textContent =
-            fmt(
-                latestRecord.pm10
-            );
-
-
-        $("heroTemp").textContent =
-            latestRecord.temperature == null
-                ? "--"
-                : fmt(
-                    latestRecord.temperature
-                );
-
-
-        $("heroHum").textContent =
-            latestRecord.humidity == null
-                ? "--"
-                : fmt(
-                    latestRecord.humidity
-                );
-
-
-        $("heroLight").textContent =
-            latestRecord.light == null
-                ? "--"
-                : fmt(
-                    latestRecord.light
-                );
-
-
-        const pm25 =
-            latestRecord.pm25;
-
-
-        const q =
-            quality(pm25);
-
-
-        $("qualityBadge").textContent =
-            q;
-
-
-        $("overallStatus").textContent =
-            q;
-
-
-        updateOverallDot(
-            pm25
-        );
-
-
-        updateAlerts(
-            pm25
-        );
-
-
-        updateAI(
-            latestRecord,
-            q
-        );
-
-
-        renderAverages();
-
-
-        updateStatistics();
-
-
-        updateTrendStatistics();
-
-
-        drawCharts();
-
-    }
+    
 
 
     /* =========================================================
@@ -4424,85 +3822,7 @@ function updateTrendStatistics(){
     }
 
 
-    /* =========================================================
-    ALERTS
-    ========================================================= */
-
-    function updateAlerts(
-        pm25
-    ){
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-slate-400">
-                    ยังไม่มีข้อมูล PM2.5
-                </span>
-
-                `;
-
-            return;
-
-        }
-
-
-        if(pm25 > 37.5){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-red-400 font-bold">
-                    ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรเฝ้าระวังและติดตามสถานการณ์
-                </span>
-
-                `;
-
-        }
-
-        else if(pm25 > 25){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-amber-400 font-bold">
-                    ⚠ PM2.5 เริ่มสูง
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรติดตามแนวโน้มอย่างต่อเนื่อง
-                </span>
-
-                `;
-
-        }
-
-        else{
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-emerald-400 font-bold">
-                    ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
-                </span>
-
-                `;
-
-        }
-
-    }
+    
 
 
     /* =========================================================
@@ -4699,16 +4019,6 @@ function updateTrendStatistics(){
         );
 
 
-    /* =========================================================
-    EXPORT BUTTON
-    ========================================================= */
-
-    $("exportButton")
-        .addEventListener(
-            "click",
-            exportSelectedData
-        );
-
 
     /* =========================================================
     CLOCK
@@ -4825,9 +4135,1372 @@ function updateTrendStatistics(){
         },
         5000
     );
+/* =========================================================
+   EXPORT SYSTEM
+========================================================= */
+
+const exportBtn =
+    document.getElementById("exportBtn");
+
+const exportModal =
+    document.getElementById("exportModal");
+
+const exportClose =
+    document.getElementById("exportClose");
+
+const exportCancel =
+    document.getElementById("exportCancel");
+
+const exportBackdrop =
+    document.getElementById("exportBackdrop");
+
+const exportStartDate =
+    document.getElementById("exportStartDate");
+
+const exportEndDate =
+    document.getElementById("exportEndDate");
+
+const exportCount =
+    document.getElementById("exportCount");
+
+const exportTableBody =
+    document.getElementById("exportTableBody");
+
+const exportExcel =
+    document.getElementById("exportExcel");
 
 
+let exportRecords = [];
+
+
+/* =========================================================
+   EXPORT SYSTEM
+   ใช้ HISTORY_API?range=30d
+========================================================= */
+
+
+
+/* ---------------------------------------------------------
+   ELEMENTS
+--------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------
+   LOAD HISTORY FOR EXPORT
+--------------------------------------------------------- */
+
+async function loadExportHistory() {
+
+    const response = await fetch(
+        HISTORY_API + "?range=30d",
+        {
+            method: "GET",
+            cache: "no-store"
+        }
+    );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "HTTP " + response.status
+        );
+
+    }
+
+
+    const result =
+        await response.json();
+
+
+    console.log(
+        "EXPORT API RESULT:",
+        result
+    );
+
+
+    /*
+     * รองรับหลายรูปแบบของ JSON
+     */
+
+    let data = [];
+
+
+    if (Array.isArray(result)) {
+
+        data = result;
+
+    } else if (
+        result &&
+        Array.isArray(result.data)
+    ) {
+
+        data = result.data;
+
+    } else if (
+        result &&
+        Array.isArray(result.records)
+    ) {
+
+        data = result.records;
+
+    } else if (
+        result &&
+        Array.isArray(result.history)
+    ) {
+
+        data = result.history;
+
+    }
+
+
+    console.log(
+        "EXPORT DATA (raw):",
+        data
+    );
+
+
+    /*
+     * normalize ให้ field ตรงกัน
+     * (แก้ปัญหาหาประวัติไม่เจอ เพราะ API
+     * อาจส่ง field ชื่อ recorded_at แทน timestamp)
+     */
+
+    const normalized =
+        data
+        .map(normalize)
+        .filter(Boolean);
+
+
+    console.log(
+        "EXPORT DATA (normalized):",
+        normalized
+    );
+
+
+    return normalized;
+}
+
+
+/* ---------------------------------------------------------
+   OPEN EXPORT MODAL
+--------------------------------------------------------- */
+
+if (exportBtn) {
+
+    exportBtn.addEventListener(
+        "click",
+        async () => {
+
+            /*
+             * เปิด Modal
+             */
+
+            exportModal.classList.add("show");
+
+            exportModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            /*
+             * Loading
+             */
+
+            exportCount.textContent =
+                "กำลังโหลด";
+
+
+            exportTableBody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        ⏳ กำลังโหลดข้อมูลย้อนหลัง...
+                    </td>
+                </tr>
+            `;
+
+
+            try {
+
+                /*
+                 * โหลดข้อมูล 30 วัน
+                 */
+
+                exportRecords =
+                    await loadExportHistory();
+
+
+                console.log(
+                    "จำนวนข้อมูล Export:",
+                    exportRecords.length
+                );
+
+
+                /*
+                 * ไม่พบข้อมูล
+                 */
+
+                if (
+                    !exportRecords ||
+                    exportRecords.length === 0
+                ) {
+
+                    exportCount.textContent =
+                        "0";
+
+
+                    exportTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8">
+                                ไม่พบข้อมูลย้อนหลัง
+                            </td>
+                        </tr>
+                    `;
+
+                    return;
+                }
+
+
+                /*
+                 * วันที่ปัจจุบัน
+                 */
+
+                const today =
+                    new Date();
+
+
+                /*
+                 * ย้อนหลัง 30 วัน
+                 */
+
+                const startDate =
+                    new Date();
+
+                startDate.setDate(
+                    startDate.getDate() - 30
+                );
+
+
+                /*
+                 * ใส่วันที่ลง Input
+                 */
+
+                exportStartDate.value =
+                    formatDateInput(
+                        startDate
+                    );
+
+
+                exportEndDate.value =
+                    formatDateInput(
+                        today
+                    );
+
+
+                /*
+                 * แสดง Preview
+                 */
+
+                updateExportPreview();
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "EXPORT ERROR:",
+                    error
+                );
+
+
+                exportCount.textContent =
+                    "0";
+
+
+                exportTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            ❌ ไม่สามารถโหลดข้อมูลจาก API ได้
+                        </td>
+                    </tr>
+                `;
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   FORMAT DATE FOR INPUT
+--------------------------------------------------------- */
+
+function formatDateInput(date) {
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+
+    return `${year}-${month}-${day}`;
+}
+
+
+/* ---------------------------------------------------------
+   DATE CHANGE
+--------------------------------------------------------- */
+
+if (exportStartDate) {
+
+    exportStartDate.addEventListener(
+        "change",
+        updateExportPreview
+    );
+
+}
+
+
+if (exportEndDate) {
+
+    exportEndDate.addEventListener(
+        "change",
+        updateExportPreview
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   จัดกลุ่มข้อมูลเป็น "รอบการอ่านค่า"
+   (แถวที่มาจากอุปกรณ์ต่างกัน แต่บันทึกใกล้เคียงกัน
+    ให้ถือเป็นรอบเดียวกัน)
+
+   ภายในรอบเดียวกัน: เรียง Number 1 -> 2 -> 3
+   ระหว่างรอบ: เรียงตามเวลาเก่า -> ใหม่
+   และแทรกแถวว่างคั่นระหว่างรอบ
+--------------------------------------------------------- */
+
+/*
+ถ้าเวลาห่างจากแถวก่อนหน้าในรอบเดียวกัน
+เกิน 3 นาที ให้ถือว่าเป็นรอบใหม่
+*/
+
+const EXPORT_ROUND_GAP_MS = 3 * 60 * 1000;
+
+function sortAndGroupExportRecords(list) {
+
+    /*
+     * เรียงตามเวลาก่อน เพื่อไล่จัดรอบ
+     */
+
+    const byTime =
+        [...list].sort(
+            (a, b) => {
+
+                const da =
+                    parseDate(a.timestamp);
+
+                const db =
+                    parseDate(b.timestamp);
+
+
+                if (!da && !db) return 0;
+                if (!da) return 1;
+                if (!db) return -1;
+
+
+                return (
+                    da.getTime() -
+                    db.getTime()
+                );
+
+            }
+        );
+
+
+    /*
+     * ไล่จัดกลุ่มเป็นรอบ
+     * ถ้าห่างจากแถวก่อนหน้าไม่เกิน
+     * EXPORT_ROUND_GAP_MS ถือว่ารอบเดียวกัน
+     */
+
+    const rounds = [];
+
+    let currentRound = [];
+
+    let prevTime = null;
+
+
+    byTime.forEach(
+        row => {
+
+            const t =
+                parseDate(row.timestamp);
+
+            const time =
+                t ? t.getTime() : null;
+
+
+            if (
+                currentRound.length &&
+                time !== null &&
+                prevTime !== null &&
+                (time - prevTime) >
+                EXPORT_ROUND_GAP_MS
+            ) {
+
+                rounds.push(
+                    currentRound
+                );
+
+                currentRound = [];
+
+            }
+
+
+            currentRound.push(row);
+
+            prevTime = time;
+
+        }
+    );
+
+
+    if (currentRound.length) {
+
+        rounds.push(currentRound);
+
+    }
+
+
+    /*
+     * ในแต่ละรอบ เรียงตามอุปกรณ์
+     * Number 1 -> 2 -> 3
+     */
+
+    rounds.forEach(
+        round => {
+
+            round.sort(
+                (a, b) =>
+                    normalizeNodeName(
+                        a.device_id
+                    ).localeCompare(
+                        normalizeNodeName(
+                            b.device_id
+                        ),
+                        undefined,
+                        { numeric: true }
+                    )
+            );
+
+        }
+    );
+
+
+    /*
+     * ต่อทุกรอบเข้าด้วยกัน
+     * แทรกแถวว่าง (null) คั่นระหว่างรอบ
+     */
+
+    const grouped = [];
+
+
+    rounds.forEach(
+        (round, index) => {
+
+            if (index > 0) {
+
+                grouped.push(null);
+
+            }
+
+
+            grouped.push(
+                ...round
+            );
+
+        }
+    );
+
+
+    return grouped;
+
+}
+
+
+/* ---------------------------------------------------------
+   FILTER EXPORT DATA
+--------------------------------------------------------- */
+
+function updateExportPreview() {
+
+    const start =
+        exportStartDate.value;
+
+    const end =
+        exportEndDate.value;
+
+
+    /*
+     * ยังไม่ได้เลือกวันที่
+     */
+
+    if (!start || !end) {
+
+        exportFilteredRecords = [];
+
+
+        exportCount.textContent =
+            "0";
+
+
+        exportTableBody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    กรุณาเลือกวันที่
+                </td>
+            </tr>
+        `;
+
+
+        return;
+    }
+
+
+    /*
+     * วันที่ผิด
+     */
+
+    if (start > end) {
+
+        exportFilteredRecords = [];
+
+
+        exportCount.textContent =
+            "0";
+
+
+        exportTableBody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    ❌ วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด
+                </td>
+            </tr>
+        `;
+
+
+        return;
+    }
+
+
+    /*
+     * กรองข้อมูล
+     */
+
+    exportFilteredRecords =
+        sortAndGroupExportRecords(
+            exportRecords.filter(
+                row => {
+
+                    /*
+                     * ข้อมูลถูก normalize แล้ว
+                     * field ชื่อ timestamp เสมอ
+                     */
+
+                    const date =
+                        parseDate(row.timestamp);
+
+
+                    if (!date) {
+
+                        return false;
+
+                    }
+
+
+                /*
+                 * แปลงเป็น YYYY-MM-DD
+                 * ตามเวลาไทย
+                 */
+
+                const dateString =
+                    date.toLocaleDateString(
+                        "en-CA",
+                        {
+                            timeZone:
+                                "Asia/Bangkok"
+                        }
+                    );
+
+
+                    return (
+                        dateString >= start &&
+                        dateString <= end
+                    );
+
+                }
+            )
+        );
+
+
+    /*
+     * จำนวนข้อมูล
+     */
+
+    exportCount.textContent =
+        exportFilteredRecords
+            .length
+            .toLocaleString();
+
+
+    /*
+     * แสดง Preview
+     */
+
+    renderExportPreview(
+        exportFilteredRecords
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   RENDER PREVIEW
+--------------------------------------------------------- */
+
+function renderExportPreview(data) {
+
+    /*
+     * ไม่มีข้อมูล
+     */
+
+    if (!data || data.length === 0) {
+
+        exportTableBody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    ไม่พบข้อมูลในช่วงวันที่ที่เลือก
+                </td>
+            </tr>
+        `;
+
+
+        return;
+    }
+
+
+    /*
+     * Preview แค่ 100 รายการ
+     */
+
+    const preview =
+        data.slice(0, 100);
+
+
+    exportTableBody.innerHTML =
+        preview.map(
+            row => {
+
+                /*
+                 * แถวคั่นระหว่างกลุ่มอุปกรณ์
+                 */
+
+                if (row === null) {
+
+                    return `
+                        <tr class="export-group-divider">
+                            <td colspan="8"></td>
+                        </tr>
+                    `;
+
+                }
+
+
+                const date =
+                    parseDate(row.timestamp);
+
+
+                const dateText =
+                    date
+                        ? date.toLocaleString(
+                            "th-TH",
+                            {
+                                timeZone:
+                                    "Asia/Bangkok"
+                            }
+                        )
+                        : "--";
+
+
+                return `
+                    <tr>
+
+                        <td>
+                            ${escapeHTML(dateText)}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
+                                row.device_id ??
+                                "--"
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.pm1
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.pm25
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.pm10
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.temperature
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.humidity
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExportValue(
+                                row.light
+                            )}
+                        </td>
+
+                    </tr>
+                `;
+
+            }
+        )
+        .join("");
+}
+
+
+/* ---------------------------------------------------------
+   FORMAT VALUE
+--------------------------------------------------------- */
+
+function formatExportValue(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "--";
+
+    }
+
+
+    return escapeHTML(
+        String(value)
+    );
+}
+
+
+/* ---------------------------------------------------------
+   ESCAPE HTML
+--------------------------------------------------------- */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+/* ---------------------------------------------------------
+   DOWNLOAD CSV / EXCEL
+--------------------------------------------------------- */
+
+if (exportExcel) {
+
+    exportExcel.addEventListener(
+        "click",
+        () => {
+
+            /*
+             * ไม่มีข้อมูล
+             */
+
+            if (
+                !exportFilteredRecords ||
+                exportFilteredRecords.length === 0
+            ) {
+
+                alert(
+                    "ไม่มีข้อมูลสำหรับส่งออก"
+                );
+
+
+                return;
+            }
+
+
+            /*
+             * Header
+             */
+
+            const header = [
+
+                "วันที่ / เวลา",
+
+                "อุปกรณ์",
+
+                "PM1.0",
+
+                "PM2.5",
+
+                "PM10",
+
+                "อุณหภูมิ (°C)",
+
+                "ความชื้น (%)",
+
+                "แสง (lux)"
+
+            ];
+
+
+            /*
+             * ข้อมูล
+             * (แถวที่เป็น null = แถวคั่นระหว่างอุปกรณ์
+             *  ให้แปลงเป็นแถวว่างใน CSV)
+             */
+
+            const rows =
+                exportFilteredRecords.map(
+                    row => {
+
+                        if (row === null) {
+
+                            return null;
+
+                        }
+
+
+                        const date =
+                            parseDate(row.timestamp);
+
+
+                        const dateText =
+                            date
+                                ? date.toLocaleString(
+                                    "th-TH",
+                                    {
+                                        timeZone:
+                                            "Asia/Bangkok"
+                                    }
+                                )
+                                : "";
+
+
+                        return [
+
+                            dateText,
+
+                            row.device_id ??
+                            "",
+
+                            row.pm1 ??
+                            "",
+
+                            row.pm25 ??
+                            "",
+
+                            row.pm10 ??
+                            "",
+
+                            row.temperature ??
+                            "",
+
+                            row.humidity ??
+                            "",
+
+                            row.light ??
+                            ""
+
+                        ];
+
+                    }
+                );
+
+
+            /*
+             * สร้าง CSV
+             *
+             * หมายเหตุ: คอลัมน์วันที่/เวลา ถูกครอบด้วย
+             * ="..."  (Excel text-formula trick)
+             * เพื่อบังคับให้ Excel มองเป็น "ข้อความ"
+             * ไม่ใช่วันที่/ตัวเลข ป้องกันปัญหาคอลัมน์
+             * แสดงเป็น ######## เวลาคอลัมน์แคบ
+             */
+
+            const csv =
+                "\uFEFF" +
+
+                [
+                    header,
+                    ...rows
+                ]
+                .map(
+                    row => {
+
+                        /*
+                         * แถวคั่น -> แถวว่าง
+                         */
+
+                        if (row === null) {
+
+                            return "";
+
+                        }
+
+
+                        return row
+                            .map(
+                                (value,colIndex) => {
+
+                                    const text =
+                                        String(value)
+                                        .replaceAll(
+                                            '"',
+                                            '""'
+                                        );
+
+
+                                    /*
+                                     * คอลัมน์แรก (index 0)
+                                     * = วันที่/เวลา
+                                     * บังคับเป็นข้อความ
+                                     */
+
+                                    if (
+                                        colIndex === 0 &&
+                                        text !== "" &&
+                                        text !== "วันที่ / เวลา"
+                                    ) {
+
+                                        return `"=""${text}"""`;
+
+                                    }
+
+
+                                    return `"${text}"`;
+
+                                }
+                            )
+                            .join(",");
+
+                    }
+                )
+                .join("\r\n");
+
+
+            /*
+             * สร้างไฟล์
+             */
+
+            const blob =
+                new Blob(
+                    [csv],
+                    {
+                        type:
+                            "text/csv;charset=utf-8;"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            const start =
+                exportStartDate.value;
+
+
+            const end =
+                exportEndDate.value;
+
+
+            link.href =
+                url;
+
+
+            link.download =
+                `PM25_${start}_${end}.csv`;
+
+
+            document.body.appendChild(
+                link
+            );
+
+
+            link.click();
+
+
+            document.body.removeChild(
+                link
+            );
+
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE MODAL
+--------------------------------------------------------- */
+
+function closeExportModal() {
+
+    exportModal.classList.remove(
+        "show"
+    );
+
+
+    exportModal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+}
+
+
+if (exportClose) {
+
+    exportClose.addEventListener(
+        "click",
+        closeExportModal
+    );
+
+}
+
+
+if (exportCancel) {
+
+    exportCancel.addEventListener(
+        "click",
+        closeExportModal
+    );
+
+}
+
+
+if (exportBackdrop) {
+
+    exportBackdrop.addEventListener(
+        "click",
+        closeExportModal
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   ESC TO CLOSE
+--------------------------------------------------------- */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape" &&
+            exportModal &&
+            exportModal.classList.contains(
+                "show"
+            )
+        ) {
+
+            closeExportModal();
+
+        }
+
+    }
+);
+ /* =========================================================
+        RANGE BUTTONS
+        ========================================================= */
+
+        document
+        .querySelectorAll(
+            ".range"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+
+                        document
+                        .querySelectorAll(
+                            ".range"
+                        )
+                        .forEach(
+                            x =>
+                                x.classList
+                                .remove(
+                                    "active"
+                                )
+                        );
+
+
+                        button
+                            .classList
+                            .add(
+                                "active"
+                            );
+
+
+                        currentRange =
+                            button.dataset.range;
+
+
+                        await load();
+
+                    }
+                );
+
+            }
+        );
+
+/* =========================================================
+   RENDER DASHBOARD
+========================================================= */
+
+function render(){
+
+    if(!latestRecord){
+        return;
+    }
+
+
+    /* =====================================================
+       NODE DATA
+    ===================================================== */
+
+    const n1 =
+        getLatestNode(1);
+
+    const n2 =
+        getLatestNode(2);
+
+    const n3 =
+        getLatestNode(3);
+
+
+    setNode(
+        "n1",
+        n1
+    );
+
+    setNode(
+        "n2",
+        n2
+    );
+
+    setNode(
+        "n3",
+        n3
+    );
+
+
+    /* =====================================================
+       NODE STATUS
+    ===================================================== */
+
+    updateNodeStatus(
+        "n1status",
+        "nodeCard1",
+        n1
+    );
+
+    updateNodeStatus(
+        "n2status",
+        "nodeCard2",
+        n2
+    );
+
+    updateNodeStatus(
+        "n3status",
+        "nodeCard3",
+        n3
+    );
+
+
+    /* =====================================================
+       LAST UPDATE
+    ===================================================== */
+
+    const last1 =
+        $("lastUpdate1");
+
+    const last2 =
+        $("lastUpdate2");
+
+    const last3 =
+        $("lastUpdate3");
+
+
+    if(last1){
+
+        last1.textContent =
+            n1 && n1.timestamp
+                ? formatThaiTime(n1.timestamp)
+                : "--";
+
+    }
+
+
+    if(last2){
+
+        last2.textContent =
+            n2 && n2.timestamp
+                ? formatThaiTime(n2.timestamp)
+                : "--";
+
+    }
+
+
+    if(last3){
+
+        last3.textContent =
+            n3 && n3.timestamp
+                ? formatThaiTime(n3.timestamp)
+                : "--";
+
+    }
+
+
+    /* =====================================================
+       ONLINE COUNT
+    ===================================================== */
+
+    const online =
+        [
+            n1,
+            n2,
+            n3
+        ]
+        .filter(
+            node =>
+                getNodeStatus(node) ===
+                "online"
+        )
+        .length;
+
+
+    $("onlineCountTop").textContent =
+        online +
+        " / " +
+        TOTAL_NODES;
+
+
+    /* =====================================================
+       OVERALL AIR QUALITY
+    ===================================================== */
+
+    const pm25 =
+        Number(
+            latestRecord.pm25
+        );
+
+
+    const q =
+        quality(pm25);
+
+
+    $("overallStatus").textContent =
+        q;
+
+
+    updateOverallDot(
+        pm25
+    );
+
+
+    /* =====================================================
+       AI
+    ===================================================== */
+
+    updateAI(
+        latestRecord,
+        q
+    );
+
+
+    /* =====================================================
+       HISTORICAL / AVERAGE
+    ===================================================== */
+
+    renderAverages();
+
+
+    /* =====================================================
+       CHART
+    ===================================================== */
+
+    drawCharts();
+
+}
     </script>
+<!-- =====================================================
+     PREMIUM CREDIT BAR
+     ===================================================== -->
+
+
+
 <!-- =====================================================
      PREMIUM CREDIT BAR
      ===================================================== -->
@@ -5032,7 +5705,7 @@ function updateTrendStatistics(){
                 </div>
 
                 <div class="credit-title">
-                    ครูที่ปรึกษา
+                    นาย ฐาปกรณ์ ตรีขัยศรี
                 </div>
 
                 <div class="credit-role">
