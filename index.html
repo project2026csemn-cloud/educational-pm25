@@ -599,29 +599,81 @@ FORECAST + AI
 ========================================================= -->
 <section class="grid lg:grid-cols-2 gap-4 mb-4">
     <div class="glass card p-5">
-        <div class="flex justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
                 <h2 class="text-xl font-black">
                     🔮 Forecast
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">
-                    คาดการณ์จากแนวโน้มข้อมูลย้อนหลังแบบสถิติ
+                    คาดการณ์แนวโน้มจากข้อมูลย้อนหลังด้วยวิธีทางสถิติ
                 </p>
             </div>
-            <span
-                id="forecastBadge"
-                class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
-            >
-                STATISTICAL
-            </span>
+
+            <div class="text-left sm:text-right">
+                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                    ช่วงเวลาที่คาดการณ์
+                </div>
+                <div
+                    id="forecastBadge"
+                    class="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold text-cyan-300"
+                    style="background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.16);"
+                >
+                    ⏱ 30 นาทีข้างหน้า
+                </div>
+            </div>
         </div>
+
         <div
             id="forecastMessage"
             class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
         >
             รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
         </div>
-        <canvas id="forecastChart" class="mt-4"></canvas>
+
+        <div
+            id="forecastGuide"
+            class="mt-4 rounded-xl p-3"
+            style="background:rgba(15,23,42,.38);"
+        >
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <div class="text-xs font-bold text-slate-300">
+                        วิธีอ่านกราฟ
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-1">
+                        สีและรูปแบบเส้นมีไว้บอกชนิดข้อมูล ไม่ใช่ปุ่มกด
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="inline-block w-8 h-[3px] rounded-full"
+                            style="background:#22d3ee;"
+                        ></span>
+                        <span class="text-slate-300">
+                            ข้อมูลจริง
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="inline-block w-8 h-0"
+                            style="border-top:2px dashed #34d399;"
+                        ></span>
+                        <span class="text-slate-300">
+                            ค่าคาดการณ์
+                        </span>
+                    </div>
+
+                    <div class="text-slate-500">
+                        ● จุดล่าสุด
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="forecastChart" class="mt-3"></canvas>
     </div>
     <div class="glass card p-5">
         <div class="flex justify-between items-center">
@@ -2359,23 +2411,32 @@ function drawForecast(arr){
             </div>
         </div>
 
-        <div class="mt-4">
-            <b>${direction}</b>
-            <br>
-            <span class="text-xs text-slate-400">
-                ความเชื่อมั่น: ${confidence}
-                • ใช้ ${recent.length} จุดข้อมูลล่าสุด
-            </span>
+        <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+                <b>${direction}</b>
+                <div class="text-xs text-slate-400 mt-1">
+                    ใช้ ${recent.length} จุดข้อมูลล่าสุด
+                </div>
+            </div>
+
+            <div
+                class="rounded-lg px-3 py-2 text-xs"
+                style="background:rgba(15,23,42,.42);"
+            >
+                ความเชื่อมั่น
+                <b class="text-cyan-300 ml-1">
+                    ${confidence}
+                </b>
+            </div>
         </div>
 
-        <div class="text-xs text-slate-500 mt-3">
-            * ใช้ Linear Regression ตามเวลา
-            ไม่ใช่ AI/ML และไม่ใช่ค่ารับประกัน
+        <div class="text-[11px] text-slate-500 mt-3">
+            แบบจำลอง: Linear Regression ตามเวลา • ไม่ใช่ AI/ML • เป็นค่าประมาณ ไม่ใช่ค่ารับประกัน
         </div>
     `;
 
     $("forecastBadge").textContent =
-        "30 MIN";
+        "⏱ 30 นาทีข้างหน้า";
 
     const actualToShow =
         recent.slice(-10);
@@ -2492,7 +2553,7 @@ function drawForecast(arr){
                     plugins: {
                         legend: {
                             display:
-                                true
+                                false
                         }
                     },
 
@@ -3136,13 +3197,26 @@ function updateAlerts(){
             priority: 100,
             level: "critical",
             html: `
-                <div class="soft rounded-xl p-3 border border-red-500/20">
-                    <div class="text-red-400 font-bold">
-                        🔴 ระบบแม่ OFFLINE
-                    </div>
-                    <div class="text-xs text-slate-400 mt-1">
-                        ไม่สามารถติดต่ออุปกรณ์แม่ได้
-                        อุปกรณ์ลูกทั้งหมดถือเป็น OFFLINE
+                <div
+                    class="rounded-xl p-3"
+                    style="background:rgba(239,68,68,.06); border-left:3px solid rgba(248,113,113,.85);"
+                >
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
+                            style="background:rgba(239,68,68,.12);"
+                        >
+                            📡
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-red-400 font-bold">
+                                ระบบแม่ OFFLINE
+                            </div>
+                            <div class="text-xs text-slate-400 mt-1 leading-5">
+                                ไม่สามารถติดต่ออุปกรณ์แม่ได้
+                                ระบบจึงกำหนดอุปกรณ์ลูกทั้งหมดเป็น OFFLINE
+                            </div>
+                        </div>
                     </div>
                 </div>
             `
@@ -3169,16 +3243,29 @@ function updateAlerts(){
                 priority: 90,
                 level: "critical",
                 html: `
-                    <div class="soft rounded-xl p-3 border border-red-500/20">
-                        <div class="text-red-400 font-bold">
-                            🔴 ${escapeHtml(
-                                getDeviceDisplayName(
-                                    node.device_id
-                                )
-                            )} OFFLINE
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            ไม่พบการติดต่อจากอุปกรณ์
+                    <div
+                        class="rounded-xl p-3"
+                        style="background:rgba(239,68,68,.05); border-left:3px solid rgba(248,113,113,.72);"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-red-300"
+                                style="background:rgba(239,68,68,.11);"
+                            >
+                                ●
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-red-400 font-bold">
+                                    ${escapeHtml(
+                                        getDeviceDisplayName(
+                                            node.device_id
+                                        )
+                                    )}
+                                </div>
+                                <div class="text-xs text-slate-400 mt-1">
+                                    OFFLINE • ไม่พบการติดต่อจากอุปกรณ์
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `
@@ -3230,15 +3317,33 @@ function updateAlerts(){
             priority: priority,
             level: alert.level,
             html: `
-                <div class="soft rounded-xl p-3">
-                    <div class="${textClass} font-bold">
-                        ${icon}
-                        ${escapeHtml(alert.title)}
-                    </div>
-                    <div class="text-xs text-slate-300 mt-1">
-                        ${escapeHtml(alert.device_name)}:
-                        ${fmt(alert.value)}
-                        ${escapeHtml(alert.unit)}
+                <div
+                    class="rounded-xl p-3"
+                    style="background:rgba(15,23,42,.42);"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="text-lg">
+                                ${icon}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="${textClass} font-bold">
+                                    ${escapeHtml(alert.title)}
+                                </div>
+                                <div class="text-xs text-slate-400 mt-1">
+                                    ${escapeHtml(alert.device_name)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right shrink-0">
+                            <b class="text-slate-100">
+                                ${fmt(alert.value)}
+                            </b>
+                            <div class="text-[10px] text-slate-500 mt-1">
+                                ${escapeHtml(alert.unit)}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `
@@ -3281,12 +3386,19 @@ function updateAlerts(){
             priority: 10,
             level: "info",
             html: `
-                <div class="text-xs text-slate-400 px-1 pt-1">
-                    🟡 SLEEP: ${escapeHtml(names)}
-                    <br>
-                    <span class="text-slate-500">
-                        เป็นสถานะพักตามปกติ ไม่ถือเป็นข้อผิดพลาด
+                <div
+                    class="rounded-xl px-3 py-2 text-xs text-slate-400"
+                    style="background:rgba(245,158,11,.05);"
+                >
+                    <span class="text-amber-300 font-bold">
+                        ◐ SLEEP
                     </span>
+                    <span class="ml-1">
+                        ${escapeHtml(names)}
+                    </span>
+                    <div class="text-slate-500 mt-1">
+                        สถานะพักตามปกติ ไม่ถือเป็นข้อผิดพลาด
+                    </div>
                 </div>
             `
         });
@@ -3318,14 +3430,27 @@ function updateAlerts(){
                 : "";
 
         $("alerts").innerHTML = `
-            <div class="soft rounded-xl p-3 border border-emerald-500/20">
-                <div class="text-emerald-400 font-bold">
-                    ✅ ระบบปกติ
+            <div
+                class="rounded-xl p-4"
+                style="background:rgba(16,185,129,.06); border-left:3px solid rgba(52,211,153,.72);"
+            >
+                <div class="flex items-start gap-3">
+                    <div
+                        class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
+                        style="background:rgba(16,185,129,.12);"
+                    >
+                        ✓
+                    </div>
+                    <div>
+                        <div class="text-emerald-400 font-bold">
+                            ระบบปกติ
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">
+                            ไม่พบค่าหรือสถานะที่ต้องเฝ้าระวัง
+                        </div>
+                        ${sleepText}
+                    </div>
                 </div>
-                <div class="text-xs text-slate-400 mt-1">
-                    ไม่พบค่าหรือสถานะที่ต้องเฝ้าระวัง
-                </div>
-                ${sleepText}
             </div>
         `;
 
@@ -3353,15 +3478,29 @@ function updateAlerts(){
 
     const header =
         importantCount === 1
-            ? "⚠️ พบ 1 รายการที่ต้องตรวจสอบ"
-            : "⚠️ พบ " +
+            ? "พบ 1 รายการที่ต้องตรวจสอบ"
+            : "พบ " +
               importantCount +
               " รายการที่ต้องตรวจสอบ";
 
 
     $("alerts").innerHTML = `
-        <div class="font-bold text-slate-200 mb-3">
-            ${header}
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+                <div class="font-bold text-slate-200">
+                    ${header}
+                </div>
+                <div class="text-[11px] text-slate-500 mt-1">
+                    เรียงจากรายการที่สำคัญที่สุด
+                </div>
+            </div>
+
+            <div
+                class="rounded-full px-3 py-1 text-xs font-bold text-amber-300"
+                style="background:rgba(245,158,11,.08);"
+            >
+                ${importantCount}
+            </div>
         </div>
 
         <div class="space-y-2">
