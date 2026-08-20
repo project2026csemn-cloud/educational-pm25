@@ -644,6 +644,8 @@ const API_URL =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
 const HISTORY_API =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
+const MOTHER_STATUS_API =
+    "https://educational-pm25-api.project2026csemn.workers.dev/api/mother_status";
 const TOTAL_NODES = 3;
 const NODE_OFFLINE_AFTER_SECONDS = 6 * 60;
 const NODE_SLEEP_OFFLINE_AFTER_SECONDS = 6 * 60;
@@ -658,6 +660,7 @@ let forecastChart = null;
 let metric = "pm25";
 let averageRange = "24h";
 let apiConnectionOnline = false;
+let motherStatus = null;
 /* =========================================================
 RANGE
 ========================================================= */
@@ -1174,6 +1177,68 @@ async function loadLatest(){
     }
     return [];
 }
+/* =========================================================
+MOTHER STATUS API
+========================================================= */
+
+async function loadMotherStatus(){
+
+    const response =
+        await fetch(
+            MOTHER_STATUS_API +
+            "?t=" +
+            Date.now(),
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+        );
+
+    if(!response.ok){
+        throw new Error(
+            "mother_status HTTP " +
+            response.status
+        );
+    }
+
+    const json =
+        await response.json();
+
+    if(
+        !json ||
+        !json.success
+    ){
+        throw new Error(
+            json?.message ||
+            "mother_status ส่งข้อมูลไม่สำเร็จ"
+        );
+    }
+
+    if(!json.data){
+        return null;
+    }
+
+    return {
+        status:
+            String(
+                json.data.status || "offline"
+            )
+            .trim()
+            .toLowerCase(),
+
+        last_seen:
+            json.data.last_seen || null,
+
+        updated_at:
+            json.data.updated_at || null
+    };
+}
+
+
 /* =========================================================
 HISTORY API
 ========================================================= */
@@ -2379,8 +2444,24 @@ async function load(){
         const newHistory =
             await loadHistory();
 
+        let newMotherStatus = null;
+
+        try{
+            newMotherStatus =
+                await loadMotherStatus();
+        }
+        catch(error){
+            console.warn(
+                "Mother status unavailable:",
+                error
+            );
+        }
+
         latestNodes =
             newLatestNodes;
+
+        motherStatus =
+            newMotherStatus;
 
         latestRecord =
             latestNodes.length
@@ -2532,9 +2613,7 @@ function render(){
     const currentAirQuality =
         updateCurrentAirQuality();
 
-    updateAlerts(
-        currentAirQuality.average
-    );
+    updateAlerts();
 
     updateAI(
         latestRecord,
@@ -2579,47 +2658,438 @@ function updateOverallDot(pm25){
             "w-2.5 h-2.5 rounded-full bg-red-500";
     }
 }
-function updateAlerts(pm25){
+function getAlertSeverityRank(level){
+
+    const rank = {
+        critical: 5,
+        high: 4,
+        warning: 3,
+        info: 2,
+        normal: 1
+    };
+
+    return rank[level] || 0;
+}
+
+
+function getCurrentSensorAlerts(){
+
+    const result = [];
+
+    for(const node of latestNodes){
+
+        if(!node){
+            continue;
+        }
+
+        const status =
+            getNodeStatus(node);
+
+        /*
+         * SENSOR ALERT ใช้เฉพาะ ONLINE / SLEEP
+         *
+         * SLEEP ใช้ค่าจาก ONLINE ล่าสุดที่ Worker คงไว้
+         * OFFLINE ไม่ใช้ค่ามาประเมิน เพราะถือว่าไม่ใช่ข้อมูลสด
+         */
+        if(
+            status !== "online" &&
+            status !== "sleep"
+        ){
+            continue;
+        }
+
+        const deviceName =
+            getDeviceDisplayName(
+                node.device_id
+            );
+
+        const checks = [
+            {
+                field: "pm25",
+                title: "PM2.5",
+                value: node.pm25,
+                unit: "µg/m³",
+                getLevel(value){
+                    if(value >= 37.5){
+                        return "critical";
+                    }
+                    if(value > 25){
+                        return "warning";
+                    }
+                    return "normal";
+                }
+            },
+            {
+                field: "pm1",
+                title: "PM1.0",
+                value: node.pm1,
+                unit: "µg/m³",
+                getLevel(value){
+                    if(value >= 100){
+                        return "critical";
+                    }
+                    if(value >= 50){
+                        return "high";
+                    }
+                    return "normal";
+                }
+            },
+            {
+                field: "pm10",
+                title: "PM10",
+                value: node.pm10,
+                unit: "µg/m³",
+                getLevel(value){
+                    if(value >= 150){
+                        return "critical";
+                    }
+                    if(value >= 100){
+                        return "warning";
+                    }
+                    return "normal";
+                }
+            },
+            {
+                field: "temperature",
+                title: "อุณหภูมิ",
+                value: node.temperature,
+                unit: "°C",
+                getLevel(value){
+                    if(
+                        value >= 35 ||
+                        value <= 18
+                    ){
+                        return "warning";
+                    }
+                    return "normal";
+                }
+            },
+            {
+                field: "humidity",
+                title: "ความชื้น",
+                value: node.humidity,
+                unit: "%",
+                getLevel(value){
+                    if(
+                        value >= 80 ||
+                        value <= 30
+                    ){
+                        return "warning";
+                    }
+                    return "normal";
+                }
+            },
+            {
+                field: "light",
+                title: "แสง",
+                value: node.light,
+                unit: "lux",
+                getLevel(value){
+                    if(value < 100){
+                        return "info";
+                    }
+                    return "normal";
+                }
+            }
+        ];
+
+        for(const check of checks){
+
+            if(
+                check.value === null ||
+                check.value === undefined ||
+                isNaN(Number(check.value))
+            ){
+                continue;
+            }
+
+            const numericValue =
+                Number(check.value);
+
+            const level =
+                check.getLevel(
+                    numericValue
+                );
+
+            if(level === "normal"){
+                continue;
+            }
+
+            result.push({
+                type: "sensor",
+                level: level,
+                device_id: node.device_id,
+                device_name: deviceName,
+                title: check.title,
+                value: numericValue,
+                unit: check.unit
+            });
+        }
+    }
+
+    return result;
+}
+
+
+function updateAlerts(){
+
+    const alerts = [];
+
+
+    // =========================================================
+    // 1. MOTHER / SYSTEM
+    // Priority สูงสุด
+    // =========================================================
+
     if(
-        pm25 == null ||
-        isNaN(pm25)
+        motherStatus &&
+        String(
+            motherStatus.status || ""
+        )
+        .trim()
+        .toLowerCase() === "offline"
     ){
+        alerts.push({
+            priority: 100,
+            level: "critical",
+            html: `
+                <div class="soft rounded-xl p-3 border border-red-500/20">
+                    <div class="text-red-400 font-bold">
+                        🔴 ระบบแม่ OFFLINE
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">
+                        ไม่สามารถติดต่ออุปกรณ์แม่ได้
+                        อุปกรณ์ลูกทั้งหมดถือเป็น OFFLINE
+                    </div>
+                </div>
+            `
+        });
+    }
+
+
+    // =========================================================
+    // 2. NODE OFFLINE
+    // =========================================================
+
+    for(const node of latestNodes){
+
+        if(!node){
+            continue;
+        }
+
+        const status =
+            getNodeStatus(node);
+
+        if(status === "offline"){
+
+            alerts.push({
+                priority: 90,
+                level: "critical",
+                html: `
+                    <div class="soft rounded-xl p-3 border border-red-500/20">
+                        <div class="text-red-400 font-bold">
+                            🔴 ${escapeHtml(
+                                getDeviceDisplayName(
+                                    node.device_id
+                                )
+                            )} OFFLINE
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">
+                            ไม่พบการติดต่อจากอุปกรณ์
+                        </div>
+                    </div>
+                `
+            });
+        }
+    }
+
+
+    // =========================================================
+    // 3. SENSOR ALERTS
+    // =========================================================
+
+    const sensorAlerts =
+        getCurrentSensorAlerts();
+
+    for(const alert of sensorAlerts){
+
+        let icon = "🟡";
+        let textClass =
+            "text-amber-400";
+        let priority = 50;
+
+        if(alert.level === "critical"){
+            icon = "🔴";
+            textClass =
+                "text-red-400";
+            priority = 80;
+        }
+        else if(alert.level === "high"){
+            icon = "🟠";
+            textClass =
+                "text-orange-400";
+            priority = 70;
+        }
+        else if(alert.level === "warning"){
+            icon = "🟡";
+            textClass =
+                "text-amber-400";
+            priority = 60;
+        }
+        else if(alert.level === "info"){
+            icon = "🔵";
+            textClass =
+                "text-cyan-400";
+            priority = 40;
+        }
+
+        alerts.push({
+            priority: priority,
+            level: alert.level,
+            html: `
+                <div class="soft rounded-xl p-3">
+                    <div class="${textClass} font-bold">
+                        ${icon}
+                        ${escapeHtml(alert.title)}
+                    </div>
+                    <div class="text-xs text-slate-300 mt-1">
+                        ${escapeHtml(alert.device_name)}:
+                        ${fmt(alert.value)}
+                        ${escapeHtml(alert.unit)}
+                    </div>
+                </div>
+            `
+        });
+    }
+
+
+    // =========================================================
+    // 4. SLEEP INFORMATION
+    //
+    // ไม่ถือเป็นปัญหา
+    // แสดงเฉพาะเมื่อมี SLEEP และมี Alert อื่นอยู่
+    // เพื่อให้ผู้ใช้เข้าใจสถานะระบบ
+    // =========================================================
+
+    const sleepingNodes =
+        latestNodes.filter(
+            node =>
+                node &&
+                getNodeStatus(node) ===
+                "sleep"
+        );
+
+    if(
+        sleepingNodes.length &&
+        alerts.length
+    ){
+
+        const names =
+            sleepingNodes
+                .map(
+                    node =>
+                        getDeviceDisplayName(
+                            node.device_id
+                        )
+                )
+                .join(", ");
+
+        alerts.push({
+            priority: 10,
+            level: "info",
+            html: `
+                <div class="text-xs text-slate-400 px-1 pt-1">
+                    🟡 SLEEP: ${escapeHtml(names)}
+                    <br>
+                    <span class="text-slate-500">
+                        เป็นสถานะพักตามปกติ ไม่ถือเป็นข้อผิดพลาด
+                    </span>
+                </div>
+            `
+        });
+    }
+
+
+    // =========================================================
+    // NO ALERT
+    // =========================================================
+
+    if(!alerts.length){
+
+        const sleepText =
+            sleepingNodes.length
+                ? `
+                    <div class="text-xs text-slate-400 mt-2">
+                        🟡 ${escapeHtml(
+                            sleepingNodes
+                                .map(
+                                    node =>
+                                        getDeviceDisplayName(
+                                            node.device_id
+                                        )
+                                )
+                                .join(", ")
+                        )} กำลัง SLEEP ตามปกติ
+                    </div>
+                `
+                : "";
+
         $("alerts").innerHTML = `
-            <span class="text-slate-400">
-                ยังไม่มีข้อมูล PM2.5
-            </span>
+            <div class="soft rounded-xl p-3 border border-emerald-500/20">
+                <div class="text-emerald-400 font-bold">
+                    ✅ ระบบปกติ
+                </div>
+                <div class="text-xs text-slate-400 mt-1">
+                    ไม่พบค่าหรือสถานะที่ต้องเฝ้าระวัง
+                </div>
+                ${sleepText}
+            </div>
         `;
+
         return;
     }
-    if(pm25 > 37.5){
-        $("alerts").innerHTML = `
-            <span class="text-red-400 font-bold">
-                ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
-            </span>
-            <br>
-            <span class="text-slate-400">
-                ควรเฝ้าระวังและติดตามสถานการณ์
-            </span>
-        `;
-    }
-    else if(pm25 > 25){
-        $("alerts").innerHTML = `
-            <span class="text-amber-400 font-bold">
-                ⚠ PM2.5 เริ่มสูง
-            </span>
-            <br>
-            <span class="text-slate-400">
-                ควรติดตามแนวโน้มอย่างต่อเนื่อง
-            </span>
-        `;
-    }
-    else{
-        $("alerts").innerHTML = `
-            <span class="text-emerald-400 font-bold">
-                ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
-            </span>
-        `;
-    }
+
+
+    // =========================================================
+    // SORT PRIORITY
+    // =========================================================
+
+    alerts.sort(
+        (a,b) =>
+            b.priority -
+            a.priority
+    );
+
+
+    const importantCount =
+        alerts.filter(
+            alert =>
+                alert.priority >= 40
+        ).length;
+
+
+    const header =
+        importantCount === 1
+            ? "⚠️ พบ 1 รายการที่ต้องตรวจสอบ"
+            : "⚠️ พบ " +
+              importantCount +
+              " รายการที่ต้องตรวจสอบ";
+
+
+    $("alerts").innerHTML = `
+        <div class="font-bold text-slate-200 mb-3">
+            ${header}
+        </div>
+
+        <div class="space-y-2">
+            ${alerts
+                .map(
+                    alert =>
+                        alert.html
+                )
+                .join("")}
+        </div>
+    `;
 }
 /* =========================================================
 AI
