@@ -1,11 +1,11 @@
 const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
 const API={
-latest:`${BASE}/api/get_latest.php`,
-history:`${BASE}/api/get_history.php`,
-export:`${BASE}/api/export.php`,
-mother:`${BASE}/api/mother_status`,
-alerts:`${BASE}/api/alert_states`,
-standards:`${BASE}/api/standards.php`
+  latest:`${BASE}/api/get_latest.php`,
+  history:`${BASE}/api/get_history.php`,
+  export:`${BASE}/api/export.php`,
+  mother:`${BASE}/api/mother_status`,
+  alerts:`${BASE}/api/alert_states`,
+  standards:`${BASE}/api/standards.php`
 };
 
 const TOTAL_NODES=3;
@@ -13,4624 +13,3253 @@ const $=id=>document.getElementById(id);
 
 let latestNodes=[],records=[],motherStatus=null,alertStates=[],standardsData=null;
 let latestRecord=null,historyChart=null,forecastChart=null,forecastVisible=true;
-let metric="pm25",averageRange="24h",customRangeStart=null,customRangeEnd=null;
+let metric="pm25",currentMetric="pm25",averageRange="24h";
+let customRangeStart=null,customRangeEnd=null;
 let calendarDisplayDate=new Date(),calendarSelectionStep="start";
 let apiConnectionOnline=false,exportRows=[],activeHelpButton=null;
 
 const RANGE_CONFIG={
-"30m":{label:"30 นาที",minutes:30,apiRange:"24h"},
-"1h":{label:"1 ชั่วโมง",minutes:60,apiRange:"24h"},
-"3h":{label:"3 ชั่วโมง",minutes:180,apiRange:"24h"},
-"6h":{label:"6 ชั่วโมง",minutes:360,apiRange:"24h"},
-"12h":{label:"12 ชั่วโมง",minutes:720,apiRange:"24h"},
-"24h":{label:"24 ชั่วโมง",minutes:1440,apiRange:"24h"},
-"3d":{label:"3 วัน",minutes:4320,apiRange:"7d"},
-"7d":{label:"7 วัน",minutes:10080,apiRange:"7d"},
-"30d":{label:"30 วัน",minutes:43200,apiRange:"30d"}
+  "30m":{label:"30 นาที",minutes:30,apiRange:"24h"},
+  "1h":{label:"1 ชั่วโมง",minutes:60,apiRange:"24h"},
+  "3h":{label:"3 ชั่วโมง",minutes:180,apiRange:"24h"},
+  "6h":{label:"6 ชั่วโมง",minutes:360,apiRange:"24h"},
+  "12h":{label:"12 ชั่วโมง",minutes:720,apiRange:"24h"},
+  "24h":{label:"24 ชั่วโมง",minutes:1440,apiRange:"24h"},
+  "3d":{label:"3 วัน",minutes:4320,apiRange:"7d"},
+  "7d":{label:"7 วัน",minutes:10080,apiRange:"7d"},
+  "30d":{label:"30 วัน",minutes:43200,apiRange:"30d"}
 };
 
-function fmt(v){return v===null||v===undefined||v===""||isNaN(v)?"--":Number(v).toFixed(1)}
+const CURRENT_METRIC_CONFIG={
+  pm1:{label:"PM1.0",unit:"µg/m³",description:"แสดงค่า PM1.0 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"},
+  pm25:{label:"PM2.5",unit:"µg/m³",description:"ประเมินจากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"},
+  pm10:{label:"PM10",unit:"µg/m³",description:"แสดงค่า PM10 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"},
+  temperature:{label:"อุณหภูมิ",unit:"°C",description:"แสดงอุณหภูมิล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"},
+  humidity:{label:"ความชื้น",unit:"%",description:"แสดงความชื้นสัมพัทธ์ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"},
+  light:{label:"แสง",unit:"lux",description:"แสดงระดับความสว่างล่าสุดของจุดตรวจวัดที่กำลังใช้งาน"}
+};
+
+function fmt(v){
+  return v===null||v===undefined||v===""||isNaN(v)?"--":Number(v).toFixed(1);
+}
 
 function escapeHtml(v){
-return String(v??"")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
 
 function parseDate(v){
-if(!v)return null;
-if(v instanceof Date)return isNaN(v.getTime())?null:v;
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v.getTime())?null:v;
 
-const t=String(v).trim();
-if(!t)return null;
+  const t=String(v).trim();
+  if(!t)return null;
 
-let d;
+  let d;
 
-if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(t)){
-d=new Date(t.replace(" ","T")+"Z");
-}
-else if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(t)){
-d=new Date(t+"Z");
-}
-else{
-d=new Date(t);
-}
+  if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(t)){
+    d=new Date(t.replace(" ","T")+"Z");
+  }else if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(t)){
+    d=new Date(t+"Z");
+  }else{
+    d=new Date(t);
+  }
 
-return isNaN(d.getTime())?null:d;
+  return isNaN(d.getTime())?null:d;
 }
 
 function formatThaiTime(v){
-const d=parseDate(v);
+  const d=parseDate(v);
+  if(!d)return "--";
 
-if(!d)return "--";
-
-return d.toLocaleTimeString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit",
-hour12:false
-}
-);
+  return d.toLocaleTimeString("th-TH",{
+    timeZone:"Asia/Bangkok",
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit",
+    hour12:false
+  });
 }
 
 function normalize(d){
-if(!d)return null;
+  if(!d)return null;
 
-return{
-id:d.id==null?null:Number(d.id),
-device_id:String(d.device_id??"").trim(),
-status:String(d.status??"offline").trim().toLowerCase(),
-pm1:d.pm1==null?null:Number(d.pm1),
-pm25:d.pm25==null?null:Number(d.pm25),
-pm10:d.pm10==null?null:Number(d.pm10),
-temperature:d.temperature==null?null:Number(d.temperature),
-humidity:d.humidity==null?null:Number(d.humidity),
-light:d.light==null?null:Number(d.light),
-timestamp:d.recorded_at||d.timestamp||d.created_at||null
-};
+  return{
+    id:d.id==null?null:Number(d.id),
+    device_id:String(d.device_id??"").trim(),
+    status:String(d.status??"offline").trim().toLowerCase(),
+    pm1:d.pm1==null?null:Number(d.pm1),
+    pm25:d.pm25==null?null:Number(d.pm25),
+    pm10:d.pm10==null?null:Number(d.pm10),
+    temperature:d.temperature==null?null:Number(d.temperature),
+    humidity:d.humidity==null?null:Number(d.humidity),
+    light:d.light==null?null:Number(d.light),
+    timestamp:d.recorded_at||d.timestamp||d.created_at||null
+  };
 }
 
 function normalizeNodeName(v){
-const t=String(v??"").trim().toLowerCase();
-const m=t.match(/(\d+)/);
-
-return m?`node${m[1]}`:t;
+  const t=String(v??"").trim().toLowerCase();
+  const m=t.match(/(\d+)/);
+  return m?`node${m[1]}`:t;
 }
 
 function isSameNode(id,n){
-return normalizeNodeName(id)===`node${n}`;
+  return normalizeNodeName(id)===`node${n}`;
 }
 
 function getLatestNode(n){
-return latestNodes.find(x=>isSameNode(x.device_id,n))||null;
+  return latestNodes.find(x=>isSameNode(x.device_id,n))||null;
 }
 
 function motherOnline(){
-return !!(
-apiConnectionOnline &&
-motherStatus &&
-String(motherStatus.status||"").toLowerCase()==="online"
-);
+  return !!(
+    apiConnectionOnline&&
+    motherStatus&&
+    String(motherStatus.status||"").toLowerCase()==="online"
+  );
 }
 
 function getNodeStatus(node){
+  if(!motherOnline()||!node)return"offline";
 
-if(!motherOnline()||!node){
-return"offline";
-}
-
-return["online","sleep","offline"].includes(node.status)
-?node.status
-:"offline";
+  return["online","sleep","offline"].includes(node.status)
+    ?node.status
+    :"offline";
 }
 
 function countActiveNodes(){
-
-return latestNodes.filter(
-n=>["online","sleep"].includes(getNodeStatus(n))
-).length;
+  return latestNodes.filter(
+    n=>["online","sleep"].includes(getNodeStatus(n))
+  ).length;
 }
 
 function getLatestTimestampRecord(list){
+  let latest=null;
 
-let latest=null;
+  for(const x of list||[]){
+    const d=parseDate(x?.timestamp);
+    if(!d)continue;
 
-for(const x of list||[]){
+    if(!latest||d>parseDate(latest.timestamp)){
+      latest=x;
+    }
+  }
 
-const d=parseDate(x?.timestamp);
-
-if(!d)continue;
-
-if(
-!latest ||
-d>parseDate(latest.timestamp)
-){
-latest=x;
-}
-
-}
-
-return latest;
+  return latest;
 }
 
 function metricLabel(){
-
-return{
-pm1:"PM1.0",
-pm25:"PM2.5",
-pm10:"PM10",
-temperature:"อุณหภูมิ",
-humidity:"ความชื้น",
-light:"แสง"
-}[metric]||metric;
+  return{
+    pm1:"PM1.0",
+    pm25:"PM2.5",
+    pm10:"PM10",
+    temperature:"อุณหภูมิ",
+    humidity:"ความชื้น",
+    light:"แสง"
+  }[metric]||metric;
 }
 
 function metricUnit(){
-
-return{
-pm1:"µg/m³",
-pm25:"µg/m³",
-pm10:"µg/m³",
-temperature:"°C",
-humidity:"%",
-light:"lux"
-}[metric]||"";
+  return{
+    pm1:"µg/m³",
+    pm25:"µg/m³",
+    pm10:"µg/m³",
+    temperature:"°C",
+    humidity:"%",
+    light:"lux"
+  }[metric]||"";
 }
 
 async function fetchJson(url){
+  const r=await fetch(
+    url+(url.includes("?")?"&":"?")+"t="+Date.now(),
+    {
+      cache:"no-store",
+      headers:{Accept:"application/json"}
+    }
+  );
 
-const r=await fetch(
-url+
-(url.includes("?")?"&":"?")+
-"t="+
-Date.now(),
-{
-cache:"no-store",
-headers:{
-Accept:"application/json"
-}
-}
-);
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
 
-if(!r.ok){
-throw new Error(`HTTP ${r.status}`);
-}
+  const j=await r.json();
 
-const j=await r.json();
+  if(!j?.success){
+    throw new Error(j?.message||"API error");
+  }
 
-if(!j?.success){
-throw new Error(j?.message||"API error");
-}
-
-return j;
+  return j;
 }
 
 async function loadLatest(){
+  const j=await fetchJson(API.latest);
 
-const j=await fetchJson(API.latest);
-
-return(
-Array.isArray(j.data)
-?j.data
-:j.data
-?[j.data]
-:[]
-)
-.map(normalize)
-.filter(Boolean);
+  return(
+    Array.isArray(j.data)
+      ?j.data
+      :j.data?[j.data]:[]
+  ).map(normalize).filter(Boolean);
 }
 
 async function loadMotherStatus(){
+  const j=await fetchJson(API.mother);
 
-const j=await fetchJson(API.mother);
-
-return j.data
-?{
-status:String(j.data.status||"offline").toLowerCase(),
-last_seen:j.data.last_seen||null,
-updated_at:j.data.updated_at||null
-}
-:null;
+  return j.data?{
+    status:String(j.data.status||"offline").toLowerCase(),
+    last_seen:j.data.last_seen||null,
+    updated_at:j.data.updated_at||null
+  }:null;
 }
 
 async function loadAlertStates(){
-
-const j=await fetchJson(API.alerts);
-
-return Array.isArray(j.data)
-?j.data
-:[];
+  const j=await fetchJson(API.alerts);
+  return Array.isArray(j.data)?j.data:[];
 }
 
 async function loadStandards(){
-
-return fetchJson(API.standards);
+  return fetchJson(API.standards);
 }
 
 function getApiRange(){
-
-return averageRange==="custom"
-?"30d"
-:(RANGE_CONFIG[averageRange]?.apiRange||"24h");
+  return averageRange==="custom"
+    ?"30d"
+    :(RANGE_CONFIG[averageRange]?.apiRange||"24h");
 }
 
 async function loadHistory(){
+  const j=await fetchJson(
+    `${API.history}?range=${encodeURIComponent(getApiRange())}&limit=5000`
+  );
 
-const j=await fetchJson(
-`${API.history}?range=${encodeURIComponent(getApiRange())}&limit=5000`
-);
+  if(!Array.isArray(j.data)){
+    throw new Error("History data invalid");
+  }
 
-if(!Array.isArray(j.data)){
-throw new Error("History data invalid");
-}
-
-return j.data
-.map(normalize)
-.filter(Boolean);
+  return j.data.map(normalize).filter(Boolean);
 }
 
 function getRealtimeThreshold(field){
-
-return standardsData
-?.realtime_thresholds
-?.[field]
-||null;
+  return standardsData?.realtime_thresholds?.[field]||null;
 }
 
 function getRealtimeLevel(field,value){
+  const n=Number(value);
 
-const n=Number(value);
+  if(!Number.isFinite(n))return"no_data";
 
-if(!Number.isFinite(n)){
-return"no_data";
-}
+  const t=getRealtimeThreshold(field);
 
-const t=getRealtimeThreshold(field);
+  if(!t)return"normal";
 
-if(!t){
-return"normal";
-}
+  if(t.critical!=null&&n>=Number(t.critical))return"critical";
+  if(t.warning!=null&&n>=Number(t.warning))return"warning";
+  if(t.low_warning!=null&&n<=Number(t.low_warning))return"warning";
+  if(t.high_warning!=null&&n>=Number(t.high_warning))return"warning";
+  if(t.low_info!=null&&n<Number(t.low_info))return"info";
 
-if(
-t.critical!=null &&
-n>=Number(t.critical)
-){
-return"critical";
-}
-
-if(
-t.warning!=null &&
-n>=Number(t.warning)
-){
-return"warning";
-}
-
-if(
-t.low_warning!=null &&
-n<=Number(t.low_warning)
-){
-return"warning";
-}
-
-if(
-t.high_warning!=null &&
-n>=Number(t.high_warning)
-){
-return"warning";
-}
-
-if(
-t.low_info!=null &&
-n<Number(t.low_info)
-){
-return"info";
-}
-
-return"normal";
+  return"normal";
 }
 
 function realtimeLevelLabel(l){
-
-return{
-normal:"ปกติ",
-warning:"เฝ้าระวัง",
-critical:"สูง",
-info:"ควรตรวจสอบ",
-no_data:"รอข้อมูล"
-}[l]||"รอข้อมูล";
+  return{
+    normal:"ปกติ",
+    warning:"เฝ้าระวัง",
+    critical:"สูง",
+    info:"ควรตรวจสอบ",
+    no_data:"รอข้อมูล"
+  }[l]||"รอข้อมูล";
 }
 
 function quality(v){
-
-return realtimeLevelLabel(
-getRealtimeLevel(
-"pm25",
-v
-)
-);
+  return realtimeLevelLabel(getRealtimeLevel("pm25",v));
 }
 
 function setNode(prefix,d){
+  const ids=["pm1","pm25","pm10","temp","hum","light"];
 
-const ids=[
-"pm1",
-"pm25",
-"pm10",
-"temp",
-"hum",
-"light"
-];
+  if(!d){
+    ids.forEach(x=>{
+      const e=$(prefix+x);
+      if(e)e.textContent="--";
+    });
+    return;
+  }
 
-if(!d){
+  $(prefix+"pm1").textContent=fmt(d.pm1);
+  $(prefix+"pm25").textContent=fmt(d.pm25);
+  $(prefix+"pm10").textContent=fmt(d.pm10);
 
-ids.forEach(
-x=>{
-const e=$(prefix+x);
+  $(prefix+"temp").textContent=
+    d.temperature==null?"--":fmt(d.temperature)+"°C";
 
-if(e){
-e.textContent="--";
-}
-}
-);
+  $(prefix+"hum").textContent=
+    d.humidity==null?"--":fmt(d.humidity)+"%";
 
-return;
-}
-
-$(prefix+"pm1").textContent=fmt(d.pm1);
-$(prefix+"pm25").textContent=fmt(d.pm25);
-$(prefix+"pm10").textContent=fmt(d.pm10);
-
-$(prefix+"temp").textContent=
-d.temperature==null
-?"--"
-:fmt(d.temperature)+"°C";
-
-$(prefix+"hum").textContent=
-d.humidity==null
-?"--"
-:fmt(d.humidity)+"%";
-
-$(prefix+"light").textContent=
-d.light==null
-?"--"
-:fmt(d.light)+" lux";
+  $(prefix+"light").textContent=
+    d.light==null?"--":fmt(d.light)+" lux";
 }
 
 function updateLastUpdate(id,node){
+  const e=$(id);
 
-const e=$(id);
-
-if(e){
-e.textContent=
-node?.timestamp
-?formatThaiTime(node.timestamp)
-:"--";
-}
+  if(e){
+    e.textContent=node?.timestamp
+      ?formatThaiTime(node.timestamp)
+      :"--";
+  }
 }
 
-function updateNodeStatus(
-statusId,
-cardId,
-node
-){
+function updateNodeStatus(statusId,cardId,node){
+  const s=$(statusId);
+  const c=$(cardId);
 
-const s=$(statusId);
-const c=$(cardId);
+  if(!s||!c)return;
 
-if(!s||!c){
-return;
-}
+  const st=getNodeStatus(node);
 
-const st=getNodeStatus(node);
+  const map={
+    online:["status-online","status-online-dot","ONLINE"],
+    sleep:["status-sleep","status-sleep-dot","SLEEP"],
+    offline:["status-offline","status-offline-dot","OFFLINE"]
+  };
 
-const map={
-online:[
-"status-online",
-"status-online-dot",
-"ONLINE"
-],
-sleep:[
-"status-sleep",
-"status-sleep-dot",
-"SLEEP"
-],
-offline:[
-"status-offline",
-"status-offline-dot",
-"OFFLINE"
-]
-};
+  const[cls,dot,label]=map[st];
 
-const[
-cls,
-dot,
-label
-]=map[st];
+  s.innerHTML=`
+    <span class="${dot}">●</span>
+    ${label}
+    <span class="badge rounded-full px-3 py-1 text-xs">
+      ESP-NOW
+    </span>
+  `;
 
-s.innerHTML=`
-<span class="${dot}">
-●
-</span>
-${label}
-<span class="badge rounded-full px-3 py-1 text-xs">
-ESP-NOW
-</span>
-`;
-
-s.className=
-`${cls} text-xs font-bold`;
-
-c.classList.toggle(
-"offline",
-st==="offline"
-);
+  s.className=`${cls} text-xs font-bold`;
+  c.classList.toggle("offline",st==="offline");
 }
 
 function renderMonitoringNodes(){
+  for(let i=1;i<=3;i++){
+    const n=getLatestNode(i);
 
-for(let i=1;i<=3;i++){
+    setNode("n"+i,n);
+    updateLastUpdate("lastUpdate"+i,n);
+    updateNodeStatus("n"+i+"status","nodeCard"+i,n);
+  }
 
-const n=getLatestNode(i);
-
-setNode(
-"n"+i,
-n
-);
-
-updateLastUpdate(
-"lastUpdate"+i,
-n
-);
-
-updateNodeStatus(
-"n"+i+"status",
-"nodeCard"+i,
-n
-);
-}
-
-updateSystemHealth();
+  updateSystemHealth();
 }
 
 function updateSystemHealth(){
+  const dot=$("gatewayDotTop");
+  const status=$("gatewayStatusTop");
+  const active=$("nodesActiveTop");
 
-const dot=$("gatewayDotTop");
-const status=$("gatewayStatusTop");
-const active=$("nodesActiveTop");
+  if(!dot||!status||!active)return;
 
-if(
-!dot||
-!status||
-!active
-){
-return;
-}
+  if(!apiConnectionOnline){
+    dot.className="text-red-400";
+    status.textContent="API ERROR";
+    active.textContent="ไม่สามารถตรวจสอบระบบได้";
+    return;
+  }
 
-if(!apiConnectionOnline){
-
-dot.className=
-"text-red-400";
-
-status.textContent=
-"API ERROR";
-
-active.textContent=
-"ไม่สามารถตรวจสอบระบบได้";
-
-return;
-}
-
-if(motherOnline()){
-
-dot.className=
-"text-emerald-400";
-
-status.textContent=
-"ONLINE";
-
-active.textContent=
-`${countActiveNodes()} / ${TOTAL_NODES} Nodes active`;
-}
-else{
-
-dot.className=
-"text-red-400";
-
-status.textContent=
-"OFFLINE";
-
-active.textContent=
-`0 / ${TOTAL_NODES} Nodes active`;
-}
+  if(motherOnline()){
+    dot.className="text-emerald-400";
+    status.textContent="ONLINE";
+    active.textContent=`${countActiveNodes()} / ${TOTAL_NODES} Nodes active`;
+  }else{
+    dot.className="text-red-400";
+    status.textContent="OFFLINE";
+    active.textContent=`0 / ${TOTAL_NODES} Nodes active`;
+  }
 }
 
 function forceAllNodesOffline(){
+  for(let i=1;i<=3;i++){
+    updateNodeStatus("n"+i+"status","nodeCard"+i,null);
+  }
 
-for(let i=1;i<=3;i++){
+  const dot=$("gatewayDotTop");
+  const s=$("gatewayStatusTop");
+  const a=$("nodesActiveTop");
 
-updateNodeStatus(
-"n"+i+"status",
-"nodeCard"+i,
-null
-);
-}
-
-const dot=$("gatewayDotTop");
-const s=$("gatewayStatusTop");
-const a=$("nodesActiveTop");
-
-if(dot){
-dot.className=
-"text-red-400";
-}
-
-if(s){
-s.textContent=
-"API ERROR";
-}
-
-if(a){
-a.textContent=
-"ไม่สามารถตรวจสอบระบบได้";
-}
+  if(dot)dot.className="text-red-400";
+  if(s)s.textContent="API ERROR";
+  if(a)a.textContent="ไม่สามารถตรวจสอบระบบได้";
 }
 
 function getDeviceDisplayName(id){
+  const m=String(id||"").match(/(\d+)/);
+  return m?`อุปกรณ์ ${m[1]}`:(id||"--");
+}
 
-const m=String(id||"")
-.match(/(\d+)/);
+/* =========================================================
+   CURRENT ENVIRONMENT
+   ========================================================= */
 
-return m
-?`อุปกรณ์ ${m[1]}`
-:(id||"--");
+function getCurrentMetricConfig(){
+  return CURRENT_METRIC_CONFIG[currentMetric]||CURRENT_METRIC_CONFIG.pm25;
+}
+
+function formatCurrentMetricValue(value){
+  if(
+    value===null||
+    value===undefined||
+    !Number.isFinite(Number(value))
+  ){
+    return"--";
+  }
+
+  const config=getCurrentMetricConfig();
+
+  return fmt(value)+(config.unit?" "+config.unit:"");
+}
+
+function getCurrentMetricLevel(value){
+  if(
+    value===null||
+    value===undefined||
+    !Number.isFinite(Number(value))
+  ){
+    return"no_data";
+  }
+
+  return getRealtimeLevel(currentMetric,Number(value));
+}
+
+function setCurrentQualityBadge(level){
+  const badge=$("qualityBadge");
+
+  if(!badge)return;
+
+  badge.className="current-quality-badge";
+
+  const map={
+    normal:["ปกติ","current-quality-normal"],
+    warning:["เฝ้าระวัง","current-quality-warning"],
+    critical:["สูง","current-quality-critical"],
+    info:["ควรตรวจสอบ","current-quality-info"],
+    no_data:["รอข้อมูล","current-quality-unavailable"]
+  };
+
+  const item=map[level]||map.no_data;
+
+  badge.textContent=item[0];
+  badge.classList.add(item[1]);
+}
+
+function resetCurrentEnvironment(reason="รอข้อมูล"){
+  const config=getCurrentMetricConfig();
+
+  if($("currentOverallLabel")){
+    $("currentOverallLabel").textContent=config.label+" ภาพรวม";
+  }
+
+  if($("currentOverallValue")){
+    $("currentOverallValue").textContent="--";
+  }
+
+  if($("currentOverallDetail")){
+    $("currentOverallDetail").textContent="ไม่มีข้อมูลสำหรับคำนวณ";
+  }
+
+  if($("currentHighestValue")){
+    $("currentHighestValue").textContent="--";
+  }
+
+  if($("currentHighestNode")){
+    $("currentHighestNode").textContent="--";
+  }
+
+  if($("currentWatchNode")){
+    $("currentWatchNode").textContent="--";
+  }
+
+  if($("currentWatchDetail")){
+    $("currentWatchDetail").textContent=reason;
+  }
+
+  if($("currentEnvironmentDescription")){
+    $("currentEnvironmentDescription").textContent=config.description;
+  }
+
+  if($("currentEnvironmentFooter")){
+    $("currentEnvironmentFooter").textContent=reason;
+  }
+
+  setCurrentQualityBadge("no_data");
 }
 
 function updateCurrentAirQuality(){
+  const config=getCurrentMetricConfig();
 
-if(!motherOnline()){
+  if($("currentOverallLabel")){
+    $("currentOverallLabel").textContent=config.label+" ภาพรวม";
+  }
 
-$("currentPM25").textContent=
-"--";
+  if($("currentEnvironmentDescription")){
+    $("currentEnvironmentDescription").textContent=config.description;
+  }
 
-$("highestPM25").textContent=
-"--";
+  if(!apiConnectionOnline){
+    resetCurrentEnvironment("ไม่สามารถเชื่อมต่อ API ได้");
+    return;
+  }
 
-$("highestPM25Node").textContent=
-"--";
+  if(!motherOnline()){
+    resetCurrentEnvironment(
+      "Gateway Offline • ไม่สามารถประเมินข้อมูลปัจจุบันได้"
+    );
+    return;
+  }
 
-$("watchNode").textContent=
-"--";
+  const usableNodes=latestNodes.filter(node=>{
+    const status=getNodeStatus(node);
 
-$("watchNodeDetail").textContent=
-"Gateway Offline • ไม่สามารถประเมินคุณภาพอากาศปัจจุบันได้";
+    if(!["online","sleep"].includes(status)){
+      return false;
+    }
 
-$("qualityBadge").textContent=
-"ไม่พร้อมใช้งาน";
+    const value=Number(node[currentMetric]);
+    return Number.isFinite(value);
+  });
 
-return;
+  if(!usableNodes.length){
+    resetCurrentEnvironment(
+      "ไม่มีอุปกรณ์ที่มีข้อมูลสำหรับตัวแปรนี้"
+    );
+    return;
+  }
+
+  const average=
+    usableNodes.reduce(
+      (sum,node)=>sum+Number(node[currentMetric]),
+      0
+    )/usableNodes.length;
+
+  const highest=usableNodes.reduce(
+    (current,node)=>
+      Number(node[currentMetric])>Number(current[currentMetric])
+        ?node
+        :current
+  );
+
+  const highestValue=Number(highest[currentMetric]);
+
+  const watchNodes=usableNodes
+    .map(node=>{
+      const value=Number(node[currentMetric]);
+      const level=getCurrentMetricLevel(value);
+
+      return{node,value,level};
+    })
+    .filter(item=>
+      ["warning","critical","info"].includes(item.level)
+    )
+    .sort((a,b)=>b.value-a.value);
+
+  if($("currentOverallValue")){
+    $("currentOverallValue").textContent=
+      formatCurrentMetricValue(average);
+  }
+
+  if($("currentOverallDetail")){
+    $("currentOverallDetail").textContent=
+      `ค่าเฉลี่ยจาก ${usableNodes.length} จุดที่ใช้งาน`;
+  }
+
+  if($("currentHighestValue")){
+    $("currentHighestValue").textContent=
+      formatCurrentMetricValue(highestValue);
+  }
+
+  if($("currentHighestNode")){
+    $("currentHighestNode").textContent=
+      getDeviceDisplayName(highest.device_id);
+  }
+
+  setCurrentQualityBadge(
+    getCurrentMetricLevel(average)
+  );
+
+  if(watchNodes.length){
+    const watch=watchNodes[0];
+
+    if($("currentWatchNode")){
+      $("currentWatchNode").textContent=
+        getDeviceDisplayName(watch.node.device_id);
+    }
+
+    if($("currentWatchDetail")){
+      $("currentWatchDetail").textContent=
+        `${config.label} ${formatCurrentMetricValue(watch.value)} • ${realtimeLevelLabel(watch.level)}`;
+    }
+  }else{
+    if($("currentWatchNode")){
+      $("currentWatchNode").textContent="ไม่มี";
+    }
+
+    if($("currentWatchDetail")){
+      $("currentWatchDetail").textContent=
+        "ทุกจุดที่ใช้งานยังไม่เข้าเกณฑ์เฝ้าระวัง";
+    }
+  }
+
+  if($("currentEnvironmentFooter")){
+    $("currentEnvironmentFooter").textContent=
+      `ใช้ข้อมูลล่าสุดจาก ${usableNodes.length} / ${TOTAL_NODES} จุดตรวจวัด`;
+  }
 }
 
-const usable=
-latestNodes.filter(
-n=>
-["online","sleep"]
-.includes(
-getNodeStatus(n)
-)
-&&
-Number.isFinite(
-Number(n.pm25)
-)
-);
-
-if(!usable.length){
-
-$("currentPM25").textContent=
-"--";
-
-$("highestPM25").textContent=
-"--";
-
-$("highestPM25Node").textContent=
-"--";
-
-$("watchNode").textContent=
-"--";
-
-$("watchNodeDetail").textContent=
-"ไม่มีจุดตรวจวัดที่มีข้อมูลใช้งาน";
-
-$("qualityBadge").textContent=
-"รอข้อมูล";
-
-return;
-}
-
-const avg=
-usable.reduce(
-(s,n)=>
-s+
-Number(n.pm25),
-0
-)
-/usable.length;
-
-const high=
-usable.reduce(
-(a,b)=>
-Number(b.pm25)>
-Number(a.pm25)
-?b
-:a
-);
-
-const hv=
-Number(high.pm25);
-
-const level=
-getRealtimeLevel(
-"pm25",
-hv
-);
-
-$("currentPM25").textContent=
-fmt(avg)+
-" µg/m³";
-
-$("highestPM25").textContent=
-fmt(hv)+
-" µg/m³";
-
-$("highestPM25Node").textContent=
-getDeviceDisplayName(
-high.device_id
-);
-
-$("qualityBadge").textContent=
-quality(avg);
-
-if(
-["warning","critical"]
-.includes(level)
-){
-
-$("watchNode").textContent=
-getDeviceDisplayName(
-high.device_id
-);
-
-$("watchNodeDetail").textContent=
-`PM2.5 ${fmt(hv)} µg/m³ • ${realtimeLevelLabel(level)}`;
-}
-else{
-
-$("watchNode").textContent=
-"ไม่มี";
-
-$("watchNodeDetail").textContent=
-"ทุกจุดที่ใช้งานยังไม่เข้าเกณฑ์เฝ้าระวัง Real-time";
-}
-}
-
-function set24HourStandardMetric(
-prefix,
-data
-){
-
-const e=$(
-"standard"+
-prefix+
-"Average"
-);
-
-if(!e){
-return;
-}
-
-e.textContent=
-data?.average_24h==null
-?"--"
-:fmt(data.average_24h)+
-" µg/m³";
-}
-
-function update24HourStandards(){
-
-const badge=
-$("standard24hCoverage");
-
-const text=
-$("standard24hCoverageText");
-
-const bar=
-$("standard24hProgressBar");
-
-const note=
-$("standard24hNote");
-
-if(!standardsData){
-
-if(badge){
-badge.textContent=
-"โหลดข้อมูลไม่ได้";
-}
-
-if(text){
-text.textContent=
-"-- / 24 ชม.";
-}
-
-if(bar){
-bar.style.width=
-"0%";
-}
-
-set24HourStandardMetric(
-"PM25",
-null
-);
-
-set24HourStandardMetric(
-"PM10",
-null
-);
-
-if(note){
-note.textContent=
-"ยังไม่สามารถอ่านข้อมูลย้อนหลังจาก Worker";
-}
-
-return;
-}
-
-const d=
-standardsData.data;
-
-if(!d){
-return;
-}
-
-const cov=
-Math.max(
-0,
-Math.min(
-24,
-Number(d.coverage_hours)||0
-)
-);
-
-if(badge){
-
-badge.textContent=
-d.provisional
-?"ข้อมูลยังไม่ครบ 24 ชม."
-:"ข้อมูลครบช่วงประเมิน";
-
-badge.classList.toggle(
-"is-complete",
-!d.provisional
-);
-}
-
-if(text){
-
-text.textContent=
-`${fmt(cov)} / 24 ชม.`;
-}
-
-if(bar){
-
-bar.style.width=
-`${Math.max(
-0,
-Math.min(
-100,
-cov/24*100
-)
-)}%`;
-}
-
-set24HourStandardMetric(
-"PM25",
-d.pm25
-);
-
-set24HourStandardMetric(
-"PM10",
-d.pm10
-);
-
-if(note){
-
-note.textContent=
-d.provisional
-?"ค่าเฉลี่ยนี้เป็นข้อมูลเบื้องต้น เพราะข้อมูลย้อนหลังยังไม่ครอบคลุม 24 ชั่วโมง"
-:"คำนวณจากข้อมูลย้อนหลังที่บันทึกไว้ในระบบ";
-}
-}
-
-function getStandardHelpHtml(){
-
-const c=
-standardsData
-?.standard_24h;
-
-const p25t=
-c?.pm25
-?.thailand
-?.limit
-??37.5;
-
-const p25w=
-c?.pm25
-?.who
-?.limit
-??15;
-
-const p10t=
-c?.pm10
-?.thailand
-?.limit
-??120;
-
-const p10w=
-c?.pm10
-?.who
-?.limit
-??45;
-
-return `
-<p>
-ส่วนนี้สรุปค่าเฉลี่ยของข้อมูลที่ระบบบันทึกไว้ในช่วง 24 ชั่วโมงล่าสุด
-จึงเป็นคนละส่วนกับ “คุณภาพอากาศปัจจุบัน”
-</p>
-
-<div class="help-info-box">
-
-<b>
-เกณฑ์อ้างอิงที่ระบบเตรียมไว้
-</b>
-
-<div class="help-info-grid">
-
-<span>
-PM2.5 ไทย
-</span>
-
-<b>
-${fmt(p25t)} µg/m³
-</b>
-
-<span>
-PM2.5 WHO 2021
-</span>
-
-<b>
-${fmt(p25w)} µg/m³
-</b>
-
-<span>
-PM10 ไทย
-</span>
-
-<b>
-${fmt(p10t)} µg/m³
-</b>
-
-<span>
-PM10 WHO 2021
-</span>
-
-<b>
-${fmt(p10w)} µg/m³
-</b>
-
-</div>
-</div>
-
-<p>
-“ข้อมูลครอบคลุม”
-บอกว่าฐานข้อมูลมีช่วงข้อมูลสำหรับการคำนวณกี่ชั่วโมง
-จาก 24 ชั่วโมงล่าสุด
-หากยังไม่ครบ 24 ชั่วโมง
-ผลจะแสดงเป็นข้อมูลเบื้องต้น
-</p>
-
-<p class="help-muted">
-ข้อมูลนี้ใช้เพื่อการติดตามและการศึกษา
-ไม่ใช่ผลจากสถานีตรวจวัดอ้างอิงทางกฎหมาย
-</p>
-`;
-}
+/* =========================================================
+   SMART SUMMARY
+   ========================================================= */
 
 function updateSmartSummary(){
+  const e=$("aiSummary");
 
-const e=$("aiSummary");
+  if(!e)return;
 
-if(!e){
-return;
+  if(!apiConnectionOnline){
+    e.innerHTML=`
+      <b class="text-red-300">
+        🔴 ไม่สามารถเชื่อมต่อ API
+      </b>
+      <div class="text-xs text-slate-500 mt-2">
+        ข้อมูลปัจจุบันไม่สามารถยืนยันได้
+      </div>
+    `;
+    return;
+  }
+
+  if(!motherOnline()){
+    e.innerHTML=`
+      <b class="text-red-300">
+        🔴 Gateway Offline
+      </b>
+
+      <div class="mt-2">
+        ไม่สามารถยืนยันการเชื่อมต่อของอุปกรณ์ลูกได้
+      </div>
+
+      <div class="mt-2 text-xs text-slate-400">
+        ONLINE 0 • SLEEP 0 • OFFLINE ${TOTAL_NODES}
+      </div>
+    `;
+    return;
+  }
+
+  const status=latestNodes.map(node=>({
+    node,
+    status:getNodeStatus(node)
+  }));
+
+  const online=status.filter(x=>x.status==="online").length;
+  const sleep=status.filter(x=>x.status==="sleep").length;
+  const offline=Math.max(0,TOTAL_NODES-online-sleep);
+
+  const usable=status.filter(
+    x=>
+      ["online","sleep"].includes(x.status)&&
+      Number.isFinite(Number(x.node?.pm25))
+  );
+
+  let headline="🟢 ระบบทำงานปกติ";
+  let cls="text-emerald-300";
+  let pmText="ยังไม่มีข้อมูล PM2.5 ที่ใช้ประเมินได้";
+
+  if(usable.length){
+    const avg=
+      usable.reduce(
+        (s,x)=>s+Number(x.node.pm25),
+        0
+      )/usable.length;
+
+    const l=getRealtimeLevel("pm25",avg);
+
+    pmText=`PM2.5 ภาพรวม ${fmt(avg)} µg/m³ • ${quality(avg)}`;
+
+    if(l==="critical"){
+      headline="🔴 คุณภาพอากาศควรเฝ้าระวัง";
+      cls="text-red-300";
+    }else if(l==="warning"){
+      headline="🟡 มีค่าที่ควรติดตาม";
+      cls="text-amber-300";
+    }
+  }
+
+  if(offline>0){
+    headline="🟠 มีอุปกรณ์ที่ต้องตรวจสอบ";
+    cls="text-amber-300";
+  }
+
+  e.innerHTML=`
+    <b class="${cls}">
+      ${headline}
+    </b>
+
+    <div class="mt-2">
+      ${pmText}
+    </div>
+
+    <div class="mt-2 text-xs text-slate-400">
+      Gateway ONLINE
+      • ONLINE ${online}
+      • SLEEP ${sleep}
+      • OFFLINE ${offline}
+    </div>
+  `;
 }
 
-if(!apiConnectionOnline){
-
-e.innerHTML=`
-<b class="text-red-300">
-🔴 ไม่สามารถเชื่อมต่อ API
-</b>
-
-<div class="text-xs text-slate-500 mt-2">
-ข้อมูลปัจจุบันไม่สามารถยืนยันได้
-</div>
-`;
-
-return;
-}
-
-if(!motherOnline()){
-
-e.innerHTML=`
-<b class="text-red-300">
-🔴 Gateway Offline
-</b>
-
-<div class="mt-2">
-ไม่สามารถยืนยันการเชื่อมต่อของอุปกรณ์ลูกได้
-</div>
-
-<div class="mt-2 text-xs text-slate-400">
-ONLINE 0
-• SLEEP 0
-• OFFLINE ${TOTAL_NODES}
-</div>
-`;
-
-return;
-}
-
-const status=
-latestNodes.map(
-node=>({
-node,
-status:getNodeStatus(node)
-})
-);
-
-const online=
-status.filter(
-x=>x.status==="online"
-).length;
-
-const sleep=
-status.filter(
-x=>x.status==="sleep"
-).length;
-
-const offline=
-Math.max(
-0,
-TOTAL_NODES-
-online-
-sleep
-);
-
-const usable=
-status.filter(
-x=>
-["online","sleep"]
-.includes(x.status)
-&&
-Number.isFinite(
-Number(x.node?.pm25)
-)
-);
-
-let headline=
-"🟢 ระบบทำงานปกติ";
-
-let cls=
-"text-emerald-300";
-
-let pmText=
-"ยังไม่มีข้อมูล PM2.5 ที่ใช้ประเมินได้";
-
-if(usable.length){
-
-const avg=
-usable.reduce(
-(s,x)=>
-s+
-Number(x.node.pm25),
-0
-)
-/usable.length;
-
-const l=
-getRealtimeLevel(
-"pm25",
-avg
-);
-
-pmText=
-`PM2.5 ภาพรวม ${fmt(avg)} µg/m³ • ${quality(avg)}`;
-
-if(l==="critical"){
-
-headline=
-"🔴 คุณภาพอากาศควรเฝ้าระวัง";
-
-cls=
-"text-red-300";
-}
-else if(l==="warning"){
-
-headline=
-"🟡 มีค่าที่ควรติดตาม";
-
-cls=
-"text-amber-300";
-}
-}
-
-if(offline>0){
-
-headline=
-"🟠 มีอุปกรณ์ที่ต้องตรวจสอบ";
-
-cls=
-"text-amber-300";
-}
-
-e.innerHTML=`
-<b class="${cls}">
-${headline}
-</b>
-
-<div class="mt-2">
-${pmText}
-</div>
-
-<div class="mt-2 text-xs text-slate-400">
-Gateway ONLINE
-• ONLINE ${online}
-• SLEEP ${sleep}
-• OFFLINE ${offline}
-</div>
-`;
-}
+/* =========================================================
+   ALERTS
+   ========================================================= */
 
 function getAlertStateForNode(n){
-
-return alertStates.find(
-s=>
-s&&
-isSameNode(
-s.device_id,
-n
-)
-)
-||null;
+  return alertStates.find(
+    s=>s&&isSameNode(s.device_id,n)
+  )||null;
 }
 
-function getSensorAlertItems(
-n,
-node
-){
+function getSensorAlertItems(n,node){
+  const state=getAlertStateForNode(n);
 
-const state=
-getAlertStateForNode(n);
+  if(!state||!node)return[];
 
-if(!state||!node){
-return[];
-}
+  const defs=[
+    ["pm1_level","PM1.0","pm1","µg/m³"],
+    ["pm25_level","PM2.5","pm25","µg/m³"],
+    ["pm10_level","PM10","pm10","µg/m³"],
+    ["temperature_level","อุณหภูมิ","temperature","°C"],
+    ["humidity_level","ความชื้น","humidity","%"],
+    ["light_level","แสง","light","lux"]
+  ];
 
-const defs=[
-[
-"pm1_level",
-"PM1.0",
-"pm1",
-"µg/m³"
-],
-[
-"pm25_level",
-"PM2.5",
-"pm25",
-"µg/m³"
-],
-[
-"pm10_level",
-"PM10",
-"pm10",
-"µg/m³"
-],
-[
-"temperature_level",
-"อุณหภูมิ",
-"temperature",
-"°C"
-],
-[
-"humidity_level",
-"ความชื้น",
-"humidity",
-"%"
-],
-[
-"light_level",
-"แสง",
-"light",
-"lux"
-]
-];
+  return defs.map(([lk,label,vk,unit])=>{
+    const level=String(state[lk]||"normal").toLowerCase();
 
-return defs
-.map(
-([
-lk,
-label,
-vk,
-unit
-])=>{
+    if(level==="normal")return null;
 
-const level=
-String(
-state[lk]||
-"normal"
-)
-.toLowerCase();
-
-if(level==="normal"){
-return null;
-}
-
-return{
-type:level,
-title:`อุปกรณ์ ${n} • ${label}`,
-detail:`${fmt(node[vk])} ${unit}`
-};
-}
-)
-.filter(Boolean);
+    return{
+      type:level,
+      title:`อุปกรณ์ ${n} • ${label}`,
+      detail:`${fmt(node[vk])} ${unit}`
+    };
+  }).filter(Boolean);
 }
 
 function updateAlerts(){
+  const element=$("alerts");
 
-const e=$("alerts");
+  if(!element)return;
 
-if(!e){
-return;
+  if(!apiConnectionOnline){
+    element.innerHTML=`
+      <div class="alert-summary-bar">
+        <span class="alert-summary-count alert-summary-danger">
+          1 รายการ
+        </span>
+
+        <span class="alert-summary-text">
+          ระบบต้องการการตรวจสอบ
+        </span>
+      </div>
+
+      <div class="dashboard-alert dashboard-alert-danger">
+        <div class="dashboard-alert-icon">!</div>
+
+        <div class="dashboard-alert-content">
+          <div class="dashboard-alert-title">
+            ไม่สามารถเชื่อมต่อ API
+          </div>
+
+          <div class="dashboard-alert-detail">
+            Dashboard ไม่สามารถติดต่อ Cloudflare Worker ได้
+          </div>
+
+          <div class="dashboard-alert-meta">
+            ตรวจสอบอินเทอร์เน็ตหรือสถานะ Worker
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(!motherOnline()){
+    element.innerHTML=`
+      <div class="alert-summary-bar">
+        <span class="alert-summary-count alert-summary-danger">
+          1 รายการ
+        </span>
+
+        <span class="alert-summary-text">
+          พบปัญหาการเชื่อมต่อ
+        </span>
+      </div>
+
+      <div class="dashboard-alert dashboard-alert-danger">
+        <div class="dashboard-alert-icon">●</div>
+
+        <div class="dashboard-alert-content">
+          <div class="dashboard-alert-top">
+            <div class="dashboard-alert-title">
+              Gateway OFFLINE
+            </div>
+
+            <span class="dashboard-alert-level">
+              SYSTEM
+            </span>
+          </div>
+
+          <div class="dashboard-alert-detail">
+            ไม่สามารถติดต่ออุปกรณ์แม่ได้
+          </div>
+
+          <div class="dashboard-alert-impact">
+            <span>อุปกรณ์ 1 <b>OFFLINE</b></span>
+            <span>อุปกรณ์ 2 <b>OFFLINE</b></span>
+            <span>อุปกรณ์ 3 <b>OFFLINE</b></span>
+          </div>
+
+          <div class="dashboard-alert-meta">
+            ระบบไม่สามารถยืนยันการเชื่อมต่อของอุปกรณ์ลูกได้
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const list=[];
+
+  for(let i=1;i<=TOTAL_NODES;i++){
+    const node=getLatestNode(i);
+    const status=getNodeStatus(node);
+
+    if(status==="offline"){
+      list.push({
+        type:"offline",
+        title:`อุปกรณ์ ${i} OFFLINE`,
+        detail:"ไม่สามารถติดต่ออุปกรณ์ได้",
+        meta:"ตรวจสอบการจ่ายไฟหรือการเชื่อมต่อ ESP-NOW"
+      });
+
+      continue;
+    }
+
+    const sensorAlerts=getSensorAlertItems(i,node);
+
+    for(const alert of sensorAlerts){
+      list.push({
+        ...alert,
+        meta:"ค่าตรวจวัดเข้าเกณฑ์เฝ้าระวังของระบบ"
+      });
+    }
+  }
+
+  if(!list.length){
+    element.innerHTML=`
+      <div class="alert-summary-bar">
+        <span class="alert-summary-count alert-summary-success">
+          0 รายการ
+        </span>
+
+        <span class="alert-summary-text">
+          ไม่พบความผิดปกติ
+        </span>
+      </div>
+
+      <div class="dashboard-alert dashboard-alert-success">
+        <div class="dashboard-alert-icon">✓</div>
+
+        <div class="dashboard-alert-content">
+          <div class="dashboard-alert-title">
+            ระบบทำงานปกติ
+          </div>
+
+          <div class="dashboard-alert-detail">
+            ไม่พบรายการที่ต้องตรวจสอบในขณะนี้
+          </div>
+
+          <div class="dashboard-alert-meta">
+            Gateway และอุปกรณ์ที่เชื่อมต่ออยู่ในสถานะปกติ
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const visual={
+    offline:{
+      icon:"●",
+      className:"dashboard-alert-danger",
+      level:"OFFLINE"
+    },
+
+    critical:{
+      icon:"!",
+      className:"dashboard-alert-danger",
+      level:"CRITICAL"
+    },
+
+    high:{
+      icon:"↑",
+      className:"dashboard-alert-high",
+      level:"HIGH"
+    },
+
+    warning:{
+      icon:"!",
+      className:"dashboard-alert-warning",
+      level:"WARNING"
+    },
+
+    info:{
+      icon:"i",
+      className:"dashboard-alert-info",
+      level:"INFO"
+    }
+  };
+
+  element.innerHTML=`
+    <div class="alert-summary-bar">
+      <span class="alert-summary-count alert-summary-danger">
+        ${list.length} รายการ
+      </span>
+
+      <span class="alert-summary-text">
+        พบรายการที่ควรตรวจสอบ
+      </span>
+    </div>
+
+    <div class="dashboard-alert-list">
+      ${list.map(alert=>{
+        const style=visual[alert.type]||visual.warning;
+
+        return`
+          <div class="dashboard-alert ${style.className}">
+            <div class="dashboard-alert-icon">
+              ${style.icon}
+            </div>
+
+            <div class="dashboard-alert-content">
+              <div class="dashboard-alert-top">
+                <div class="dashboard-alert-title">
+                  ${escapeHtml(alert.title)}
+                </div>
+
+                <span class="dashboard-alert-level">
+                  ${style.level}
+                </span>
+              </div>
+
+              <div class="dashboard-alert-detail">
+                ${escapeHtml(alert.detail)}
+              </div>
+
+              <div class="dashboard-alert-meta">
+                ${escapeHtml(alert.meta||"")}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
-if(!apiConnectionOnline){
-
-e.innerHTML=`
-<div class="soft rounded-xl p-3">
-
-<b class="text-red-300">
-🔴 ไม่สามารถเชื่อมต่อ API
-</b>
-
-<div class="text-xs text-slate-400 mt-1">
-กรุณาตรวจสอบ Cloudflare Worker
-หรือการเชื่อมต่ออินเทอร์เน็ต
-</div>
-
-</div>
-`;
-
-return;
-}
-
-if(!motherOnline()){
-
-e.innerHTML=`
-<div class="soft rounded-xl p-3">
-
-<b class="text-red-300">
-🔴 Gateway OFFLINE
-</b>
-
-<div class="text-xs text-slate-400 mt-1">
-Worker ไม่สามารถยืนยันสถานะอุปกรณ์ลูกได้
-และกำหนดทุก Node เป็น OFFLINE
-</div>
-
-</div>
-`;
-
-return;
-}
-
-const list=[];
-
-for(
-let i=1;
-i<=TOTAL_NODES;
-i++
-){
-
-const n=
-getLatestNode(i);
-
-const st=
-getNodeStatus(n);
-
-if(st==="offline"){
-
-list.push({
-type:"offline",
-title:`อุปกรณ์ ${i} OFFLINE`,
-detail:"ไม่สามารถติดต่ออุปกรณ์ได้"
-});
-}
-else{
-
-list.push(
-...getSensorAlertItems(
-i,
-n
-)
-);
-}
-}
-
-if(!list.length){
-
-e.innerHTML=`
-<div class="soft rounded-xl p-3">
-
-<b class="text-emerald-300">
-✅ ไม่พบรายการที่ต้องตรวจสอบ
-</b>
-
-<div class="text-xs text-slate-400 mt-1">
-Gateway,
-สถานะอุปกรณ์
-และค่าตรวจวัดยังอยู่ในเงื่อนไขปกติ
-</div>
-
-</div>
-`;
-
-return;
-}
-
-const v={
-offline:[
-"🔴",
-"text-red-300"
-],
-critical:[
-"🔴",
-"text-red-300"
-],
-high:[
-"🟠",
-"text-orange-300"
-],
-warning:[
-"🟡",
-"text-amber-300"
-],
-info:[
-"🔵",
-"text-cyan-300"
-]
-};
-
-e.innerHTML=
-list.map(
-a=>{
-
-const[
-icon,
-cls
-]=
-v[a.type]
-||v.warning;
-
-return`
-<div class="soft rounded-xl p-3 mb-2">
-
-<b class="${cls}">
-${icon}
-${escapeHtml(a.title)}
-</b>
-
-<div class="text-xs text-slate-400 mt-1">
-${escapeHtml(a.detail)}
-</div>
-
-</div>
-`;
-}
-)
-.join("");
-}
+/* =========================================================
+   HISTORY RANGE
+   ========================================================= */
 
 function getRangeLabel(){
+  if(
+    averageRange==="custom"&&
+    customRangeStart&&
+    customRangeEnd
+  ){
+    const opt={
+      timeZone:"Asia/Bangkok",
+      day:"2-digit",
+      month:"short",
+      hour:"2-digit",
+      minute:"2-digit"
+    };
 
-if(
-averageRange==="custom" &&
-customRangeStart &&
-customRangeEnd
-){
+    return`${customRangeStart.toLocaleString("th-TH",opt)} – ${customRangeEnd.toLocaleString("th-TH",opt)}`;
+  }
 
-const opt={
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit"
-};
-
-return`
-${customRangeStart.toLocaleString(
-"th-TH",
-opt
-)}
-–
-${customRangeEnd.toLocaleString(
-"th-TH",
-opt
-)}
-`;
-}
-
-return RANGE_CONFIG[
-averageRange
-]?.label
-||"ช่วงเวลาที่เลือก";
+  return RANGE_CONFIG[averageRange]?.label||"ช่วงเวลาที่เลือก";
 }
 
 function getSelectedTimeWindow(){
+  if(averageRange==="custom"){
+    return customRangeStart&&customRangeEnd
+      ?{
+        start:new Date(customRangeStart),
+        end:new Date(customRangeEnd)
+      }
+      :null;
+  }
 
-if(
-averageRange==="custom"
-){
+  const c=RANGE_CONFIG[averageRange];
 
-return customRangeStart&&customRangeEnd
-?{
-start:new Date(customRangeStart),
-end:new Date(customRangeEnd)
-}
-:null;
-}
+  if(!c)return null;
 
-const c=
-RANGE_CONFIG[
-averageRange
-];
+  const end=new Date();
+  const start=new Date(end.getTime()-c.minutes*60000);
 
-if(!c){
-return null;
-}
-
-const end=
-new Date();
-
-const start=
-new Date(
-end.getTime()-
-c.minutes*
-60000
-);
-
-return{
-start,
-end
-};
+  return{start,end};
 }
 
 function getRecordsInSelectedRange(){
+  const w=getSelectedTimeWindow();
 
-const w=
-getSelectedTimeWindow();
+  if(!w)return[];
 
-if(!w){
-return[];
+  return records.filter(r=>{
+    const d=parseDate(r.timestamp);
+    return d&&d>=w.start&&d<=w.end;
+  });
 }
 
-return records.filter(
-r=>{
+function calculateAverage(data,field){
+  const v=data
+    .map(x=>x[field])
+    .filter(
+      x=>
+        x!==null&&
+        x!==undefined&&
+        Number.isFinite(Number(x))
+    )
+    .map(Number);
 
-const d=
-parseDate(
-r.timestamp
-);
-
-return d&&
-d>=w.start&&
-d<=w.end;
-}
-);
-}
-
-function calculateAverage(
-data,
-field
-){
-
-const v=
-data
-.map(
-x=>x[field]
-)
-.filter(
-x=>
-x!==null&&
-x!==undefined&&
-Number.isFinite(
-Number(x)
-)
-)
-.map(Number);
-
-return v.length
-?v.reduce(
-(a,b)=>a+b,
-0
-)/v.length
-:null;
+  return v.length
+    ?v.reduce((a,b)=>a+b,0)/v.length
+    :null;
 }
 
-function calculateStatistics(
-data,
-field
-){
+function calculateStatistics(data,field){
+  const v=data
+    .map(x=>x[field])
+    .filter(
+      x=>
+        x!==null&&
+        x!==undefined&&
+        Number.isFinite(Number(x))
+    )
+    .map(Number);
 
-const v=
-data
-.map(
-x=>x[field]
-)
-.filter(
-x=>
-x!==null&&
-x!==undefined&&
-Number.isFinite(
-Number(x)
-)
-)
-.map(Number);
-
-return v.length
-?{
-average:
-v.reduce(
-(a,b)=>a+b,
-0
-)/v.length,
-
-max:
-Math.max(...v),
-
-min:
-Math.min(...v),
-
-last:
-v[v.length-1]
-}
-:{
-average:null,
-max:null,
-min:null,
-last:null
-};
+  return v.length
+    ?{
+      average:v.reduce((a,b)=>a+b,0)/v.length,
+      max:Math.max(...v),
+      min:Math.min(...v),
+      last:v[v.length-1]
+    }
+    :{
+      average:null,
+      max:null,
+      min:null,
+      last:null
+    };
 }
 
-function averageStatus(
-value,
-field
-){
-
-return value==null
-?"● ไม่มีข้อมูล"
-:`● เฉลี่ย ${getRangeLabel()}${field==="pm25"?" • "+quality(value):""}`;
+function averageStatus(value,field){
+  return value==null
+    ?"● ไม่มีข้อมูล"
+    :`● เฉลี่ย ${getRangeLabel()}${field==="pm25"?" • "+quality(value):""}`;
 }
 
 function renderAverages(){
+  const d=getRecordsInSelectedRange();
 
-const d=
-getRecordsInSelectedRange();
+  if($("selectedRangeLabel")){
+    $("selectedRangeLabel").textContent=getRangeLabel();
+  }
 
-if($("selectedRangeLabel")){
+  [
+    ["pm1","averagePM1","averagePM1Status"],
+    ["pm25","averagePM25","averagePM25Status"],
+    ["pm10","averagePM10","averagePM10Status"],
+    ["temperature","averageTemp","averageTempStatus"],
+    ["humidity","averageHum","averageHumStatus"],
+    ["light","averageLight","averageLightStatus"]
+  ].forEach(([f,id,sid])=>{
+    const a=calculateAverage(d,f);
 
-$("selectedRangeLabel").textContent=
-getRangeLabel();
-}
+    if($(id)){
+      $(id).textContent=a==null?"--":fmt(a);
+    }
 
-[
-[
-"pm1",
-"averagePM1",
-"averagePM1Status"
-],
-[
-"pm25",
-"averagePM25",
-"averagePM25Status"
-],
-[
-"pm10",
-"averagePM10",
-"averagePM10Status"
-],
-[
-"temperature",
-"averageTemp",
-"averageTempStatus"
-],
-[
-"humidity",
-"averageHum",
-"averageHumStatus"
-],
-[
-"light",
-"averageLight",
-"averageLightStatus"
-]
-]
-.forEach(
-([
-f,
-id,
-sid
-])=>{
-
-const a=
-calculateAverage(
-d,
-f
-);
-
-$(id).textContent=
-a==null
-?"--"
-:fmt(a);
-
-$(sid).textContent=
-averageStatus(
-a,
-f
-);
-}
-);
+    if($(sid)){
+      $(sid).textContent=averageStatus(a,f);
+    }
+  });
 }
 
 function updateTrendStatistics(){
+  const s=calculateStatistics(
+    getRecordsInSelectedRange(),
+    metric
+  );
 
-const s=
-calculateStatistics(
-getRecordsInSelectedRange(),
-metric
-);
+  if($("trendAvg")){
+    $("trendAvg").textContent=
+      s.average==null?"--":fmt(s.average);
+  }
 
-$("trendAvg").textContent=
-s.average==null
-?"--"
-:fmt(s.average);
+  if($("trendMax")){
+    $("trendMax").textContent=
+      s.max==null?"--":fmt(s.max);
+  }
 
-$("trendMax").textContent=
-s.max==null
-?"--"
-:fmt(s.max);
+  if($("trendMin")){
+    $("trendMin").textContent=
+      s.min==null?"--":fmt(s.min);
+  }
 
-$("trendMin").textContent=
-s.min==null
-?"--"
-:fmt(s.min);
+  let latest=null;
 
-let latest=null;
+  for(const r of[
+    ...records,
+    ...(latestRecord?[latestRecord]:[])
+  ]){
+    const d=parseDate(r?.timestamp);
+    const v=r?.[metric];
 
-for(
-const r of[
-...records,
-...(latestRecord
-?[latestRecord]
-:[])
-]
-){
+    if(!d||!Number.isFinite(Number(v)))continue;
 
-const d=
-parseDate(
-r?.timestamp
-);
+    if(!latest||d>parseDate(latest.timestamp)){
+      latest=r;
+    }
+  }
 
-const v=
-r?.[metric];
+  if($("trendLast")){
+    $("trendLast").textContent=
+      latest?fmt(latest[metric]):"--";
+  }
 
-if(
-!d||
-!Number.isFinite(
-Number(v)
-)
-){
-continue;
+  if($("selectedMetricLabel")){
+    $("selectedMetricLabel").textContent=metricLabel();
+  }
 }
 
-if(
-!latest||
-d>
-parseDate(
-latest.timestamp
-)
-){
-latest=r;
-}
-}
-
-$("trendLast").textContent=
-latest
-?fmt(
-latest[metric]
-)
-:"--";
-
-if($("selectedMetricLabel")){
-
-$("selectedMetricLabel").textContent=
-metricLabel();
-}
-}
+/* =========================================================
+   CHART
+   ========================================================= */
 
 function drawCharts(){
+  const arr=getRecordsInSelectedRange()
+    .filter(
+      x=>
+        Number.isFinite(Number(x?.[metric]))&&
+        parseDate(x.timestamp)
+    )
+    .sort(
+      (a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp)
+    );
 
-const arr=
-getRecordsInSelectedRange()
-.filter(
-x=>
-Number.isFinite(
-Number(
-x?.[metric]
-)
-)
-&&
-parseDate(
-x.timestamp
-)
-)
-.sort(
-(a,b)=>
-parseDate(a.timestamp)-
-parseDate(b.timestamp)
-);
+  updateTrendStatistics();
 
-updateTrendStatistics();
+  if(!arr.length){
+    if($("trend")){
+      $("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
+    }
 
-if(!arr.length){
+    if(historyChart){
+      historyChart.destroy();
+      historyChart=null;
+    }
 
-$("trend").textContent=
-"ไม่มีข้อมูลในช่วงเวลาที่เลือก";
+    if(forecastChart){
+      forecastChart.destroy();
+      forecastChart=null;
+    }
 
-if(historyChart){
+    if($("forecastMessage")){
+      $("forecastMessage").textContent=
+        "ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
+    }
 
-historyChart.destroy();
+    if($("forecastBadge")){
+      $("forecastBadge").textContent="WAITING";
+    }
 
-historyChart=null;
+    return;
+  }
+
+  const labels=arr.map(
+    x=>parseDate(x.timestamp).toLocaleString(
+      "th-TH",
+      {
+        timeZone:"Asia/Bangkok",
+        day:"2-digit",
+        month:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      }
+    )
+  );
+
+  const values=arr.map(x=>Number(x[metric]));
+
+  if(values.length<2){
+    if($("trend")){
+      $("trend").textContent="ข้อมูลยังน้อย";
+    }
+  }else{
+    const diff=values.at(-1)-values[0];
+    const pct=values[0]===0
+      ?0
+      :diff/Math.abs(values[0])*100;
+
+    if($("trend")){
+      $("trend").textContent=
+        Math.abs(pct)<1
+          ?"→ คงที่"
+          :diff>0
+            ?"↑ เพิ่มขึ้น"
+            :"↓ ลดลง";
+    }
+  }
+
+  if(historyChart){
+    historyChart.destroy();
+  }
+
+  const historyCanvas=$("historyChart");
+
+  if(historyCanvas){
+    historyChart=new Chart(
+      historyCanvas,
+      {
+        type:"line",
+
+        data:{
+          labels,
+          datasets:[
+            {
+              label:metricLabel(),
+              data:values,
+              borderColor:"#22d3ee",
+              backgroundColor:"rgba(34,211,238,.08)",
+              fill:true,
+              tension:.35,
+              pointRadius:values.length>50?0:3,
+              borderWidth:2
+            }
+          ]
+        },
+
+        options:{
+          responsive:true,
+          maintainAspectRatio:true,
+
+          interaction:{
+            intersect:false,
+            mode:"index"
+          },
+
+          plugins:{
+            legend:{display:false}
+          },
+
+          scales:{
+            y:{
+              beginAtZero:false,
+              grid:{
+                color:"rgba(148,163,184,.08)"
+              }
+            },
+
+            x:{
+              grid:{display:false},
+              ticks:{maxTicksLimit:12}
+            }
+          }
+        }
+      }
+    );
+  }
+
+  drawForecast(arr);
 }
 
-if(forecastChart){
-
-forecastChart.destroy();
-
-forecastChart=null;
-}
-
-$("forecastMessage").textContent=
-"ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
-
-$("forecastBadge").textContent=
-"WAITING";
-
-return;
-}
-
-const labels=
-arr.map(
-x=>
-parseDate(
-x.timestamp
-)
-.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"2-digit",
-hour:"2-digit",
-minute:"2-digit"
-}
-)
-);
-
-const values=
-arr.map(
-x=>
-Number(
-x[metric]
-)
-);
-
-if(values.length<2){
-
-$("trend").textContent=
-"ข้อมูลยังน้อย";
-}
-else{
-
-const diff=
-values.at(-1)-
-values[0];
-
-const pct=
-values[0]===0
-?0
-:diff/
-Math.abs(values[0])*
-100;
-
-$("trend").textContent=
-Math.abs(pct)<1
-?"→ คงที่"
-:diff>0
-?"↑ เพิ่มขึ้น"
-:"↓ ลดลง";
-}
-
-if(historyChart){
-
-historyChart.destroy();
-}
-
-historyChart=
-new Chart(
-$("historyChart"),
-{
-type:"line",
-
-data:{
-labels,
-
-datasets:[
-{
-label:metricLabel(),
-data:values,
-borderColor:"#22d3ee",
-backgroundColor:"rgba(34,211,238,.08)",
-fill:true,
-tension:.35,
-pointRadius:
-values.length>50
-?0
-:3,
-borderWidth:2
-}
-]
-},
-
-options:{
-responsive:true,
-maintainAspectRatio:true,
-
-interaction:{
-intersect:false,
-mode:"index"
-},
-
-plugins:{
-legend:{
-display:false
-}
-},
-
-scales:{
-y:{
-beginAtZero:false,
-grid:{
-color:"rgba(148,163,184,.08)"
-}
-},
-
-x:{
-grid:{
-display:false
-},
-
-ticks:{
-maxTicksLimit:12
-}
-}
-}
-}
-}
-);
-
-drawForecast(arr);
-}
+/* =========================================================
+   FORECAST
+   ========================================================= */
 
 function linearRegression(points){
+  const n=points.length;
 
-const n=
-points.length;
+  if(n<2)return null;
 
-if(n<2){
-return null;
+  let sx=0;
+  let sy=0;
+  let sxy=0;
+  let sxx=0;
+
+  for(const p of points){
+    sx+=p.x;
+    sy+=p.y;
+    sxy+=p.x*p.y;
+    sxx+=p.x*p.x;
+  }
+
+  const den=n*sxx-sx*sx;
+
+  if(!den)return null;
+
+  const slope=(n*sxy-sx*sy)/den;
+  const intercept=(sy-slope*sx)/n;
+  const mean=sy/n;
+
+  let total=0;
+  let res=0;
+
+  for(const p of points){
+    const fit=intercept+slope*p.x;
+
+    total+=(p.y-mean)**2;
+    res+=(p.y-fit)**2;
+  }
+
+  return{
+    slope,
+    intercept,
+
+    r2:
+      total===0
+        ?1
+        :Math.max(
+          0,
+          Math.min(1,1-res/total)
+        ),
+
+    rmse:
+      Math.sqrt(
+        res/Math.max(1,n-2)
+      )
+  };
 }
 
-let sx=0;
-let sy=0;
-let sxy=0;
-let sxx=0;
+function clampForecastValue(field,v){
+  if(!Number.isFinite(v))return null;
 
-for(const p of points){
+  if(field==="humidity"){
+    return Math.max(0,Math.min(100,v));
+  }
 
-sx+=p.x;
-sy+=p.y;
-sxy+=p.x*p.y;
-sxx+=p.x*p.x;
-}
+  if(["pm1","pm25","pm10","light"].includes(field)){
+    return Math.max(0,v);
+  }
 
-const den=
-n*sxx-
-sx*sx;
-
-if(!den){
-return null;
-}
-
-const slope=
-(
-n*sxy-
-sx*sy
-)
-/den;
-
-const intercept=
-(
-sy-
-slope*sx
-)
-/n;
-
-const mean=
-sy/n;
-
-let total=0;
-let res=0;
-
-for(const p of points){
-
-const fit=
-intercept+
-slope*p.x;
-
-total+=
-(
-p.y-
-mean
-)**2;
-
-res+=
-(
-p.y-
-fit
-)**2;
-}
-
-return{
-slope,
-intercept,
-
-r2:
-total===0
-?1
-:Math.max(
-0,
-Math.min(
-1,
-1-
-res/total
-)
-),
-
-rmse:
-Math.sqrt(
-res/
-Math.max(
-1,
-n-2
-)
-)
-};
-}
-
-function clampForecastValue(
-field,
-v
-){
-
-if(!Number.isFinite(v)){
-return null;
-}
-
-if(field==="humidity"){
-
-return Math.max(
-0,
-Math.min(
-100,
-v
-)
-);
-}
-
-if(
-[
-"pm1",
-"pm25",
-"pm10",
-"light"
-]
-.includes(field)
-){
-
-return Math.max(
-0,
-v
-);
-}
-
-return v;
+  return v;
 }
 
 function minUncertainty(f){
-
-return{
-pm1:1,
-pm25:1,
-pm10:2,
-temperature:.5,
-humidity:2,
-light:15
-}[f]||1;
+  return{
+    pm1:1,
+    pm25:1,
+    pm10:2,
+    temperature:.5,
+    humidity:2,
+    light:15
+  }[f]||1;
 }
 
 function stability(f){
-
-return{
-pm1:1,
-pm25:1,
-pm10:2,
-temperature:.5,
-humidity:2,
-light:20
-}[f]||1;
+  return{
+    pm1:1,
+    pm25:1,
+    pm10:2,
+    temperature:.5,
+    humidity:2,
+    light:20
+  }[f]||1;
 }
 
-function forecastConfidence(
-r2,
-n,
-min
-){
-
-return(
-n>=20&&
-min>=30&&
-r2>=.6
-)
-?"ค่อนข้างสูง"
-:(
-n>=12&&
-min>=20&&
-r2>=.25
-)
-?"ปานกลาง"
-:"ต่ำ";
+function forecastConfidence(r2,n,min){
+  return(
+    n>=20&&
+    min>=30&&
+    r2>=.6
+  )
+    ?"ค่อนข้างสูง"
+    :(
+      n>=12&&
+      min>=20&&
+      r2>=.25
+    )
+      ?"ปานกลาง"
+      :"ต่ำ";
 }
 
 function updateForecastToggleUI(){
+  const b=$("forecastToggle");
+  const l=$("forecastToggleLabel");
+  const s=$("forecastToggleState");
 
-const b=
-$("forecastToggle");
+  if(!b||!l)return;
 
-const l=
-$("forecastToggleLabel");
+  b.setAttribute(
+    "aria-pressed",
+    String(forecastVisible)
+  );
 
-const s=
-$("forecastToggleState");
+  b.setAttribute(
+    "aria-checked",
+    String(forecastVisible)
+  );
 
-if(!b||!l){
-return;
-}
+  b.classList.toggle(
+    "is-on",
+    forecastVisible
+  );
 
-b.setAttribute(
-"aria-pressed",
-String(forecastVisible)
-);
+  b.classList.toggle(
+    "is-off",
+    !forecastVisible
+  );
 
-b.setAttribute(
-"aria-checked",
-String(forecastVisible)
-);
+  l.textContent=
+    forecastVisible
+      ?"เปิดการคาดการณ์"
+      :"ซ่อนการคาดการณ์";
 
-b.classList.toggle(
-"is-on",
-forecastVisible
-);
+  if(s){
+    s.textContent=
+      forecastVisible
+        ?"ON"
+        :"OFF";
+  }
 
-b.classList.toggle(
-"is-off",
-!forecastVisible
-);
-
-l.textContent=
-forecastVisible
-?"เปิดการคาดการณ์"
-:"ซ่อนการคาดการณ์";
-
-if(s){
-
-s.textContent=
-forecastVisible
-?"ON"
-:"OFF";
-}
-
-b.title=
-forecastVisible
-?"กดเพื่อซ่อน Forecast"
-:"กดเพื่อแสดง Forecast";
+  b.title=
+    forecastVisible
+      ?"กดเพื่อซ่อน Forecast"
+      :"กดเพื่อแสดง Forecast";
 }
 
 function setForecastDatasetVisibility(){
+  if(!forecastChart?.data?.datasets)return;
 
-if(
-!forecastChart
-?.data
-?.datasets
-){
-return;
-}
+  for(
+    let i=1;
+    i<forecastChart.data.datasets.length;
+    i++
+  ){
+    forecastChart.setDatasetVisibility(
+      i,
+      forecastVisible
+    );
+  }
 
-for(
-let i=1;
-i<
-forecastChart.data.datasets.length;
-i++
-){
-
-forecastChart.setDatasetVisibility(
-i,
-forecastVisible
-);
-}
-
-forecastChart.update();
-
-updateForecastToggleUI();
+  forecastChart.update();
+  updateForecastToggleUI();
 }
 
 function drawForecast(arr){
+  if(forecastChart){
+    forecastChart.destroy();
+    forecastChart=null;
+  }
 
-if(forecastChart){
+  const valid=arr
+    .filter(
+      r=>
+        parseDate(r.timestamp)&&
+        Number.isFinite(Number(r[metric]))
+    )
+    .sort(
+      (a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp)
+    );
 
-forecastChart.destroy();
+  if(valid.length<10){
+    if($("forecastMessage")){
+      $("forecastMessage").textContent=
+        "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีอย่างน้อย 10 จุดข้อมูล";
+    }
 
-forecastChart=null;
+    if($("forecastBadge")){
+      $("forecastBadge").textContent=
+        `${metricLabel()} • รอข้อมูล`;
+    }
+
+    return;
+  }
+
+  const latestDate=parseDate(valid.at(-1).timestamp);
+
+  const windowStart=new Date(
+    latestDate.getTime()-3600000
+  );
+
+  const recent=valid
+    .filter(
+      r=>{
+        const d=parseDate(r.timestamp);
+
+        return(
+          d>=windowStart&&
+          d<=latestDate
+        );
+      }
+    )
+    .slice(-90);
+
+  if(recent.length<10){
+    if($("forecastMessage")){
+      $("forecastMessage").textContent=
+        "ข้อมูลใน 60 นาทีล่าสุดยังไม่พอสำหรับคาดการณ์";
+    }
+
+    if($("forecastBadge")){
+      $("forecastBadge").textContent=
+        `${metricLabel()} • รอข้อมูล`;
+    }
+
+    return;
+  }
+
+  const first=parseDate(recent[0].timestamp);
+  const last=parseDate(recent.at(-1).timestamp);
+
+  const covered=(last-first)/60000;
+
+  const pts=recent.map(r=>({
+    x:(parseDate(r.timestamp)-first)/60000,
+    y:Number(r[metric])
+  }));
+
+  const model=linearRegression(pts);
+
+  if(!model)return;
+
+  const current=Number(recent.at(-1)[metric]);
+  const currentX=(last-first)/60000;
+  const vals=recent.map(r=>Number(r[metric]));
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+
+  const sd=Math.sqrt(
+    vals.reduce(
+      (s,v)=>s+(v-mean)**2,
+      0
+    )/vals.length
+  );
+
+  const maxChange=Math.max(
+    stability(metric)*3,
+    sd*3
+  );
+
+  const base=Math.max(
+    minUncertainty(metric),
+    model.rmse*1.5
+  );
+
+  const predictions=[10,20,30].map(minutes=>{
+    const raw=
+      model.intercept+
+      model.slope*(currentX+minutes);
+
+    const limit=maxChange*(minutes/30);
+
+    const bounded=Math.max(
+      current-limit,
+      Math.min(current+limit,raw)
+    );
+
+    const center=clampForecastValue(
+      metric,
+      bounded
+    );
+
+    const u=base*(.85+.5*(minutes/30));
+
+    return{
+      minutes,
+      center,
+      lower:clampForecastValue(metric,center-u),
+      upper:clampForecastValue(metric,center+u)
+    };
+  });
+
+  const f=predictions.at(-1);
+  const change=f.center-current;
+
+  const direction=
+    Math.abs(change)<stability(metric)
+      ?"→ ค่อนข้างคงที่"
+      :change>0
+        ?"↗ มีแนวโน้มเพิ่มขึ้น"
+        :"↘ มีแนวโน้มลดลง";
+
+  const confidence=forecastConfidence(
+    model.r2,
+    recent.length,
+    covered
+  );
+
+  const assessment=realtimeLevelLabel(
+    getRealtimeLevel(metric,f.center)
+  );
+
+  const unit=metricUnit();
+
+  if($("forecastMessage")){
+    $("forecastMessage").innerHTML=`
+      <div class="text-[11px] text-slate-500">
+        ตัวแปรที่กำลังคาดการณ์
+      </div>
+
+      <b class="text-cyan-300">
+        ${metricLabel()}
+        ${unit?" ("+unit+")":""}
+      </b>
+
+      <div class="grid grid-cols-3 gap-3 mt-3">
+        <div>
+          <span class="text-xs text-slate-500">
+            ค่าปัจจุบัน
+          </span>
+
+          <b class="block text-xl mt-1">
+            ${fmt(current)}
+          </b>
+        </div>
+
+        <div>
+          <span class="text-xs text-slate-500">
+            ช่วงคาดการณ์ +30 นาที
+          </span>
+
+          <b class="block text-xl text-cyan-300 mt-1">
+            ${fmt(f.lower)} – ${fmt(f.upper)}
+          </b>
+        </div>
+
+        <div>
+          <span class="text-xs text-slate-500">
+            ค่ากลางประมาณ
+          </span>
+
+          <b class="block text-xl text-emerald-300 mt-1">
+            ${fmt(f.center)}
+          </b>
+        </div>
+      </div>
+
+      <div class="mt-4 grid sm:grid-cols-3 gap-2">
+        <div
+          class="rounded-lg px-3 py-2"
+          style="background:rgba(15,23,42,.42)"
+        >
+          <div class="text-[10px] text-slate-500">
+            แนวโน้ม
+          </div>
+
+          <b class="text-xs">
+            ${direction}
+          </b>
+        </div>
+
+        <div
+          class="rounded-lg px-3 py-2"
+          style="background:rgba(15,23,42,.42)"
+        >
+          <div class="text-[10px] text-slate-500">
+            ระดับคาดการณ์
+          </div>
+
+          <b class="text-xs text-cyan-300">
+            ${assessment}
+          </b>
+        </div>
+
+        <div
+          class="rounded-lg px-3 py-2"
+          style="background:rgba(15,23,42,.42)"
+        >
+          <div class="text-[10px] text-slate-500">
+            ความเชื่อมั่น
+          </div>
+
+          <b class="text-xs text-cyan-300">
+            ${confidence}
+          </b>
+        </div>
+      </div>
+
+      <div class="text-[11px] text-slate-400 mt-3">
+        ใช้ข้อมูลล่าสุด ${recent.length} จุด
+        • ครอบคลุมประมาณ ${Math.round(covered)} นาที
+      </div>
+
+      <div class="text-[10px] text-slate-500 mt-2">
+        Forecast ใช้ Linear Regression
+        • ไม่ใช่ AI/ML
+        • ไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
+      </div>
+    `;
+  }
+
+  if($("forecastBadge")){
+    $("forecastBadge").textContent=
+      `${metricLabel()} • +30 นาที`;
+  }
+
+  const actual=recent.slice(-12);
+
+  const actualLabels=actual.map(
+    r=>formatThaiTime(r.timestamp)
+  );
+
+  const actualValues=actual.map(
+    r=>Number(r[metric])
+  );
+
+  const future=predictions.map(
+    p=>`+${p.minutes} นาที`
+  );
+
+  const nulls=new Array(
+    Math.max(0,actualValues.length-1)
+  ).fill(null);
+
+  const forecastCanvas=$("forecastChart");
+
+  if(!forecastCanvas)return;
+
+  forecastChart=new Chart(
+    forecastCanvas,
+    {
+      type:"line",
+
+      data:{
+        labels:[
+          ...actualLabels,
+          ...future
+        ],
+
+        datasets:[
+          {
+            label:"ข้อมูลจริง",
+
+            data:[
+              ...actualValues,
+              ...new Array(3).fill(null)
+            ],
+
+            borderColor:"#22d3ee",
+            backgroundColor:"rgba(34,211,238,.05)",
+            borderWidth:2,
+            tension:.3,
+            pointRadius:2
+          },
+
+          {
+            label:"ขอบล่าง Forecast",
+
+            data:[
+              ...nulls,
+              actualValues.at(-1),
+              ...predictions.map(p=>p.lower)
+            ],
+
+            borderColor:"rgba(52,211,153,0)",
+            borderWidth:0,
+            pointRadius:0
+          },
+
+          {
+            label:"ช่วงคาดการณ์",
+
+            data:[
+              ...nulls,
+              actualValues.at(-1),
+              ...predictions.map(p=>p.upper)
+            ],
+
+            borderColor:"rgba(52,211,153,.22)",
+            backgroundColor:"rgba(52,211,153,.10)",
+            borderWidth:1,
+            pointRadius:0,
+            fill:"-1"
+          },
+
+          {
+            label:"Forecast",
+
+            data:[
+              ...nulls,
+              actualValues.at(-1),
+              ...predictions.map(p=>p.center)
+            ],
+
+            borderColor:"#34d399",
+            borderDash:[6,5],
+            borderWidth:2,
+            pointRadius:3
+          }
+        ]
+      },
+
+      options:{
+        responsive:true,
+        maintainAspectRatio:true,
+
+        plugins:{
+          legend:{display:false}
+        },
+
+        scales:{
+          y:{
+            grid:{
+              color:"rgba(148,163,184,.08)"
+            }
+          },
+
+          x:{
+            grid:{display:false}
+          }
+        }
+      }
+    }
+  );
+
+  setForecastDatasetVisibility();
 }
 
-const valid=
-arr
-.filter(
-r=>
-parseDate(
-r.timestamp
-)
-&&
-Number.isFinite(
-Number(
-r[metric]
-)
-)
-)
-.sort(
-(a,b)=>
-parseDate(a.timestamp)-
-parseDate(b.timestamp)
-);
-
-if(valid.length<10){
-
-$("forecastMessage").textContent=
-"ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีอย่างน้อย 10 จุดข้อมูล";
-
-$("forecastBadge").textContent=
-`${metricLabel()} • รอข้อมูล`;
-
-return;
-}
-
-const latestDate=
-parseDate(
-valid.at(-1).timestamp
-);
-
-const windowStart=
-new Date(
-latestDate.getTime()-
-3600000
-);
-
-const recent=
-valid
-.filter(
-r=>
-parseDate(r.timestamp)>=windowStart&&
-parseDate(r.timestamp)<=latestDate
-)
-.slice(-90);
-
-if(recent.length<10){
-
-$("forecastMessage").textContent=
-"ข้อมูลใน 60 นาทีล่าสุดยังไม่พอสำหรับคาดการณ์";
-
-$("forecastBadge").textContent=
-`${metricLabel()} • รอข้อมูล`;
-
-return;
-}
-
-const first=
-parseDate(
-recent[0].timestamp
-);
-
-const last=
-parseDate(
-recent.at(-1).timestamp
-);
-
-const covered=
-(
-last-
-first
-)
-/60000;
-
-const pts=
-recent.map(
-r=>({
-x:
-(
-parseDate(r.timestamp)-
-first
-)
-/60000,
-
-y:
-Number(
-r[metric]
-)
-})
-);
-
-const model=
-linearRegression(pts);
-
-if(!model){
-return;
-}
-
-const current=
-Number(
-recent.at(-1)[metric]
-);
-
-const currentX=
-(
-last-
-first
-)
-/60000;
-
-const vals=
-recent.map(
-r=>
-Number(
-r[metric]
-)
-);
-
-const mean=
-vals.reduce(
-(a,b)=>a+b,
-0
-)
-/vals.length;
-
-const sd=
-Math.sqrt(
-vals.reduce(
-(s,v)=>
-s+
-(v-mean)**2,
-0
-)
-/vals.length
-);
-
-const maxChange=
-Math.max(
-stability(metric)*3,
-sd*3
-);
-
-const base=
-Math.max(
-minUncertainty(metric),
-model.rmse*1.5
-);
-
-const predictions=
-[
-10,
-20,
-30
-]
-.map(
-minutes=>{
-
-const raw=
-model.intercept+
-model.slope*
-(
-currentX+
-minutes
-);
-
-const limit=
-maxChange*
-(
-minutes/30
-);
-
-const bounded=
-Math.max(
-current-
-limit,
-Math.min(
-current+
-limit,
-raw
-)
-);
-
-const center=
-clampForecastValue(
-metric,
-bounded
-);
-
-const u=
-base*
-(
-.85+
-.5*
-(
-minutes/30
-)
-);
-
-return{
-minutes,
-center,
-
-lower:
-clampForecastValue(
-metric,
-center-u
-),
-
-upper:
-clampForecastValue(
-metric,
-center+u
-)
-};
-}
-);
-
-const f=
-predictions.at(-1);
-
-const change=
-f.center-
-current;
-
-const direction=
-Math.abs(change)<
-stability(metric)
-?"→ ค่อนข้างคงที่"
-:change>0
-?"↗ มีแนวโน้มเพิ่มขึ้น"
-:"↘ มีแนวโน้มลดลง";
-
-const confidence=
-forecastConfidence(
-model.r2,
-recent.length,
-covered
-);
-
-const assessment=
-realtimeLevelLabel(
-getRealtimeLevel(
-metric,
-f.center
-)
-);
-
-const unit=
-metricUnit();
-
-$("forecastMessage").innerHTML=`
-
-<div class="text-[11px] text-slate-500">
-ตัวแปรที่กำลังคาดการณ์
-</div>
-
-<b class="text-cyan-300">
-${metricLabel()}
-${unit?" ("+unit+")":""}
-</b>
-
-<div class="grid grid-cols-3 gap-3 mt-3">
-
-<div>
-<span class="text-xs text-slate-500">
-ค่าปัจจุบัน
-</span>
-
-<b class="block text-xl mt-1">
-${fmt(current)}
-</b>
-</div>
-
-<div>
-<span class="text-xs text-slate-500">
-ช่วงคาดการณ์ +30 นาที
-</span>
-
-<b class="block text-xl text-cyan-300 mt-1">
-${fmt(f.lower)}
-–
-${fmt(f.upper)}
-</b>
-</div>
-
-<div>
-<span class="text-xs text-slate-500">
-ค่ากลางประมาณ
-</span>
-
-<b class="block text-xl text-emerald-300 mt-1">
-${fmt(f.center)}
-</b>
-</div>
-
-</div>
-
-<div class="mt-4 grid sm:grid-cols-3 gap-2">
-
-<div
-class="rounded-lg px-3 py-2"
-style="background:rgba(15,23,42,.42)"
->
-<div class="text-[10px] text-slate-500">
-แนวโน้ม
-</div>
-
-<b class="text-xs">
-${direction}
-</b>
-</div>
-
-<div
-class="rounded-lg px-3 py-2"
-style="background:rgba(15,23,42,.42)"
->
-<div class="text-[10px] text-slate-500">
-ระดับคาดการณ์
-</div>
-
-<b class="text-xs text-cyan-300">
-${assessment}
-</b>
-</div>
-
-<div
-class="rounded-lg px-3 py-2"
-style="background:rgba(15,23,42,.42)"
->
-<div class="text-[10px] text-slate-500">
-ความเชื่อมั่น
-</div>
-
-<b class="text-xs text-cyan-300">
-${confidence}
-</b>
-</div>
-
-</div>
-
-<div class="text-[11px] text-slate-400 mt-3">
-ใช้ข้อมูลล่าสุด ${recent.length} จุด
-• ครอบคลุมประมาณ ${Math.round(covered)} นาที
-</div>
-
-<div class="text-[10px] text-slate-500 mt-2">
-Forecast ใช้ Linear Regression
-• ไม่ใช่ AI/ML
-• ไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
-</div>
-`;
-
-$("forecastBadge").textContent=
-`${metricLabel()} • +30 นาที`;
-
-const actual=
-recent.slice(-12);
-
-const actualLabels=
-actual.map(
-r=>
-formatThaiTime(
-r.timestamp
-)
-);
-
-const actualValues=
-actual.map(
-r=>
-Number(
-r[metric]
-)
-);
-
-const future=
-predictions.map(
-p=>
-`+${p.minutes} นาที`
-);
-
-const nulls=
-new Array(
-Math.max(
-0,
-actualValues.length-1
-)
-)
-.fill(null);
-
-forecastChart=
-new Chart(
-$("forecastChart"),
-{
-type:"line",
-
-data:{
-labels:[
-...actualLabels,
-...future
-],
-
-datasets:[
-{
-label:"ข้อมูลจริง",
-
-data:[
-...actualValues,
-...new Array(3).fill(null)
-],
-
-borderColor:"#22d3ee",
-backgroundColor:"rgba(34,211,238,.05)",
-borderWidth:2,
-tension:.3,
-pointRadius:2
-},
-
-{
-label:"ขอบล่าง Forecast",
-
-data:[
-...nulls,
-actualValues.at(-1),
-...predictions.map(
-p=>p.lower
-)
-],
-
-borderColor:
-"rgba(52,211,153,0)",
-
-borderWidth:0,
-pointRadius:0
-},
-
-{
-label:"ช่วงคาดการณ์",
-
-data:[
-...nulls,
-actualValues.at(-1),
-...predictions.map(
-p=>p.upper
-)
-],
-
-borderColor:
-"rgba(52,211,153,.22)",
-
-backgroundColor:
-"rgba(52,211,153,.10)",
-
-borderWidth:1,
-pointRadius:0,
-fill:"-1"
-},
-
-{
-label:"Forecast",
-
-data:[
-...nulls,
-actualValues.at(-1),
-...predictions.map(
-p=>p.center
-)
-],
-
-borderColor:"#34d399",
-borderDash:[6,5],
-borderWidth:2,
-pointRadius:3
-}
-]
-},
-
-options:{
-responsive:true,
-maintainAspectRatio:true,
-
-plugins:{
-legend:{
-display:false
-}
-},
-
-scales:{
-y:{
-grid:{
-color:"rgba(148,163,184,.08)"
-}
-},
-
-x:{
-grid:{
-display:false
-}
-}
-}
-}
-}
-);
-
-setForecastDatasetVisibility();
-}
+/* =========================================================
+   RANGE PICKER
+   ========================================================= */
 
 function toDateTimeLocalValue(d){
+  const p=v=>String(v).padStart(2,"0");
 
-const p=
-v=>
-String(v)
-.padStart(
-2,
-"0"
-);
-
-return d
-?`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
-:"";
+  return d
+    ?`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+    :"";
 }
 
-function setPickerInputs(
-s,
-e
-){
+function setPickerInputs(s,e){
+  if($("customRangeStart")){
+    $("customRangeStart").value=
+      toDateTimeLocalValue(s);
+  }
 
-$("customRangeStart").value=
-toDateTimeLocalValue(s);
-
-$("customRangeEnd").value=
-toDateTimeLocalValue(e);
+  if($("customRangeEnd")){
+    $("customRangeEnd").value=
+      toDateTimeLocalValue(e);
+  }
 }
 
 function setQuickRange(k){
+  const c=RANGE_CONFIG[k];
 
-const c=
-RANGE_CONFIG[k];
+  if(!c)return;
 
-if(!c){
-return;
-}
+  const e=new Date();
+  const s=new Date(
+    e.getTime()-c.minutes*60000
+  );
 
-const e=
-new Date();
+  setPickerInputs(s,e);
 
-const s=
-new Date(
-e.getTime()-
-c.minutes*
-60000
-);
+  calendarDisplayDate=new Date(e);
+  calendarSelectionStep="start";
 
-setPickerInputs(
-s,
-e
-);
-
-calendarDisplayDate=
-new Date(e);
-
-calendarSelectionStep=
-"start";
-
-updateQuickRangeUI(k);
-
-renderRangeCalendar();
+  updateQuickRangeUI(k);
+  renderRangeCalendar();
 }
 
 function updateQuickRangeUI(k){
+  document
+    .querySelectorAll(".quick-range-option")
+    .forEach(b=>{
+      const a=b.dataset.range===k;
 
-document
-.querySelectorAll(
-".quick-range-option"
-)
-.forEach(
-b=>{
+      b.style.background=
+        a
+          ?"rgba(34,211,238,.10)"
+          :"transparent";
 
-const a=
-b.dataset.range===k;
+      b.style.color=
+        a
+          ?"#67e8f9"
+          :"#cbd5e1";
 
-b.style.background=
-a
-?"rgba(34,211,238,.10)"
-:"transparent";
-
-b.style.color=
-a
-?"#67e8f9"
-:"#cbd5e1";
-
-b.style.border=
-a
-?"1px solid rgba(34,211,238,.18)"
-:"1px solid transparent";
-}
-);
+      b.style.border=
+        a
+          ?"1px solid rgba(34,211,238,.18)"
+          :"1px solid transparent";
+    });
 }
 
 function dateOnlyFromInput(id){
+  const v=$(id)?.value;
+  const d=v?new Date(v):null;
 
-const v=
-$(id)?.value;
-
-const d=
-v
-?new Date(v)
-:null;
-
-return d&&!isNaN(d)
-?d
-:null;
+  return d&&!isNaN(d)
+    ?d
+    :null;
 }
 
-function sameCalendarDay(
-a,
-b
-){
-
-return !!(
-a&&
-b&&
-a.getFullYear()===b.getFullYear()&&
-a.getMonth()===b.getMonth()&&
-a.getDate()===b.getDate()
-);
+function sameCalendarDay(a,b){
+  return !!(
+    a&&
+    b&&
+    a.getFullYear()===b.getFullYear()&&
+    a.getMonth()===b.getMonth()&&
+    a.getDate()===b.getDate()
+  );
 }
 
 function openHistoryRangePicker(){
+  $("historyRangePanel")?.classList.remove("hidden");
 
-$("historyRangePanel")
-.classList
-.remove(
-"hidden"
-);
+  $("historyRangeButton")?.setAttribute(
+    "aria-expanded",
+    "true"
+  );
 
-$("historyRangeButton")
-.setAttribute(
-"aria-expanded",
-"true"
-);
+  const w=getSelectedTimeWindow();
 
-const w=
-getSelectedTimeWindow();
+  const s=
+    w?.start||
+    new Date(Date.now()-86400000);
 
-const s=
-w?.start
-||new Date(
-Date.now()-
-86400000
-);
+  const e=
+    w?.end||
+    new Date();
 
-const e=
-w?.end
-||new Date();
+  setPickerInputs(s,e);
 
-setPickerInputs(
-s,
-e
-);
+  calendarDisplayDate=new Date(e);
+  calendarSelectionStep="start";
 
-calendarDisplayDate=
-new Date(e);
+  updateQuickRangeUI(
+    averageRange==="custom"
+      ?null
+      :averageRange
+  );
 
-calendarSelectionStep=
-"start";
-
-updateQuickRangeUI(
-averageRange==="custom"
-?null
-:averageRange
-);
-
-renderRangeCalendar();
+  renderRangeCalendar();
 }
 
 function closeHistoryRangePicker(){
+  $("historyRangePanel")
+    ?.classList
+    .add("hidden");
 
-$("historyRangePanel")
-?.classList
-.add(
-"hidden"
-);
+  $("historyRangeButton")
+    ?.setAttribute(
+      "aria-expanded",
+      "false"
+    );
 
-$("historyRangeButton")
-?.setAttribute(
-"aria-expanded",
-"false"
-);
-
-$("customRangeError")
-?.classList
-.add(
-"hidden"
-);
+  $("customRangeError")
+    ?.classList
+    .add("hidden");
 }
 
 function renderRangeCalendar(){
+  const grid=$("rangeCalendarGrid");
 
-const grid=
-$("rangeCalendarGrid");
+  if(!grid)return;
 
-if(!grid){
-return;
-}
+  const y=calendarDisplayDate.getFullYear();
+  const m=calendarDisplayDate.getMonth();
 
-const y=
-calendarDisplayDate
-.getFullYear();
+  const first=new Date(y,m,1).getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const prev=new Date(y,m,0).getDate();
 
-const m=
-calendarDisplayDate
-.getMonth();
+  if($("rangeCalendarTitle")){
+    $("rangeCalendarTitle").textContent=
+      calendarDisplayDate.toLocaleDateString(
+        "th-TH",
+        {
+          timeZone:"Asia/Bangkok",
+          month:"long",
+          year:"numeric"
+        }
+      );
+  }
 
-const first=
-new Date(
-y,
-m,
-1
-)
-.getDay();
+  grid.innerHTML="";
 
-const days=
-new Date(
-y,
-m+1,
-0
-)
-.getDate();
+  const ss=dateOnlyFromInput("customRangeStart");
+  const se=dateOnlyFromInput("customRangeEnd");
 
-const prev=
-new Date(
-y,
-m,
-0
-)
-.getDate();
+  for(let i=0;i<42;i++){
+    let day;
+    let cm=m;
+    let muted=false;
 
-$("rangeCalendarTitle")
-.textContent=
-calendarDisplayDate
-.toLocaleDateString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-month:"long",
-year:"numeric"
-}
-);
+    if(i<first){
+      day=prev-first+i+1;
+      cm=m-1;
+      muted=true;
+    }else if(i>=first+days){
+      day=i-(first+days)+1;
+      cm=m+1;
+      muted=true;
+    }else{
+      day=i-first+1;
+    }
 
-grid.innerHTML="";
+    const d=new Date(y,cm,day);
+    const b=document.createElement("button");
 
-const ss=
-dateOnlyFromInput(
-"customRangeStart"
-);
+    b.type="button";
+    b.textContent=day;
 
-const se=
-dateOnlyFromInput(
-"customRangeEnd"
-);
+    b.className=
+      "h-9 rounded-lg text-xs transition";
 
-for(
-let i=0;
-i<42;
-i++
-){
+    b.style.color=
+      muted
+        ?"#475569"
+        :"#e2e8f0";
 
-let day;
-let cm=m;
-let muted=false;
+    const startDay=sameCalendarDay(d,ss);
+    const endDay=sameCalendarDay(d,se);
 
-if(i<first){
+    const inRange=
+      ss&&
+      se&&
+      d>=new Date(
+        ss.getFullYear(),
+        ss.getMonth(),
+        ss.getDate()
+      )&&
+      d<=new Date(
+        se.getFullYear(),
+        se.getMonth(),
+        se.getDate()
+      );
 
-day=
-prev-
-first+
-i+
-1;
+    b.style.background=
+      startDay||endDay
+        ?"rgba(34,211,238,.28)"
+        :inRange
+          ?"rgba(34,211,238,.07)"
+          :"transparent";
 
-cm=
-m-
-1;
+    b.style.border=
+      startDay||endDay
+        ?"1px solid rgba(103,232,249,.34)"
+        :"1px solid transparent";
 
-muted=true;
-}
-else if(
-i>=
-first+
-days
-){
+    b.onclick=()=>{
+      if(calendarSelectionStep==="start"){
+        const old=dateOnlyFromInput(
+          "customRangeStart"
+        );
 
-day=
-i-
-(
-first+
-days
-)+
-1;
+        const n=new Date(d);
 
-cm=
-m+
-1;
+        n.setHours(
+          old?.getHours()||0,
+          old?.getMinutes()||0,
+          0,
+          0
+        );
 
-muted=true;
-}
-else{
+        $("customRangeStart").value=
+          toDateTimeLocalValue(n);
 
-day=
-i-
-first+
-1;
-}
+        const end=dateOnlyFromInput(
+          "customRangeEnd"
+        );
 
-const d=
-new Date(
-y,
-cm,
-day
-);
+        if(!end||end<n){
+          const e=new Date(n);
 
-const b=
-document.createElement(
-"button"
-);
+          e.setHours(
+            23,
+            59,
+            0,
+            0
+          );
 
-b.type=
-"button";
+          $("customRangeEnd").value=
+            toDateTimeLocalValue(e);
+        }
 
-b.textContent=
-day;
+        calendarSelectionStep="end";
+      }else{
+        const old=dateOnlyFromInput(
+          "customRangeEnd"
+        );
 
-b.className=
-"h-9 rounded-lg text-xs transition";
+        const n=new Date(d);
 
-b.style.color=
-muted
-?"#475569"
-:"#e2e8f0";
+        n.setHours(
+          old?.getHours()??23,
+          old?.getMinutes()??59,
+          0,
+          0
+        );
 
-const startDay=
-sameCalendarDay(
-d,
-ss
-);
+        const start=dateOnlyFromInput(
+          "customRangeStart"
+        );
 
-const endDay=
-sameCalendarDay(
-d,
-se
-);
+        if(start&&n<start){
+          $("customRangeStart").value=
+            toDateTimeLocalValue(n);
 
-const inRange=
-ss&&
-se&&
-d>=
-new Date(
-ss.getFullYear(),
-ss.getMonth(),
-ss.getDate()
-)&&
-d<=
-new Date(
-se.getFullYear(),
-se.getMonth(),
-se.getDate()
-);
+          $("customRangeEnd").value=
+            toDateTimeLocalValue(start);
+        }else{
+          $("customRangeEnd").value=
+            toDateTimeLocalValue(n);
+        }
 
-b.style.background=
-startDay||
-endDay
-?"rgba(34,211,238,.28)"
-:inRange
-?"rgba(34,211,238,.07)"
-:"transparent";
+        calendarSelectionStep="start";
+      }
 
-b.style.border=
-startDay||
-endDay
-?"1px solid rgba(103,232,249,.34)"
-:"1px solid transparent";
+      updateQuickRangeUI(null);
+      renderRangeCalendar();
+    };
 
-b.onclick=
-()=>{
-
-if(
-calendarSelectionStep===
-"start"
-){
-
-const old=
-dateOnlyFromInput(
-"customRangeStart"
-);
-
-const n=
-new Date(d);
-
-n.setHours(
-old?.getHours()||0,
-old?.getMinutes()||0,
-0,
-0
-);
-
-$("customRangeStart").value=
-toDateTimeLocalValue(n);
-
-const end=
-dateOnlyFromInput(
-"customRangeEnd"
-);
-
-if(
-!end||
-end<n
-){
-
-const e=
-new Date(n);
-
-e.setHours(
-23,
-59,
-0,
-0
-);
-
-$("customRangeEnd").value=
-toDateTimeLocalValue(e);
-}
-
-calendarSelectionStep=
-"end";
-}
-else{
-
-const old=
-dateOnlyFromInput(
-"customRangeEnd"
-);
-
-const n=
-new Date(d);
-
-n.setHours(
-old?.getHours()??23,
-old?.getMinutes()??59,
-0,
-0
-);
-
-const start=
-dateOnlyFromInput(
-"customRangeStart"
-);
-
-if(
-start&&
-n<start
-){
-
-$("customRangeStart").value=
-toDateTimeLocalValue(n);
-
-$("customRangeEnd").value=
-toDateTimeLocalValue(start);
-}
-else{
-
-$("customRangeEnd").value=
-toDateTimeLocalValue(n);
-}
-
-calendarSelectionStep=
-"start";
-}
-
-updateQuickRangeUI(null);
-
-renderRangeCalendar();
-};
-
-grid.appendChild(b);
-}
+    grid.appendChild(b);
+  }
 }
 
 async function applyHistoryRange(){
+  const s=dateOnlyFromInput("customRangeStart");
+  const e=dateOnlyFromInput("customRangeEnd");
+  const err=$("customRangeError");
 
-const s=
-dateOnlyFromInput(
-"customRangeStart"
-);
+  if(!s||!e){
+    if(err){
+      err.textContent="กรุณาเลือก Start และ End";
+      err.classList.remove("hidden");
+    }
 
-const e=
-dateOnlyFromInput(
-"customRangeEnd"
-);
+    return;
+  }
 
-const err=
-$("customRangeError");
+  if(s>=e){
+    if(err){
+      err.textContent="End ต้องอยู่หลัง Start";
+      err.classList.remove("hidden");
+    }
 
-if(!s||!e){
+    return;
+  }
 
-err.textContent=
-"กรุณาเลือก Start และ End";
+  if(e-s>30*86400000){
+    if(err){
+      err.textContent="เลือกช่วงเวลาได้สูงสุด 30 วัน";
+      err.classList.remove("hidden");
+    }
 
-err.classList.remove(
-"hidden"
-);
+    return;
+  }
 
-return;
+  const mins=(e-s)/60000;
+
+  const match=Object.entries(RANGE_CONFIG)
+    .find(
+      ([,c])=>
+        Math.abs(mins-c.minutes)<1.5
+    )?.[0];
+
+  if(match){
+    averageRange=match;
+    customRangeStart=null;
+    customRangeEnd=null;
+  }else{
+    averageRange="custom";
+    customRangeStart=s;
+    customRangeEnd=e;
+  }
+
+  if($("historyRangeButtonLabel")){
+    $("historyRangeButtonLabel").textContent=
+      getRangeLabel();
+  }
+
+  closeHistoryRangePicker();
+  await load();
 }
 
-if(s>=e){
-
-err.textContent=
-"End ต้องอยู่หลัง Start";
-
-err.classList.remove(
-"hidden"
-);
-
-return;
-}
-
-if(
-e-s>
-30*
-86400000
-){
-
-err.textContent=
-"เลือกช่วงเวลาได้สูงสุด 30 วัน";
-
-err.classList.remove(
-"hidden"
-);
-
-return;
-}
-
-const mins=
-(
-e-s
-)
-/60000;
-
-const match=
-Object.entries(
-RANGE_CONFIG
-)
-.find(
-(
-[,c]
-)=>
-Math.abs(
-mins-
-c.minutes
-)<1.5
-)
-?.[0];
-
-if(match){
-
-averageRange=
-match;
-
-customRangeStart=
-null;
-
-customRangeEnd=
-null;
-}
-else{
-
-averageRange=
-"custom";
-
-customRangeStart=
-s;
-
-customRangeEnd=
-e;
-}
-
-$("historyRangeButtonLabel").textContent=
-getRangeLabel();
-
-closeHistoryRangePicker();
-
-await load();
-}
+/* =========================================================
+   EXPORT
+   ========================================================= */
 
 function dateToInputValue(d){
+  const p=v=>String(v).padStart(2,"0");
 
-const p=
-v=>
-String(v)
-.padStart(
-2,
-"0"
-);
-
-return d
-?`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`
-:"";
+  return d
+    ?`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`
+    :"";
 }
 
 function showExportError(m){
+  const e=$("exportError");
 
-const e=
-$("exportError");
+  if(!e)return;
 
-if(!e){
-return;
-}
-
-e.textContent=
-m||"";
-
-e.classList.toggle(
-"hidden",
-!m
-);
+  e.textContent=m||"";
+  e.classList.toggle("hidden",!m);
 }
 
 function setExportLoading(v){
+  $("exportLoading")?.classList.toggle(
+    "hidden",
+    !v
+  );
 
-$("exportLoading")
-?.classList
-.toggle(
-"hidden",
-!v
-);
-
-if($("exportExcelButton")){
-
-$("exportExcelButton").disabled=
-v||
-!exportRows.length;
-}
+  if($("exportExcelButton")){
+    $("exportExcelButton").disabled=
+      v||!exportRows.length;
+  }
 }
 
 function getBangkokExportBoundaries(){
+  const s=$("exportStartDate")?.value;
+  const e=$("exportEndDate")?.value;
 
-const s=
-$("exportStartDate")
-?.value;
+  if(!s||!e)return null;
 
-const e=
-$("exportEndDate")
-?.value;
+  const start=new Date(
+    s+"T00:00:00+07:00"
+  );
 
-if(!s||!e){
-return null;
-}
+  const end0=new Date(
+    e+"T00:00:00+07:00"
+  );
 
-const start=
-new Date(
-s+
-"T00:00:00+07:00"
-);
+  if(isNaN(start)||isNaN(end0)){
+    return null;
+  }
 
-const end0=
-new Date(
-e+
-"T00:00:00+07:00"
-);
-
-if(
-isNaN(start)||
-isNaN(end0)
-){
-return null;
-}
-
-return{
-start,
-
-end:
-new Date(
-end0.getTime()+
-86400000
-)
-};
+  return{
+    start,
+    end:new Date(
+      end0.getTime()+86400000
+    )
+  };
 }
 
 async function loadExportRows(){
+  const b=getBangkokExportBoundaries();
 
-const b=
-getBangkokExportBoundaries();
+  if(!b){
+    throw new Error(
+      "กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด"
+    );
+  }
 
-if(!b){
+  if(b.end-b.start>31*86400000){
+    throw new Error(
+      "สามารถส่งออกข้อมูลได้สูงสุดครั้งละ 30 วัน"
+    );
+  }
 
-throw new Error(
-"กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด"
-);
-}
+  let offset=0;
+  let total=null;
+  let all=[];
 
-if(
-b.end-
-b.start>
-31*
-86400000
-){
+  while(true){
+    const j=await fetchJson(
+      `${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
+    );
 
-throw new Error(
-"สามารถส่งออกข้อมูลได้สูงสุดครั้งละ 30 วัน"
-);
-}
+    if(total===null&&j.total!=null){
+      total=Number(j.total);
+    }
 
-let offset=0;
-let total=null;
-let all=[];
+    const rows=(j.data||[])
+      .map(normalize)
+      .filter(Boolean);
 
-while(true){
+    all.push(...rows);
 
-const j=
-await fetchJson(
-`${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
-);
+    if($("exportDataCount")){
+      $("exportDataCount").textContent=
+        total!=null
+          ?`${all.length.toLocaleString("th-TH")} / ${total.toLocaleString("th-TH")}`
+          :all.length.toLocaleString("th-TH");
+    }
 
-if(
-total===null&&
-j.total!=null
-){
+    if(
+      j.has_more!==true||
+      !rows.length
+    ){
+      break;
+    }
 
-total=
-Number(j.total);
-}
+    offset+=rows.length;
+  }
 
-const rows=
-(
-j.data||
-[]
-)
-.map(normalize)
-.filter(Boolean);
-
-all.push(
-...rows
-);
-
-$("exportDataCount").textContent=
-total!=null
-?`${all.length.toLocaleString("th-TH")} / ${total.toLocaleString("th-TH")}`
-:all.length.toLocaleString(
-"th-TH"
-);
-
-if(
-j.has_more!==true||
-!rows.length
-){
-break;
-}
-
-offset+=
-rows.length;
-}
-
-return all.sort(
-(a,b)=>
-parseDate(a.timestamp)-
-parseDate(b.timestamp)
-);
+  return all.sort(
+    (a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp)
+  );
 }
 
 function formatExportDate(v){
+  const d=parseDate(v);
 
-const d=
-parseDate(v);
-
-return d
-?d.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-year:"numeric",
-month:"2-digit",
-day:"2-digit",
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit",
-hour12:false
-}
-)
-:"";
+  return d
+    ?d.toLocaleString(
+      "th-TH",
+      {
+        timeZone:"Asia/Bangkok",
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit",
+        second:"2-digit",
+        hour12:false
+      }
+    )
+    :"";
 }
 
 function renderExportPreview(){
+  const body=$("exportPreviewBody");
 
-const body=
-$("exportPreviewBody");
+  if($("exportDataCount")){
+    $("exportDataCount").textContent=
+      exportRows.length.toLocaleString("th-TH");
+  }
 
-$("exportDataCount").textContent=
-exportRows.length
-.toLocaleString(
-"th-TH"
-);
+  if(!body)return;
 
-if(!exportRows.length){
+  if(!exportRows.length){
+    body.innerHTML=`
+      <tr>
+        <td
+          colspan="8"
+          class="export-empty-cell"
+        >
+          ไม่พบข้อมูลในช่วงวันที่ที่เลือก
+        </td>
+      </tr>
+    `;
 
-body.innerHTML=`
-<tr>
-<td
-colspan="8"
-class="export-empty-cell"
->
-ไม่พบข้อมูลในช่วงวันที่ที่เลือก
-</td>
-</tr>
-`;
+    if($("exportExcelButton")){
+      $("exportExcelButton").disabled=true;
+    }
 
-$("exportExcelButton").disabled=
-true;
+    return;
+  }
 
-return;
-}
+  body.innerHTML=exportRows
+    .slice(0,50)
+    .map(r=>`
+      <tr>
+        <td>
+          ${escapeHtml(formatExportDate(r.timestamp))}
+        </td>
 
-body.innerHTML=
-exportRows
-.slice(
-0,
-50
-)
-.map(
-r=>`
-<tr>
+        <td>
+          ${escapeHtml(r.device_id)}
+        </td>
 
-<td>
-${escapeHtml(
-formatExportDate(
-r.timestamp
-)
-)}
-</td>
+        <td>${fmt(r.pm1)}</td>
+        <td>${fmt(r.pm25)}</td>
+        <td>${fmt(r.pm10)}</td>
+        <td>${fmt(r.temperature)}</td>
+        <td>${fmt(r.humidity)}</td>
+        <td>${fmt(r.light)}</td>
+      </tr>
+    `)
+    .join("");
 
-<td>
-${escapeHtml(
-r.device_id
-)}
-</td>
-
-<td>
-${fmt(r.pm1)}
-</td>
-
-<td>
-${fmt(r.pm25)}
-</td>
-
-<td>
-${fmt(r.pm10)}
-</td>
-
-<td>
-${fmt(r.temperature)}
-</td>
-
-<td>
-${fmt(r.humidity)}
-</td>
-
-<td>
-${fmt(r.light)}
-</td>
-
-</tr>
-`
-)
-.join("");
-
-$("exportExcelButton").disabled=
-false;
+  if($("exportExcelButton")){
+    $("exportExcelButton").disabled=false;
+  }
 }
 
 async function refreshExportPreview(){
+  showExportError("");
 
-showExportError("");
+  exportRows=[];
+  setExportLoading(true);
 
-exportRows=[];
+  try{
+    exportRows=await loadExportRows();
+    renderExportPreview();
+  }catch(e){
+    console.error(e);
+    showExportError(e.message);
 
-setExportLoading(true);
-
-try{
-
-exportRows=
-await loadExportRows();
-
-renderExportPreview();
-}
-catch(e){
-
-console.error(e);
-
-showExportError(
-e.message
-);
-
-$("exportPreviewBody").innerHTML=`
-<tr>
-<td
-colspan="8"
-class="export-empty-cell"
->
-ไม่สามารถแสดงตัวอย่างข้อมูลได้
-</td>
-</tr>
-`;
-}
-finally{
-
-setExportLoading(false);
-}
+    if($("exportPreviewBody")){
+      $("exportPreviewBody").innerHTML=`
+        <tr>
+          <td
+            colspan="8"
+            class="export-empty-cell"
+          >
+            ไม่สามารถแสดงตัวอย่างข้อมูลได้
+          </td>
+        </tr>
+      `;
+    }
+  }finally{
+    setExportLoading(false);
+  }
 }
 
 function openExportModal(){
+  const w=getSelectedTimeWindow();
+  const now=new Date();
 
-const w=
-getSelectedTimeWindow();
+  const end=w?.end||now;
 
-const now=
-new Date();
+  const start=
+    w?.start||
+    new Date(now-86400000);
 
-const end=
-w?.end||
-now;
+  if($("exportStartDate")){
+    $("exportStartDate").value=
+      dateToInputValue(start);
+  }
 
-const start=
-w?.start||
-new Date(
-now-
-86400000
-);
+  if($("exportEndDate")){
+    $("exportEndDate").value=
+      dateToInputValue(end);
+  }
 
-$("exportStartDate").value=
-dateToInputValue(
-start
-);
+  exportRows=[];
 
-$("exportEndDate").value=
-dateToInputValue(
-end
-);
+  if($("exportDataCount")){
+    $("exportDataCount").textContent="0";
+  }
 
-exportRows=[];
+  showExportError("");
 
-$("exportDataCount").textContent=
-"0";
+  $("exportModal")?.classList.add("active");
 
-showExportError("");
+  $("exportModal")?.setAttribute(
+    "aria-hidden",
+    "false"
+  );
 
-$("exportModal")
-.classList
-.add(
-"active"
-);
+  document.body.classList.add(
+    "export-modal-open"
+  );
 
-$("exportModal")
-.setAttribute(
-"aria-hidden",
-"false"
-);
-
-document.body
-.classList
-.add(
-"export-modal-open"
-);
-
-refreshExportPreview();
+  refreshExportPreview();
 }
 
 function closeExportModal(){
+  $("exportModal")?.classList.remove("active");
 
-$("exportModal")
-?.classList
-.remove(
-"active"
-);
+  $("exportModal")?.setAttribute(
+    "aria-hidden",
+    "true"
+  );
 
-$("exportModal")
-?.setAttribute(
-"aria-hidden",
-"true"
-);
-
-document.body
-.classList
-.remove(
-"export-modal-open"
-);
+  document.body.classList.remove(
+    "export-modal-open"
+  );
 }
 
 function downloadExportExcel(){
+  if(!exportRows.length){
+    showExportError(
+      "ไม่มีข้อมูลสำหรับดาวน์โหลด"
+    );
+    return;
+  }
 
-if(!exportRows.length){
+  if(typeof XLSX==="undefined"){
+    showExportError(
+      "ไม่สามารถโหลดระบบสร้าง Excel ได้"
+    );
+    return;
+  }
 
-showExportError(
-"ไม่มีข้อมูลสำหรับดาวน์โหลด"
-);
+  const data=exportRows.map(r=>({
+    "วันที่ / เวลา":formatExportDate(r.timestamp),
+    "อุปกรณ์":r.device_id||"",
+    "PM1.0 (µg/m³)":r.pm1??"",
+    "PM2.5 (µg/m³)":r.pm25??"",
+    "PM10 (µg/m³)":r.pm10??"",
+    "อุณหภูมิ (°C)":r.temperature??"",
+    "ความชื้น (%)":r.humidity??"",
+    "แสง (lux)":r.light??""
+  }));
 
-return;
+  const ws=XLSX.utils.json_to_sheet(data);
+
+  ws["!cols"]=[
+    {wch:22},
+    {wch:16},
+    {wch:15},
+    {wch:15},
+    {wch:15},
+    {wch:16},
+    {wch:16},
+    {wch:14}
+  ];
+
+  const wb=XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "PM2.5 Data"
+  );
+
+  XLSX.writeFile(
+    wb,
+    `PM25_${$("exportStartDate").value}_to_${$("exportEndDate").value}.xlsx`
+  );
 }
 
-if(
-typeof XLSX===
-"undefined"
-){
-
-showExportError(
-"ไม่สามารถโหลดระบบสร้าง Excel ได้"
-);
-
-return;
-}
-
-const data=
-exportRows.map(
-r=>({
-
-"วันที่ / เวลา":
-formatExportDate(
-r.timestamp
-),
-
-"อุปกรณ์":
-r.device_id||"",
-
-"PM1.0 (µg/m³)":
-r.pm1??"",
-
-"PM2.5 (µg/m³)":
-r.pm25??"",
-
-"PM10 (µg/m³)":
-r.pm10??"",
-
-"อุณหภูมิ (°C)":
-r.temperature??"",
-
-"ความชื้น (%)":
-r.humidity??"",
-
-"แสง (lux)":
-r.light??""
-
-})
-);
-
-const ws=
-XLSX.utils
-.json_to_sheet(
-data
-);
-
-ws["!cols"]=[
-{wch:22},
-{wch:16},
-{wch:15},
-{wch:15},
-{wch:15},
-{wch:16},
-{wch:16},
-{wch:14}
-];
-
-const wb=
-XLSX.utils
-.book_new();
-
-XLSX.utils
-.book_append_sheet(
-wb,
-ws,
-"PM2.5 Data"
-);
-
-XLSX.writeFile(
-wb,
-`PM25_${$("exportStartDate").value}_to_${$("exportEndDate").value}.xlsx`
-);
-}
+/* =========================================================
+   HELP SYSTEM
+   ========================================================= */
 
 const HELP_CONTENT={
+  monitoring:{
+    title:"Monitoring Nodes",
 
-monitoring:{
-title:
-"Monitoring Nodes",
+    html:`
+      <p>
+        แสดงสถานะและค่าตรวจวัดล่าสุดของอุปกรณ์ทั้ง 3 จุด
+        โดยค่าบนการ์ดเป็นค่าล่าสุดที่ระบบเคยได้รับ
+      </p>
 
-html:`
-<p>
-แสดงสถานะและค่าตรวจวัดล่าสุดของอุปกรณ์ทั้ง 3 จุด
-โดยค่าบนการ์ดเป็นค่าล่าสุดที่ระบบเคยได้รับ
-</p>
+      <div class="help-status-list">
+        <div>
+          <span class="help-status-dot online"></span>
+          <b>ONLINE</b>
+          <span>
+            อุปกรณ์กำลังเชื่อมต่อและส่งข้อมูล
+          </span>
+        </div>
 
-<div class="help-status-list">
+        <div>
+          <span class="help-status-dot sleep"></span>
+          <b>SLEEP</b>
+          <span>
+            อุปกรณ์อยู่ในโหมดพักตามรอบการทำงาน
+          </span>
+        </div>
 
-<div>
-<span class="help-status-dot online"></span>
-<b>ONLINE</b>
-<span>
-อุปกรณ์กำลังเชื่อมต่อและส่งข้อมูล
-</span>
-</div>
+        <div>
+          <span class="help-status-dot offline"></span>
+          <b>OFFLINE</b>
+          <span>
+            ระบบไม่สามารถยืนยันการเชื่อมต่อได้
+          </span>
+        </div>
+      </div>
 
-<div>
-<span class="help-status-dot sleep"></span>
-<b>SLEEP</b>
-<span>
-อุปกรณ์อยู่ในโหมดพักตามรอบการทำงาน
-</span>
-</div>
+      <p>
+        <b>Last update</b>
+        คือเวลาของข้อมูล/สถานะล่าสุด
+        ส่วน Gateway คืออุปกรณ์แม่ที่เชื่อม ESP-NOW กับ Cloud
+      </p>
 
-<div>
-<span class="help-status-dot offline"></span>
-<b>OFFLINE</b>
-<span>
-ระบบไม่สามารถยืนยันการเชื่อมต่อได้
-</span>
-</div>
+      <p class="help-muted">
+        เมื่อ Gateway Offline
+        ระบบจะถือว่าอุปกรณ์ลูกทุกตัว Offline
+        จนกว่าจะได้รับข้อมูลใหม่จริง
+      </p>
+    `
+  },
 
-</div>
+  smartSummary:{
+    title:"Smart Summary",
 
-<p>
-<b>Last update</b>
-คือเวลาของข้อมูล/สถานะล่าสุด
-ส่วน Gateway คืออุปกรณ์แม่ที่เชื่อม ESP-NOW กับ Cloud
-</p>
+    html:`
+      <p>
+        สรุปสถานการณ์อัตโนมัติจากกฎของระบบ
+        เช่น Gateway,
+        สถานะอุปกรณ์
+        และ PM2.5 ภาพรวม
+      </p>
 
-<p class="help-muted">
-เมื่อ Gateway Offline
-ระบบจะถือว่าอุปกรณ์ลูกทุกตัว Offline
-จนกว่าจะได้รับข้อมูลใหม่จริง
-</p>
-`
-},
+      <p>
+        ส่วนนี้ยัง <b>ไม่ใช่ AI</b>
+        และไม่ได้สร้างคำตอบด้วยโมเดลภาษา
+      </p>
+    `
+  },
 
-smartSummary:{
-title:
-"Smart Summary",
+  currentAir:{
+    title:"คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน",
 
-html:`
-<p>
-สรุปสถานการณ์อัตโนมัติจากกฎของระบบ
-เช่น Gateway,
-สถานะอุปกรณ์
-และ PM2.5 ภาพรวม
-</p>
+    html:`
+      <p>
+        ส่วนนี้ใช้สำหรับดูค่าตรวจวัดล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่ากำลังใช้งาน
+      </p>
 
-<p>
-ส่วนนี้ยัง <b>ไม่ใช่ AI</b>
-และไม่ได้สร้างคำตอบด้วยโมเดลภาษา
-</p>
-`
-},
+      <p>
+        สามารถเลือกดูได้ 6 ตัวแปร ได้แก่
+        <b>PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และแสง</b>
+      </p>
 
-currentAir:{
-title:
-"คุณภาพอากาศปัจจุบัน",
+      <ul>
+        <li>
+          <b>ค่าภาพรวม</b>
+          — ค่าเฉลี่ยล่าสุดจากจุดตรวจวัดที่ใช้งานได้
+        </li>
 
-html:`
-<p>
-ใช้ค่า PM2.5 ล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้
-เพื่อสรุปสถานการณ์ปัจจุบัน
-</p>
+        <li>
+          <b>จุดที่มีค่าสูงสุด</b>
+          — อุปกรณ์ที่มีค่าของตัวแปรที่เลือกสูงที่สุด
+        </li>
 
-<ul>
+        <li>
+          <b>จุดที่ต้องเฝ้าระวัง</b>
+          — จุดที่ค่าตรวจวัดเข้าเงื่อนไขเฝ้าระวังของระบบ
+        </li>
+      </ul>
 
-<li>
-<b>PM2.5 ภาพรวม</b>
-— ค่าเฉลี่ยของจุดที่นำมาประเมิน
-</li>
+      <p>
+        การเปลี่ยนตัวแปรในส่วนนี้
+        จะไม่เปลี่ยนตัวแปรที่เลือกใน Historical Data & Trend
+      </p>
 
-<li>
-<b>จุดที่สูงสุด</b>
-— จุดที่มี PM2.5 สูงที่สุด
-</li>
+      <p class="help-muted">
+        หาก Gateway Offline
+        ระบบจะไม่ใช้ค่าที่ค้างอยู่ในฐานข้อมูล
+        มาประเมินเป็นสถานการณ์ปัจจุบัน
+      </p>
+    `
+  },
 
-<li>
-<b>จุดที่ต้องเฝ้าระวัง</b>
-— จุดที่เข้าเกณฑ์เฝ้าระวัง Real-time
-</li>
+  alerts:{
+    title:"Alerts",
 
-</ul>
+    html:`
+      <p>
+        แสดงรายการที่ควรตรวจสอบ
+        เช่น Gateway Offline,
+        Node Offline
+        หรือค่าจากเซนเซอร์ที่เข้าเกณฑ์เฝ้าระวัง
+      </p>
 
-<p class="help-muted">
-หาก Gateway Offline
-ระบบจะไม่เอาค่าค้างในฐานข้อมูล
-มาประเมินเป็นค่าปัจจุบัน
-</p>
-`
-},
+      <p>
+        Dashboard และ Telegram
+        ใช้สถานะ Alert จาก Worker ชุดเดียวกัน
+      </p>
 
-standard24h:{
-title:
-"เกณฑ์เฉลี่ย 24 ชั่วโมง",
-dynamic:true
-},
+      <p class="help-muted">
+        SLEEP เป็นสถานะปกติ
+        จึงไม่ถือเป็น Offline
+      </p>
+    `
+  },
 
-alerts:{
-title:
-"Alerts",
+  historical:{
+    title:"Historical Data & Trend",
 
-html:`
-<p>
-แสดงรายการที่ควรตรวจสอบ
-เช่น Gateway Offline,
-Node Offline
-หรือค่าจากเซนเซอร์ที่เข้าเกณฑ์เฝ้าระวัง
-</p>
+    html:`
+      <p>
+        ใช้ดูข้อมูลย้อนหลังตามตัวแปรและช่วงเวลาที่เลือก
+        โดยไม่กระทบค่าล่าสุดบน Monitoring Nodes
+      </p>
 
-<p>
-Dashboard และ Telegram
-ใช้สถานะ Alert จาก Worker ชุดเดียวกัน
-</p>
+      <ul>
+        <li>
+          เลือก PM1.0,
+          PM2.5,
+          PM10,
+          อุณหภูมิ,
+          ความชื้น
+          หรือแสง
+        </li>
 
-<p class="help-muted">
-SLEEP เป็นสถานะปกติ
-จึงไม่ถือเป็น Offline
-</p>
-`
-},
+        <li>
+          ดูค่าเฉลี่ย
+          สูงสุด
+          ต่ำสุด
+          ล่าสุด
+          และแนวโน้ม
+        </li>
 
-historical:{
-title:
-"Historical Data & Trend",
+        <li>
+          กำหนดช่วงเวลาเองได้
+        </li>
 
-html:`
-<p>
-ใช้ดูข้อมูลย้อนหลังตามตัวแปรและช่วงเวลาที่เลือก
-โดยไม่กระทบค่าล่าสุดบน Monitoring Nodes
-</p>
+        <li>
+          ส่งออกเป็น Excel ได้
+        </li>
+      </ul>
+    `
+  },
 
-<ul>
+  forecast:{
+    title:"Forecast",
 
-<li>
-เลือก PM1.0,
-PM2.5,
-PM10,
-อุณหภูมิ,
-ความชื้น
-หรือแสง
-</li>
+    html:`
+      <p>
+        คาดการณ์ระยะสั้นจากข้อมูลย้อนหลังล่าสุดของตัวแปรที่เลือก
+        โดยใช้ Linear Regression
+        และช่วงความคลาดเคลื่อน
+      </p>
 
-<li>
-ดูค่าเฉลี่ย
-สูงสุด
-ต่ำสุด
-ล่าสุด
-และแนวโน้ม
-</li>
+      <p>
+        เส้นข้อมูลจริงมาจากเซนเซอร์
+        ส่วน Forecast เป็นค่าประมาณ
+        และสามารถเปิด/ซ่อนได้
+      </p>
 
-<li>
-กำหนดช่วงเวลาเองได้
-</li>
+      <p class="help-muted">
+        ปัจจุบันยังไม่ใช่ AI/ML
+        และไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
+      </p>
+    `
+  },
 
-<li>
-ส่งออกเป็น Excel ได้
-</li>
+  ai:{
+    title:"AI วิเคราะห์สถานการณ์",
 
-</ul>
-`
-},
+    html:`
+      <p>
+        พื้นที่สำหรับ AI
+        ที่จะวิเคราะห์ข้อมูลหลายส่วนร่วมกัน
+        เช่น ค่าปัจจุบัน,
+        Alerts,
+        Historical Data & Trend
+        และ Forecast
+      </p>
 
-forecast:{
-title:
-"Forecast",
-
-html:`
-<p>
-คาดการณ์ระยะสั้นจากข้อมูลย้อนหลังล่าสุดของตัวแปรที่เลือก
-โดยใช้ Linear Regression
-และช่วงความคลาดเคลื่อน
-</p>
-
-<p>
-เส้นข้อมูลจริงมาจากเซนเซอร์
-ส่วน Forecast เป็นค่าประมาณ
-และสามารถเปิด/ซ่อนได้
-</p>
-
-<p class="help-muted">
-ปัจจุบันยังไม่ใช่ AI/ML
-และไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
-</p>
-`
-},
-
-ai:{
-title:
-"AI วิเคราะห์สถานการณ์",
-
-html:`
-<p>
-พื้นที่สำหรับ AI
-ที่จะวิเคราะห์ข้อมูลหลายส่วนร่วมกัน
-เช่น ค่าปัจจุบัน,
-Alerts,
-Historical,
-ค่าเฉลี่ย 24 ชั่วโมง
-และ Forecast
-</p>
-
-<p>
-ปัจจุบันยังไม่ได้เชื่อม AI API
-</p>
-`
-}
-
+      <p>
+        ปัจจุบันยังไม่ได้เชื่อม AI API
+      </p>
+    `
+  }
 };
 
 function getHelpHtml(key){
-
-return key==="standard24h"
-?getStandardHelpHtml()
-:(HELP_CONTENT[key]?.html||"");
+  return HELP_CONTENT[key]?.html||"";
 }
 
 function positionHelpPopover(button){
+  const p=$("helpPopover");
 
-const p=
-$("helpPopover");
+  if(!p||!button)return;
 
-if(!p||!button){
-return;
-}
+  const r=button.getBoundingClientRect();
+  const margin=12;
+  const gap=10;
 
-const r=
-button
-.getBoundingClientRect();
+  const w=Math.min(
+    390,
+    window.innerWidth-margin*2
+  );
 
-const margin=12;
-const gap=10;
+  p.style.width=w+"px";
+  p.style.visibility="hidden";
+  p.classList.add("active");
 
-const w=
-Math.min(
-390,
-window.innerWidth-
-margin*2
-);
+  const pr=p.getBoundingClientRect();
 
-p.style.width=
-w+"px";
+  let left=Math.max(
+    margin,
+    Math.min(
+      r.right-pr.width,
+      window.innerWidth-pr.width-margin
+    )
+  );
 
-p.style.visibility=
-"hidden";
+  let top=r.bottom+gap;
 
-p.classList.add(
-"active"
-);
+  if(
+    top+pr.height>
+    window.innerHeight-margin
+  ){
+    top=r.top-pr.height-gap;
+  }
 
-const pr=
-p.getBoundingClientRect();
+  top=Math.max(margin,top);
 
-let left=
-Math.max(
-margin,
-Math.min(
-r.right-
-pr.width,
-window.innerWidth-
-pr.width-
-margin
-)
-);
-
-let top=
-r.bottom+
-gap;
-
-if(
-top+
-pr.height>
-window.innerHeight-
-margin
-){
-
-top=
-r.top-
-pr.height-
-gap;
-}
-
-top=
-Math.max(
-margin,
-top
-);
-
-p.style.left=
-left+"px";
-
-p.style.top=
-top+"px";
-
-p.style.visibility=
-"visible";
+  p.style.left=left+"px";
+  p.style.top=top+"px";
+  p.style.visibility="visible";
 }
 
 function closeHelpPopover(){
+  const p=$("helpPopover");
 
-const p=
-$("helpPopover");
+  if(p){
+    p.classList.remove("active");
+    p.style.visibility="";
+    p.setAttribute("aria-hidden","true");
+  }
 
-if(p){
+  if(activeHelpButton){
+    activeHelpButton.classList.remove(
+      "is-active"
+    );
 
-p.classList.remove(
-"active"
-);
+    activeHelpButton.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+  }
 
-p.style.visibility="";
-
-p.setAttribute(
-"aria-hidden",
-"true"
-);
-}
-
-if(activeHelpButton){
-
-activeHelpButton
-.classList
-.remove(
-"is-active"
-);
-
-activeHelpButton
-.setAttribute(
-"aria-expanded",
-"false"
-);
-}
-
-activeHelpButton=null;
+  activeHelpButton=null;
 }
 
 function openHelpPopover(button){
+  const key=button?.dataset?.help;
+  const item=HELP_CONTENT[key];
 
-const key=
-button
-?.dataset
-?.help;
+  if(!item)return;
 
-const item=
-HELP_CONTENT[key];
+  if(
+    activeHelpButton===button&&
+    $("helpPopover")?.classList.contains("active")
+  ){
+    closeHelpPopover();
+    return;
+  }
 
-if(!item){
-return;
-}
+  closeHelpPopover();
 
-if(
-activeHelpButton===button&&
-$("helpPopover")
-?.classList
-.contains(
-"active"
-)
-){
+  activeHelpButton=button;
 
-closeHelpPopover();
+  button.classList.add("is-active");
 
-return;
-}
+  button.setAttribute(
+    "aria-expanded",
+    "true"
+  );
 
-closeHelpPopover();
+  if($("helpPopoverTitle")){
+    $("helpPopoverTitle").textContent=item.title;
+  }
 
-activeHelpButton=
-button;
+  if($("helpPopoverBody")){
+    $("helpPopoverBody").innerHTML=
+      getHelpHtml(key);
+  }
 
-button.classList.add(
-"is-active"
-);
+  $("helpPopover")?.setAttribute(
+    "aria-hidden",
+    "false"
+  );
 
-button.setAttribute(
-"aria-expanded",
-"true"
-);
-
-$("helpPopoverTitle").textContent=
-item.title;
-
-$("helpPopoverBody").innerHTML=
-getHelpHtml(key);
-
-$("helpPopover")
-.setAttribute(
-"aria-hidden",
-"false"
-);
-
-positionHelpPopover(
-button
-);
+  positionHelpPopover(button);
 }
 
 function bindHelpSystem(){
+  document
+    .querySelectorAll(".help-button")
+    .forEach(b=>
+      b.addEventListener(
+        "click",
+        e=>{
+          e.stopPropagation();
+          openHelpPopover(b);
+        }
+      )
+    );
 
-document
-.querySelectorAll(
-".help-button"
-)
-.forEach(
-b=>
-b.addEventListener(
-"click",
-e=>{
+  $("helpPopoverClose")
+    ?.addEventListener(
+      "click",
+      e=>{
+        e.stopPropagation();
+        closeHelpPopover();
+      }
+    );
 
-e.stopPropagation();
+  $("helpPopover")
+    ?.addEventListener(
+      "click",
+      e=>e.stopPropagation()
+    );
 
-openHelpPopover(b);
+  document.addEventListener(
+    "click",
+    closeHelpPopover
+  );
+
+  window.addEventListener(
+    "resize",
+    ()=>{
+      if(activeHelpButton){
+        positionHelpPopover(activeHelpButton);
+      }
+    }
+  );
+
+  window.addEventListener(
+    "scroll",
+    ()=>{
+      if(activeHelpButton){
+        positionHelpPopover(activeHelpButton);
+      }
+    },
+    true
+  );
 }
-)
-);
 
-$("helpPopoverClose")
-?.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-closeHelpPopover();
-}
-);
-
-$("helpPopover")
-?.addEventListener(
-"click",
-e=>
-e.stopPropagation()
-);
-
-document.addEventListener(
-"click",
-closeHelpPopover
-);
-
-window.addEventListener(
-"resize",
-()=>{
-
-if(activeHelpButton){
-
-positionHelpPopover(
-activeHelpButton
-);
-}
-}
-);
-
-window.addEventListener(
-"scroll",
-()=>{
-
-if(activeHelpButton){
-
-positionHelpPopover(
-activeHelpButton
-);
-}
-},
-true
-);
-}
+/* =========================================================
+   EVENTS
+   ========================================================= */
 
 function bindDashboardEvents(){
+  const currentMetricSelect=$("currentMetric");
 
-$("metric")
-?.addEventListener(
-"change",
-e=>{
+  if(currentMetricSelect){
+    currentMetricSelect.value=currentMetric;
 
-metric=
-e.target.value;
+    currentMetricSelect.addEventListener(
+      "change",
+      ()=>{
+        currentMetric=currentMetricSelect.value;
+        updateCurrentAirQuality();
+      }
+    );
+  }
 
-drawCharts();
+  $("metric")
+    ?.addEventListener(
+      "change",
+      e=>{
+        metric=e.target.value;
+        drawCharts();
+      }
+    );
+
+  $("historyRangeButton")
+    ?.addEventListener(
+      "click",
+      e=>{
+        e.stopPropagation();
+
+        $("historyRangePanel")
+          .classList
+          .contains("hidden")
+            ?openHistoryRangePicker()
+            :closeHistoryRangePicker();
+      }
+    );
+
+  document
+    .querySelectorAll(".quick-range-option")
+    .forEach(b=>
+      b.addEventListener(
+        "click",
+        ()=>{
+          setQuickRange(b.dataset.range);
+        }
+      )
+    );
+
+  $("calendarPrev")
+    ?.addEventListener(
+      "click",
+      ()=>{
+        calendarDisplayDate=new Date(
+          calendarDisplayDate.getFullYear(),
+          calendarDisplayDate.getMonth()-1,
+          1
+        );
+
+        renderRangeCalendar();
+      }
+    );
+
+  $("calendarNext")
+    ?.addEventListener(
+      "click",
+      ()=>{
+        calendarDisplayDate=new Date(
+          calendarDisplayDate.getFullYear(),
+          calendarDisplayDate.getMonth()+1,
+          1
+        );
+
+        renderRangeCalendar();
+      }
+    );
+
+  $("customRangeStart")
+    ?.addEventListener(
+      "change",
+      ()=>{
+        updateQuickRangeUI(null);
+        renderRangeCalendar();
+      }
+    );
+
+  $("customRangeEnd")
+    ?.addEventListener(
+      "change",
+      ()=>{
+        updateQuickRangeUI(null);
+        renderRangeCalendar();
+      }
+    );
+
+  $("historyRangeApply")
+    ?.addEventListener(
+      "click",
+      applyHistoryRange
+    );
+
+  $("historyRangeCancel")
+    ?.addEventListener(
+      "click",
+      closeHistoryRangePicker
+    );
+
+  $("forecastToggle")
+    ?.addEventListener(
+      "click",
+      ()=>{
+        forecastVisible=!forecastVisible;
+        setForecastDatasetVisibility();
+      }
+    );
+
+  $("exportButton")
+    ?.addEventListener(
+      "click",
+      openExportModal
+    );
+
+  $("exportModalClose")
+    ?.addEventListener(
+      "click",
+      closeExportModal
+    );
+
+  $("exportCancelButton")
+    ?.addEventListener(
+      "click",
+      closeExportModal
+    );
+
+  document
+    .querySelectorAll(
+      "[data-export-close='true']"
+    )
+    .forEach(e=>
+      e.addEventListener(
+        "click",
+        closeExportModal
+      )
+    );
+
+  $("exportStartDate")
+    ?.addEventListener(
+      "change",
+      refreshExportPreview
+    );
+
+  $("exportEndDate")
+    ?.addEventListener(
+      "change",
+      refreshExportPreview
+    );
+
+  $("exportExcelButton")
+    ?.addEventListener(
+      "click",
+      downloadExportExcel
+    );
+
+  document.addEventListener(
+    "keydown",
+    e=>{
+      if(e.key==="Escape"){
+        closeExportModal();
+        closeHistoryRangePicker();
+        closeHelpPopover();
+
+        if(
+          $("creditImageModal")
+            ?.classList
+            .contains("active")
+        ){
+          closeCreditImage();
+        }
+      }
+    }
+  );
 }
-);
 
-$("historyRangeButton")
-?.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-$("historyRangePanel")
-.classList
-.contains(
-"hidden"
-)
-?openHistoryRangePicker()
-:closeHistoryRangePicker();
-}
-);
-
-document
-.querySelectorAll(
-".quick-range-option"
-)
-.forEach(
-b=>
-b.addEventListener(
-"click",
-()=>{
-
-setQuickRange(
-b.dataset.range
-);
-}
-)
-);
-
-$("calendarPrev")
-?.addEventListener(
-"click",
-()=>{
-
-calendarDisplayDate=
-new Date(
-calendarDisplayDate.getFullYear(),
-calendarDisplayDate.getMonth()-1,
-1
-);
-
-renderRangeCalendar();
-}
-);
-
-$("calendarNext")
-?.addEventListener(
-"click",
-()=>{
-
-calendarDisplayDate=
-new Date(
-calendarDisplayDate.getFullYear(),
-calendarDisplayDate.getMonth()+1,
-1
-);
-
-renderRangeCalendar();
-}
-);
-
-$("customRangeStart")
-?.addEventListener(
-"change",
-()=>{
-
-updateQuickRangeUI(null);
-
-renderRangeCalendar();
-}
-);
-
-$("customRangeEnd")
-?.addEventListener(
-"change",
-()=>{
-
-updateQuickRangeUI(null);
-
-renderRangeCalendar();
-}
-);
-
-$("historyRangeApply")
-?.addEventListener(
-"click",
-applyHistoryRange
-);
-
-$("historyRangeCancel")
-?.addEventListener(
-"click",
-closeHistoryRangePicker
-);
-
-$("forecastToggle")
-?.addEventListener(
-"click",
-()=>{
-
-forecastVisible=
-!forecastVisible;
-
-setForecastDatasetVisibility();
-}
-);
-
-$("exportButton")
-?.addEventListener(
-"click",
-openExportModal
-);
-
-$("exportModalClose")
-?.addEventListener(
-"click",
-closeExportModal
-);
-
-$("exportCancelButton")
-?.addEventListener(
-"click",
-closeExportModal
-);
-
-document
-.querySelectorAll(
-"[data-export-close='true']"
-)
-.forEach(
-e=>
-e.addEventListener(
-"click",
-closeExportModal
-)
-);
-
-$("exportStartDate")
-?.addEventListener(
-"change",
-refreshExportPreview
-);
-
-$("exportEndDate")
-?.addEventListener(
-"change",
-refreshExportPreview
-);
-
-$("exportExcelButton")
-?.addEventListener(
-"click",
-downloadExportExcel
-);
-
-document.addEventListener(
-"keydown",
-e=>{
-
-if(e.key==="Escape"){
-
-closeExportModal();
-
-closeHistoryRangePicker();
-
-closeHelpPopover();
-
-if(
-$("creditImageModal")
-?.classList
-.contains(
-"active"
-)
-){
-
-closeCreditImage();
-}
-}
-}
-);
-}
+/* =========================================================
+   LOAD DASHBOARD
+   ========================================================= */
 
 async function load(){
+  try{
+    const[l,h,m,a,s]=await Promise.all([
+      loadLatest(),
+      loadHistory(),
+      loadMotherStatus(),
 
-try{
+      loadAlertStates()
+        .catch(()=>[]),
 
-const[
-l,
-h,
-m,
-a,
-s
-]=
-await Promise.all(
-[
-loadLatest(),
+      /*
+       * Standards UI 24 ชั่วโมงถูกลบแล้ว
+       * แต่ยังโหลด endpoint นี้อยู่
+       * เพราะ Real-time Threshold และ Alerts ยังใช้งาน
+       */
+      loadStandards()
+        .catch(()=>null)
+    ]);
 
-loadHistory(),
+    apiConnectionOnline=true;
 
-loadMotherStatus(),
+    latestNodes=l;
+    records=h;
+    motherStatus=m;
+    alertStates=a;
+    standardsData=s;
 
-loadAlertStates()
-.catch(
-()=>[]
-),
+    latestRecord=getLatestTimestampRecord(
+      latestNodes
+    );
 
-loadStandards()
-.catch(
-()=>null
-)
-]
-);
+    renderMonitoringNodes();
+    updateCurrentAirQuality();
+    updateSmartSummary();
+    updateAlerts();
+    renderAverages();
+    drawCharts();
+  }catch(e){
+    console.error(
+      "Dashboard load error:",
+      e
+    );
 
-apiConnectionOnline=
-true;
+    apiConnectionOnline=false;
+    motherStatus=null;
+    alertStates=[];
+    standardsData=null;
 
-latestNodes=l;
-
-records=h;
-
-motherStatus=m;
-
-alertStates=a;
-
-standardsData=s;
-
-latestRecord=
-getLatestTimestampRecord(
-latestNodes
-);
-
-renderMonitoringNodes();
-
-updateCurrentAirQuality();
-
-update24HourStandards();
-
-updateSmartSummary();
-
-updateAlerts();
-
-renderAverages();
-
-drawCharts();
+    forceAllNodesOffline();
+    updateCurrentAirQuality();
+    updateSmartSummary();
+    updateAlerts();
+  }
 }
-catch(e){
 
-console.error(
-"Dashboard load error:",
-e
-);
-
-apiConnectionOnline=
-false;
-
-motherStatus=
-null;
-
-alertStates=[];
-
-standardsData=
-null;
-
-forceAllNodesOffline();
-
-updateCurrentAirQuality();
-
-update24HourStandards();
-
-updateSmartSummary();
-
-updateAlerts();
-}
-}
+/* =========================================================
+   CLOCK
+   ========================================================= */
 
 function updateClock(){
-
-if($("clock")){
-
-$("clock").textContent=
-new Date()
-.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-dateStyle:"medium",
-timeStyle:"medium"
-}
-);
-}
+  if($("clock")){
+    $("clock").textContent=
+      new Date().toLocaleString(
+        "th-TH",
+        {
+          timeZone:"Asia/Bangkok",
+          dateStyle:"medium",
+          timeStyle:"medium"
+        }
+      );
+  }
 }
 
-function openCreditImage(
-src,
-alt
-){
+/* =========================================================
+   CREDIT IMAGE MODAL
+   ========================================================= */
 
-const m=
-$("creditImageModal");
+function openCreditImage(src,alt){
+  const m=$("creditImageModal");
+  const img=$("creditFullImage");
+  const cap=$("creditImageCaption");
 
-const img=
-$("creditFullImage");
+  if(!m||!img)return;
 
-const cap=
-$("creditImageCaption");
+  img.src=src;
+  img.alt=alt||"";
 
-if(!m||!img){
-return;
-}
+  if(cap){
+    cap.textContent=alt||"";
+  }
 
-img.src=
-src;
+  m.classList.add("active");
 
-img.alt=
-alt||"";
+  m.setAttribute(
+    "aria-hidden",
+    "false"
+  );
 
-if(cap){
-
-cap.textContent=
-alt||"";
-}
-
-m.classList.add(
-"active"
-);
-
-m.setAttribute(
-"aria-hidden",
-"false"
-);
-
-document.body.style.overflow=
-"hidden";
+  document.body.style.overflow="hidden";
 }
 
 function closeCreditImage(){
+  const m=$("creditImageModal");
 
-const m=
-$("creditImageModal");
+  if(!m)return;
 
-if(!m){
-return;
+  m.classList.remove("active");
+
+  m.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  document.body.style.overflow="";
+
+  setTimeout(
+    ()=>{
+      if($("creditFullImage")){
+        $("creditFullImage").src="";
+      }
+    },
+    200
+  );
 }
 
-m.classList.remove(
-"active"
-);
-
-m.setAttribute(
-"aria-hidden",
-"true"
-);
-
-document.body.style.overflow=
-"";
-
-setTimeout(
-()=>{
-
-if($("creditFullImage")){
-
-$("creditFullImage").src=
-"";
-}
-},
-200
-);
-}
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
 
 if($("historyRangeButtonLabel")){
-
-$("historyRangeButtonLabel").textContent=
-getRangeLabel();
+  $("historyRangeButtonLabel").textContent=
+    getRangeLabel();
 }
 
 updateForecastToggleUI();
-
 bindDashboardEvents();
-
 bindHelpSystem();
-
 updateClock();
-
 load();
 
 setInterval(
-updateClock,
-1000
+  updateClock,
+  1000
 );
 
 setInterval(
-load,
-10000
+  load,
+  10000
 );
 
 setInterval(
-()=>{
-
-if(apiConnectionOnline){
-
-renderMonitoringNodes();
-
-updateCurrentAirQuality();
-
-update24HourStandards();
-
-updateSmartSummary();
-
-updateAlerts();
-}
-else{
-
-forceAllNodesOffline();
-}
-},
-5000
+  ()=>{
+    if(apiConnectionOnline){
+      renderMonitoringNodes();
+      updateCurrentAirQuality();
+      updateSmartSummary();
+      updateAlerts();
+    }else{
+      forceAllNodesOffline();
+    }
+  },
+  5000
 );
