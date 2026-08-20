@@ -116,11 +116,16 @@ return (
 customRangeStart.toLocaleString(
 "th-TH",
 {
-timeZone: "Asia/Bangkok",
-day: "2-digit",
-month: "short",
-hour: "2-digit",
-minute: "2-digit"
+timeZone:
+"Asia/Bangkok",
+day:
+"2-digit",
+month:
+"short",
+hour:
+"2-digit",
+minute:
+"2-digit"
 }
 )
 
@@ -133,11 +138,16 @@ minute: "2-digit"
 customRangeEnd.toLocaleString(
 "th-TH",
 {
-timeZone: "Asia/Bangkok",
-day: "2-digit",
-month: "short",
-hour: "2-digit",
-minute: "2-digit"
+timeZone:
+"Asia/Bangkok",
+day:
+"2-digit",
+month:
+"short",
+hour:
+"2-digit",
+minute:
+"2-digit"
 }
 )
 
@@ -516,15 +526,19 @@ calendarDisplayDate
 "th-TH",
 
 {
-timeZone: "Asia/Bangkok",
-month: "long",
-year: "numeric"
+timeZone:
+"Asia/Bangkok",
+month:
+"long",
+year:
+"numeric"
 }
 
 );
 
 
-grid.innerHTML = "";
+grid.innerHTML =
+"";
 
 
 const firstDay =
@@ -567,7 +581,8 @@ dateOnlyFromInput(
 );
 
 
-const totalCells = 42;
+const totalCells =
+42;
 
 
 for(
@@ -591,12 +606,9 @@ false;
 if(index < firstWeekday){
 
 dayNumber =
-prevMonthDays
--
-firstWeekday
-+
-index
-+
+prevMonthDays -
+firstWeekday +
+index +
 1;
 
 
@@ -616,13 +628,11 @@ daysInMonth
 ){
 
 dayNumber =
-index
--
+index -
 (
 firstWeekday +
 daysInMonth
-)
-+
+) +
 1;
 
 
@@ -1057,10 +1067,8 @@ const maxRange =
 
 
 if(
-end.getTime()
--
-start.getTime()
->
+end.getTime() -
+start.getTime() >
 maxRange
 ){
 
@@ -1084,8 +1092,7 @@ null;
 
 const durationMinutes =
 (
-end.getTime()
--
+end.getTime() -
 start.getTime()
 )
 / 60000;
@@ -1298,11 +1305,16 @@ return date.toLocaleTimeString(
 "th-TH",
 
 {
-timeZone: "Asia/Bangkok",
-hour: "2-digit",
-minute: "2-digit",
-second: "2-digit",
-hour12: false
+timeZone:
+"Asia/Bangkok",
+hour:
+"2-digit",
+minute:
+"2-digit",
+second:
+"2-digit",
+hour12:
+false
 }
 
 );
@@ -1471,6 +1483,24 @@ nodeNumber
 function getNodeStatus(node){
 
 if(!apiConnectionOnline){
+
+return "offline";
+
+}
+
+
+const motherOnline =
+motherStatus &&
+String(
+motherStatus.status || ""
+)
+.trim()
+.toLowerCase()
+===
+"online";
+
+
+if(!motherOnline){
 
 return "offline";
 
@@ -1795,6 +1825,17 @@ gatewayDot.className =
 gatewayStatus.textContent =
 "ONLINE";
 
+
+const active =
+countActiveNodes();
+
+
+nodesActive.textContent =
+active +
+" / " +
+TOTAL_NODES +
+" Nodes active";
+
 }
 
 else{
@@ -1806,18 +1847,13 @@ gatewayDot.className =
 gatewayStatus.textContent =
 "OFFLINE";
 
-}
-
-
-const active =
-countActiveNodes();
-
 
 nodesActive.textContent =
-active +
-" / " +
+"0 / " +
 TOTAL_NODES +
 " Nodes active";
+
+}
 
 }
 
@@ -1835,7 +1871,8 @@ Date.now(),
 method: "GET",
 cache: "no-store",
 headers: {
-"Accept": "application/json"
+"Accept":
+"application/json"
 }
 }
 
@@ -1938,7 +1975,8 @@ Date.now(),
 method: "GET",
 cache: "no-store",
 headers: {
-"Accept": "application/json"
+"Accept":
+"application/json"
 }
 }
 
@@ -1987,21 +2025,18 @@ return {
 
 status:
 String(
-json.data.status ||
-"offline"
+json.data.status || "offline"
 )
 .trim()
 .toLowerCase(),
 
 
 last_seen:
-json.data.last_seen ||
-null,
+json.data.last_seen || null,
 
 
 updated_at:
-json.data.updated_at ||
-null
+json.data.updated_at || null
 
 };
 
@@ -2018,8 +2053,12 @@ ALERT_STATES_API +
 Date.now(),
 
 {
-method: "GET",
-cache: "no-store",
+method:
+"GET",
+
+cache:
+"no-store",
+
 headers: {
 "Accept":
 "application/json"
@@ -2110,8 +2149,12 @@ STANDARDS_API +
 Date.now(),
 
 {
-method: "GET",
-cache: "no-store",
+method:
+"GET",
+
+cache:
+"no-store",
+
 headers: {
 "Accept":
 "application/json"
@@ -2431,9 +2474,17 @@ if($("standard24hNote")){
 
 $("standard24hNote").textContent =
 
+"ข้อมูลย้อนหลัง • "
+
++
+
+(
+
 data.note ||
 
-"ค่าเฉลี่ย 24 ชั่วโมงคำนวณจากข้อมูล ONLINE ที่ระบบมี";
+"ค่าเฉลี่ย 24 ชั่วโมงคำนวณจากข้อมูล ONLINE ที่บันทึกไว้ในระบบ"
+
+);
 
 }
 
@@ -2547,27 +2598,36 @@ who
 if(
 thai &&
 thai.available &&
-thai.exceeded
+who &&
+who.available
 ){
 
-statusElement.textContent =
-"เกินเกณฑ์ไทย";
+const thaiText =
+thai.exceeded
+? "เกินไทย"
+: "ผ่านไทย";
 
+
+const whoText =
+who.exceeded
+? "เกิน WHO"
+: "ผ่าน WHO";
+
+
+statusElement.textContent =
+thaiText +
+" • " +
+whoText;
+
+
+if(thai.exceeded){
 
 statusElement.className =
 "badge rounded-full px-3 py-1 text-xs text-red-300";
 
 }
 
-else if(
-who &&
-who.available &&
-who.exceeded
-){
-
-statusElement.textContent =
-"เกิน WHO";
-
+else if(who.exceeded){
 
 statusElement.className =
 "badge rounded-full px-3 py-1 text-xs text-amber-300";
@@ -2576,12 +2636,21 @@ statusElement.className =
 
 else{
 
+statusElement.className =
+"badge rounded-full px-3 py-1 text-xs text-emerald-300";
+
+}
+
+}
+
+else{
+
 statusElement.textContent =
-"อยู่ในเกณฑ์";
+"รอข้อมูล";
 
 
 statusElement.className =
-"badge rounded-full px-3 py-1 text-xs text-emerald-300";
+"badge rounded-full px-3 py-1 text-xs text-slate-400";
 
 }
 
@@ -3482,6 +3551,68 @@ deviceId
 
 function updateCurrentAirQuality(){
 
+const motherOnline =
+
+apiConnectionOnline &&
+
+motherStatus &&
+
+String(
+motherStatus.status || ""
+)
+.trim()
+.toLowerCase()
+
+===
+
+"online";
+
+
+if(!motherOnline){
+
+$("currentPM25").textContent =
+"--";
+
+
+$("highestPM25").textContent =
+"--";
+
+
+$("highestPM25Node").textContent =
+"--";
+
+
+$("watchNode").textContent =
+"--";
+
+
+$("watchNodeDetail").textContent =
+"Gateway Offline • ไม่สามารถประเมินคุณภาพอากาศปัจจุบันได้";
+
+
+$("qualityBadge").textContent =
+"ไม่พร้อมใช้งาน";
+
+
+return {
+
+average:
+null,
+
+highest:
+null,
+
+quality:
+"ไม่พร้อมใช้งาน",
+
+count:
+0
+
+};
+
+}
+
+
 const usableNodes =
 latestNodes
 .filter(
@@ -3556,10 +3687,17 @@ $("qualityBadge").textContent =
 
 return {
 
-average: null,
-highest: null,
-quality: "รอข้อมูล",
-count: 0
+average:
+null,
+
+highest:
+null,
+
+quality:
+"รอข้อมูล",
+
+count:
+0
 
 };
 
@@ -3768,6 +3906,7 @@ if(historyChart){
 
 historyChart.destroy();
 
+
 historyChart =
 null;
 
@@ -3777,6 +3916,7 @@ null;
 if(forecastChart){
 
 forecastChart.destroy();
+
 
 forecastChart =
 null;
@@ -3814,11 +3954,16 @@ return d
 "th-TH",
 
 {
-timeZone: "Asia/Bangkok",
-day: "2-digit",
-month: "2-digit",
-hour: "2-digit",
-minute: "2-digit"
+timeZone:
+"Asia/Bangkok",
+day:
+"2-digit",
+month:
+"2-digit",
+hour:
+"2-digit",
+minute:
+"2-digit"
 }
 
 )
@@ -3919,7 +4064,8 @@ $("historyChart"),
 
 {
 
-type: "line",
+type:
+"line",
 
 data: {
 
@@ -3971,14 +4117,22 @@ maintainAspectRatio:
 true,
 
 interaction: {
-intersect: false,
-mode: "index"
+
+intersect:
+false,
+
+mode:
+"index"
+
 },
 
 plugins: {
 
 legend: {
-display: false
+
+display:
+false
+
 },
 
 tooltip: {
@@ -4014,8 +4168,10 @@ beginAtZero:
 false,
 
 grid: {
+
 color:
 "rgba(148,163,184,.08)"
+
 }
 
 },
@@ -4023,13 +4179,17 @@ color:
 x: {
 
 grid: {
+
 display:
 false
+
 },
 
 ticks: {
+
 maxTicksLimit:
 12
+
 }
 
 }
@@ -4200,8 +4360,11 @@ return null;
 
 
 let sumX = 0;
+
 let sumY = 0;
+
 let sumXY = 0;
+
 let sumXX = 0;
 
 
@@ -4287,6 +4450,7 @@ n;
 
 
 let ssTotal = 0;
+
 let ssResidual = 0;
 
 
@@ -4306,6 +4470,7 @@ point.x;
 
 
 ssTotal +=
+
 Math.pow(
 point.y -
 meanY,
@@ -4314,6 +4479,7 @@ meanY,
 
 
 ssResidual +=
+
 Math.pow(
 point.y -
 fitted,
@@ -4362,10 +4528,12 @@ n - 2
 
 
 return {
+
 slope,
 intercept,
 r2,
 rmse
+
 };
 
 }
@@ -4397,8 +4565,10 @@ light:
 
 
 return (
+
 units[metric] ||
 ""
+
 );
 
 }
@@ -4458,19 +4628,32 @@ field
 
 const values = {
 
-pm1: 1.0,
-pm25: 1.0,
-pm10: 2.0,
-temperature: 0.5,
-humidity: 2.0,
-light: 15.0
+pm1:
+1.0,
+
+pm25:
+1.0,
+
+pm10:
+2.0,
+
+temperature:
+0.5,
+
+humidity:
+2.0,
+
+light:
+15.0
 
 };
 
 
 return (
+
 values[field] ||
 1
+
 );
 
 }
@@ -4482,19 +4665,32 @@ field
 
 const values = {
 
-pm1: 1.0,
-pm25: 1.0,
-pm10: 2.0,
-temperature: 0.5,
-humidity: 2.0,
-light: 20.0
+pm1:
+1.0,
+
+pm25:
+1.0,
+
+pm10:
+2.0,
+
+temperature:
+0.5,
+
+humidity:
+2.0,
+
+light:
+20.0
 
 };
 
 
 return (
+
 values[field] ||
 1
+
 );
 
 }
@@ -4591,6 +4787,7 @@ function drawForecast(arr){
 if(forecastChart){
 
 forecastChart.destroy();
+
 
 forecastChart =
 null;
@@ -5524,15 +5721,22 @@ maintainAspectRatio:
 true,
 
 interaction: {
-intersect: false,
-mode: "index"
+
+intersect:
+false,
+
+mode:
+"index"
+
 },
 
 plugins: {
 
 legend: {
+
 display:
 false
+
 },
 
 tooltip: {
@@ -5603,8 +5807,10 @@ scales: {
 y: {
 
 grid: {
+
 color:
 "rgba(148,163,184,.08)"
+
 }
 
 },
@@ -5612,8 +5818,10 @@ color:
 x: {
 
 grid: {
+
 display:
 false
+
 }
 
 }
@@ -5632,13 +5840,16 @@ setForecastDatasetVisibility();
 }
 
 
-let exportRows = [];
+let exportRows =
+[];
 
 
 function dateToInputValue(date){
 
 if(!date){
+
 return "";
+
 }
 
 
@@ -5901,7 +6112,8 @@ defaultEnd
 );
 
 
-exportRows = [];
+exportRows =
+[];
 
 
 $("exportDataCount").textContent =
@@ -5912,7 +6124,9 @@ $("exportExcelButton").disabled =
 true;
 
 
-showExportError("");
+showExportError(
+""
+);
 
 
 const modal =
@@ -6104,7 +6318,8 @@ let total =
 null;
 
 
-const allRows = [];
+const allRows =
+[];
 
 
 while(true){
@@ -6164,8 +6379,12 @@ await fetch(
 url,
 
 {
-method: "GET",
-cache: "no-store",
+method:
+"GET",
+
+cache:
+"no-store",
+
 headers: {
 "Accept":
 "application/json"
@@ -6356,14 +6575,18 @@ exportRows.length
 if(!exportRows.length){
 
 body.innerHTML = `
+
 <tr>
+
 <td
 colspan="8"
 class="export-empty-cell"
 >
 ไม่พบข้อมูลในช่วงวันที่ที่เลือก
 </td>
+
 </tr>
+
 `;
 
 
@@ -6462,7 +6685,9 @@ row.light
 
 )
 
-.join("");
+.join(
+""
+);
 
 
 $("exportExcelButton").disabled =
@@ -6473,10 +6698,13 @@ false;
 
 async function refreshExportPreview(){
 
-showExportError("");
+showExportError(
+""
+);
 
 
-exportRows = [];
+exportRows =
+[];
 
 
 setExportLoading(
@@ -6507,14 +6735,18 @@ $("exportDataCount").textContent =
 
 
 $("exportPreviewBody").innerHTML = `
+
 <tr>
+
 <td
 colspan="8"
 class="export-empty-cell"
 >
 ไม่สามารถแสดงตัวอย่างข้อมูลได้
 </td>
+
 </tr>
+
 `;
 
 
@@ -6549,8 +6781,12 @@ return "";
 }
 
 
-return Number(value)
-.toFixed(1);
+return Number(
+value
+)
+.toFixed(
+1
+);
 
 }
 
@@ -6573,7 +6809,6 @@ return date.toLocaleString(
 "th-TH",
 
 {
-
 timeZone:
 "Asia/Bangkok",
 
@@ -6597,7 +6832,6 @@ second:
 
 hour12:
 false
-
 }
 
 );
@@ -6689,21 +6923,27 @@ row.device_id ||
 
 row.pm1 == null
 ? ""
-: Number(row.pm1),
+: Number(
+row.pm1
+),
 
 
 "PM2.5 (µg/m³)":
 
 row.pm25 == null
 ? ""
-: Number(row.pm25),
+: Number(
+row.pm25
+),
 
 
 "PM10 (µg/m³)":
 
 row.pm10 == null
 ? ""
-: Number(row.pm10),
+: Number(
+row.pm10
+),
 
 
 "อุณหภูมิ (°C)":
@@ -6746,12 +6986,19 @@ excelRows
 worksheet["!cols"] = [
 
 { wch: 22 },
+
 { wch: 16 },
+
 { wch: 15 },
+
 { wch: 15 },
+
 { wch: 15 },
+
 { wch: 16 },
+
 { wch: 16 },
+
 { wch: 14 }
 
 ];
@@ -6773,7 +7020,9 @@ XLSX.writeFile(
 workbook,
 
 makeExportFileName()
+
 +
+
 ".xlsx"
 
 );
@@ -6909,15 +7158,21 @@ node.timestamp
 function renderMonitoringNodes(){
 
 const n1 =
-getLatestNode(1);
+getLatestNode(
+1
+);
 
 
 const n2 =
-getLatestNode(2);
+getLatestNode(
+2
+);
 
 
 const n3 =
-getLatestNode(3);
+getLatestNode(
+3
+);
 
 
 setNode(
@@ -7032,7 +7287,8 @@ motherStatus.status ||
 
 
 const nodes =
-latestNodes.map(
+latestNodes
+.map(
 
 node => ({
 
@@ -7095,9 +7351,9 @@ element.innerHTML = `
 </div>
 
 <div class="mt-2 text-xs text-slate-400">
-ONLINE ${online}
-• SLEEP ${sleep}
-• OFFLINE ${offline}
+ONLINE 0
+• SLEEP 0
+• OFFLINE ${TOTAL_NODES}
 </div>
 
 `;
@@ -7711,7 +7967,9 @@ ${escapeHtml(alert.detail)}
 
 )
 
-.join("");
+.join(
+""
+);
 
 }
 
@@ -7819,19 +8077,27 @@ latestNodes
 
 renderMonitoringNodes();
 
+
 updateSystemHealth();
+
 
 updateCurrentAirQuality();
 
+
 update24HourStandards();
+
 
 updateSmartSummary();
 
+
 updateAlerts();
+
 
 renderAverages();
 
+
 updateTrendStatistics();
+
 
 drawCharts();
 
@@ -8397,9 +8663,14 @@ new Date()
 "th-TH",
 
 {
-timeZone: "Asia/Bangkok",
-dateStyle: "medium",
-timeStyle: "medium"
+timeZone:
+"Asia/Bangkok",
+
+dateStyle:
+"medium",
+
+timeStyle:
+"medium"
 }
 
 );
@@ -8444,13 +8715,18 @@ if(apiConnectionOnline){
 
 renderMonitoringNodes();
 
+
 updateSystemHealth();
+
 
 updateCurrentAirQuality();
 
+
 update24HourStandards();
 
+
 updateSmartSummary();
+
 
 updateAlerts();
 
