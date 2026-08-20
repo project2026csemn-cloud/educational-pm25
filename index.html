@@ -32,11 +32,11 @@
 
             <div>
 
-                <img src="img/โลโก.png"
+                <img src="โลโก.png"
                      alt="Logo"
                      class="w-20 h-20 rounded-xl">
 
-                <img src="img/ICT.jpg"
+                <img src="ICT.jpg"
                      alt="Logo"
                      class="w-20 h-20 rounded-full">
 
@@ -109,7 +109,7 @@
                 </div>
 
 
-                <div class=" flex md:grid-cols-2 gap-3"">
+                <div class=" flex md:grid-cols-2 gap-3">
 
 
                     <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
@@ -1673,34 +1673,45 @@ HISTORICAL DATA & TREND
             return "offline";
         }
 
-        /*
-         * สถานะจริงมาจากตัวแม่ แต่ข้อมูลเกิน 6 นาทีให้บังคับ OFFLINE
-         * เพื่อป้องกันสถานะเก่าค้างเมื่อแม่ถูกถอดไฟหรือหยุดส่งข้อมูล
-         * กฎ 6 นาทีใช้กับ SLEEP ด้วย
-         */
-        if(!isNodeFresh(node)){
-            return "offline";
-        }
-
         const status =
-            String(node.status || "")
-                .trim()
-                .toLowerCase();
+            String(
+                node.status || ""
+            )
+            .trim()
+            .toLowerCase();
 
+        /*
+         * SLEEP = สถานะที่ตัวแม่ประกาศอย่างตั้งใจ
+         * จึงห้ามใช้ timeout ไปทับเป็น OFFLINE
+         * เพราะระหว่าง sleep อุปกรณ์อาจไม่ส่งข้อมูลใหม่
+         */
         if(status === "sleep"){
             return "sleep";
         }
 
+        /*
+         * ถ้าตัวแม่ประกาศ OFFLINE ให้เชื่อตัวแม่โดยตรง
+         */
         if(status === "offline"){
             return "offline";
         }
 
+        /*
+         * ONLINE ต้องมีข้อมูลสดตามเวลาที่กำหนด
+         * ถ้าเงียบเกิน timeout ให้เป็น OFFLINE
+         */
         if(status === "online"){
-            return "online";
+            return isNodeFresh(node)
+                ? "online"
+                : "offline";
         }
 
-        /* สถานะไม่รู้จัก แต่ข้อมูลยังสด */
-        return "online";
+        /*
+         * สถานะไม่รู้จัก: ใช้ freshness เป็น fallback
+         */
+        return isNodeFresh(node)
+            ? "online"
+            : "offline";
 
     }
 
@@ -1921,19 +1932,23 @@ HISTORICAL DATA & TREND
         else if(nodeStatus === "sleep"){
 
             statusElement.innerHTML = `
-                <span class="status-sleep-dot" style="color:#facc15;">
+
+                <span class="status-sleep-dot">
                     ●
                 </span>
-                <span style="color:#facc15;">SLEEP</span>
+
+                SLEEP
+
                 <span class="badge rounded-full px-3 py-1 text-xs">
                     ESP-NOW
                 </span>
+
             `;
+
 
             statusElement.className =
                 "status-sleep text-xs font-bold";
 
-            statusElement.style.color = "#facc15";
 
             cardElement
                 .classList
@@ -1988,10 +2003,9 @@ HISTORICAL DATA & TREND
 
 
         return nodes.filter(
-            node => {
-                const status = getNodeStatus(node);
-                return status === "online" || status === "sleep";
-            }
+            node =>
+                getNodeStatus(node) ===
+                "online"
         ).length;
 
     }
@@ -4193,7 +4207,7 @@ const exportExcel =
     document.getElementById("exportExcel");
 
 
-let exportRecords = [];
+let exportFilteredRecords = [];
 
 
 /* =========================================================
@@ -4350,13 +4364,13 @@ if (exportBtn) {
                  * โหลดข้อมูล 30 วัน
                  */
 
-                exportRecords =
+                exportFilteredRecords =
                     await loadExportHistory();
 
 
                 console.log(
                     "จำนวนข้อมูล Export:",
-                    exportRecords.length
+                    exportFilteredRecords.length
                 );
 
 
@@ -4365,8 +4379,8 @@ if (exportBtn) {
                  */
 
                 if (
-                    !exportRecords ||
-                    exportRecords.length === 0
+                    !exportFilteredRecords ||
+                    exportFilteredRecords.length === 0
                 ) {
 
                     exportCount.textContent =
@@ -5451,7 +5465,17 @@ function render(){
     ===================================================== */
 
     const online =
-        countOnlineNodes();
+        [
+            n1,
+            n2,
+            n3
+        ]
+        .filter(
+            node =>
+                getNodeStatus(node) ===
+                "online"
+        )
+        .length;
 
 
     $("onlineCountTop").textContent =
@@ -5546,13 +5570,13 @@ function render(){
             <div
                 class="credit-icon credit-image-button"
                 onclick="openCreditImage(
-                    'img/ตราวิทลัยใหม่.png',
+                    'ตราวิทลัยใหม่.png',
                     'โลโก้วิทยาลัย'
                 )"
             >
 
                 <img
-                    src="img/ตราวิทลัยใหม่.png"
+                    src="ตราวิทลัยใหม่.png"
                     alt="โลโก้วิทยาลัย"
                 >
 
@@ -5632,13 +5656,13 @@ function render(){
             <div
                 class="credit-icon credit-image-button"
                 onclick="openCreditImage(
-                    'img/ICT.jpg',
+                    'ICT.jpg',
                     'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
                 )"
             >
 
                 <img
-                    src="img/ICT.jpg"
+                    src="ICT.jpg"
                     alt="โลโก้แผนก"
                 >
 
@@ -5696,13 +5720,13 @@ function render(){
             <div
                 class="credit-icon credit-image-button"
                 onclick="openCreditImage(
-                    'img/ฐาปกรณ์01.jpg',
+                    'ฐาปกรณ์01.jpg',
                     'ครูที่ปรึกษา'
                 )"
             >
 
                 <img
-                    src="img/ฐาปกรณ์01.jpg"
+                    src="ฐาปกรณ์01.jpg"
                     alt="ครูที่ปรึกษา"
                 >
 
@@ -5742,13 +5766,13 @@ function render(){
             <div
                 class="credit-icon credit-image-button credit-placeholder"
                 onclick="openCreditImage(
-                    'img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
+                    'สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
                     'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
                 )"
             >
 
                 <img
-                    src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"
+                    src="สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"
                     alt="สามเณร ธรรมปพน"
                 >
 
@@ -5788,13 +5812,13 @@ function render(){
             <div
                 class="credit-icon credit-image-button credit-placeholder"
                 onclick="openCreditImage(
-                    'img/สามเณรรัฐภูมิสร้อยคำ.jpg',
+                    'สามเณรรัฐภูมิสร้อยคำ.jpg',
                     'สามเณร รัฐภูมิ สร้อยคำ'
                 )"
             >
 
                 <img
-                    src="img/สามเณรรัฐภูมิสร้อยคำ.jpg"
+                    src="สามเณรรัฐภูมิสร้อยคำ.jpg"
                     alt="สามเณร รัฐภูมิ"
                 >
 
