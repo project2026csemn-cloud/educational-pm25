@@ -286,7 +286,7 @@ QUALITY + ALERT
                     คุณภาพอากาศปัจจุบัน
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">
-                    ประเมินจากค่า PM2.5 ล่าสุด
+                    ประเมินจากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน
                 </p>
             </div>
             <div
@@ -296,30 +296,48 @@ QUALITY + ALERT
                 รอข้อมูล
             </div>
         </div>
-        <div class="grid grid-cols-3 gap-3 mt-5">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
             <div class="soft rounded-xl p-4">
                 <span class="text-xs text-slate-400">
-                    เฉลี่ย PM2.5
+                    PM2.5 ภาพรวม
                 </span>
-                <b id="avgPM" class="block text-2xl mt-1">
+                <b id="currentPM25" class="block text-2xl mt-1">
                     --
                 </b>
+                <div class="text-xs text-slate-500 mt-1">
+                    ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP
+                </div>
             </div>
+
             <div class="soft rounded-xl p-4">
                 <span class="text-xs text-slate-400">
-                    สูงสุด
+                    จุดที่สูงสุด
                 </span>
-                <b id="maxPM" class="block text-2xl mt-1">
+                <b id="highestPM25" class="block text-2xl mt-1">
                     --
                 </b>
+                <div
+                    id="highestPM25Node"
+                    class="text-xs text-slate-500 mt-1"
+                >
+                    --
+                </div>
             </div>
+
             <div class="soft rounded-xl p-4">
                 <span class="text-xs text-slate-400">
-                    ต่ำสุด
+                    จุดที่ต้องเฝ้าระวัง
                 </span>
-                <b id="minPM" class="block text-2xl mt-1">
+                <b id="watchNode" class="block text-2xl mt-1">
                     --
                 </b>
+                <div
+                    id="watchNodeDetail"
+                    class="text-xs text-slate-500 mt-1"
+                >
+                    รอข้อมูล
+                </div>
             </div>
         </div>
     </div>
@@ -1614,36 +1632,177 @@ function updateTrendStatistics(){
     updateSelectedMetricLabel();
 }
 /* =========================================================
-QUALITY STATISTICS
+CURRENT AIR QUALITY
 ========================================================= */
-function updateStatistics(){
-    const data =
-        getRecordsInSelectedRange();
-    const values =
-        data
-            .map(x => x.pm25)
-            .filter(
-                x =>
-                    x != null &&
-                    !isNaN(x)
-            );
-    if(!values.length){
-        $("avgPM").textContent = "--";
-        $("maxPM").textContent = "--";
-        $("minPM").textContent = "--";
-        return;
+
+function getDeviceDisplayName(deviceId){
+    if(!deviceId){
+        return "--";
     }
-    const avg =
+
+    const match =
+        String(deviceId)
+            .match(/(\d+)/);
+
+    if(match){
+        return "อุปกรณ์ " + match[1];
+    }
+
+    return String(deviceId);
+}
+
+function updateCurrentAirQuality(){
+
+    /*
+     * ใช้เฉพาะข้อมูลล่าสุดของแต่ละอุปกรณ์
+     * ไม่เกี่ยวกับ Historical Range
+     *
+     * ONLINE = ใช้ค่าล่าสุด
+     * SLEEP  = ใช้ค่าจาก ONLINE ล่าสุดที่ Worker ส่งกลับมา
+     * OFFLINE = ไม่นำมาคำนวณภาพรวมปัจจุบัน
+     */
+
+    const usableNodes =
+        latestNodes
+            .filter(
+                node => {
+                    if(!node){
+                        return false;
+                    }
+
+                    const status =
+                        getNodeStatus(node);
+
+                    if(
+                        status !== "online" &&
+                        status !== "sleep"
+                    ){
+                        return false;
+                    }
+
+                    return (
+                        node.pm25 !== null &&
+                        node.pm25 !== undefined &&
+                        !isNaN(Number(node.pm25))
+                    );
+                }
+            );
+
+    if(!usableNodes.length){
+
+        $("currentPM25").textContent =
+            "--";
+
+        $("highestPM25").textContent =
+            "--";
+
+        $("highestPM25Node").textContent =
+            "--";
+
+        $("watchNode").textContent =
+            "--";
+
+        $("watchNodeDetail").textContent =
+            "ไม่มีจุดตรวจวัดที่มีข้อมูลใช้งาน";
+
+        $("qualityBadge").textContent =
+            "รอข้อมูล";
+
+        $("overallStatus").textContent =
+            "รอข้อมูล";
+
+        updateOverallDot(null);
+
+        return {
+            average: null,
+            highest: null,
+            quality: "รอข้อมูล",
+            count: 0
+        };
+    }
+
+    const values =
+        usableNodes.map(
+            node =>
+                Number(node.pm25)
+        );
+
+    const average =
         values.reduce(
-            (a,b) => a + b,
+            (sum,value) =>
+                sum + value,
             0
         ) / values.length;
-    $("avgPM").textContent =
-        avg.toFixed(1);
-    $("maxPM").textContent =
-        Math.max(...values).toFixed(1);
-    $("minPM").textContent =
-        Math.min(...values).toFixed(1);
+
+    let highestNode =
+        usableNodes[0];
+
+    for(const node of usableNodes){
+
+        if(
+            Number(node.pm25) >
+            Number(highestNode.pm25)
+        ){
+            highestNode = node;
+        }
+    }
+
+    const highestValue =
+        Number(highestNode.pm25);
+
+    const q =
+        quality(average);
+
+    $("currentPM25").textContent =
+        fmt(average) + " µg/m³";
+
+    $("highestPM25").textContent =
+        fmt(highestValue) + " µg/m³";
+
+    $("highestPM25Node").textContent =
+        getDeviceDisplayName(
+            highestNode.device_id
+        );
+
+    if(highestValue > 25){
+
+        $("watchNode").textContent =
+            getDeviceDisplayName(
+                highestNode.device_id
+            );
+
+        $("watchNodeDetail").textContent =
+            "PM2.5 " +
+            fmt(highestValue) +
+            " µg/m³";
+
+    }
+    else{
+
+        $("watchNode").textContent =
+            "ไม่มี";
+
+        $("watchNodeDetail").textContent =
+            "ทุกจุดที่ใช้งานยังอยู่ในระดับปกติ";
+
+    }
+
+    $("qualityBadge").textContent =
+        q;
+
+    $("overallStatus").textContent =
+        q;
+
+    updateOverallDot(
+        average
+    );
+
+    return {
+        average: average,
+        highest: highestNode,
+        quality: q,
+        count: usableNodes.length
+    };
 }
 /* =========================================================
 CHARTS
@@ -2370,22 +2529,19 @@ function render(){
                 n3.timestamp
             )
             : "--";
-const pm25 =
-        latestRecord.pm25;
-    const q =
-        quality(pm25);
-    $("qualityBadge").textContent =
-        q;
-    $("overallStatus").textContent =
-        q;
-    updateOverallDot(pm25);
-    updateAlerts(pm25);
+    const currentAirQuality =
+        updateCurrentAirQuality();
+
+    updateAlerts(
+        currentAirQuality.average
+    );
+
     updateAI(
         latestRecord,
-        q
+        quality(latestRecord.pm25)
     );
+
     renderAverages();
-    updateStatistics();
     updateTrendStatistics();
     drawCharts();
 }
