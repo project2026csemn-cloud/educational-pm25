@@ -3186,3 +3186,709 @@ canvas { max-height: 300px; }
         max-height: 60vh;
     }
 }
+
+/* =========================================================
+   HISTORICAL DATE / TIME RANGE PICKER
+   ใช้กับ Dashboard เวอร์ชัน Date/Time Range Picker
+   ========================================================= */
+
+/* ตัวครอบปุ่มเลือกช่วงเวลา */
+#historyRangePicker {
+    position: relative;
+    z-index: 80;
+}
+
+/* ปุ่มหลักด้านบน เช่น "24 ชั่วโมง" */
+#historyRangeButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 42px;
+    height: 42px;
+
+    padding: 0 13px;
+
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 12px;
+
+    background: #102338;
+    color: #eaf2f8;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+#historyRangeButton:hover {
+    background: #132a42;
+    border-color: rgba(34, 211, 238, 0.42);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.06);
+}
+
+#historyRangeButton:active {
+    transform: translateY(1px);
+}
+
+#historyRangeButton[aria-expanded="true"] {
+    border-color: rgba(34, 211, 238, 0.55);
+    background: #12283e;
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.08),
+        0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+
+/* =========================================================
+   PICKER PANEL
+   ========================================================= */
+
+#historyRangePanel {
+    position: absolute !important;
+
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    left: auto !important;
+
+    z-index: 99999 !important;
+
+    width: min(720px, calc(100vw - 32px)) !important;
+    min-width: min(680px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+
+    max-height: min(680px, calc(100vh - 100px));
+    overflow: auto;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(9, 24, 39, 0.995),
+            rgba(8, 31, 48, 0.995)
+        ) !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.20) !important;
+
+    border-radius: 18px !important;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(34, 211, 238, 0.025),
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+    color: #e2e8f0;
+
+    scrollbar-width: thin;
+    scrollbar-color: #1e4b66 transparent;
+}
+
+#historyRangePanel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#historyRangePanel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#historyRangePanel::-webkit-scrollbar-thumb {
+    background: #1e4b66;
+    border-radius: 999px;
+}
+
+
+/* สำคัญมาก:
+   เมื่อ JS ใส่ class hidden ต้องปิด Panel จริง */
+#historyRangePanel.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ซ้าย = ปฏิทิน / ขวา = Quick Range
+   ========================================================= */
+
+#historyRangePanel > .grid {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(0, 1.35fr)
+        minmax(220px, 0.65fr) !important;
+
+    width: 100%;
+}
+
+
+/* ฝั่งปฏิทิน */
+#historyRangePanel > .grid > div:first-child {
+    min-width: 0;
+
+    padding: 18px !important;
+
+    border-right:
+        1px solid rgba(51, 65, 85, 0.72);
+}
+
+
+/* ฝั่ง Quick Range */
+#historyRangePanel > .grid > div:last-child {
+    min-width: 0;
+
+    padding: 14px !important;
+
+    background:
+        rgba(2, 6, 23, 0.10);
+}
+
+
+/* =========================================================
+   CALENDAR HEADER
+   ========================================================= */
+
+#rangeCalendarTitle {
+    color: #e2e8f0;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    text-transform: none;
+}
+
+
+/* ปุ่มเดือนก่อน / เดือนถัดไป */
+#calendarPrev,
+#calendarNext {
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border:
+        1px solid rgba(71, 85, 105, 0.82);
+
+    border-radius: 9px;
+
+    background:
+        rgba(15, 35, 56, 0.85);
+
+    color: #cbd5e1;
+
+    font-family: inherit;
+    font-size: 21px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.16s ease,
+        color 0.16s ease,
+        border-color 0.16s ease;
+}
+
+#calendarPrev:hover,
+#calendarNext:hover {
+    background: #17314a;
+    color: #67e8f9;
+
+    border-color:
+        rgba(34, 211, 238, 0.36);
+}
+
+
+/* =========================================================
+   CALENDAR GRID
+   ========================================================= */
+
+/* บังคับ 7 คอลัมน์จริง
+   ป้องกันปัญหาวันเรียงลงแนวตั้ง */
+#rangeCalendarGrid {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(7, minmax(0, 1fr)) !important;
+
+    gap: 4px !important;
+
+    width: 100%;
+}
+
+
+/* ปุ่มแต่ละวัน */
+#rangeCalendarGrid button {
+    appearance: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+
+    margin: 0;
+    padding: 0 !important;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: #e2e8f0;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.14s ease,
+        border-color 0.14s ease,
+        color 0.14s ease,
+        transform 0.14s ease;
+}
+
+#rangeCalendarGrid button:hover {
+    background:
+        rgba(34, 211, 238, 0.09) !important;
+
+    border-color:
+        rgba(34, 211, 238, 0.13) !important;
+
+    color: #cffafe !important;
+}
+
+
+/* =========================================================
+   QUICK RANGE
+   ========================================================= */
+
+#quickRangeList {
+    display: flex !important;
+    flex-direction: column !important;
+
+    gap: 4px !important;
+
+    width: 100%;
+}
+
+.quick-range-option {
+    appearance: none;
+
+    display: block !important;
+
+    width: 100% !important;
+    min-height: 38px;
+
+    padding: 8px 11px !important;
+
+    border:
+        1px solid transparent;
+
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: #cbd5e1;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.quick-range-option:hover {
+    background:
+        rgba(34, 211, 238, 0.075) !important;
+
+    color: #a5f3fc !important;
+
+    border-color:
+        rgba(34, 211, 238, 0.10) !important;
+}
+
+
+/* =========================================================
+   START / END
+   ========================================================= */
+
+/* ส่วน Start / End เป็น div border-t ตัวแรก */
+#historyRangePanel > .border-t:nth-of-type(1) {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr)) !important;
+
+    gap: 12px !important;
+
+    width: 100%;
+
+    padding: 16px !important;
+
+    border-top:
+        1px solid rgba(51, 65, 85, 0.72) !important;
+}
+
+#historyRangePanel label {
+    display: block;
+
+    min-width: 0;
+}
+
+#historyRangePanel label > span {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+}
+
+
+/* กล่องครอบ input */
+#historyRangePanel label > div {
+    display: flex;
+    align-items: center;
+
+    min-height: 42px;
+
+    padding: 0 11px !important;
+
+    border:
+        1px solid rgba(71, 85, 105, 0.78) !important;
+
+    border-radius: 11px !important;
+
+    background:
+        rgba(2, 6, 23, 0.22) !important;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+#historyRangePanel label > div:focus-within {
+    border-color:
+        rgba(34, 211, 238, 0.58) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.07);
+}
+
+
+/* datetime-local */
+#customRangeStart,
+#customRangeEnd {
+    appearance: none;
+
+    width: 100% !important;
+    min-width: 0;
+
+    height: 38px;
+
+    margin: 0;
+    padding: 0 !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+
+    background:
+        transparent !important;
+
+    color: #e2e8f0 !important;
+
+    font-family: inherit;
+    font-size: 12px;
+
+    color-scheme: dark;
+}
+
+#customRangeStart::-webkit-calendar-picker-indicator,
+#customRangeEnd::-webkit-calendar-picker-indicator {
+    opacity: 0.72;
+
+    filter:
+        invert(83%)
+        sepia(9%)
+        saturate(635%)
+        hue-rotate(176deg)
+        brightness(92%);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+/* footer คือ border-t ตัวสุดท้าย */
+#historyRangePanel > .border-t:last-child {
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    gap: 14px !important;
+
+    width: 100%;
+
+    padding: 12px 16px !important;
+
+    border-top:
+        1px solid rgba(51, 65, 85, 0.72) !important;
+
+    background:
+        rgba(2, 6, 23, 0.16);
+}
+
+
+/* Error */
+#customRangeError {
+    color: #f87171;
+
+    font-size: 11px;
+}
+
+#customRangeError.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   APPLY / CANCEL BUTTON
+   ========================================================= */
+
+#historyRangeCancel,
+#historyRangeApply {
+    min-height: 38px;
+
+    padding: 0 15px !important;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.16s ease,
+        border-color 0.16s ease,
+        color 0.16s ease,
+        transform 0.16s ease;
+}
+
+#historyRangeCancel {
+    border:
+        1px solid rgba(71, 85, 105, 0.82) !important;
+
+    background:
+        rgba(15, 35, 56, 0.72) !important;
+
+    color: #cbd5e1 !important;
+}
+
+#historyRangeCancel:hover {
+    background:
+        rgba(30, 41, 59, 0.95) !important;
+
+    color: #ffffff !important;
+}
+
+#historyRangeApply {
+    border:
+        1px solid rgba(34, 211, 238, 0.34) !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(8, 145, 178, 0.78),
+            rgba(6, 182, 212, 0.72)
+        ) !important;
+
+    color: #ffffff !important;
+
+    box-shadow:
+        0 8px 22px rgba(6, 182, 212, 0.12);
+}
+
+#historyRangeApply:hover {
+    border-color:
+        rgba(103, 232, 249, 0.62) !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(8, 145, 178, 0.94),
+            rgba(6, 182, 212, 0.90)
+        ) !important;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    #historyRangePanel {
+        width:
+            min(660px, calc(100vw - 28px)) !important;
+
+        min-width: 0 !important;
+    }
+
+    #historyRangePanel > .grid {
+        grid-template-columns:
+            minmax(0, 1.2fr)
+            minmax(190px, 0.8fr) !important;
+    }
+}
+
+
+@media (max-width: 720px) {
+
+    #historyRangePicker {
+        position: static;
+    }
+
+    #historyRangePanel {
+        position: fixed !important;
+
+        top: 70px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        left: 12px !important;
+
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+
+        max-height:
+            calc(100vh - 86px) !important;
+
+        border-radius: 16px !important;
+    }
+
+    #historyRangePanel > .grid {
+        grid-template-columns:
+            1fr !important;
+    }
+
+    #historyRangePanel > .grid > div:first-child {
+        border-right: 0;
+
+        border-bottom:
+            1px solid rgba(51, 65, 85, 0.72);
+    }
+
+    #historyRangePanel > .grid > div:last-child {
+        border-right: 0;
+    }
+
+    #quickRangeList {
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 5px !important;
+    }
+
+    #historyRangePanel > .border-t:nth-of-type(1) {
+        grid-template-columns:
+            1fr !important;
+    }
+
+    #historyRangePanel > .border-t:last-child {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    #historyRangePanel > .border-t:last-child > div:last-child {
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 8px;
+    }
+}
+
+
+@media (max-width: 430px) {
+
+    #historyRangePanel {
+        top: 58px !important;
+
+        right: 8px !important;
+        left: 8px !important;
+
+        max-height:
+            calc(100vh - 70px) !important;
+    }
+
+    #historyRangePanel > .grid > div:first-child,
+    #historyRangePanel > .grid > div:last-child {
+        padding: 12px !important;
+    }
+
+    #rangeCalendarGrid button {
+        height: 34px !important;
+
+        font-size: 11px;
+    }
+
+    #quickRangeList {
+        grid-template-columns:
+            1fr !important;
+    }
+
+    #historyRangePanel > .border-t:nth-of-type(1) {
+        padding: 12px !important;
+    }
+
+    #historyRangePanel > .border-t:last-child {
+        padding: 10px 12px !important;
+    }
+
+    #historyRangePanel > .border-t:last-child > div:last-child {
+        width: 100%;
+    }
+
+    #historyRangeCancel,
+    #historyRangeApply {
+        flex: 1;
+    }
+}
