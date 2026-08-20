@@ -792,57 +792,69 @@ FORECAST + AI
 
         <div
             id="forecastGuide"
-            class="mt-4 rounded-xl p-3"
-            style="background:rgba(15,23,42,.38);"
+            class="forecast-display-panel"
         >
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <div class="text-xs font-bold text-slate-300">
-                        การแสดงผลกราฟ
-                    </div>
-                    <div class="text-[11px] text-slate-500 mt-1">
-                        กดปุ่ม Forecast เพื่อเปิดหรือซ่อนเส้นคาดการณ์
+            <div class="forecast-display-copy">
+                <div class="forecast-display-title">
+                    การแสดงผลกราฟ
+                </div>
+                <div class="forecast-display-subtitle">
+                    เปิดหรือซ่อนช่วงคาดการณ์บนกราฟ
+                </div>
+            </div>
+
+            <div class="forecast-display-controls">
+
+                <div class="forecast-actual-legend">
+                    <span class="forecast-actual-line"></span>
+
+                    <div>
+                        <div class="forecast-actual-label">
+                            ข้อมูลจริง
+                        </div>
+                        <div class="forecast-actual-note">
+                            ค่าที่วัดจากอุปกรณ์
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 text-xs">
+                <div class="forecast-toggle-wrap">
+                    <div class="forecast-toggle-copy">
+                        <div class="forecast-toggle-name">
+                            <span class="forecast-dash-line"></span>
+                            Forecast
+                        </div>
 
-                    <div
-                        class="flex items-center gap-2 rounded-lg px-3 py-2"
-                        style="background:rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.12);"
-                    >
-                        <span
-                            class="inline-block w-8 h-[3px] rounded-full"
-                            style="background:#22d3ee;"
-                        ></span>
-                        <span class="text-slate-300 font-medium">
-                            ข้อมูลจริง
-                        </span>
+                        <div
+                            id="forecastToggleLabel"
+                            class="forecast-toggle-status"
+                        >
+                            เปิดการคาดการณ์
+                        </div>
                     </div>
 
                     <button
                         id="forecastToggle"
                         type="button"
+                        role="switch"
+                        aria-checked="true"
                         aria-pressed="true"
-                        class="rounded-lg px-3 py-2 font-bold transition-all duration-200"
-                        style="background:rgba(52,211,153,.10); border:1px solid rgba(52,211,153,.26); color:#6ee7b7; cursor:pointer;"
-                        title="กดเพื่อเปิดหรือซ่อนเส้นคาดการณ์"
+                        class="forecast-switch is-on"
+                        title="กดเพื่อซ่อน Forecast"
                     >
-                        <span class="inline-flex items-center gap-2">
-                            <span
-                                class="inline-block w-8 h-0"
-                                style="border-top:2px dashed currentColor;"
-                            ></span>
-                            <span id="forecastToggleLabel">
-                                ✓ Forecast เปิดอยู่
-                            </span>
+                        <span class="forecast-switch-track">
+                            <span class="forecast-switch-thumb"></span>
+                        </span>
+
+                        <span
+                            id="forecastToggleState"
+                            class="forecast-switch-state"
+                        >
+                            ON
                         </span>
                     </button>
-
-                    <div class="text-[11px] text-slate-500">
-                        ● จุดล่าสุด
-                    </div>
                 </div>
+
             </div>
         </div>
 
@@ -3362,6 +3374,9 @@ function updateForecastToggleUI(){
     const label =
         $("forecastToggleLabel");
 
+    const state =
+        $("forecastToggleState");
+
     if(
         !button ||
         !label
@@ -3376,42 +3391,50 @@ function updateForecastToggleUI(){
             : "false"
     );
 
+    button.setAttribute(
+        "aria-checked",
+        forecastVisible
+            ? "true"
+            : "false"
+    );
+
+    button.classList.toggle(
+        "is-on",
+        forecastVisible
+    );
+
+    button.classList.toggle(
+        "is-off",
+        !forecastVisible
+    );
+
     if(forecastVisible){
 
         label.textContent =
-            "✓ Forecast เปิดอยู่";
+            "เปิดการคาดการณ์";
 
-        button.style.background =
-            "rgba(52,211,153,.10)";
-
-        button.style.borderColor =
-            "rgba(52,211,153,.26)";
-
-        button.style.color =
-            "#6ee7b7";
+        if(state){
+            state.textContent =
+                "ON";
+        }
 
         button.title =
-            "กดเพื่อซ่อนเส้นคาดการณ์";
+            "กดเพื่อซ่อน Forecast";
     }
     else{
 
         label.textContent =
-            "○ Forecast ซ่อนอยู่";
+            "ซ่อนการคาดการณ์";
 
-        button.style.background =
-            "rgba(100,116,139,.08)";
-
-        button.style.borderColor =
-            "rgba(100,116,139,.18)";
-
-        button.style.color =
-            "#94a3b8";
+        if(state){
+            state.textContent =
+                "OFF";
+        }
 
         button.title =
-            "กดเพื่อแสดงเส้นคาดการณ์";
+            "กดเพื่อแสดง Forecast";
     }
 }
-
 
 function setForecastDatasetVisibility(){
 
