@@ -3892,3 +3892,79 @@ canvas { max-height: 300px; }
         flex: 1;
     }
 }
+
+/* =========================================================
+   DATE/TIME PICKER - CALENDAR ALIGNMENT FIX
+   แก้หัววัน อา จ อ พ พฤ ศ ส ที่เรียงลงแนวตั้ง
+   ========================================================= */
+
+/* แถวชื่อวันเหนือปฏิทิน */
+#historyRangePanel .grid-cols-7 {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    width: 100% !important;
+}
+
+/* เฉพาะแถวชื่อวัน ไม่กระทบช่องวันที่ */
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) {
+    gap: 4px !important;
+    margin-bottom: 8px !important;
+    text-align: center !important;
+}
+
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    min-width: 0 !important;
+    height: 26px !important;
+
+    color: #64748b !important;
+
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    text-align: center !important;
+}
+
+/* ทำให้วันที่ตรงกับหัววันพอดี */
+#rangeCalendarGrid {
+    grid-auto-rows: 38px !important;
+}
+
+#rangeCalendarGrid button {
+    height: 38px !important;
+}
+
+/* ลดความกว้างฝั่ง Quick Range เล็กน้อย ให้ปฏิทินดูสมดุลขึ้น */
+#historyRangePanel > .grid {
+    grid-template-columns:
+        minmax(0, 1.45fr)
+        minmax(205px, 0.55fr) !important;
+}
+
+/* Desktop: panel ไม่ใหญ่เกินจำเป็น */
+@media (min-width: 901px) {
+    #historyRangePanel {
+        width: min(680px, calc(100vw - 32px)) !important;
+        min-width: min(640px, calc(100vw - 32px)) !important;
+    }
+}
+
+/* Tablet / mobile ยังคง responsive */
+@media (max-width: 900px) {
+    #historyRangePanel > .grid {
+        grid-template-columns:
+            minmax(0, 1.25fr)
+            minmax(190px, 0.75fr) !important;
+    }
+}
+
+@media (max-width: 720px) {
+    #historyRangePanel > .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
