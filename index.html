@@ -252,7 +252,7 @@ MONITORING NODES + AI
             </div>
         </div>
     </div>
-    <!-- AI SUMMARY -->
+    <!-- SMART SUMMARY -->
     <div class="glass card p-5 flex flex-col justify-center">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
@@ -260,10 +260,10 @@ MONITORING NODES + AI
             </div>
             <div>
                 <h2 class="font-black text-lg">
-                    AI Analysis
+                    Smart Summary
                 </h2>
                 <p class="text-xs text-slate-400">
-                    ภาพรวมอัตโนมัติ
+                    สรุปสถานการณ์ปัจจุบันอัตโนมัติ
                 </p>
             </div>
         </div>
@@ -605,14 +605,14 @@ FORECAST + AI
                     🔮 Forecast
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">
-                    แนวโน้มจากข้อมูลย้อนหลัง
+                    คาดการณ์จากแนวโน้มข้อมูลย้อนหลังแบบสถิติ
                 </p>
             </div>
             <span
                 id="forecastBadge"
                 class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
             >
-                PREVIEW
+                STATISTICAL
             </span>
         </div>
         <div
@@ -624,14 +624,27 @@ FORECAST + AI
         <canvas id="forecastChart" class="mt-4"></canvas>
     </div>
     <div class="glass card p-5">
-        <h2 class="text-xl font-black">
-            AI วิเคราะห์สถานการณ์
-        </h2>
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-black">
+                    🤖 AI วิเคราะห์สถานการณ์
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">
+                    สำหรับ AI จริงที่จะเชื่อมต่อภายหลัง
+                </p>
+            </div>
+            <span
+                id="aiStatusBadge"
+                class="badge rounded-full px-3 py-1 text-xs text-amber-300"
+            >
+                NOT CONNECTED
+            </span>
+        </div>
         <div
             id="aiDetails"
             class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
         >
-            รอข้อมูลเพื่อวิเคราะห์
+            ยังไม่ได้เชื่อมต่อ AI API
         </div>
     </div>
 </section>
@@ -2061,161 +2074,428 @@ function drawCharts(){
                 }
             }
         );
-    drawForecast(values);
+    drawForecast(arr);
 }
 /* =========================================================
 FORECAST
 ========================================================= */
-function drawForecast(values){
-    if(forecastChart){
-        forecastChart.destroy();
-        forecastChart = null;
-    }
-    const recent =
-        values.slice(-10);
-    if(recent.length < 3){
-        $("forecastMessage").textContent =
-            "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีข้อมูลย้อนหลังเพิ่มเติม";
-        $("forecastBadge").textContent =
-            "WAITING";
-        return;
-    }
+
+function linearRegression(points){
+
     const n =
-        recent.length;
+        points.length;
+
+    if(n < 2){
+        return null;
+    }
+
     let sumX = 0;
     let sumY = 0;
     let sumXY = 0;
     let sumXX = 0;
-    for(
-        let i = 0;
-        i < n;
-        i++
-    ){
-        const x = i;
-        const y =
-            recent[i];
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumXX += x * x;
+
+    for(const point of points){
+        sumX += point.x;
+        sumY += point.y;
+        sumXY += point.x * point.y;
+        sumXX += point.x * point.x;
     }
+
     const denominator =
         n * sumXX -
         sumX * sumX;
+
+    if(denominator === 0){
+        return null;
+    }
+
     const slope =
-        denominator === 0
-            ? 0
-            : (
-                n * sumXY -
-                sumX * sumY
-            ) / denominator;
+        (
+            n * sumXY -
+            sumX * sumY
+        ) / denominator;
+
     const intercept =
         (
             sumY -
             slope * sumX
         ) / n;
-    const forecast = [];
-    for(
-        let i = 0;
-        i <= 6;
-        i++
+
+    const meanY =
+        sumY / n;
+
+    let ssTotal = 0;
+    let ssResidual = 0;
+
+    for(const point of points){
+
+        const predicted =
+            intercept +
+            slope * point.x;
+
+        ssTotal +=
+            Math.pow(
+                point.y - meanY,
+                2
+            );
+
+        ssResidual +=
+            Math.pow(
+                point.y - predicted,
+                2
+            );
+    }
+
+    const r2 =
+        ssTotal === 0
+            ? 1
+            : Math.max(
+                0,
+                Math.min(
+                    1,
+                    1 -
+                    ssResidual /
+                    ssTotal
+                )
+            );
+
+    return {
+        slope,
+        intercept,
+        r2
+    };
+}
+
+
+function getForecastConfidence(
+    r2,
+    sampleCount
+){
+
+    if(
+        sampleCount >= 10 &&
+        r2 >= 0.65
     ){
-        const x =
-            n - 1 + i;
-        forecast.push(
+        return "สูง";
+    }
+
+    if(
+        sampleCount >= 6 &&
+        r2 >= 0.30
+    ){
+        return "ปานกลาง";
+    }
+
+    return "ต่ำ";
+}
+
+
+function drawForecast(arr){
+
+    if(forecastChart){
+        forecastChart.destroy();
+        forecastChart = null;
+    }
+
+    const valid =
+        arr
+            .filter(
+                row =>
+                    row &&
+                    row.timestamp &&
+                    row[metric] !== null &&
+                    row[metric] !== undefined &&
+                    !isNaN(Number(row[metric]))
+            )
+            .sort(
+                (a,b) =>
+                    parseDate(a.timestamp).getTime() -
+                    parseDate(b.timestamp).getTime()
+            );
+
+    if(valid.length < 4){
+
+        $("forecastMessage").textContent =
+            "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีอย่างน้อย 4 จุดข้อมูล";
+
+        $("forecastBadge").textContent =
+            "WAITING";
+
+        return;
+    }
+
+    /*
+     * ใช้ข้อมูลล่าสุดไม่เกิน 30 จุด
+     * เพื่อให้ Forecast สะท้อนสถานการณ์ช่วงล่าสุด
+     */
+    const recent =
+        valid.slice(-30);
+
+    const firstDate =
+        parseDate(
+            recent[0].timestamp
+        );
+
+    const lastDate =
+        parseDate(
+            recent[
+                recent.length - 1
+            ].timestamp
+        );
+
+    if(
+        !firstDate ||
+        !lastDate
+    ){
+        $("forecastMessage").textContent =
+            "ไม่สามารถอ่านเวลาของข้อมูลเพื่อสร้าง Forecast ได้";
+
+        $("forecastBadge").textContent =
+            "WAITING";
+
+        return;
+    }
+
+    const points =
+        recent.map(
+            row => ({
+                x:
+                    (
+                        parseDate(
+                            row.timestamp
+                        ).getTime() -
+                        firstDate.getTime()
+                    ) / 60000,
+
+                y:
+                    Number(
+                        row[metric]
+                    )
+            })
+        );
+
+    const model =
+        linearRegression(
+            points
+        );
+
+    if(!model){
+
+        $("forecastMessage").textContent =
+            "ข้อมูลช่วงนี้ไม่เหมาะสำหรับการคำนวณ Forecast";
+
+        $("forecastBadge").textContent =
+            "WAITING";
+
+        return;
+    }
+
+    const currentX =
+        (
+            lastDate.getTime() -
+            firstDate.getTime()
+        ) / 60000;
+
+    const currentValue =
+        Number(
+            recent[
+                recent.length - 1
+            ][metric]
+        );
+
+    const forecastMinutes = 30;
+
+    const futureX =
+        currentX +
+        forecastMinutes;
+
+    const predicted =
+        Math.max(
+            0,
+            model.intercept +
+            model.slope *
+            futureX
+        );
+
+    const change =
+        predicted -
+        currentValue;
+
+    let direction =
+        "→ ค่อนข้างคงที่";
+
+    if(Math.abs(change) >= 0.5){
+
+        direction =
+            change > 0
+                ? "↗ มีแนวโน้มเพิ่มขึ้น"
+                : "↘ มีแนวโน้มลดลง";
+    }
+
+    const confidence =
+        getForecastConfidence(
+            model.r2,
+            recent.length
+        );
+
+    $("forecastMessage").innerHTML = `
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <span class="text-xs text-slate-500">
+                    ค่าปัจจุบัน
+                </span>
+                <b class="block text-xl text-white mt-1">
+                    ${fmt(currentValue)}
+                </b>
+            </div>
+
+            <div>
+                <span class="text-xs text-slate-500">
+                    คาดการณ์ +30 นาที
+                </span>
+                <b class="block text-xl text-cyan-300 mt-1">
+                    ${fmt(predicted)}
+                </b>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <b>${direction}</b>
+            <br>
+            <span class="text-xs text-slate-400">
+                ความเชื่อมั่น: ${confidence}
+                • ใช้ ${recent.length} จุดข้อมูลล่าสุด
+            </span>
+        </div>
+
+        <div class="text-xs text-slate-500 mt-3">
+            * ใช้ Linear Regression ตามเวลา
+            ไม่ใช่ AI/ML และไม่ใช่ค่ารับประกัน
+        </div>
+    `;
+
+    $("forecastBadge").textContent =
+        "30 MIN";
+
+    const actualToShow =
+        recent.slice(-10);
+
+    const actualLabels =
+        actualToShow.map(
+            row =>
+                formatThaiTime(
+                    row.timestamp
+                )
+        );
+
+    const actualValues =
+        actualToShow.map(
+            row =>
+                Number(
+                    row[metric]
+                )
+        );
+
+    const labels = [
+        ...actualLabels,
+        "+30 นาที"
+    ];
+
+    const actualDataset = [
+        ...actualValues,
+        null
+    ];
+
+    const forecastDataset =
+        new Array(
             Math.max(
                 0,
-                intercept +
-                slope * x
+                actualValues.length - 1
             )
-        );
-    }
-    const labels = [
-        "ตอนนี้",
-        "+1 ช่วง",
-        "+2 ช่วง",
-        "+3 ช่วง",
-        "+4 ช่วง",
-        "+5 ช่วง",
-        "+6 ช่วง"
-    ];
-    let direction;
-    if(
-        Math.abs(slope) < 0.05
-    ){
-        direction =
-            "ค่อนข้างคงที่";
-    }
-    else if(slope > 0){
-        direction =
-            "มีแนวโน้มเพิ่มขึ้น";
-    }
-    else{
-        direction =
-            "มีแนวโน้มลดลง";
-    }
-    $("forecastMessage").innerHTML = `
-        แนวโน้มปัจจุบัน:
-        <b class="text-cyan-300">
-            ${direction}
-        </b>
-        <br>
-        ค่าแนวโน้มล่าสุด:
-        <b>
-            ${fmt(forecast[0])}
-        </b>
-        <br>
-        คาดการณ์ปลายช่วง:
-        <b>
-            ${fmt(
-                forecast[
-                    forecast.length - 1
-                ]
-            )}
-        </b>
-        <br><br>
-        <span class="text-xs text-slate-500">
-            * เป็นการคาดการณ์จาก Linear Trend
-            ไม่ใช่ AI/ML Model จริง
-        </span>
-    `;
-    $("forecastBadge").textContent =
-        "ACTIVE";
+        )
+        .fill(null);
+
+    forecastDataset.push(
+        actualValues[
+            actualValues.length - 1
+        ]
+    );
+
+    forecastDataset.push(
+        predicted
+    );
+
     forecastChart =
         new Chart(
             $("forecastChart"),
             {
                 type: "line",
+
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label:
-                            "Forecast",
-                        data:
-                            forecast,
-                        borderColor:
-                            "#34d399",
-                        backgroundColor:
-                            "rgba(52,211,153,.08)",
-                        borderDash:
-                            [6,5],
-                        fill:
-                            true,
-                        tension:
-                            .3,
-                        pointRadius:
-                            4
-                    }]
+
+                    datasets: [
+                        {
+                            label:
+                                "ข้อมูลจริง",
+
+                            data:
+                                actualDataset,
+
+                            borderColor:
+                                "#22d3ee",
+
+                            backgroundColor:
+                                "rgba(34,211,238,.05)",
+
+                            borderWidth:
+                                2,
+
+                            tension:
+                                .3,
+
+                            pointRadius:
+                                2
+                        },
+                        {
+                            label:
+                                "Forecast",
+
+                            data:
+                                forecastDataset,
+
+                            borderColor:
+                                "#34d399",
+
+                            backgroundColor:
+                                "rgba(52,211,153,.06)",
+
+                            borderDash:
+                                [6,5],
+
+                            borderWidth:
+                                2,
+
+                            tension:
+                                .2,
+
+                            pointRadius:
+                                4
+                        }
+                    ]
                 },
+
                 options: {
                     responsive:
                         true,
+
                     plugins: {
                         legend: {
                             display:
-                                false
+                                true
                         }
                     },
+
                     scales: {
                         y: {
                             grid: {
@@ -2223,6 +2503,7 @@ function drawForecast(values){
                                     "rgba(148,163,184,.08)"
                             }
                         },
+
                         x: {
                             grid: {
                                 display:
@@ -2234,6 +2515,8 @@ function drawForecast(values){
             }
         );
 }
+
+
 /* =========================================================
 EXPORT
 ========================================================= */
@@ -2433,7 +2716,7 @@ LOAD + RENDER
 async function load(){
     try{
         $("aiSummary").textContent =
-            "กำลังโหลดข้อมูล...";
+            "กำลังสรุปสถานการณ์...";
 
         const newLatestNodes =
             await loadLatest();
@@ -3092,94 +3375,370 @@ function updateAlerts(){
     `;
 }
 /* =========================================================
-AI
+SMART SUMMARY + AI PLACEHOLDER
 ========================================================= */
+
+function getNodeStatusCounts(){
+
+    const counts = {
+        online: 0,
+        sleep: 0,
+        offline: 0
+    };
+
+    for(const node of latestNodes){
+
+        const status =
+            getNodeStatus(node);
+
+        if(
+            status === "online" ||
+            status === "sleep" ||
+            status === "offline"
+        ){
+            counts[status]++;
+        }
+    }
+
+    return counts;
+}
+
+
+function getCurrentPM25Summary(){
+
+    const usable =
+        latestNodes
+            .filter(
+                node => {
+                    const status =
+                        getNodeStatus(node);
+
+                    return (
+                        (
+                            status === "online" ||
+                            status === "sleep"
+                        ) &&
+                        node.pm25 !== null &&
+                        node.pm25 !== undefined &&
+                        !isNaN(Number(node.pm25))
+                    );
+                }
+            );
+
+    if(!usable.length){
+        return null;
+    }
+
+    const average =
+        usable.reduce(
+            (sum,node) =>
+                sum +
+                Number(node.pm25),
+            0
+        ) / usable.length;
+
+    let highest =
+        usable[0];
+
+    for(const node of usable){
+
+        if(
+            Number(node.pm25) >
+            Number(highest.pm25)
+        ){
+            highest = node;
+        }
+    }
+
+    return {
+        average,
+        highest,
+        count:
+            usable.length
+    };
+}
+
+
+function getShortTermPM25Trend(){
+
+    const now =
+        Date.now();
+
+    const cutoff =
+        now -
+        3 *
+        60 *
+        60 *
+        1000;
+
+    const data =
+        records
+            .filter(
+                row => {
+                    const date =
+                        parseDate(
+                            row.timestamp
+                        );
+
+                    return (
+                        date &&
+                        date.getTime() >=
+                        cutoff &&
+                        row.pm25 !== null &&
+                        row.pm25 !== undefined &&
+                        !isNaN(Number(row.pm25))
+                    );
+                }
+            )
+            .sort(
+                (a,b) =>
+                    parseDate(a.timestamp).getTime() -
+                    parseDate(b.timestamp).getTime()
+            );
+
+    if(data.length < 2){
+        return "ข้อมูลยังไม่พอ";
+    }
+
+    const first =
+        Number(
+            data[0].pm25
+        );
+
+    const last =
+        Number(
+            data[
+                data.length - 1
+            ].pm25
+        );
+
+    const diff =
+        last -
+        first;
+
+    if(Math.abs(diff) < 1){
+        return "→ ค่อนข้างคงที่";
+    }
+
+    return diff > 0
+        ? "↗ มีแนวโน้มเพิ่มขึ้น"
+        : "↘ มีแนวโน้มลดลง";
+}
+
+
 function updateAI(
     latest,
     q
 ){
-    const pm25 =
-        latest.pm25;
-    if(
-        pm25 == null ||
-        isNaN(pm25)
-    ){
-        $("aiSummary").textContent =
-            "กำลังรอข้อมูลจากอุปกรณ์...";
-        $("aiDetails").textContent =
-            "ยังไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์";
+
+    const counts =
+        getNodeStatusCounts();
+
+    const pm =
+        getCurrentPM25Summary();
+
+    if(!pm){
+
+        $("aiSummary").innerHTML = `
+            <b class="text-slate-300">
+                รอข้อมูลปัจจุบัน
+            </b>
+            <br>
+            <span class="text-xs text-slate-500">
+                ONLINE ${counts.online}
+                • SLEEP ${counts.sleep}
+                • OFFLINE ${counts.offline}
+            </span>
+        `;
+
+        $("aiDetails").innerHTML = `
+            <b class="text-amber-300">
+                🤖 AI ยังไม่ได้เชื่อมต่อ
+            </b>
+            <br><br>
+            ระบบจะเตรียมข้อมูลจาก
+            Current Air Quality,
+            Alerts,
+            Historical Trend
+            และ Forecast
+            เพื่อส่งให้ AI วิเคราะห์ภายหลัง
+        `;
+
         return;
     }
-    let recommendation;
-    if(pm25 <= 15){
+
+    const currentQuality =
+        quality(
+            pm.average
+        );
+
+    const highestName =
+        getDeviceDisplayName(
+            pm.highest.device_id
+        );
+
+    const highestValue =
+        Number(
+            pm.highest.pm25
+        );
+
+    const trend =
+        getShortTermPM25Trend();
+
+    let summaryClass =
+        "text-emerald-300";
+
+    let headline =
+        "🟢 สถานการณ์ปกติ";
+
+    let recommendation =
+        "สามารถทำกิจกรรมได้ตามปกติ";
+
+    if(pm.average > 37.5){
+
+        summaryClass =
+            "text-red-400";
+
+        headline =
+            "🔴 ควรเฝ้าระวัง";
+
         recommendation =
-            "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
+            "ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
+
     }
-    else if(pm25 <= 25){
+    else if(pm.average > 25){
+
+        summaryClass =
+            "text-amber-300";
+
+        headline =
+            "🟡 เริ่มมีค่าที่ควรติดตาม";
+
         recommendation =
-            "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
+            "ควรติดตามค่า PM2.5 ต่อเนื่อง โดยเฉพาะจุดที่มีค่าสูงสุด";
+
     }
-    else if(pm25 <= 37.5){
+
+    if(
+        counts.offline > 0
+    ){
+
+        summaryClass =
+            "text-red-400";
+
+        headline =
+            "🔴 ระบบมีจุดที่ต้องตรวจสอบ";
+
         recommendation =
-            "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
+            "ควรตรวจสอบอุปกรณ์ที่ OFFLINE ก่อนประเมินภาพรวมพื้นที่";
     }
-    else{
-        recommendation =
-            "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
-    }
+
     $("aiSummary").innerHTML = `
+        <b class="${summaryClass}">
+            ${headline}
+        </b>
+        <br>
+
+        PM2.5 ภาพรวม
         <b class="text-cyan-300">
-            PM2.5 ${fmt(pm25)} µg/m³
+            ${fmt(pm.average)} µg/m³
         </b>
+        • ${currentQuality}
+
         <br>
-        สถานะ:
+
+        สูงสุด:
         <b>
-            ${q}
+            ${escapeHtml(highestName)}
+            ${fmt(highestValue)}
         </b>
+
         <br>
-        ${recommendation}
+
+        <span class="text-xs text-slate-400">
+            ${trend}
+            <br>
+            ONLINE ${counts.online}
+            • SLEEP ${counts.sleep}
+            • OFFLINE ${counts.offline}
+        </span>
+
+        <br>
+
+        <span class="text-xs text-slate-300">
+            💡 ${recommendation}
+        </span>
     `;
+
+
+    /*
+     * AI จริงยังไม่เชื่อม
+     *
+     * ส่วนนี้จงใจไม่สร้าง "คำตอบ AI ปลอม"
+     * แต่แสดงให้เห็นว่าระบบเตรียมข้อมูลอะไรไว้ให้ AI
+     */
     $("aiDetails").innerHTML = `
-        <b class="text-white">
-            🤖 วิเคราะห์สถานการณ์
+        <b class="text-amber-300">
+            🤖 AI API ยังไม่ได้เชื่อมต่อ
         </b>
-        <br>
-        PM2.5 ล่าสุด:
-        <b class="text-cyan-300">
-            ${fmt(pm25)} µg/m³
-        </b>
-        <br>
-        อุณหภูมิ:
-        <b>
-            ${fmt(latest.temperature)} °C
-        </b>
-        <br>
-        ความชื้น:
-        <b>
-            ${fmt(latest.humidity)} %
-        </b>
-        <br>
-        แสง:
-        <b>
-            ${
-                latest.light == null
-                    ? "--"
-                    : fmt(latest.light) + " lux"
-            }
-        </b>
+
         <br><br>
-        <b class="text-white">
-            คำแนะนำ
-        </b>
-        <br>
-        ${recommendation}
+
+        <span class="text-slate-400">
+            เมื่อเชื่อม AI แล้ว
+            ส่วนนี้จะนำข้อมูลต่อไปนี้ไปวิเคราะห์ร่วมกัน:
+        </span>
+
         <br><br>
+
+        • คุณภาพอากาศปัจจุบัน:
+        <b>
+            ${currentQuality}
+        </b>
+
+        <br>
+
+        • PM2.5 ภาพรวม:
+        <b>
+            ${fmt(pm.average)} µg/m³
+        </b>
+
+        <br>
+
+        • จุดสูงสุด:
+        <b>
+            ${escapeHtml(highestName)}
+            (${fmt(highestValue)} µg/m³)
+        </b>
+
+        <br>
+
+        • แนวโน้ม 3 ชั่วโมง:
+        <b>
+            ${trend}
+        </b>
+
+        <br>
+
+        • สถานะอุปกรณ์:
+        <b>
+            ${counts.online} ONLINE /
+            ${counts.sleep} SLEEP /
+            ${counts.offline} OFFLINE
+        </b>
+
+        <br><br>
+
         <span class="text-xs text-slate-500">
-            * การวิเคราะห์นี้เป็นกฎพื้นฐานของระบบ
-            ยังไม่ใช่ AI/ML Model จริง
+            หน้าที่ของ AI:
+            ตีความสาเหตุที่เป็นไปได้,
+            เชื่อมโยง Current / Alerts / Trend / Forecast
+            และสร้างคำแนะนำที่อ่านเข้าใจง่าย
         </span>
     `;
 }
+
+
 /* =========================================================
 EVENTS
 ========================================================= */
