@@ -1564,8 +1564,15 @@ HISTORICAL DATA & TREND
             .toLowerCase();
 
 
+        /*
+         * แก้บั๊ก: เดิมใช้ /(\d+)/ ซึ่งจับ "ตัวเลขกลุ่มแรก"
+         * ที่เจอในสตริง เช่น device_id = "ESP32-01" จะได้
+         * เลข 32 (จาก ESP32) แทนที่จะเป็นเลขอุปกรณ์จริง 01
+         * ที่อยู่ท้ายชื่อ จึงเปลี่ยนมาจับ "ตัวเลขกลุ่มสุดท้าย"
+         * ของสตริงแทน ด้วย (?!.*\d) lookahead
+         */
         const match =
-            text.match(/(\d+)/);
+            text.match(/(\d+)(?!.*\d)/);
 
 
         if(match){
@@ -1738,11 +1745,19 @@ HISTORICAL DATA & TREND
                 continue;
             }
 
+            /*
+             * แก้บั๊ก: เดิมเขียน regex /(\d+)/ ซ้ำเองตรงนี้
+             * (จับตัวเลขกลุ่มแรก ไม่ใช่เลขอุปกรณ์จริง)
+             * เปลี่ยนมาใช้ normalizeNodeName() ที่แก้ไขแล้ว
+             * ร่วมกันทั้งไฟล์ เพื่อไม่ให้ logic เพี้ยนกันคนละที่
+             */
+            const normalizedName =
+                normalizeNodeName(
+                    record.device_id
+                );
+
             const match =
-                String(record.device_id)
-                    .trim()
-                    .toLowerCase()
-                    .match(/(\d+)/);
+                normalizedName.match(/^node(\d+)$/);
 
             if(!match){
                 continue;
@@ -2407,7 +2422,44 @@ HISTORICAL DATA & TREND
         }
 
 
-        return records.filter(
+        /*
+         * แก้บั๊ก: เดิมฟังก์ชันนี้ใช้ records[] อย่างเดียว
+         * (ข้อมูลจาก Historical API) ไม่รวม latestRecord
+         * (ข้อมูลสดจาก Latest API) ทำให้ค่าเฉลี่ย/สูงสุด/
+         * ต่ำสุด ในการ์ด "ค่าเฉลี่ยรวม" ไม่รวมค่าที่เพิ่ง
+         * เข้ามาล่าสุด ในขณะที่ trendLast (updateTrendStatistics)
+         * กลับรวม latestRecord เข้าไปด้วย ทำให้ตัวเลข
+         * ไม่สอดคล้องกันโดยเฉพาะช่วงเวลาสั้นๆ เช่น 30 นาที
+         * จึงรวม latestRecord เข้ากับ records ก่อนกรองช่วงเวลา
+         * เหมือนที่ updateTrendStatistics() ทำ
+         */
+        const allRecords =
+            records.slice();
+
+        if(latestRecord){
+
+            const alreadyExists =
+                allRecords.some(
+                    record =>
+
+                        record &&
+                        record.id != null &&
+                        latestRecord.id != null &&
+                        record.id === latestRecord.id
+                );
+
+            if(!alreadyExists){
+
+                allRecords.push(
+                    latestRecord
+                );
+
+            }
+
+        }
+
+
+        return allRecords.filter(
             record => {
 
                 const date =
@@ -3601,11 +3653,26 @@ function updateTrendStatistics(){
 
     async function load(){
 
+        $("aiSummary").textContent =
+            "กำลังโหลดข้อมูล...";
+
+
+        /*
+         * แก้บั๊ก: เดิม loadLatest() และ loadHistory()
+         * อยู่ใน try/catch เดียวกัน ทำให้ถ้า history API
+         * ล้มเหลวเพียงอย่างเดียว (แต่ latest API สำเร็จ)
+         * โค้ดจะกระโดดไป catch แล้วเรียก forceAllNodesOffline()
+         * ทำให้การ์ด node ทั้ง 3 ถูกตีเป็น OFFLINE ทั้งที่
+         * เซนเซอร์ยังออนไลน์อยู่จริง จึงแยก try/catch
+         * ของทั้งสอง API ออกจากกันอย่างชัดเจน
+         */
+
+
+        /* =====================================================
+           STEP 1 : LOAD LATEST (จำเป็นต่อสถานะ ONLINE/OFFLINE)
+        ===================================================== */
+
         try{
-
-            $("aiSummary").textContent =
-                "กำลังโหลดข้อมูล...";
-
 
             const newLatest =
                 await loadLatest();
@@ -3650,58 +3717,12 @@ function updateTrendStatistics(){
                     )
                     : newLatest;
 
-
-            const newHistory =
-                await loadHistory();
-
-
-            records =
-                newHistory;
-
-
-            records =
-                records.filter(
-                    record =>
-
-                        record &&
-                        record.timestamp &&
-                        parseDate(
-                            record.timestamp
-                        )
-
-                );
-
-
-            records.sort(
-                (a,b) => {
-
-                    return (
-
-                        parseDate(
-                            a.timestamp
-                        ).getTime()
-
-                        -
-
-                        parseDate(
-                            b.timestamp
-                        ).getTime()
-
-                    );
-
-                }
-            );
-
-
-            render();
-
         }
-
 
         catch(error){
 
             console.error(
-                "Dashboard ERROR:",
+                "Dashboard ERROR (latest):",
                 error
             );
 
@@ -3759,7 +3780,79 @@ function updateTrendStatistics(){
 
                 `;
 
+
+            /*
+             * latest API ล้มเหลว ไม่มีข้อมูลพอสำหรับ render()
+             * จึงหยุดที่นี่ ไม่ไปโหลด history ต่อ
+             */
+            return;
+
         }
+
+
+        /* =====================================================
+           STEP 2 : LOAD HISTORY (ไม่กระทบสถานะ ONLINE/OFFLINE)
+        ===================================================== */
+
+        try{
+
+            const newHistory =
+                await loadHistory();
+
+
+            records =
+                newHistory.filter(
+                    record =>
+
+                        record &&
+                        record.timestamp &&
+                        parseDate(
+                            record.timestamp
+                        )
+
+                );
+
+
+            records.sort(
+                (a,b) => {
+
+                    return (
+
+                        parseDate(
+                            a.timestamp
+                        ).getTime()
+
+                        -
+
+                        parseDate(
+                            b.timestamp
+                        ).getTime()
+
+                    );
+
+                }
+            );
+
+        }
+
+        catch(error){
+
+            /*
+             * history ล้มเหลว แต่ latest สำเร็จแล้ว
+             * ไม่ force node ให้เป็น offline และไม่ล้าง
+             * records เดิม — ใช้ข้อมูลย้อนหลังชุดล่าสุด
+             * ที่เคยโหลดสำเร็จไปพลางก่อน
+             */
+
+            console.error(
+                "Dashboard ERROR (history):",
+                error
+            );
+
+        }
+
+
+        render();
 
     }
 
@@ -4131,6 +4224,42 @@ function updateTrendStatistics(){
 
             if(apiConnectionOnline){
 
+                /*
+                 * แก้บั๊ก: เดิม interval นี้อัปเดตแค่ป้าย
+                 * สถานะ (updateNodeStatus) ทุก 5 วินาที แต่
+                 * ไม่เคยเรียก setNode() เลย ทำให้ถ้า node
+                 * เพิ่งหลุดออฟไลน์ระหว่างรอบนี้ ตัวเลขจะยัง
+                 * ค้างแสดงค่าเก่าไปจนกว่า load() รอบถัดไป
+                 * (ทุก 10 วิ) จะทำงาน จึงเพิ่ม setNode() ที่
+                 * เช็คสถานะก่อนเหมือนใน render()
+                 */
+
+                const n1Status =
+                    getNodeStatus(n1);
+
+                const n2Status =
+                    getNodeStatus(n2);
+
+                const n3Status =
+                    getNodeStatus(n3);
+
+
+                setNode(
+                    "n1",
+                    n1Status === "offline" ? null : n1
+                );
+
+                setNode(
+                    "n2",
+                    n2Status === "offline" ? null : n2
+                );
+
+                setNode(
+                    "n3",
+                    n3Status === "offline" ? null : n3
+                );
+
+
                 updateNodeStatus(
                     "n1status",
                     "nodeCard1",
@@ -4208,6 +4337,13 @@ const exportExcel =
 
 
 let exportFilteredRecords = [];
+
+/*
+ * เก็บข้อมูลดิบทั้งหมดที่โหลดจาก loadExportHistory()
+ * (ก่อนกรองตามช่วงวันที่) — แก้บั๊ก: เดิมโค้ดกรองจาก
+ * ตัวแปรชื่อ exportRecords ซึ่งไม่เคยถูกประกาศไว้เลย
+ */
+let rawExportRecords = [];
 
 
 /* =========================================================
@@ -4364,8 +4500,11 @@ if (exportBtn) {
                  * โหลดข้อมูล 30 วัน
                  */
 
-                exportFilteredRecords =
+                rawExportRecords =
                     await loadExportHistory();
+
+                exportFilteredRecords =
+                    rawExportRecords;
 
 
                 console.log(
@@ -4751,7 +4890,7 @@ function updateExportPreview() {
 
     exportFilteredRecords =
         sortAndGroupExportRecords(
-            exportRecords.filter(
+            rawExportRecords.filter(
                 row => {
 
                     /*
@@ -4959,6 +5098,21 @@ function formatExportValue(value) {
 
     }
 
+    /*
+     * แก้บั๊ก: เดิมแสดงตัวเลขดิบจาก API ตรงๆ
+     * (เช่น 23.456789) ไม่ถูกปัดเป็นทศนิยม 1 ตำแหน่ง
+     * เหมือนตัวเลขจุดอื่นในหน้าเว็บที่ผ่าน fmt() ทั้งหมด
+     * ทำให้ตารางตัวอย่างข้อมูล export แสดงผลไม่ตรงรูปแบบ
+     * เดียวกับการ์ดหลัก จึงเช็คก่อนว่าเป็นตัวเลขหรือไม่
+     * ถ้าใช่ให้ปัดด้วย fmt() เหมือนที่อื่น
+     */
+    if (!isNaN(value) && value !== true && value !== false) {
+
+        return escapeHTML(
+            fmt(value)
+        );
+
+    }
 
     return escapeHTML(
         String(value)
@@ -4970,14 +5124,16 @@ function formatExportValue(value) {
    ESCAPE HTML
 --------------------------------------------------------- */
 
+/*
+ * แก้บั๊ก: เดิม escapeHTML() คัดลอก logic เดียวกันกับ
+ * escapeHtml() (บรรทัด ~3827) มาเขียนซ้ำอีกรอบ ต่างกันแค่
+ * ตัวพิมพ์ใหญ่-เล็กของชื่อฟังก์ชัน เสี่ยงแก้ไขจุดหนึ่ง
+ * แล้วลืมอีกจุด จึงเปลี่ยนให้เรียกใช้ escapeHtml() แทน
+ */
 function escapeHTML(value) {
 
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return escapeHtml(value);
+
 }
 
 
@@ -5377,19 +5533,39 @@ function render(){
         getLatestNode(3);
 
 
+    /*
+     * แก้บั๊ก: เดิม setNode() ถูกเรียกด้วยข้อมูล cache ล่าสุด
+     * (n1/n2/n3) ตรงๆ เสมอ โดยไม่เช็คว่า node นั้นออฟไลน์
+     * อยู่หรือไม่ ทำให้ถึงแม้ป้ายสถานะจะขึ้น OFFLINE แล้ว
+     * ตัวเลข PM/Temp/Hum/Light ก็ยังค้างแสดงค่าเก่าที่เคย
+     * รับมาก่อนหน้าอยู่ตลอด (ไม่เหมือนอุปกรณ์ที่ไม่เคยมี
+     * ข้อมูลเลยซึ่งจะโชว์ -- ตั้งแต่แรก) จึงเช็คสถานะก่อน
+     * ถ้าออฟไลน์ให้ส่ง null เข้า setNode() เพื่อล้างเป็น --
+     */
+
+    const n1Status =
+        getNodeStatus(n1);
+
+    const n2Status =
+        getNodeStatus(n2);
+
+    const n3Status =
+        getNodeStatus(n3);
+
+
     setNode(
         "n1",
-        n1
+        n1Status === "offline" ? null : n1
     );
 
     setNode(
         "n2",
-        n2
+        n2Status === "offline" ? null : n2
     );
 
     setNode(
         "n3",
-        n3
+        n3Status === "offline" ? null : n3
     );
 
 
