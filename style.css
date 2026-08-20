@@ -5643,3 +5643,22 @@ body.export-modal-open {
     }
 }
 
+
+
+/* =========================================================
+   PRE-AI SYSTEM HEALTH POLISH
+   ========================================================= */
+
+#gatewayStatusTop {
+    letter-spacing: .03em;
+}
+
+#nodesActiveTop {
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    #nodesActiveTop {
+        white-space: normal;
+    }
+}
