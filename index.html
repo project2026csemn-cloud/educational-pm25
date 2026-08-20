@@ -7,6 +7,7 @@
     <title>PM2.5 Monitoring Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <script src="chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="max-w-[1800px] mx-auto p-4 md:p-6">
@@ -570,7 +571,7 @@ HISTORICAL DATA & TREND
                 type="button"
                 class="rounded-xl px-4 py-2 text-sm font-bold"
             >
-                EXPORT
+                📤 ส่งออก
             </button>
         </div>
     </div>
@@ -887,6 +888,198 @@ FORECAST + AI
     </div>
 </section>
 </div>
+
+<!-- =========================================================
+EXPORT MODAL
+========================================================= -->
+<div
+    id="exportModal"
+    class="export-modal"
+    aria-hidden="true"
+>
+    <div
+        class="export-modal-backdrop"
+        data-export-close="true"
+    ></div>
+
+    <div
+        class="export-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exportModalTitle"
+    >
+        <!-- HEADER -->
+        <div class="export-modal-header">
+            <div class="export-modal-title-wrap">
+                <div class="export-modal-icon">
+                    📤
+                </div>
+
+                <div>
+                    <h2
+                        id="exportModalTitle"
+                        class="export-modal-title"
+                    >
+                        ส่งออกข้อมูล
+                    </h2>
+
+                    <p class="export-modal-subtitle">
+                        เลือกช่วงวันที่เพื่อดาวน์โหลดข้อมูลการตรวจวัด
+                    </p>
+                </div>
+            </div>
+
+            <button
+                id="exportModalClose"
+                type="button"
+                class="export-modal-close"
+                aria-label="ปิด"
+            >
+                ×
+            </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="export-modal-body">
+
+            <!-- DATE RANGE -->
+            <div class="export-date-grid">
+                <label class="export-field">
+                    <span>
+                        วันที่เริ่มต้น
+                    </span>
+                    <input
+                        id="exportStartDate"
+                        type="date"
+                    >
+                </label>
+
+                <div class="export-date-arrow">
+                    →
+                </div>
+
+                <label class="export-field">
+                    <span>
+                        วันที่สิ้นสุด
+                    </span>
+                    <input
+                        id="exportEndDate"
+                        type="date"
+                    >
+                </label>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="export-summary-row">
+                <div class="export-count-card">
+                    <div class="export-count-label">
+                        จำนวนข้อมูล
+                    </div>
+
+                    <b
+                        id="exportDataCount"
+                        class="export-count-value"
+                    >
+                        0
+                    </b>
+
+                    <div class="export-count-unit">
+                        รายการ
+                    </div>
+                </div>
+
+                <div class="export-summary-note">
+                    <div>
+                        ส่งออกเฉพาะข้อมูล Sensor ที่สถานะ
+                        <b class="text-emerald-400">
+                            ONLINE
+                        </b>
+                    </div>
+
+                    <div class="mt-1">
+                        เวลาในไฟล์:
+                        <b>
+                            Asia/Bangkok (GMT+7)
+                        </b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="export-preview-head">
+                <div>
+                    <b>
+                        ตัวอย่างข้อมูล
+                    </b>
+                    <div class="export-preview-note">
+                        แสดงสูงสุด 50 รายการแรกจากช่วงวันที่ที่เลือก
+                    </div>
+                </div>
+
+                <div
+                    id="exportLoading"
+                    class="export-loading hidden"
+                >
+                    กำลังโหลด...
+                </div>
+            </div>
+
+            <div class="export-table-wrap">
+                <table class="export-table">
+                    <thead>
+                        <tr>
+                            <th>วันที่ / เวลา</th>
+                            <th>อุปกรณ์</th>
+                            <th>PM1.0</th>
+                            <th>PM2.5</th>
+                            <th>PM10</th>
+                            <th>อุณหภูมิ</th>
+                            <th>ความชื้น</th>
+                            <th>แสง</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="exportPreviewBody">
+                        <tr>
+                            <td
+                                colspan="8"
+                                class="export-empty-cell"
+                            >
+                                เลือกช่วงวันที่เพื่อดูตัวอย่างข้อมูล
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div
+                id="exportError"
+                class="export-error hidden"
+            ></div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="export-modal-footer">
+            <button
+                id="exportCancelButton"
+                type="button"
+                class="export-cancel-button"
+            >
+                ยกเลิก
+            </button>
+
+            <button
+                id="exportExcelButton"
+                type="button"
+                class="export-excel-button"
+                disabled
+            >
+                📊 ดาวน์โหลด Excel
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 /* =========================================================
 API + CONFIG
@@ -3720,145 +3913,563 @@ function drawForecast(arr){
 /* =========================================================
 EXPORT
 ========================================================= */
-function exportSelectedData(){
-    const data =
-        getRecordsInSelectedRange()
-            .slice()
-            .sort(
-                (a,b) => {
-                    const da =
-                        parseDate(
-                            a.timestamp
-                        );
-                    const db =
-                        parseDate(
-                            b.timestamp
-                        );
-                    if(!da || !db){
-                        return 0;
-                    }
-                    return (
-                        da.getTime() -
-                        db.getTime()
-                    );
-                }
-            );
-    if(!data.length){
-        alert(
-            "ไม่มีข้อมูลในช่วงเวลาที่เลือก"
-        );
-        return;
+
+let exportRows = [];
+
+
+function dateToInputValue(date){
+
+    if(!date){
+        return "";
     }
-    const headers = [
-        "Timestamp",
-        "Device ID",
-        "Status",
-        "PM1.0 (ug/m3)",
-        "PM2.5 (ug/m3)",
-        "PM10 (ug/m3)",
-        "Temperature (C)",
-        "Humidity (%)",
-        "Light (lux)"
-    ];
-    const rows =
-        data.map(
-            record => [
-                formatExportDate(
-                    record.timestamp
-                ),
-                record.device_id || "",
-                record.status || "",
-                exportNumber(
-                    record.pm1
-                ),
-                exportNumber(
-                    record.pm25
-                ),
-                exportNumber(
-                    record.pm10
-                ),
-                exportNumber(
-                    record.temperature
-                ),
-                exportNumber(
-                    record.humidity
-                ),
-                exportNumber(
-                    record.light
-                )
-            ]
-        );
-    const csvRows = [];
-    csvRows.push(
-        headers
-            .map(csvEscape)
-            .join(",")
-    );
-    rows.forEach(
-        row => {
-            csvRows.push(
-                row
-                    .map(csvEscape)
-                    .join(",")
-            );
-        }
-    );
-    const csv =
-        "\uFEFF" +
-        csvRows.join("\r\n");
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
-    const url =
-        URL.createObjectURL(
-            blob
-        );
-    const link =
-        document.createElement(
-            "a"
-        );
-    const now =
-        new Date();
-    const dateText =
-        now.toLocaleDateString(
-            "th-TH",
-            {
-                timeZone:
-                    "Asia/Bangkok",
-                year:
-                    "numeric",
-                month:
-                    "2-digit",
-                day:
-                    "2-digit"
-            }
+
+    const pad =
+        value =>
+            String(value)
+                .padStart(
+                    2,
+                    "0"
+                );
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(
+            date.getMonth() + 1
+        ) +
+        "-" +
+        pad(
+            date.getDate()
         )
-        .replaceAll("/", "-");
-    link.href =
-        url;
-    link.download =
-        "PM25_Historical_" +
-        averageRange +
-        "_" +
-        dateText +
-        ".csv";
-    document.body.appendChild(
-        link
-    );
-    link.click();
-    document.body.removeChild(
-        link
-    );
-    URL.revokeObjectURL(
-        url
     );
 }
+
+
+function getExportDateWindow(){
+
+    const startValue =
+        $("exportStartDate").value;
+
+    const endValue =
+        $("exportEndDate").value;
+
+    if(
+        !startValue ||
+        !endValue
+    ){
+        return null;
+    }
+
+    const [
+        startYear,
+        startMonth,
+        startDay
+    ] =
+        startValue
+            .split("-")
+            .map(Number);
+
+    const [
+        endYear,
+        endMonth,
+        endDay
+    ] =
+        endValue
+            .split("-")
+            .map(Number);
+
+    const start =
+        new Date(
+            startYear,
+            startMonth - 1,
+            startDay,
+            0,
+            0,
+            0,
+            0
+        );
+
+    const end =
+        new Date(
+            endYear,
+            endMonth - 1,
+            endDay,
+            23,
+            59,
+            59,
+            999
+        );
+
+    if(
+        isNaN(start.getTime()) ||
+        isNaN(end.getTime())
+    ){
+        return null;
+    }
+
+    return {
+        start,
+        end
+    };
+}
+
+
+function getExportApiRange(
+    start,
+    end
+){
+
+    const durationHours =
+        (
+            end.getTime() -
+            start.getTime()
+        ) /
+        (
+            60 *
+            60 *
+            1000
+        );
+
+    if(durationHours <= 24){
+        return "24h";
+    }
+
+    if(durationHours <= 168){
+        return "7d";
+    }
+
+    return "30d";
+}
+
+
+function showExportError(message){
+
+    const element =
+        $("exportError");
+
+    if(!message){
+        element.textContent =
+            "";
+
+        element.classList.add(
+            "hidden"
+        );
+
+        return;
+    }
+
+    element.textContent =
+        message;
+
+    element.classList.remove(
+        "hidden"
+    );
+}
+
+
+function setExportLoading(
+    loading
+){
+
+    $("exportLoading")
+        .classList.toggle(
+            "hidden",
+            !loading
+        );
+
+    $("exportExcelButton").disabled =
+        loading ||
+        exportRows.length === 0;
+}
+
+
+function openExportModal(){
+
+    const selected =
+        getSelectedTimeWindow();
+
+    const now =
+        new Date();
+
+    const defaultEnd =
+        selected
+            ? selected.end
+            : now;
+
+    const defaultStart =
+        selected
+            ? selected.start
+            : new Date(
+                now.getTime() -
+                24 *
+                60 *
+                60 *
+                1000
+            );
+
+    $("exportStartDate").value =
+        dateToInputValue(
+            defaultStart
+        );
+
+    $("exportEndDate").value =
+        dateToInputValue(
+            defaultEnd
+        );
+
+    exportRows =
+        [];
+
+    $("exportDataCount").textContent =
+        "0";
+
+    $("exportExcelButton").disabled =
+        true;
+
+    showExportError("");
+
+    const modal =
+        $("exportModal");
+
+    modal.classList.add(
+        "active"
+    );
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+    document.body.classList.add(
+        "export-modal-open"
+    );
+
+    refreshExportPreview();
+}
+
+
+function closeExportModal(){
+
+    const modal =
+        $("exportModal");
+
+    modal.classList.remove(
+        "active"
+    );
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    document.body.classList.remove(
+        "export-modal-open"
+    );
+}
+
+
+async function loadExportRows(){
+
+    const window =
+        getExportDateWindow();
+
+    if(!window){
+        throw new Error(
+            "กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด"
+        );
+    }
+
+    if(
+        window.start >
+        window.end
+    ){
+        throw new Error(
+            "วันที่สิ้นสุดต้องอยู่หลังวันที่เริ่มต้น"
+        );
+    }
+
+    const maxRangeMs =
+        30 *
+        24 *
+        60 *
+        60 *
+        1000;
+
+    if(
+        window.end.getTime() -
+        window.start.getTime() >
+        maxRangeMs
+    ){
+        throw new Error(
+            "สามารถส่งออกข้อมูลได้สูงสุดครั้งละ 30 วัน"
+        );
+    }
+
+    const apiRange =
+        getExportApiRange(
+            window.start,
+            window.end
+        );
+
+    const response =
+        await fetch(
+            HISTORY_API +
+            "?range=" +
+            encodeURIComponent(
+                apiRange
+            ) +
+            "&t=" +
+            Date.now(),
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+        );
+
+    if(!response.ok){
+        throw new Error(
+            "โหลดข้อมูลสำหรับ Export ไม่สำเร็จ HTTP " +
+            response.status
+        );
+    }
+
+    const json =
+        await response.json();
+
+    if(
+        !json ||
+        !json.success ||
+        !Array.isArray(
+            json.data
+        )
+    ){
+        throw new Error(
+            json?.message ||
+            "รูปแบบข้อมูล Export ไม่ถูกต้อง"
+        );
+    }
+
+    return json.data
+        .map(normalize)
+        .filter(Boolean)
+        .filter(
+            row => {
+
+                /*
+                 * Export เฉพาะ reading จริง
+                 * sleep / offline ไม่มี sensor data
+                 */
+                if(
+                    String(
+                        row.status || ""
+                    )
+                    .trim()
+                    .toLowerCase() !==
+                    "online"
+                ){
+                    return false;
+                }
+
+                const date =
+                    parseDate(
+                        row.timestamp
+                    );
+
+                if(!date){
+                    return false;
+                }
+
+                return (
+                    date >=
+                        window.start &&
+                    date <=
+                        window.end
+                );
+            }
+        )
+        .sort(
+            (a,b) =>
+                parseDate(
+                    a.timestamp
+                ).getTime() -
+                parseDate(
+                    b.timestamp
+                ).getTime()
+        );
+}
+
+
+function renderExportPreview(){
+
+    const body =
+        $("exportPreviewBody");
+
+    $("exportDataCount").textContent =
+        exportRows.length
+            .toLocaleString(
+                "th-TH"
+            );
+
+    if(!exportRows.length){
+
+        body.innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    class="export-empty-cell"
+                >
+                    ไม่พบข้อมูลในช่วงวันที่ที่เลือก
+                </td>
+            </tr>
+        `;
+
+        $("exportExcelButton").disabled =
+            true;
+
+        return;
+    }
+
+    const preview =
+        exportRows.slice(
+            0,
+            50
+        );
+
+    body.innerHTML =
+        preview
+            .map(
+                row => `
+                    <tr>
+                        <td>
+                            ${escapeHtml(
+                                formatExportDate(
+                                    row.timestamp
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                row.device_id ||
+                                ""
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.pm1
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.pm25
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.pm10
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.temperature
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.humidity
+                                )
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                exportNumber(
+                                    row.light
+                                )
+                            )}
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+
+    $("exportExcelButton").disabled =
+        false;
+}
+
+
+async function refreshExportPreview(){
+
+    showExportError("");
+
+    exportRows =
+        [];
+
+    setExportLoading(
+        true
+    );
+
+    try{
+
+        exportRows =
+            await loadExportRows();
+
+        renderExportPreview();
+    }
+    catch(error){
+
+        console.error(
+            "Export preview error:",
+            error
+        );
+
+        $("exportDataCount").textContent =
+            "0";
+
+        $("exportPreviewBody").innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    class="export-empty-cell"
+                >
+                    ไม่สามารถแสดงตัวอย่างข้อมูลได้
+                </td>
+            </tr>
+        `;
+
+        showExportError(
+            error.message
+        );
+    }
+    finally{
+
+        setExportLoading(
+            false
+        );
+    }
+}
+
+
 function exportNumber(value){
+
     if(
         value === null ||
         value === undefined ||
@@ -3867,1349 +4478,185 @@ function exportNumber(value){
     ){
         return "";
     }
+
     return Number(value)
-        .toFixed(2);
+        .toFixed(1);
 }
+
+
 function formatExportDate(value){
+
     const date =
         parseDate(value);
+
     if(!date){
         return "";
     }
+
     return date.toLocaleString(
         "th-TH",
         {
             timeZone:
                 "Asia/Bangkok",
+
             year:
                 "numeric",
+
             month:
                 "2-digit",
+
             day:
                 "2-digit",
+
             hour:
                 "2-digit",
+
             minute:
                 "2-digit",
+
             second:
                 "2-digit",
+
             hour12:
                 false
         }
     );
 }
-function csvEscape(value){
-    const text =
-        value == null
-            ? ""
-            : String(value);
-    return '"' +
-        text.replaceAll(
-            '"',
-            '""'
-        ) +
-        '"';
+
+
+function makeExportFileName(){
+
+    const start =
+        $("exportStartDate").value ||
+        "start";
+
+    const end =
+        $("exportEndDate").value ||
+        "end";
+
+    return (
+        "PM25_" +
+        start +
+        "_to_" +
+        end
+    );
 }
-/* =========================================================
-LOAD + RENDER
-========================================================= */
-async function load(){
-    try{
-        $("aiSummary").textContent =
-            "กำลังสรุปสถานการณ์...";
 
-        const newLatestNodes =
-            await loadLatest();
 
-        apiConnectionOnline =
-            true;
+function downloadExportExcel(){
 
-        const newHistory =
-            await loadHistory();
-
-        let newMotherStatus = null;
-
-        try{
-            newMotherStatus =
-                await loadMotherStatus();
-        }
-        catch(error){
-            console.warn(
-                "Mother status unavailable:",
-                error
-            );
-        }
-
-        latestNodes =
-            newLatestNodes;
-
-        motherStatus =
-            newMotherStatus;
-
-        latestRecord =
-            latestNodes.length
-                ? latestNodes[0]
-                : null;
-
-        records =
-            newHistory;
-
-        records =
-            records.filter(
-                record =>
-                    record &&
-                    record.timestamp &&
-                    parseDate(
-                        record.timestamp
-                    )
-            );
-
-        records.sort(
-            (a,b) =>
-                parseDate(
-                    a.timestamp
-                ).getTime()
-                -
-                parseDate(
-                    b.timestamp
-                ).getTime()
+    if(!exportRows.length){
+        showExportError(
+            "ไม่มีข้อมูลสำหรับดาวน์โหลด"
         );
-
-        render();
-    }
-    catch(error){
-        console.error(
-            "Dashboard ERROR:",
-            error
-        );
-        apiConnectionOnline =
-            false;
-        forceAllNodesOffline();
-        $("aiSummary").innerHTML = `
-            <span class="text-red-400 font-bold">
-                ⚠ ระบบออฟไลน์
-            </span>
-            <br>
-            <span class="text-slate-400">
-                ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ข้อมูลได้
-            </span>
-            <br>
-            <span class="text-slate-500">
-                ${escapeHtml(error.message)}
-            </span>
-        `;
-        $("aiDetails").innerHTML = `
-            <span class="text-red-400 font-bold">
-                ⚠ ระบบออฟไลน์
-            </span>
-            <br><br>
-            <span class="text-slate-400">
-                Dashboard ไม่ได้รับข้อมูลใหม่
-                จากระบบแม่
-            </span>
-            <br><br>
-            <span class="text-slate-500">
-                ระบบจะลองเชื่อมต่อใหม่อัตโนมัติ
-            </span>
-        `;
-    }
-}
-function escapeHtml(value){
-    return String(value)
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-}
-function render(){
-    if(!latestRecord){
-        return;
-    }
-    const n1 =
-        getLatestNode(1);
-    const n2 =
-        getLatestNode(2);
-    const n3 =
-        getLatestNode(3);
-    setNode(
-        "n1",
-        n1
-    );
-    setNode(
-        "n2",
-        n2
-    );
-    setNode(
-        "n3",
-        n3
-    );
-    updateNodeStatus(
-        "n1status",
-        "nodeCard1",
-        n1
-    );
-    updateNodeStatus(
-        "n2status",
-        "nodeCard2",
-        n2
-    );
-    updateNodeStatus(
-        "n3status",
-        "nodeCard3",
-        n3
-    );
-    updateSystemLive();
-    $("lastUpdate1").textContent =
-        n1
-            ? formatThaiTime(
-                n1.timestamp
-            )
-            : "--";
-    $("lastUpdate2").textContent =
-        n2
-            ? formatThaiTime(
-                n2.timestamp
-            )
-            : "--";
-    $("lastUpdate3").textContent =
-        n3
-            ? formatThaiTime(
-                n3.timestamp
-            )
-            : "--";
-    const currentAirQuality =
-        updateCurrentAirQuality();
-
-    updateAlerts();
-
-    updateAI(
-        latestRecord,
-        quality(latestRecord.pm25)
-    );
-
-    renderAverages();
-    updateTrendStatistics();
-    drawCharts();
-}
-/* =========================================================
-AIR QUALITY
-========================================================= */
-function updateOverallDot(pm25){
-    const dot =
-        $("overallDot");
-    if(
-        pm25 == null ||
-        isNaN(pm25)
-    ){
-        dot.className =
-            "w-2.5 h-2.5 rounded-full bg-slate-500";
         return;
     }
 
-    if(pm25 <= 15){
-
-        dot.className =
-            "w-2.5 h-2.5 rounded-full bg-emerald-400";
-    }
-    else if(pm25 <= 25){
-        dot.className =
-            "w-2.5 h-2.5 rounded-full bg-lime-400";
-    }
-
-    else if(pm25 <= 37.5){
-        dot.className =
-            "w-2.5 h-2.5 rounded-full bg-amber-400";
-    }
-    else{
-        dot.className =
-            "w-2.5 h-2.5 rounded-full bg-red-500";
-    }
-}
-function getAlertSeverityRank(level){
-
-    const rank = {
-        critical: 5,
-        high: 4,
-        warning: 3,
-        info: 2,
-        normal: 1
-    };
-
-    return rank[level] || 0;
-}
-
-
-function getCurrentSensorAlerts(){
-
-    const result = [];
-
-    for(const node of latestNodes){
-
-        if(!node){
-            continue;
-        }
-
-        const status =
-            getNodeStatus(node);
-
-        /*
-         * SENSOR ALERT ใช้เฉพาะ ONLINE / SLEEP
-         *
-         * SLEEP ใช้ค่าจาก ONLINE ล่าสุดที่ Worker คงไว้
-         * OFFLINE ไม่ใช้ค่ามาประเมิน เพราะถือว่าไม่ใช่ข้อมูลสด
-         */
-        if(
-            status !== "online" &&
-            status !== "sleep"
-        ){
-            continue;
-        }
-
-        const deviceName =
-            getDeviceDisplayName(
-                node.device_id
-            );
-
-        const checks = [
-            {
-                field: "pm25",
-                title: "PM2.5",
-                value: node.pm25,
-                unit: "µg/m³",
-                getLevel(value){
-                    if(value >= 37.5){
-                        return "critical";
-                    }
-                    if(value > 25){
-                        return "warning";
-                    }
-                    return "normal";
-                }
-            },
-            {
-                field: "pm1",
-                title: "PM1.0",
-                value: node.pm1,
-                unit: "µg/m³",
-                getLevel(value){
-                    if(value >= 100){
-                        return "critical";
-                    }
-                    if(value >= 50){
-                        return "high";
-                    }
-                    return "normal";
-                }
-            },
-            {
-                field: "pm10",
-                title: "PM10",
-                value: node.pm10,
-                unit: "µg/m³",
-                getLevel(value){
-                    if(value >= 150){
-                        return "critical";
-                    }
-                    if(value >= 100){
-                        return "warning";
-                    }
-                    return "normal";
-                }
-            },
-            {
-                field: "temperature",
-                title: "อุณหภูมิ",
-                value: node.temperature,
-                unit: "°C",
-                getLevel(value){
-                    if(
-                        value >= 35 ||
-                        value <= 18
-                    ){
-                        return "warning";
-                    }
-                    return "normal";
-                }
-            },
-            {
-                field: "humidity",
-                title: "ความชื้น",
-                value: node.humidity,
-                unit: "%",
-                getLevel(value){
-                    if(
-                        value >= 80 ||
-                        value <= 30
-                    ){
-                        return "warning";
-                    }
-                    return "normal";
-                }
-            },
-            {
-                field: "light",
-                title: "แสง",
-                value: node.light,
-                unit: "lux",
-                getLevel(value){
-                    if(value < 100){
-                        return "info";
-                    }
-                    return "normal";
-                }
-            }
-        ];
-
-        for(const check of checks){
-
-            if(
-                check.value === null ||
-                check.value === undefined ||
-                isNaN(Number(check.value))
-            ){
-                continue;
-            }
-
-            const numericValue =
-                Number(check.value);
-
-            const level =
-                check.getLevel(
-                    numericValue
-                );
-
-            if(level === "normal"){
-                continue;
-            }
-
-            result.push({
-                type: "sensor",
-                level: level,
-                device_id: node.device_id,
-                device_name: deviceName,
-                title: check.title,
-                value: numericValue,
-                unit: check.unit
-            });
-        }
-    }
-
-    return result;
-}
-
-
-function updateAlerts(){
-
-    const alerts = [];
-
-
-    // =========================================================
-    // 1. MOTHER / SYSTEM
-    // Priority สูงสุด
-    // =========================================================
-
     if(
-        motherStatus &&
-        String(
-            motherStatus.status || ""
-        )
-        .trim()
-        .toLowerCase() === "offline"
+        typeof XLSX ===
+        "undefined"
     ){
-        alerts.push({
-            priority: 100,
-            level: "critical",
-            html: `
-                <div
-                    class="rounded-xl p-3"
-                    style="background:rgba(239,68,68,.06); border-left:3px solid rgba(248,113,113,.85);"
-                >
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
-                            style="background:rgba(239,68,68,.12);"
-                        >
-                            📡
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-red-400 font-bold">
-                                ระบบแม่ OFFLINE
-                            </div>
-                            <div class="text-xs text-slate-400 mt-1 leading-5">
-                                ไม่สามารถติดต่ออุปกรณ์แม่ได้
-                                ระบบจึงกำหนดอุปกรณ์ลูกทั้งหมดเป็น OFFLINE
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `
-        });
-    }
-
-
-    // =========================================================
-    // 2. NODE OFFLINE
-    // =========================================================
-
-    for(const node of latestNodes){
-
-        if(!node){
-            continue;
-        }
-
-        const status =
-            getNodeStatus(node);
-
-        if(status === "offline"){
-
-            alerts.push({
-                priority: 90,
-                level: "critical",
-                html: `
-                    <div
-                        class="rounded-xl p-3"
-                        style="background:rgba(239,68,68,.05); border-left:3px solid rgba(248,113,113,.72);"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-red-300"
-                                style="background:rgba(239,68,68,.11);"
-                            >
-                                ●
-                            </div>
-                            <div class="min-w-0">
-                                <div class="text-red-400 font-bold">
-                                    ${escapeHtml(
-                                        getDeviceDisplayName(
-                                            node.device_id
-                                        )
-                                    )}
-                                </div>
-                                <div class="text-xs text-slate-400 mt-1">
-                                    OFFLINE • ไม่พบการติดต่อจากอุปกรณ์
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            });
-        }
-    }
-
-
-    // =========================================================
-    // 3. SENSOR ALERTS
-    // =========================================================
-
-    const sensorAlerts =
-        getCurrentSensorAlerts();
-
-    for(const alert of sensorAlerts){
-
-        let icon = "🟡";
-        let textClass =
-            "text-amber-400";
-        let priority = 50;
-
-        if(alert.level === "critical"){
-            icon = "🔴";
-            textClass =
-                "text-red-400";
-            priority = 80;
-        }
-        else if(alert.level === "high"){
-            icon = "🟠";
-            textClass =
-                "text-orange-400";
-            priority = 70;
-        }
-        else if(alert.level === "warning"){
-            icon = "🟡";
-            textClass =
-                "text-amber-400";
-            priority = 60;
-        }
-        else if(alert.level === "info"){
-            icon = "🔵";
-            textClass =
-                "text-cyan-400";
-            priority = 40;
-        }
-
-        alerts.push({
-            priority: priority,
-            level: alert.level,
-            html: `
-                <div
-                    class="rounded-xl p-3"
-                    style="background:rgba(15,23,42,.42);"
-                >
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="text-lg">
-                                ${icon}
-                            </div>
-                            <div class="min-w-0">
-                                <div class="${textClass} font-bold">
-                                    ${escapeHtml(alert.title)}
-                                </div>
-                                <div class="text-xs text-slate-400 mt-1">
-                                    ${escapeHtml(alert.device_name)}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="text-right shrink-0">
-                            <b class="text-slate-100">
-                                ${fmt(alert.value)}
-                            </b>
-                            <div class="text-[10px] text-slate-500 mt-1">
-                                ${escapeHtml(alert.unit)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `
-        });
-    }
-
-
-    // =========================================================
-    // 4. SLEEP INFORMATION
-    //
-    // ไม่ถือเป็นปัญหา
-    // แสดงเฉพาะเมื่อมี SLEEP และมี Alert อื่นอยู่
-    // เพื่อให้ผู้ใช้เข้าใจสถานะระบบ
-    // =========================================================
-
-    const sleepingNodes =
-        latestNodes.filter(
-            node =>
-                node &&
-                getNodeStatus(node) ===
-                "sleep"
+        showExportError(
+            "ไม่สามารถโหลดระบบสร้าง Excel ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่"
         );
+        return;
+    }
 
-    if(
-        sleepingNodes.length &&
-        alerts.length
-    ){
+    const excelRows =
+        exportRows.map(
+            row => ({
+                "วันที่ / เวลา":
+                    formatExportDate(
+                        row.timestamp
+                    ),
 
-        const names =
-            sleepingNodes
-                .map(
-                    node =>
-                        getDeviceDisplayName(
-                            node.device_id
+                "อุปกรณ์":
+                    row.device_id ||
+                    "",
+
+                "PM1.0 (µg/m³)":
+                    row.pm1 == null
+                        ? ""
+                        : Number(
+                            row.pm1
+                        ),
+
+                "PM2.5 (µg/m³)":
+                    row.pm25 == null
+                        ? ""
+                        : Number(
+                            row.pm25
+                        ),
+
+                "PM10 (µg/m³)":
+                    row.pm10 == null
+                        ? ""
+                        : Number(
+                            row.pm10
+                        ),
+
+                "อุณหภูมิ (°C)":
+                    row.temperature == null
+                        ? ""
+                        : Number(
+                            row.temperature
+                        ),
+
+                "ความชื้น (%)":
+                    row.humidity == null
+                        ? ""
+                        : Number(
+                            row.humidity
+                        ),
+
+                "แสง (lux)":
+                    row.light == null
+                        ? ""
+                        : Number(
+                            row.light
                         )
-                )
-                .join(", ");
-
-        alerts.push({
-            priority: 10,
-            level: "info",
-            html: `
-                <div
-                    class="rounded-xl px-3 py-2 text-xs text-slate-400"
-                    style="background:rgba(245,158,11,.05);"
-                >
-                    <span class="text-amber-300 font-bold">
-                        ◐ SLEEP
-                    </span>
-                    <span class="ml-1">
-                        ${escapeHtml(names)}
-                    </span>
-                    <div class="text-slate-500 mt-1">
-                        สถานะพักตามปกติ ไม่ถือเป็นข้อผิดพลาด
-                    </div>
-                </div>
-            `
-        });
-    }
-
-
-    // =========================================================
-    // NO ALERT
-    // =========================================================
-
-    if(!alerts.length){
-
-        const sleepText =
-            sleepingNodes.length
-                ? `
-                    <div class="text-xs text-slate-400 mt-2">
-                        🟡 ${escapeHtml(
-                            sleepingNodes
-                                .map(
-                                    node =>
-                                        getDeviceDisplayName(
-                                            node.device_id
-                                        )
-                                )
-                                .join(", ")
-                        )} กำลัง SLEEP ตามปกติ
-                    </div>
-                `
-                : "";
-
-        $("alerts").innerHTML = `
-            <div
-                class="rounded-xl p-4"
-                style="background:rgba(16,185,129,.06); border-left:3px solid rgba(52,211,153,.72);"
-            >
-                <div class="flex items-start gap-3">
-                    <div
-                        class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
-                        style="background:rgba(16,185,129,.12);"
-                    >
-                        ✓
-                    </div>
-                    <div>
-                        <div class="text-emerald-400 font-bold">
-                            ระบบปกติ
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            ไม่พบค่าหรือสถานะที่ต้องเฝ้าระวัง
-                        </div>
-                        ${sleepText}
-                    </div>
-                </div>
-            </div>
-        `;
-
-        return;
-    }
-
-
-    // =========================================================
-    // SORT PRIORITY
-    // =========================================================
-
-    alerts.sort(
-        (a,b) =>
-            b.priority -
-            a.priority
-    );
-
-
-    const importantCount =
-        alerts.filter(
-            alert =>
-                alert.priority >= 40
-        ).length;
-
-
-    const header =
-        importantCount === 1
-            ? "พบ 1 รายการที่ต้องตรวจสอบ"
-            : "พบ " +
-              importantCount +
-              " รายการที่ต้องตรวจสอบ";
-
-
-    $("alerts").innerHTML = `
-        <div class="flex items-center justify-between gap-3 mb-3">
-            <div>
-                <div class="font-bold text-slate-200">
-                    ${header}
-                </div>
-                <div class="text-[11px] text-slate-500 mt-1">
-                    เรียงจากรายการที่สำคัญที่สุด
-                </div>
-            </div>
-
-            <div
-                class="rounded-full px-3 py-1 text-xs font-bold text-amber-300"
-                style="background:rgba(245,158,11,.08);"
-            >
-                ${importantCount}
-            </div>
-        </div>
-
-        <div class="space-y-2">
-            ${alerts
-                .map(
-                    alert =>
-                        alert.html
-                )
-                .join("")}
-        </div>
-    `;
-}
-/* =========================================================
-SMART SUMMARY + AI PLACEHOLDER
-========================================================= */
-
-function getNodeStatusCounts(){
-
-    const counts = {
-        online: 0,
-        sleep: 0,
-        offline: 0
-    };
-
-    for(const node of latestNodes){
-
-        const status =
-            getNodeStatus(node);
-
-        if(
-            status === "online" ||
-            status === "sleep" ||
-            status === "offline"
-        ){
-            counts[status]++;
-        }
-    }
-
-    return counts;
-}
-
-
-function getCurrentPM25Summary(){
-
-    const usable =
-        latestNodes
-            .filter(
-                node => {
-                    const status =
-                        getNodeStatus(node);
-
-                    return (
-                        (
-                            status === "online" ||
-                            status === "sleep"
-                        ) &&
-                        node.pm25 !== null &&
-                        node.pm25 !== undefined &&
-                        !isNaN(Number(node.pm25))
-                    );
-                }
-            );
-
-    if(!usable.length){
-        return null;
-    }
-
-    const average =
-        usable.reduce(
-            (sum,node) =>
-                sum +
-                Number(node.pm25),
-            0
-        ) / usable.length;
-
-    let highest =
-        usable[0];
-
-    for(const node of usable){
-
-        if(
-            Number(node.pm25) >
-            Number(highest.pm25)
-        ){
-            highest = node;
-        }
-    }
-
-    return {
-        average,
-        highest,
-        count:
-            usable.length
-    };
-}
-
-
-function getShortTermPM25Trend(){
-
-    const now =
-        Date.now();
-
-    const cutoff =
-        now -
-        3 *
-        60 *
-        60 *
-        1000;
-
-    const data =
-        records
-            .filter(
-                row => {
-                    const date =
-                        parseDate(
-                            row.timestamp
-                        );
-
-                    return (
-                        date &&
-                        date.getTime() >=
-                        cutoff &&
-                        row.pm25 !== null &&
-                        row.pm25 !== undefined &&
-                        !isNaN(Number(row.pm25))
-                    );
-                }
-            )
-            .sort(
-                (a,b) =>
-                    parseDate(a.timestamp).getTime() -
-                    parseDate(b.timestamp).getTime()
-            );
-
-    if(data.length < 2){
-        return "ข้อมูลยังไม่พอ";
-    }
-
-    const first =
-        Number(
-            data[0].pm25
+            })
         );
 
-    const last =
-        Number(
-            data[
-                data.length - 1
-            ].pm25
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            excelRows
         );
-
-    const diff =
-        last -
-        first;
-
-    if(Math.abs(diff) < 1){
-        return "→ ค่อนข้างคงที่";
-    }
-
-    return diff > 0
-        ? "↗ มีแนวโน้มเพิ่มขึ้น"
-        : "↘ มีแนวโน้มลดลง";
-}
-
-
-function updateAI(
-    latest,
-    q
-){
-
-    const counts =
-        getNodeStatusCounts();
-
-    const pm =
-        getCurrentPM25Summary();
-
-    if(!pm){
-
-        $("aiSummary").innerHTML = `
-            <b class="text-slate-300">
-                รอข้อมูลปัจจุบัน
-            </b>
-            <br>
-            <span class="text-xs text-slate-500">
-                ONLINE ${counts.online}
-                • SLEEP ${counts.sleep}
-                • OFFLINE ${counts.offline}
-            </span>
-        `;
-
-        $("aiDetails").innerHTML = `
-            <b class="text-amber-300">
-                🤖 AI ยังไม่ได้เชื่อมต่อ
-            </b>
-            <br><br>
-            ระบบจะเตรียมข้อมูลจาก
-            Current Air Quality,
-            Alerts,
-            Historical Trend
-            และ Forecast
-            เพื่อส่งให้ AI วิเคราะห์ภายหลัง
-        `;
-
-        return;
-    }
-
-    const currentQuality =
-        quality(
-            pm.average
-        );
-
-    const highestName =
-        getDeviceDisplayName(
-            pm.highest.device_id
-        );
-
-    const highestValue =
-        Number(
-            pm.highest.pm25
-        );
-
-    const trend =
-        getShortTermPM25Trend();
-
-    let summaryClass =
-        "text-emerald-300";
-
-    let headline =
-        "🟢 สถานการณ์ปกติ";
-
-    let recommendation =
-        "สามารถทำกิจกรรมได้ตามปกติ";
-
-    if(pm.average > 37.5){
-
-        summaryClass =
-            "text-red-400";
-
-        headline =
-            "🔴 ควรเฝ้าระวัง";
-
-        recommendation =
-            "ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
-
-    }
-    else if(pm.average > 25){
-
-        summaryClass =
-            "text-amber-300";
-
-        headline =
-            "🟡 เริ่มมีค่าที่ควรติดตาม";
-
-        recommendation =
-            "ควรติดตามค่า PM2.5 ต่อเนื่อง โดยเฉพาะจุดที่มีค่าสูงสุด";
-
-    }
-
-    if(
-        counts.offline > 0
-    ){
-
-        summaryClass =
-            "text-red-400";
-
-        headline =
-            "🔴 ระบบมีจุดที่ต้องตรวจสอบ";
-
-        recommendation =
-            "ควรตรวจสอบอุปกรณ์ที่ OFFLINE ก่อนประเมินภาพรวมพื้นที่";
-    }
-
-    $("aiSummary").innerHTML = `
-        <b class="${summaryClass}">
-            ${headline}
-        </b>
-        <br>
-
-        PM2.5 ภาพรวม
-        <b class="text-cyan-300">
-            ${fmt(pm.average)} µg/m³
-        </b>
-        • ${currentQuality}
-
-        <br>
-
-        สูงสุด:
-        <b>
-            ${escapeHtml(highestName)}
-            ${fmt(highestValue)}
-        </b>
-
-        <br>
-
-        <span class="text-xs text-slate-400">
-            ${trend}
-            <br>
-            ONLINE ${counts.online}
-            • SLEEP ${counts.sleep}
-            • OFFLINE ${counts.offline}
-        </span>
-
-        <br>
-
-        <span class="text-xs text-slate-300">
-            💡 ${recommendation}
-        </span>
-    `;
-
 
     /*
-     * AI จริงยังไม่เชื่อม
-     *
-     * ส่วนนี้จงใจไม่สร้าง "คำตอบ AI ปลอม"
-     * แต่แสดงให้เห็นว่าระบบเตรียมข้อมูลอะไรไว้ให้ AI
+     * กำหนดความกว้างคอลัมน์ให้อ่านง่าย
      */
-    $("aiDetails").innerHTML = `
-        <b class="text-amber-300">
-            🤖 AI API ยังไม่ได้เชื่อมต่อ
-        </b>
+    worksheet["!cols"] = [
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 14 }
+    ];
 
-        <br><br>
+    const workbook =
+        XLSX.utils.book_new();
 
-        <span class="text-slate-400">
-            เมื่อเชื่อม AI แล้ว
-            ส่วนนี้จะนำข้อมูลต่อไปนี้ไปวิเคราะห์ร่วมกัน:
-        </span>
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "PM2.5 Data"
+    );
 
-        <br><br>
-
-        • คุณภาพอากาศปัจจุบัน:
-        <b>
-            ${currentQuality}
-        </b>
-
-        <br>
-
-        • PM2.5 ภาพรวม:
-        <b>
-            ${fmt(pm.average)} µg/m³
-        </b>
-
-        <br>
-
-        • จุดสูงสุด:
-        <b>
-            ${escapeHtml(highestName)}
-            (${fmt(highestValue)} µg/m³)
-        </b>
-
-        <br>
-
-        • แนวโน้ม 3 ชั่วโมง:
-        <b>
-            ${trend}
-        </b>
-
-        <br>
-
-        • สถานะอุปกรณ์:
-        <b>
-            ${counts.online} ONLINE /
-            ${counts.sleep} SLEEP /
-            ${counts.offline} OFFLINE
-        </b>
-
-        <br><br>
-
-        <span class="text-xs text-slate-500">
-            หน้าที่ของ AI:
-            ตีความสาเหตุที่เป็นไปได้,
-            เชื่อมโยง Current / Alerts / Trend / Forecast
-            และสร้างคำแนะนำที่อ่านเข้าใจง่าย
-        </span>
-    `;
+    XLSX.writeFile(
+        workbook,
+        makeExportFileName() +
+        ".xlsx"
+    );
 }
 
 
 /* =========================================================
-EVENTS
+CLOCK
 ========================================================= */
-$("metric")
-    .addEventListener(
-        "change",
-        e => {
-            metric =
-                e.target.value;
-            updateSelectedMetricLabel();
-            drawCharts();
-        }
-    );
-const forecastToggleButton =
-    $("forecastToggle");
-
-if(forecastToggleButton){
-
-    forecastToggleButton
-        .addEventListener(
-            "click",
-            () => {
-
-                forecastVisible =
-                    !forecastVisible;
-
-                setForecastDatasetVisibility();
-            }
-        );
-}
-
-
-$("historyRangeButton")
-    .addEventListener(
-        "click",
-        event => {
-
-            event.stopPropagation();
-
-            const panel =
-                $("historyRangePanel");
-
-            if(
-                panel.classList.contains(
-                    "hidden"
-                )
-            ){
-                openHistoryRangePicker();
-            }
-            else{
-                closeHistoryRangePicker();
-            }
-        }
-    );
-
-
-document
-    .querySelectorAll(
-        ".quick-range-option"
-    )
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    setQuickRange(
-                        button.dataset.range
-                    );
-                }
-            );
-        }
-    );
-
-
-$("calendarPrev")
-    .addEventListener(
-        "click",
-        () => {
-
-            calendarDisplayDate =
-                new Date(
-                    calendarDisplayDate
-                        .getFullYear(),
-                    calendarDisplayDate
-                        .getMonth() - 1,
-                    1
-                );
-
-            renderRangeCalendar();
-        }
-    );
-
-
-$("calendarNext")
-    .addEventListener(
-        "click",
-        () => {
-
-            calendarDisplayDate =
-                new Date(
-                    calendarDisplayDate
-                        .getFullYear(),
-                    calendarDisplayDate
-                        .getMonth() + 1,
-                    1
-                );
-
-            renderRangeCalendar();
-        }
-    );
-
-
-$("customRangeStart")
-    .addEventListener(
-        "change",
-        () => {
-
-            calendarSelectionStep =
-                "end";
-
-            updateQuickRangeUI(
-                null
-            );
-
-            renderRangeCalendar();
-        }
-    );
-
-
-$("customRangeEnd")
-    .addEventListener(
-        "change",
-        () => {
-
-            calendarSelectionStep =
-                "start";
-
-            updateQuickRangeUI(
-                null
-            );
-
-            renderRangeCalendar();
-        }
-    );
-
-
-$("historyRangeApply")
-    .addEventListener(
-        "click",
-        applyHistoryRange
-    );
-
-
-$("historyRangeCancel")
-    .addEventListener(
-        "click",
-        closeHistoryRangePicker
-    );
-
-
-$("historyRangePanel")
-    .addEventListener(
-        "click",
-        event => {
-            event.stopPropagation();
-        }
-    );
-
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const picker =
-            $("historyRangePicker");
-
-        if(
-            picker &&
-            !picker.contains(
-                event.target
-            )
-        ){
-            closeHistoryRangePicker();
-        }
-    }
-);
-$("exportButton")
-    .addEventListener(
-        "click",
-        exportSelectedData
-    );
 /* =========================================================
 CLOCK
 ========================================================= */
