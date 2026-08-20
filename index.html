@@ -78,20 +78,6 @@ MONITORING NODES + AI
                         </span>
                     </div>
                 </div>
-                <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
-                    <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                        Air Quality
-                    </div>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span
-                            id="overallDot"
-                            class="w-2.5 h-2.5 rounded-full bg-slate-500">
-                        </span>
-                        <b id="overallStatus">
-                            รอข้อมูล
-                        </b>
-                    </div>
-                </div>
             </div>
         </div>
         <div class="grid md:grid-cols-3 gap-3">
@@ -3086,11 +3072,6 @@ function updateCurrentAirQuality(){
         $("qualityBadge").textContent =
             "รอข้อมูล";
 
-        $("overallStatus").textContent =
-            "รอข้อมูล";
-
-        updateOverallDot(null);
-
         return {
             average: null,
             highest: null,
@@ -3167,13 +3148,6 @@ function updateCurrentAirQuality(){
 
     $("qualityBadge").textContent =
         q;
-
-    $("overallStatus").textContent =
-        q;
-
-    updateOverallDot(
-        average
-    );
 
     return {
         average: average,
@@ -4819,40 +4793,6 @@ function downloadExportExcel(){
 
 
 
-/* =========================================================
-DASHBOARD RENDER HELPERS
-========================================================= */
-function updateOverallDot(value){
-    const dot = $("overallDot");
-    if(!dot){
-        return;
-    }
-
-    let color = "#64748b";
-
-    if(
-        value !== null &&
-        value !== undefined &&
-        !isNaN(Number(value))
-    ){
-        const pm = Number(value);
-
-        if(pm <= 15){
-            color = "#34d399";
-        }
-        else if(pm <= 25){
-            color = "#facc15";
-        }
-        else if(pm <= 37.5){
-            color = "#fb923c";
-        }
-        else{
-            color = "#f87171";
-        }
-    }
-
-    dot.style.backgroundColor = color;
-}
 
 
 function escapeHtml(value){
