@@ -53,9 +53,20 @@ MONITORING NODES + AI
     <div class="glass card p-4 xl:col-span-3">
         <div class="flex justify-between items-center mb-3">
             <div>
-                <h2 class="text-xl font-black">
-                    📡 Monitoring Nodes
-                </h2>
+                <div class="section-title-with-help">
+                    <h2 class="text-xl font-black">
+                        📡 Monitoring Nodes
+                    </h2>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="monitoring"
+                        aria-label="ดูคำอธิบาย Monitoring Nodes"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+                </div>
                 <p class="text-xs text-slate-400">
                     ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
                 </p>
@@ -254,9 +265,20 @@ MONITORING NODES + AI
                 ✦
             </div>
             <div>
-                <h2 class="font-black text-lg">
-                    Smart Summary
-                </h2>
+                <div class="section-title-with-help">
+                    <h2 class="font-black text-lg">
+                        Smart Summary
+                    </h2>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="smartSummary"
+                        aria-label="ดูคำอธิบาย Smart Summary"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+                </div>
                 <p class="text-xs text-slate-400">
                     สรุปสถานการณ์อัตโนมัติแบบ Rule-based
                 </p>
@@ -277,9 +299,20 @@ QUALITY + ALERT
     <div class="glass card p-5 lg:col-span-2">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-black">
-                    คุณภาพอากาศปัจจุบัน
-                </h2>
+                <div class="section-title-with-help">
+                    <h2 class="text-xl font-black">
+                        คุณภาพอากาศปัจจุบัน
+                    </h2>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="currentAir"
+                        aria-label="ดูคำอธิบาย คุณภาพอากาศปัจจุบัน"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+                </div>
                 <p class="text-xs text-slate-400 mt-1">
                     ประเมินจากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน
                 </p>
@@ -336,146 +369,103 @@ QUALITY + ALERT
             </div>
         </div>
 
-        <!-- 24-HOUR STANDARD -->
+        <!-- 24-HOUR STANDARD SUMMARY -->
         <div
             id="standard24hPanel"
-            class="soft rounded-2xl p-4 mt-4"
+            class="standard24h-summary mt-4"
         >
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <div class="text-sm font-bold">
-                        🧭 ค่าเฉลี่ย 24 ชั่วโมงเทียบเกณฑ์อ้างอิง
+            <div class="standard24h-header">
+                <div class="section-title-with-help">
+                    <div class="standard24h-title">
+                        เกณฑ์เฉลี่ย 24 ชม.
                     </div>
-
-                    <div class="text-xs text-slate-500 mt-1">
-                        แยกจากค่าปัจจุบันด้านบน • ดึงผลประเมินจาก Cloudflare Worker
-                    </div>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="standard24h"
+                        aria-label="ดูคำอธิบาย เกณฑ์เฉลี่ย 24 ชั่วโมง"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
                 </div>
 
                 <span
                     id="standard24hCoverage"
-                    class="badge rounded-full px-3 py-1 text-xs text-slate-400"
+                    class="standard24h-coverage-badge"
                 >
                     กำลังโหลด...
                 </span>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-3 mt-4">
-
-                <div class="rounded-xl border border-slate-800/80 p-4 bg-slate-950/20">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-xs text-slate-400">
-                                PM2.5 เฉลี่ย 24 ชม.
-                            </div>
-
-                            <b
-                                id="standardPM25Average"
-                                class="block text-2xl mt-1"
-                            >
-                                --
-                            </b>
-                        </div>
-
-                        <span
-                            id="standardPM25Status"
-                            class="badge rounded-full px-3 py-1 text-xs"
-                        >
-                            รอข้อมูล
-                        </span>
-                    </div>
-
-                    <div class="grid sm:grid-cols-2 gap-2 mt-3 text-xs">
-                        <div class="rounded-lg border border-slate-800 px-3 py-2">
-                            <span class="text-slate-500">
-                                ไทย
-                            </span>
-                            <b
-                                id="standardPM25Thailand"
-                                class="block mt-1 text-slate-200"
-                            >
-                                --
-                            </b>
-                        </div>
-
-                        <div class="rounded-lg border border-slate-800 px-3 py-2">
-                            <span class="text-slate-500">
-                                WHO 2021
-                            </span>
-                            <b
-                                id="standardPM25WHO"
-                                class="block mt-1 text-slate-200"
-                            >
-                                --
-                            </b>
-                        </div>
-                    </div>
+            <div class="standard24h-values">
+                <div class="standard24h-value-row">
+                    <span class="standard24h-metric">
+                        PM2.5
+                    </span>
+                    <b
+                        id="standardPM25Average"
+                        class="standard24h-number"
+                    >
+                        --
+                    </b>
                 </div>
 
-                <div class="rounded-xl border border-slate-800/80 p-4 bg-slate-950/20">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-xs text-slate-400">
-                                PM10 เฉลี่ย 24 ชม.
-                            </div>
+                <div class="standard24h-value-row">
+                    <span class="standard24h-metric">
+                        PM10
+                    </span>
+                    <b
+                        id="standardPM10Average"
+                        class="standard24h-number"
+                    >
+                        --
+                    </b>
+                </div>
+            </div>
 
-                            <b
-                                id="standardPM10Average"
-                                class="block text-2xl mt-1"
-                            >
-                                --
-                            </b>
-                        </div>
-
-                        <span
-                            id="standardPM10Status"
-                            class="badge rounded-full px-3 py-1 text-xs"
-                        >
-                            รอข้อมูล
-                        </span>
-                    </div>
-
-                    <div class="grid sm:grid-cols-2 gap-2 mt-3 text-xs">
-                        <div class="rounded-lg border border-slate-800 px-3 py-2">
-                            <span class="text-slate-500">
-                                ไทย
-                            </span>
-                            <b
-                                id="standardPM10Thailand"
-                                class="block mt-1 text-slate-200"
-                            >
-                                --
-                            </b>
-                        </div>
-
-                        <div class="rounded-lg border border-slate-800 px-3 py-2">
-                            <span class="text-slate-500">
-                                WHO 2021
-                            </span>
-                            <b
-                                id="standardPM10WHO"
-                                class="block mt-1 text-slate-200"
-                            >
-                                --
-                            </b>
-                        </div>
-                    </div>
+            <div class="standard24h-progress-wrap">
+                <div class="standard24h-progress-head">
+                    <span>
+                        ข้อมูลครอบคลุม
+                    </span>
+                    <b id="standard24hCoverageText">
+                        -- / 24 ชม.
+                    </b>
                 </div>
 
+                <div class="standard24h-progress-track">
+                    <div
+                        id="standard24hProgressBar"
+                        class="standard24h-progress-bar"
+                        style="width:0%"
+                    ></div>
+                </div>
             </div>
 
             <div
                 id="standard24hNote"
-                class="text-[11px] text-slate-500 mt-3 leading-5"
+                class="standard24h-note"
             >
-                ผลมาตรฐานจะแสดงเมื่อ Worker มีข้อมูลเพียงพอ
+                กำลังตรวจสอบข้อมูลย้อนหลัง
             </div>
         </div>
     </div>
-    <div class="glass card p-5">
-        <h2 class="text-xl font-black">
-            🚨 Alerts
-        </h2>
+    <div class="glass card p-5 alerts-card">
+        <div class="section-title-with-help">
+            <h2 class="text-xl font-black">
+                🚨 Alerts
+            </h2>
+            <button
+                        type="button"
+                        class="help-button"
+                        data-help="alerts"
+                        aria-label="ดูคำอธิบาย Alerts"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+        </div>
         <div
             id="alerts"
             class="text-sm text-slate-300 mt-4"
@@ -490,9 +480,20 @@ HISTORICAL DATA & TREND
 <section class="glass card p-5 mb-4">
     <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black">
-                📈 Historical Data & Trend
-            </h2>
+            <div class="section-title-with-help">
+                <h2 class="text-2xl font-black">
+                    📈 Historical Data & Trend
+                </h2>
+                <button
+                        type="button"
+                        class="help-button"
+                        data-help="historical"
+                        aria-label="ดูคำอธิบาย Historical Data & Trend"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+            </div>
             <p class="text-xs text-slate-400 mt-1">
                 วิเคราะห์ข้อมูลย้อนหลัง ค่าเฉลี่ย และแนวโน้มในช่วงเวลาที่เลือก
             </p>
@@ -905,9 +906,20 @@ FORECAST + AI
     <div class="glass card p-5">
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
-                <h2 class="text-xl font-black">
-                    🔮 Forecast
-                </h2>
+                <div class="section-title-with-help">
+                    <h2 class="text-xl font-black">
+                        🔮 Forecast
+                    </h2>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="forecast"
+                        aria-label="ดูคำอธิบาย Forecast"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+                </div>
                 <p class="text-xs text-slate-400 mt-1">
                     คาดการณ์ระยะสั้นของตัวแปรที่เลือกจากข้อมูลย้อนหลัง 60 นาที
                 </p>
@@ -1007,9 +1019,20 @@ FORECAST + AI
     <div class="glass card p-5">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-black">
-                    🤖 AI วิเคราะห์สถานการณ์
-                </h2>
+                <div class="section-title-with-help">
+                    <h2 class="text-xl font-black">
+                        🤖 AI วิเคราะห์สถานการณ์
+                    </h2>
+                    <button
+                        type="button"
+                        class="help-button"
+                        data-help="ai"
+                        aria-label="ดูคำอธิบาย AI วิเคราะห์สถานการณ์"
+                        aria-expanded="false"
+                    >
+                        ?
+                    </button>
+                </div>
                 <p class="text-xs text-slate-400 mt-1">
                     สำหรับ AI จริงที่จะเชื่อมต่อภายหลัง
                 </p>
@@ -1029,6 +1052,42 @@ FORECAST + AI
         </div>
     </div>
 </section>
+</div>
+
+<!-- =========================================================
+HELP / INFO POPOVER
+========================================================= -->
+<div
+    id="helpPopover"
+    class="help-popover"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="false"
+>
+    <div class="help-popover-header">
+        <div>
+            <div class="help-popover-eyebrow">
+                DASHBOARD HELP
+            </div>
+            <h3 id="helpPopoverTitle">
+                คำอธิบาย
+            </h3>
+        </div>
+
+        <button
+            id="helpPopoverClose"
+            type="button"
+            class="help-popover-close"
+            aria-label="ปิดคำอธิบาย"
+        >
+            ×
+        </button>
+    </div>
+
+    <div
+        id="helpPopoverBody"
+        class="help-popover-body"
+    ></div>
 </div>
 
 <!-- =========================================================
