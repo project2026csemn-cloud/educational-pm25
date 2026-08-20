@@ -1088,6 +1088,9 @@ const API_URL =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
 const HISTORY_API =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
+
+const EXPORT_API =
+    "https://educational-pm25-api.project2026csemn.workers.dev/api/export.php";
 const MOTHER_STATUS_API =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/mother_status";
 const TOTAL_NODES = 3;
@@ -4168,25 +4171,99 @@ function closeExportModal(){
 }
 
 
+function getBangkokExportBoundaries(){
+
+    const startValue =
+        $("exportStartDate").value;
+
+    const endValue =
+        $("exportEndDate").value;
+
+    if(
+        !startValue ||
+        !endValue
+    ){
+        return null;
+    }
+
+
+    /*
+     * บังคับให้วันในช่อง input เป็นเวลาไทย GMT+7
+     * ไม่ขึ้นกับ timezone ของเครื่องที่เปิด Dashboard
+     */
+    const start =
+        new Date(
+            startValue +
+            "T00:00:00+07:00"
+        );
+
+    const endStart =
+        new Date(
+            endValue +
+            "T00:00:00+07:00"
+        );
+
+
+    if(
+        isNaN(start.getTime()) ||
+        isNaN(endStart.getTime())
+    ){
+        return null;
+    }
+
+
+    /*
+     * end เป็น exclusive boundary:
+     * วันที่สิ้นสุด + 1 วัน เวลา 00:00 ไทย
+     *
+     * เช่นเลือก 20/08/2026
+     * จะรวมข้อมูลถึง 20/08/2026 23:59:59
+     */
+    const end =
+        new Date(
+            endStart.getTime() +
+            24 *
+            60 *
+            60 *
+            1000
+        );
+
+
+    return {
+        start,
+        end
+    };
+}
+
+
 async function loadExportRows(){
 
-    const window =
+    const dateWindow =
         getExportDateWindow();
 
-    if(!window){
+    const boundaries =
+        getBangkokExportBoundaries();
+
+
+    if(
+        !dateWindow ||
+        !boundaries
+    ){
         throw new Error(
             "กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด"
         );
     }
 
+
     if(
-        window.start >
-        window.end
+        dateWindow.start >
+        dateWindow.end
     ){
         throw new Error(
             "วันที่สิ้นสุดต้องอยู่หลังวันที่เริ่มต้น"
         );
     }
+
 
     const maxRangeMs =
         30 *
@@ -4195,9 +4272,10 @@ async function loadExportRows(){
         60 *
         1000;
 
+
     if(
-        window.end.getTime() -
-        window.start.getTime() >
+        boundaries.end.getTime() -
+        boundaries.start.getTime() >
         maxRangeMs
     ){
         throw new Error(
@@ -4205,92 +4283,178 @@ async function loadExportRows(){
         );
     }
 
-    const apiRange =
-        getExportApiRange(
-            window.start,
-            window.end
-        );
 
-    const response =
-        await fetch(
-            HISTORY_API +
-            "?range=" +
+    const PAGE_SIZE =
+        1000;
+
+    let offset =
+        0;
+
+    let total =
+        null;
+
+    const allRows =
+        [];
+
+
+    while(true){
+
+        const url =
+            EXPORT_API +
+            "?start=" +
             encodeURIComponent(
-                apiRange
+                boundaries.start.toISOString()
             ) +
+            "&end=" +
+            encodeURIComponent(
+                boundaries.end.toISOString()
+            ) +
+            "&limit=" +
+            PAGE_SIZE +
+            "&offset=" +
+            offset +
             "&t=" +
-            Date.now(),
-            {
-                method: "GET",
-                cache: "no-store",
-                headers: {
-                    "Accept":
-                        "application/json"
+            Date.now();
+
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method:
+                        "GET",
+
+                    cache:
+                        "no-store",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
                 }
-            }
-        );
+            );
 
-    if(!response.ok){
-        throw new Error(
-            "โหลดข้อมูลสำหรับ Export ไม่สำเร็จ HTTP " +
-            response.status
-        );
-    }
 
-    const json =
-        await response.json();
+        if(!response.ok){
 
-    if(
-        !json ||
-        !json.success ||
-        !Array.isArray(
-            json.data
-        )
-    ){
-        throw new Error(
-            json?.message ||
-            "รูปแบบข้อมูล Export ไม่ถูกต้อง"
-        );
-    }
+            let message =
+                "โหลดข้อมูลสำหรับ Export ไม่สำเร็จ HTTP " +
+                response.status;
 
-    return json.data
-        .map(normalize)
-        .filter(Boolean)
-        .filter(
-            row => {
+            try{
 
-                /*
-                 * Export เฉพาะ reading จริง
-                 * sleep / offline ไม่มี sensor data
-                 */
+                const errorJson =
+                    await response.json();
+
                 if(
-                    String(
-                        row.status || ""
-                    )
-                    .trim()
-                    .toLowerCase() !==
-                    "online"
+                    errorJson &&
+                    errorJson.message
                 ){
-                    return false;
+                    message =
+                        errorJson.message;
                 }
 
-                const date =
-                    parseDate(
-                        row.timestamp
-                    );
-
-                if(!date){
-                    return false;
-                }
-
-                return (
-                    date >=
-                        window.start &&
-                    date <=
-                        window.end
-                );
             }
-        )
+            catch(error){
+                // ใช้ข้อความ HTTP เดิม
+            }
+
+            throw new Error(
+                message
+            );
+        }
+
+
+        const json =
+            await response.json();
+
+
+        if(
+            !json ||
+            !json.success ||
+            !Array.isArray(
+                json.data
+            )
+        ){
+            throw new Error(
+                json?.message ||
+                "รูปแบบข้อมูล Export ไม่ถูกต้อง"
+            );
+        }
+
+
+        if(
+            total === null &&
+            json.total !== null &&
+            json.total !== undefined
+        ){
+            total =
+                Number(
+                    json.total
+                );
+        }
+
+
+        const pageRows =
+            json.data
+                .map(normalize)
+                .filter(Boolean);
+
+
+        allRows.push(
+            ...pageRows
+        );
+
+
+        /*
+         * อัปเดตจำนวนระหว่างโหลด
+         * ผู้ใช้จะเห็นว่าโหลดไปแล้วกี่รายการ
+         */
+        $("exportDataCount")
+            .textContent =
+                total !== null
+                    ? (
+                        allRows.length
+                            .toLocaleString(
+                                "th-TH"
+                            ) +
+                        " / " +
+                        total
+                            .toLocaleString(
+                                "th-TH"
+                            )
+                    )
+                    : allRows.length
+                        .toLocaleString(
+                            "th-TH"
+                        );
+
+
+        if(
+            json.has_more !== true
+        ){
+            break;
+        }
+
+
+        offset +=
+            pageRows.length;
+
+
+        /*
+         * ป้องกัน loop ไม่จบ
+         * ถ้า backend บอก has_more แต่ไม่คืนข้อมูล
+         */
+        if(
+            pageRows.length === 0
+        ){
+            break;
+        }
+
+    }
+
+
+    return allRows
         .sort(
             (a,b) =>
                 parseDate(
