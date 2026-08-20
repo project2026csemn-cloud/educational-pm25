@@ -293,185 +293,77 @@ MONITORING NODES + AI
     </div>
 </section>
 <!-- =========================================================
-QUALITY + ALERT
+CURRENT ENVIRONMENT + ALERT
 ========================================================= -->
 <section class="grid lg:grid-cols-3 gap-4 mb-4">
-    <div class="glass card p-5 lg:col-span-2">
-        <div class="flex justify-between items-center">
+    <div class="glass card p-5 lg:col-span-2 current-environment-card">
+        <div class="current-environment-header">
             <div>
                 <div class="section-title-with-help">
-                    <h2 class="text-xl font-black">
-                        คุณภาพอากาศปัจจุบัน
-                    </h2>
-                    <button
-                        type="button"
-                        class="help-button"
-                        data-help="currentAir"
-                        aria-label="ดูคำอธิบาย คุณภาพอากาศปัจจุบัน"
-                        aria-expanded="false"
-                    >
-                        ?
-                    </button>
+                    <h2 class="text-xl font-black">คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน</h2>
+                    <button type="button" class="help-button" data-help="currentAir"
+                        aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" aria-expanded="false">?</button>
                 </div>
-                <p class="text-xs text-slate-400 mt-1">
+                <p id="currentEnvironmentDescription" class="text-xs text-slate-400 mt-1">
                     ประเมินจากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่กำลังใช้งาน
                 </p>
             </div>
-            <div
-                id="qualityBadge"
-                class="rounded-full px-4 py-2 badge font-bold"
-            >
-                รอข้อมูล
+            <div class="current-environment-controls">
+                <label for="currentMetric" class="current-metric-label">ตัวแปร</label>
+                <select id="currentMetric" class="current-metric-select" aria-label="เลือกตัวแปรข้อมูลปัจจุบัน">
+                    <option value="pm25" selected>PM2.5</option>
+                    <option value="pm1">PM1.0</option>
+                    <option value="pm10">PM10</option>
+                    <option value="temperature">อุณหภูมิ</option>
+                    <option value="humidity">ความชื้น</option>
+                    <option value="light">แสง</option>
+                </select>
+                <div id="qualityBadge" class="current-quality-badge">รอข้อมูล</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
-            <div class="soft rounded-xl p-4">
-                <span class="text-xs text-slate-400">
-                    PM2.5 ภาพรวม
-                </span>
-                <b id="currentPM25" class="block text-2xl mt-1">
-                    --
-                </b>
-                <div class="text-xs text-slate-500 mt-1">
-                    ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP
+        <div class="current-environment-grid">
+            <div class="current-environment-item">
+                <div class="current-environment-item-top">
+                    <span id="currentOverallLabel" class="current-environment-label">PM2.5 ภาพรวม</span>
+                    <span class="current-environment-icon">◎</span>
                 </div>
+                <b id="currentOverallValue" class="current-environment-value">--</b>
+                <div id="currentOverallDetail" class="current-environment-detail">ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP</div>
             </div>
 
-            <div class="soft rounded-xl p-4">
-                <span class="text-xs text-slate-400">
-                    จุดที่สูงสุด
-                </span>
-                <b id="highestPM25" class="block text-2xl mt-1">
-                    --
-                </b>
-                <div
-                    id="highestPM25Node"
-                    class="text-xs text-slate-500 mt-1"
-                >
-                    --
+            <div class="current-environment-item">
+                <div class="current-environment-item-top">
+                    <span class="current-environment-label">จุดที่มีค่าสูงสุด</span>
+                    <span class="current-environment-icon">↑</span>
                 </div>
+                <b id="currentHighestValue" class="current-environment-value">--</b>
+                <div id="currentHighestNode" class="current-environment-detail">--</div>
             </div>
 
-            <div class="soft rounded-xl p-4">
-                <span class="text-xs text-slate-400">
-                    จุดที่ต้องเฝ้าระวัง
-                </span>
-                <b id="watchNode" class="block text-2xl mt-1">
-                    --
-                </b>
-                <div
-                    id="watchNodeDetail"
-                    class="text-xs text-slate-500 mt-1"
-                >
-                    รอข้อมูล
+            <div class="current-environment-item">
+                <div class="current-environment-item-top">
+                    <span class="current-environment-label">จุดที่ต้องเฝ้าระวัง</span>
+                    <span class="current-environment-icon">!</span>
                 </div>
+                <b id="currentWatchNode" class="current-environment-value current-watch-value">--</b>
+                <div id="currentWatchDetail" class="current-environment-detail">รอข้อมูล</div>
             </div>
         </div>
 
-        <!-- 24-HOUR STANDARD SUMMARY -->
-        <div
-            id="standard24hPanel"
-            class="standard24h-summary mt-4"
-        >
-            <div class="standard24h-header">
-                <div class="section-title-with-help">
-                    <div class="standard24h-title">
-                        เกณฑ์เฉลี่ย 24 ชม.
-                    </div>
-                    <button
-                        type="button"
-                        class="help-button"
-                        data-help="standard24h"
-                        aria-label="ดูคำอธิบาย เกณฑ์เฉลี่ย 24 ชั่วโมง"
-                        aria-expanded="false"
-                    >
-                        ?
-                    </button>
-                </div>
-
-                <span
-                    id="standard24hCoverage"
-                    class="standard24h-coverage-badge"
-                >
-                    กำลังโหลด...
-                </span>
-            </div>
-
-            <div class="standard24h-values">
-                <div class="standard24h-value-row">
-                    <span class="standard24h-metric">
-                        PM2.5
-                    </span>
-                    <b
-                        id="standardPM25Average"
-                        class="standard24h-number"
-                    >
-                        --
-                    </b>
-                </div>
-
-                <div class="standard24h-value-row">
-                    <span class="standard24h-metric">
-                        PM10
-                    </span>
-                    <b
-                        id="standardPM10Average"
-                        class="standard24h-number"
-                    >
-                        --
-                    </b>
-                </div>
-            </div>
-
-            <div class="standard24h-progress-wrap">
-                <div class="standard24h-progress-head">
-                    <span>
-                        ข้อมูลครอบคลุม
-                    </span>
-                    <b id="standard24hCoverageText">
-                        -- / 24 ชม.
-                    </b>
-                </div>
-
-                <div class="standard24h-progress-track">
-                    <div
-                        id="standard24hProgressBar"
-                        class="standard24h-progress-bar"
-                        style="width:0%"
-                    ></div>
-                </div>
-            </div>
-
-            <div
-                id="standard24hNote"
-                class="standard24h-note"
-            >
-                กำลังตรวจสอบข้อมูลย้อนหลัง
-            </div>
+        <div class="current-environment-footer">
+            <span class="current-environment-footer-dot"></span>
+            <span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
         </div>
     </div>
+
     <div class="glass card p-5 alerts-card">
         <div class="section-title-with-help">
-            <h2 class="text-xl font-black">
-                🚨 Alerts
-            </h2>
-            <button
-                        type="button"
-                        class="help-button"
-                        data-help="alerts"
-                        aria-label="ดูคำอธิบาย Alerts"
-                        aria-expanded="false"
-                    >
-                        ?
-                    </button>
+            <h2 class="text-xl font-black">🚨 Alerts</h2>
+            <button type="button" class="help-button" data-help="alerts"
+                aria-label="ดูคำอธิบาย Alerts" aria-expanded="false">?</button>
         </div>
-        <div
-            id="alerts"
-            class="text-sm text-slate-300 mt-4"
-        >
-            กำลังตรวจสอบ...
-        </div>
+        <div id="alerts" class="text-sm text-slate-300">กำลังตรวจสอบ...</div>
     </div>
 </section>
 <!-- =========================================================
