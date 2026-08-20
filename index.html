@@ -4818,14 +4818,723 @@ function downloadExportExcel(){
 }
 
 
+
 /* =========================================================
-CLOCK
+DASHBOARD RENDER HELPERS
 ========================================================= */
+function updateOverallDot(value){
+    const dot = $("overallDot");
+    if(!dot){
+        return;
+    }
+
+    let color = "#64748b";
+
+    if(
+        value !== null &&
+        value !== undefined &&
+        !isNaN(Number(value))
+    ){
+        const pm = Number(value);
+
+        if(pm <= 15){
+            color = "#34d399";
+        }
+        else if(pm <= 25){
+            color = "#facc15";
+        }
+        else if(pm <= 37.5){
+            color = "#fb923c";
+        }
+        else{
+            color = "#f87171";
+        }
+    }
+
+    dot.style.backgroundColor = color;
+}
+
+
+function escapeHtml(value){
+    return String(
+        value === null ||
+        value === undefined
+            ? ""
+            : value
+    )
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+function getLatestTimestampRecord(list){
+    let latest = null;
+
+    for(const item of list || []){
+        if(!item || !item.timestamp){
+            continue;
+        }
+
+        const date = parseDate(item.timestamp);
+
+        if(!date){
+            continue;
+        }
+
+        if(
+            !latest ||
+            date.getTime() >
+            parseDate(latest.timestamp).getTime()
+        ){
+            latest = item;
+        }
+    }
+
+    return latest;
+}
+
+
+function updateLastUpdate(
+    id,
+    node
+){
+    const element = $(id);
+
+    if(!element){
+        return;
+    }
+
+    element.textContent =
+        node && node.timestamp
+            ? formatThaiTime(node.timestamp)
+            : "--";
+}
+
+
+function renderMonitoringNodes(){
+    const n1 = getLatestNode(1);
+    const n2 = getLatestNode(2);
+    const n3 = getLatestNode(3);
+
+    setNode("n1", n1);
+    setNode("n2", n2);
+    setNode("n3", n3);
+
+    updateLastUpdate(
+        "lastUpdate1",
+        n1
+    );
+
+    updateLastUpdate(
+        "lastUpdate2",
+        n2
+    );
+
+    updateLastUpdate(
+        "lastUpdate3",
+        n3
+    );
+
+    updateNodeStatus(
+        "n1status",
+        "nodeCard1",
+        n1
+    );
+
+    updateNodeStatus(
+        "n2status",
+        "nodeCard2",
+        n2
+    );
+
+    updateNodeStatus(
+        "n3status",
+        "nodeCard3",
+        n3
+    );
+
+    updateSystemLive();
+}
+
+
+function updateSmartSummary(){
+    const element = $("aiSummary");
+
+    if(!element){
+        return;
+    }
+
+    if(!apiConnectionOnline){
+        element.innerHTML =
+            '<span class="text-red-300">ไม่สามารถเชื่อมต่อ API ได้</span>';
+        return;
+    }
+
+    const nodes =
+        latestNodes
+            .map(
+                node => ({
+                    node,
+                    status:
+                        getNodeStatus(node)
+                })
+            );
+
+    const online =
+        nodes.filter(
+            item =>
+                item.status === "online"
+        ).length;
+
+    const sleep =
+        nodes.filter(
+            item =>
+                item.status === "sleep"
+        ).length;
+
+    const offline =
+        Math.max(
+            0,
+            TOTAL_NODES -
+            online -
+            sleep
+        );
+
+    const usable =
+        nodes
+            .filter(
+                item =>
+                    (
+                        item.status === "online" ||
+                        item.status === "sleep"
+                    ) &&
+                    item.node &&
+                    item.node.pm25 !== null &&
+                    item.node.pm25 !== undefined &&
+                    !isNaN(Number(item.node.pm25))
+            );
+
+    let pmText =
+        "ยังไม่มีข้อมูล PM2.5 ที่ใช้ประเมินได้";
+
+    if(usable.length){
+        const avg =
+            usable.reduce(
+                (sum,item) =>
+                    sum +
+                    Number(item.node.pm25),
+                0
+            ) /
+            usable.length;
+
+        pmText =
+            "PM2.5 ภาพรวม " +
+            fmt(avg) +
+            " µg/m³ • " +
+            quality(avg);
+    }
+
+    element.innerHTML = `
+        <div>
+            ${pmText}
+        </div>
+        <div class="mt-2 text-xs text-slate-400">
+            ONLINE ${online} • SLEEP ${sleep} • OFFLINE ${offline}
+        </div>
+    `;
+}
+
+
+function updateAlerts(){
+    const element = $("alerts");
+
+    if(!element){
+        return;
+    }
+
+    if(!apiConnectionOnline){
+        element.innerHTML = `
+            <div class="soft rounded-xl p-3">
+                <b class="text-red-300">
+                    🔴 ไม่สามารถเชื่อมต่อ API
+                </b>
+                <div class="text-xs text-slate-400 mt-1">
+                    กรุณาตรวจสอบ Cloudflare Worker หรือการเชื่อมต่ออินเทอร์เน็ต
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const alerts = [];
+
+    for(let number = 1; number <= TOTAL_NODES; number++){
+        const node =
+            getLatestNode(number);
+
+        const status =
+            getNodeStatus(node);
+
+        if(status === "offline"){
+            alerts.push({
+                type: "offline",
+                text:
+                    "อุปกรณ์ " +
+                    number +
+                    " OFFLINE"
+            });
+
+            continue;
+        }
+
+        if(
+            node &&
+            node.pm25 !== null &&
+            node.pm25 !== undefined &&
+            !isNaN(Number(node.pm25)) &&
+            Number(node.pm25) > 25
+        ){
+            alerts.push({
+                type: "pm25",
+                text:
+                    "อุปกรณ์ " +
+                    number +
+                    " PM2.5 " +
+                    fmt(node.pm25) +
+                    " µg/m³"
+            });
+        }
+    }
+
+    if(!alerts.length){
+        element.innerHTML = `
+            <div class="soft rounded-xl p-3">
+                <b class="text-emerald-300">
+                    ✅ ไม่พบรายการที่ต้องตรวจสอบ
+                </b>
+                <div class="text-xs text-slate-400 mt-1">
+                    สถานะอุปกรณ์และค่า PM2.5 ยังอยู่ในเงื่อนไขปกติ
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    element.innerHTML =
+        alerts
+            .map(
+                alert => `
+                    <div class="soft rounded-xl p-3 mb-2">
+                        <b class="${
+                            alert.type === "offline"
+                                ? "text-red-300"
+                                : "text-amber-300"
+                        }">
+                            ${
+                                alert.type === "offline"
+                                    ? "🔴"
+                                    : "⚠️"
+                            }
+                            ${escapeHtml(alert.text)}
+                        </b>
+                    </div>
+                `
+            )
+            .join("");
+}
+
+
+/* =========================================================
+MAIN LOAD
+========================================================= */
+async function load(){
+    try{
+        const [
+            latestResult,
+            historyResult,
+            motherResult
+        ] =
+            await Promise.all([
+                loadLatest(),
+                loadHistory(),
+                loadMotherStatus()
+            ]);
+
+        apiConnectionOnline = true;
+
+        latestNodes =
+            Array.isArray(latestResult)
+                ? latestResult
+                : [];
+
+        records =
+            Array.isArray(historyResult)
+                ? historyResult
+                : [];
+
+        motherStatus =
+            motherResult;
+
+        latestRecord =
+            getLatestTimestampRecord(
+                latestNodes
+            );
+
+        renderMonitoringNodes();
+        updateCurrentAirQuality();
+        updateSmartSummary();
+        updateAlerts();
+        renderAverages();
+        updateTrendStatistics();
+        drawCharts();
+    }
+    catch(error){
+        console.error(
+            "Dashboard load error:",
+            error
+        );
+
+        apiConnectionOnline = false;
+        motherStatus = null;
+
+        forceAllNodesOffline();
+        updateCurrentAirQuality();
+        updateSmartSummary();
+        updateAlerts();
+
+        if($("trend")){
+            $("trend").textContent =
+                "ไม่สามารถโหลดข้อมูล";
+        }
+    }
+}
+
+
+/* =========================================================
+UI EVENTS
+========================================================= */
+function bindDashboardEvents(){
+    const metricSelect =
+        $("metric");
+
+    if(metricSelect){
+        metricSelect.addEventListener(
+            "change",
+            () => {
+                metric =
+                    metricSelect.value;
+
+                updateSelectedMetricLabel();
+                drawCharts();
+            }
+        );
+    }
+
+
+    const rangeButton =
+        $("historyRangeButton");
+
+    if(rangeButton){
+        rangeButton.addEventListener(
+            "click",
+            event => {
+                event.stopPropagation();
+
+                const panel =
+                    $("historyRangePanel");
+
+                if(!panel){
+                    return;
+                }
+
+                if(
+                    panel.classList.contains(
+                        "hidden"
+                    )
+                ){
+                    openHistoryRangePicker();
+                }
+                else{
+                    closeHistoryRangePicker();
+                }
+            }
+        );
+    }
+
+
+    document
+        .querySelectorAll(
+            ".quick-range-option"
+        )
+        .forEach(
+            button => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        setQuickRange(
+                            button.dataset.range
+                        );
+                    }
+                );
+            }
+        );
+
+
+    const calendarPrev =
+        $("calendarPrev");
+
+    if(calendarPrev){
+        calendarPrev.addEventListener(
+            "click",
+            () => {
+                calendarDisplayDate =
+                    new Date(
+                        calendarDisplayDate.getFullYear(),
+                        calendarDisplayDate.getMonth() - 1,
+                        1
+                    );
+
+                renderRangeCalendar();
+            }
+        );
+    }
+
+
+    const calendarNext =
+        $("calendarNext");
+
+    if(calendarNext){
+        calendarNext.addEventListener(
+            "click",
+            () => {
+                calendarDisplayDate =
+                    new Date(
+                        calendarDisplayDate.getFullYear(),
+                        calendarDisplayDate.getMonth() + 1,
+                        1
+                    );
+
+                renderRangeCalendar();
+            }
+        );
+    }
+
+
+    const customStart =
+        $("customRangeStart");
+
+    if(customStart){
+        customStart.addEventListener(
+            "change",
+            () => {
+                updateQuickRangeUI(null);
+                renderRangeCalendar();
+            }
+        );
+    }
+
+
+    const customEnd =
+        $("customRangeEnd");
+
+    if(customEnd){
+        customEnd.addEventListener(
+            "change",
+            () => {
+                updateQuickRangeUI(null);
+                renderRangeCalendar();
+            }
+        );
+    }
+
+
+    const rangeApply =
+        $("historyRangeApply");
+
+    if(rangeApply){
+        rangeApply.addEventListener(
+            "click",
+            applyHistoryRange
+        );
+    }
+
+
+    const rangeCancel =
+        $("historyRangeCancel");
+
+    if(rangeCancel){
+        rangeCancel.addEventListener(
+            "click",
+            closeHistoryRangePicker
+        );
+    }
+
+
+    document.addEventListener(
+        "click",
+        event => {
+            const picker =
+                $("historyRangePicker");
+
+            if(
+                picker &&
+                !picker.contains(
+                    event.target
+                )
+            ){
+                closeHistoryRangePicker();
+            }
+        }
+    );
+
+
+    const forecastToggle =
+        $("forecastToggle");
+
+    if(forecastToggle){
+        forecastToggle.addEventListener(
+            "click",
+            () => {
+                forecastVisible =
+                    !forecastVisible;
+
+                updateForecastToggleUI();
+                setForecastDatasetVisibility();
+            }
+        );
+    }
+
+
+    const exportButton =
+        $("exportButton");
+
+    if(exportButton){
+        exportButton.addEventListener(
+            "click",
+            openExportModal
+        );
+    }
+
+
+    const exportClose =
+        $("exportModalClose");
+
+    if(exportClose){
+        exportClose.addEventListener(
+            "click",
+            closeExportModal
+        );
+    }
+
+
+    const exportCancel =
+        $("exportCancelButton");
+
+    if(exportCancel){
+        exportCancel.addEventListener(
+            "click",
+            closeExportModal
+        );
+    }
+
+
+    document
+        .querySelectorAll(
+            "[data-export-close='true']"
+        )
+        .forEach(
+            element => {
+                element.addEventListener(
+                    "click",
+                    closeExportModal
+                );
+            }
+        );
+
+
+    const exportStart =
+        $("exportStartDate");
+
+    if(exportStart){
+        exportStart.addEventListener(
+            "change",
+            refreshExportPreview
+        );
+    }
+
+
+    const exportEnd =
+        $("exportEndDate");
+
+    if(exportEnd){
+        exportEnd.addEventListener(
+            "change",
+            refreshExportPreview
+        );
+    }
+
+
+    const exportExcel =
+        $("exportExcelButton");
+
+    if(exportExcel){
+        exportExcel.addEventListener(
+            "click",
+            downloadExportExcel
+        );
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        event => {
+            if(event.key !== "Escape"){
+                return;
+            }
+
+            const exportModal =
+                $("exportModal");
+
+            if(
+                exportModal &&
+                exportModal.classList.contains(
+                    "active"
+                )
+            ){
+                closeExportModal();
+            }
+
+            const rangePanel =
+                $("historyRangePanel");
+
+            if(
+                rangePanel &&
+                !rangePanel.classList.contains(
+                    "hidden"
+                )
+            ){
+                closeHistoryRangePicker();
+            }
+        }
+    );
+}
+
+
 /* =========================================================
 CLOCK
 ========================================================= */
 function updateClock(){
-    $("clock").textContent =
+    const clock =
+        $("clock");
+
+    if(!clock){
+        return;
+    }
+
+    clock.textContent =
         new Date()
             .toLocaleString(
                 "th-TH",
@@ -4839,53 +5548,42 @@ function updateClock(){
                 }
             );
 }
+
+
+/* =========================================================
+INITIALIZE
+========================================================= */
 $("historyRangeButtonLabel")
     .textContent =
         getRangeLabel();
 
 updateForecastToggleUI();
-
+bindDashboardEvents();
 updateClock();
+
 setInterval(
     updateClock,
     1000
 );
-/* =========================================================
-INITIAL LOAD
-========================================================= */
+
 load();
+
 setInterval(
     load,
     10000
 );
+
+
 /* =========================================================
 STATUS REFRESH
 ========================================================= */
 setInterval(
     () => {
-        const n1 =
-            getLatestNode(1);
-        const n2 =
-            getLatestNode(2);
-        const n3 =
-            getLatestNode(3);
         if(apiConnectionOnline){
-            updateNodeStatus(
-                "n1status",
-                "nodeCard1",
-                n1
-            );
-            updateNodeStatus(
-                "n2status",
-                "nodeCard2",
-                n2
-            );
-            updateNodeStatus(
-                "n3status",
-                "nodeCard3",
-                n3
-            );
-            updateSystemLive();
+            renderMonitoringNodes();
+            updateCurrentAirQuality();
+            updateSmartSummary();
+            updateAlerts();
         }
         else{
             forceAllNodesOffline();
@@ -4893,6 +5591,7 @@ setInterval(
     },
     5000
 );
+
 </script>
 <!-- =========================================================
 CREDIT
