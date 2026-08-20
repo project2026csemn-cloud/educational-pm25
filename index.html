@@ -19,223 +19,112 @@
 
 <body>
 
-    <div class="max-w-[1800px] mx-auto p-4 md:p-6">
+<div class="max-w-[1800px] mx-auto p-4 md:p-6">
 
 
-    <!-- =========================================================
-    HEADER
-    ========================================================= -->
+<!-- =========================================================
+HEADER
+========================================================= -->
 
-    <header class="glass card px-5 py-4 mb-5 flex flex-col lg:flex-row justify-between gap-5">
+<header class="glass card px-5 py-4 mb-5 flex flex-col lg:flex-row justify-between gap-5">
 
-        <div class="flex items-center gap-4">
+    <div class="flex items-center gap-4">
 
-            <div>
+        <div>
 
-                <img src="img/โลโก.png"
-                     alt="Logo"
-                     class="w-20 h-20 rounded-xl">
+            <img src="img/โลโก.png"
+                 alt="Logo"
+                 class="w-20 h-20 rounded-xl">
 
-                <img src="img/ICT.jpg"
-                     alt="Logo"
-                     class="w-20 h-20 rounded-full">
+            <img src="img/ICT.jpg"
+                 alt="Logo"
+                 class="w-20 h-20 rounded-full">
+
+        </div>
+
+        <div>
+
+            <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
+
+                Educational Institution
+
+                <span class="text-cyan-400">
+                    PM2.5
+                </span>
+
+                Dust Monitoring System
 
             </div>
 
-            <div>
-
-                <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
-
-                    Educational Institution
-
-                    <span class="text-cyan-400">
-                        PM2.5
-                    </span>
-
-                    Dust Monitoring System
-
-                </div>
-
-                <div class="text-sm text-slate-400 mt-1">
-
-                    ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
-
-                </div>
-
+            <div class="text-sm text-slate-400 mt-1">
+                ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
             </div>
 
         </div>
 
+    </div>
 
-        <div class="flex flex-wrap items-center justify-end gap-3">
 
-            <div class="text-right hidden md:block">
+    <div class="flex flex-wrap items-center justify-end gap-3">
 
-                <div id="clock" class="font-bold">
-                    --
-                </div>
+        <div class="text-right hidden md:block">
 
-                <div class="text-xs text-slate-400 mt-1"></div>
-
+            <div id="clock" class="font-bold">
+                --
             </div>
+
+            <div class="text-xs text-slate-400 mt-1"></div>
 
         </div>
 
-    </header>
+    </div>
+
+</header>
 
 
+<!-- =========================================================
+MONITORING NODES + AI
+========================================================= -->
 
-    <!-- =========================================================
-    NODES + AI
-    ========================================================= -->
+<section class="grid xl:grid-cols-4 gap-4 mb-4">
 
-    <section class="grid xl:grid-cols-4 gap-4 mb-4">
+    <div class="glass card p-4 xl:col-span-3">
 
+        <div class="flex justify-between items-center mb-3">
 
-        <div class="glass card p-4 xl:col-span-3">
+            <div>
 
-            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-black">
+                    📡 Monitoring Nodes
+                </h2>
 
-                <div>
+                <p class="text-xs text-slate-400">
+                    ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
+                </p>
 
-                    <h2 class="text-xl font-black">
-                        📡 Monitoring Nodes
-                    </h2>
-
-                    <p class="text-xs text-slate-400">
-                        ข้อมูลจากอุปกรณ์ตรวจวัดแต่ละจุด
-                    </p>
-
-                </div>
+            </div>
 
 
-                <div class="flex justify-center">
+            <div class="flex justify-center">
 
+                <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
 
-                    <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
+                    <div class="text-[11px] text-slate-400 uppercase tracking-wider">
+                        System Live
+                    </div>
 
-                        <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                            System Live
-                        </div>
+                    <div class="font-bold mt-1">
 
-                        <div class="font-bold mt-1">
+                        <span class="text-emerald-400">
+                            ●
+                        </span>
 
-                            <span class="text-emerald-400">
-                                ●
-                            </span>
+                        <span id="onlineCountTop">
+                            0 / 3
+                        </span>
 
-                            <span id="onlineCountTop">
-                                0 / 3
-                            </span>
-
+                        <span id="systemLiveLabel">
                             Nodes
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
-
-                        <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                            Air Quality
-                        </div>
-
-                        <div class="flex items-center gap-2 mt-1">
-
-                            <span
-                                id="overallDot"
-                                class="w-2.5 h-2.5 rounded-full bg-slate-500">
-                            </span>
-
-                            <b id="overallStatus">
-                                รอข้อมูล
-                            </b>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="grid md:grid-cols-3 gap-3">
-
-
-                <!-- NODE 1 -->
-
-                <div
-                    id="nodeCard1"
-                    class="node offline soft rounded-2xl p-4 border border-slate-800"
-                >
-
-                    <div class="flex justify-between">
-
-                        <b class="text-xl">
-
-                            อุปกรณ์ 1
-
-                            <div class="text-xs text-slate-400 mt-1">
-
-                                Last update
-
-                                <span id="lastUpdate1">
-                                    --
-                                </span>
-
-                            </div>
-
-                        </b>
-
-
-                        <span
-                            id="n1status"
-                            class="text-slate-500 text-xs font-bold"
-                        >
-
-                            ● OFFLINE
-
-                            <span class="badge rounded-full px-3 py-1 text-xs">
-                                ESP-NOW
-                            </span>
-
-                        </span>
-
-                    </div>
-
-
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-
-                        <span class="text-slate-400">
-                            PM1.0
-                            <b id="n1pm1" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM2.5
-                            <b id="n1pm25" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM10
-                            <b id="n1pm10" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Temp
-                            <b id="n1temp" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Humidity
-                            <b id="n1hum" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Light
-                            <b id="n1light" class="text-white ml-1">--</b>
                         </span>
 
                     </div>
@@ -243,160 +132,22 @@
                 </div>
 
 
+                <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
 
-                <!-- NODE 2 -->
+                    <div class="text-[11px] text-slate-400 uppercase tracking-wider">
+                        Air Quality
+                    </div>
 
-                <div
-                    id="nodeCard2"
-                    class="node offline soft rounded-2xl p-4 border border-slate-800"
-                >
-
-                    <div class="flex justify-between">
-
-                        <b class="text-xl">
-
-                            อุปกรณ์ 2
-
-                            <div class="text-xs text-slate-400 mt-1">
-
-                                Last update
-
-                                <span id="lastUpdate2">
-                                    --
-                                </span>
-
-                            </div>
-
-                        </b>
-
+                    <div class="flex items-center gap-2 mt-1">
 
                         <span
-                            id="n2status"
-                            class="text-slate-500 text-xs font-bold"
-                        >
-
-                            ● OFFLINE
-
-                            <span class="badge rounded-full px-3 py-1 text-xs">
-                                ESP-NOW
-                            </span>
-
+                            id="overallDot"
+                            class="w-2.5 h-2.5 rounded-full bg-slate-500">
                         </span>
 
-                    </div>
-
-
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-
-                        <span class="text-slate-400">
-                            PM1.0
-                            <b id="n2pm1" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM2.5
-                            <b id="n2pm25" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM10
-                            <b id="n2pm10" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Temp
-                            <b id="n2temp" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Humidity
-                            <b id="n2hum" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Light
-                            <b id="n2light" class="text-white ml-1">--</b>
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- NODE 3 -->
-
-                <div
-                    id="nodeCard3"
-                    class="node offline soft rounded-2xl p-4 border border-slate-800"
-                >
-
-                    <div class="flex justify-between">
-
-                        <b class="text-xl">
-
-                            อุปกรณ์ 3
-
-                            <div class="text-xs text-slate-400 mt-1">
-
-                                Last update
-
-                                <span id="lastUpdate3">
-                                    --
-                                </span>
-
-                            </div>
-
+                        <b id="overallStatus">
+                            รอข้อมูล
                         </b>
-
-
-                        <span
-                            id="n3status"
-                            class="text-slate-500 text-xs font-bold"
-                        >
-
-                            ● OFFLINE
-
-                            <span class="badge rounded-full px-3 py-1 text-xs">
-                                ESP-NOW
-                            </span>
-
-                        </span>
-
-                    </div>
-
-
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-
-                        <span class="text-slate-400">
-                            PM1.0
-                            <b id="n3pm1" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM2.5
-                            <b id="n3pm25" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            PM10
-                            <b id="n3pm10" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Temp
-                            <b id="n3temp" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Humidity
-                            <b id="n3hum" class="text-white ml-1">--</b>
-                        </span>
-
-                        <span class="text-slate-400">
-                            Light
-                            <b id="n3light" class="text-white ml-1">--</b>
-                        </span>
 
                     </div>
 
@@ -407,285 +158,494 @@
         </div>
 
 
+        <div class="grid md:grid-cols-3 gap-3">
 
-        <!-- AI SUMMARY -->
 
-        <div class="glass card p-5 flex flex-col justify-center">
+            <!-- NODE 1 -->
 
-            <div class="flex items-center gap-3">
+            <div
+                id="nodeCard1"
+                class="node offline soft rounded-2xl p-4 border border-slate-800"
+            >
 
-                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                    ✦
+                <div class="flex justify-between">
+
+                    <b class="text-xl">
+
+                        อุปกรณ์ 1
+
+                        <div class="text-xs text-slate-400 mt-1">
+
+                            Last update
+
+                            <span id="lastUpdate1">
+                                --
+                            </span>
+
+                        </div>
+
+                    </b>
+
+
+                    <span
+                        id="n1status"
+                        class="text-slate-500 text-xs font-bold"
+                    >
+
+                        ● OFFLINE
+
+                        <span class="badge rounded-full px-3 py-1 text-xs">
+                            ESP-NOW
+                        </span>
+
+                    </span>
+
                 </div>
 
-                <div>
 
-                    <h2 class="font-black text-lg">
-                        AI Analysis
-                    </h2>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
 
-                    <p class="text-xs text-slate-400">
-                        ภาพรวมอัตโนมัติ
-                    </p>
+                    <span class="text-slate-400">
+                        PM1.0
+                        <b id="n1pm1" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM2.5
+                        <b id="n1pm25" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM10
+                        <b id="n1pm10" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Temp
+                        <b id="n1temp" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Humidity
+                        <b id="n1hum" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Light
+                        <b id="n1light" class="text-white ml-1">--</b>
+                    </span>
 
                 </div>
+
+            </div>
+
+
+            <!-- NODE 2 -->
+
+            <div
+                id="nodeCard2"
+                class="node offline soft rounded-2xl p-4 border border-slate-800"
+            >
+
+                <div class="flex justify-between">
+
+                    <b class="text-xl">
+
+                        อุปกรณ์ 2
+
+                        <div class="text-xs text-slate-400 mt-1">
+
+                            Last update
+
+                            <span id="lastUpdate2">
+                                --
+                            </span>
+
+                        </div>
+
+                    </b>
+
+
+                    <span
+                        id="n2status"
+                        class="text-slate-500 text-xs font-bold"
+                    >
+
+                        ● OFFLINE
+
+                        <span class="badge rounded-full px-3 py-1 text-xs">
+                            ESP-NOW
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+
+                    <span class="text-slate-400">
+                        PM1.0
+                        <b id="n2pm1" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM2.5
+                        <b id="n2pm25" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM10
+                        <b id="n2pm10" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Temp
+                        <b id="n2temp" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Humidity
+                        <b id="n2hum" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Light
+                        <b id="n2light" class="text-white ml-1">--</b>
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- NODE 3 -->
+
+            <div
+                id="nodeCard3"
+                class="node offline soft rounded-2xl p-4 border border-slate-800"
+            >
+
+                <div class="flex justify-between">
+
+                    <b class="text-xl">
+
+                        อุปกรณ์ 3
+
+                        <div class="text-xs text-slate-400 mt-1">
+
+                            Last update
+
+                            <span id="lastUpdate3">
+                                --
+                            </span>
+
+                        </div>
+
+                    </b>
+
+
+                    <span
+                        id="n3status"
+                        class="text-slate-500 text-xs font-bold"
+                    >
+
+                        ● OFFLINE
+
+                        <span class="badge rounded-full px-3 py-1 text-xs">
+                            ESP-NOW
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+
+                    <span class="text-slate-400">
+                        PM1.0
+                        <b id="n3pm1" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM2.5
+                        <b id="n3pm25" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        PM10
+                        <b id="n3pm10" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Temp
+                        <b id="n3temp" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Humidity
+                        <b id="n3hum" class="text-white ml-1">--</b>
+                    </span>
+
+                    <span class="text-slate-400">
+                        Light
+                        <b id="n3light" class="text-white ml-1">--</b>
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AI SUMMARY -->
+
+    <div class="glass card p-5 flex flex-col justify-center">
+
+        <div class="flex items-center gap-3">
+
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                ✦
+            </div>
+
+            <div>
+
+                <h2 class="font-black text-lg">
+                    AI Analysis
+                </h2>
+
+                <p class="text-xs text-slate-400">
+                    ภาพรวมอัตโนมัติ
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="aiSummary"
+            class="text-sm leading-6 text-slate-300 mt-4"
+        >
+            กำลังรอข้อมูล...
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+HERO METRICS
+========================================================= -->
+
+<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            PM 1.0
+        </div>
+
+        <b id="heroPM1" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            µg/m³
+        </div>
+
+    </div>
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            PM 2.5
+        </div>
+
+        <b id="heroPM25" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            µg/m³
+        </div>
+
+    </div>
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            PM 10
+        </div>
+
+        <b id="heroPM10" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            µg/m³
+        </div>
+
+    </div>
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            อุณหภูมิ
+        </div>
+
+        <b id="heroTemp" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            °C
+        </div>
+
+    </div>
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            ความชื้น
+        </div>
+
+        <b id="heroHum" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            %
+        </div>
+
+    </div>
+
+
+    <div class="glass card metric p-5">
+
+        <div class="text-slate-400 text-sm">
+            แสง
+        </div>
+
+        <b id="heroLight" class="text-4xl mt-4 block">
+            --
+        </b>
+
+        <div class="text-xs text-slate-500 mt-1">
+            lux
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+QUALITY + ALERT
+========================================================= -->
+
+<section class="grid lg:grid-cols-3 gap-4 mb-4">
+
+
+    <div class="glass card p-5 lg:col-span-2">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <h2 class="text-xl font-black">
+                    คุณภาพอากาศปัจจุบัน
+                </h2>
+
+                <p class="text-xs text-slate-400 mt-1">
+                    ประเมินจากค่า PM2.5 ล่าสุด
+                </p>
 
             </div>
 
 
             <div
-                id="aiSummary"
-                class="text-sm leading-6 text-slate-300 mt-4"
+                id="qualityBadge"
+                class="rounded-full px-4 py-2 badge font-bold"
             >
-
-                กำลังรอข้อมูล...
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================================
-    HERO METRICS
-    ========================================================= -->
-
-    <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                PM 1.0
-            </div>
-
-            <b id="heroPM1" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
+                รอข้อมูล
             </div>
 
         </div>
 
 
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                PM 2.5
-            </div>
-
-            <b id="heroPM25" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
+        <div class="grid grid-cols-3 gap-3 mt-5">
 
 
-        <div class="glass card metric p-5">
+            <div class="soft rounded-xl p-4">
 
-            <div class="text-slate-400 text-sm">
-                PM 10
-            </div>
+                <span class="text-xs text-slate-400">
+                    เฉลี่ย PM2.5
+                </span>
 
-            <b id="heroPM10" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                µg/m³
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                อุณหภูมิ
-            </div>
-
-            <b id="heroTemp" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                °C
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                ความชื้น
-            </div>
-
-            <b id="heroHum" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                %
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-
-        <div class="glass card metric p-5">
-
-            <div class="text-slate-400 text-sm">
-                แสง
-            </div>
-
-            <b id="heroLight" class="text-4xl mt-4 block">
-                --
-            </b>
-
-            <div class="text-xs text-slate-500 mt-1">
-                lux
-            </div>
-
-            <div class="live mt-4">
-                ● LIVE
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================================
-    QUALITY + ALERT
-    ========================================================= -->
-
-    <section class="grid lg:grid-cols-3 gap-4 mb-4">
-
-
-        <div class="glass card p-5 lg:col-span-2">
-
-            <div class="flex justify-between items-center">
-
-                <div>
-
-                    <h2 class="text-xl font-black">
-                        คุณภาพอากาศปัจจุบัน
-                    </h2>
-
-                    <p class="text-xs text-slate-400 mt-1">
-                        ประเมินจากค่า PM2.5 ล่าสุด
-                    </p>
-
-                </div>
-
-
-                <div
-                    id="qualityBadge"
-                    class="rounded-full px-4 py-2 badge font-bold"
-                >
-
-                    รอข้อมูล
-
-                </div>
+                <b id="avgPM" class="block text-2xl mt-1">
+                    --
+                </b>
 
             </div>
 
 
-            <div class="grid grid-cols-3 gap-3 mt-5">
+            <div class="soft rounded-xl p-4">
+
+                <span class="text-xs text-slate-400">
+                    สูงสุด
+                </span>
+
+                <b id="maxPM" class="block text-2xl mt-1">
+                    --
+                </b>
+
+            </div>
 
 
-                <div class="soft rounded-xl p-4">
+            <div class="soft rounded-xl p-4">
 
-                    <span class="text-xs text-slate-400">
-                        เฉลี่ย PM2.5
-                    </span>
+                <span class="text-xs text-slate-400">
+                    ต่ำสุด
+                </span>
 
-                    <b id="avgPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
-
-
-                <div class="soft rounded-xl p-4">
-
-                    <span class="text-xs text-slate-400">
-                        สูงสุด
-                    </span>
-
-                    <b id="maxPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
-
-
-                <div class="soft rounded-xl p-4">
-
-                    <span class="text-xs text-slate-400">
-                        ต่ำสุด
-                    </span>
-
-                    <b id="minPM" class="block text-2xl mt-1">
-                        --
-                    </b>
-
-                </div>
+                <b id="minPM" class="block text-2xl mt-1">
+                    --
+                </b>
 
             </div>
 
         </div>
 
+    </div>
 
 
-        <div class="glass card p-5">
+    <div class="glass card p-5">
 
-            <h2 class="text-xl font-black">
-                🚨 Alerts
-            </h2>
+        <h2 class="text-xl font-black">
+            🚨 Alerts
+        </h2>
 
-            <div
-                id="alerts"
-                class="text-sm text-slate-300 mt-4"
-            >
-
-                กำลังตรวจสอบ...
-
-            </div>
-
+        <div
+            id="alerts"
+            class="text-sm text-slate-300 mt-4"
+        >
+            กำลังตรวจสอบ...
         </div>
 
-    </section>
+    </div>
 
+</section>
 
 
 <!-- =========================================================
@@ -694,9 +654,6 @@ HISTORICAL DATA & TREND
 
 <section class="glass card p-5 mb-4">
 
-    <!-- =====================================================
-    HEADER + CONTROLS
-    ===================================================== -->
 
     <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
 
@@ -712,8 +669,6 @@ HISTORICAL DATA & TREND
 
         </div>
 
-
-        <!-- CONTROLS -->
 
         <div class="flex flex-wrap gap-2 items-center justify-end">
 
@@ -763,14 +718,9 @@ HISTORICAL DATA & TREND
     </div>
 
 
-
-    <!-- =====================================================
-    BAR 1 : OVERALL AVERAGE
-    ===================================================== -->
+    <!-- OVERALL AVERAGE -->
 
     <div class="soft rounded-2xl p-4 mt-5">
-
-        <!-- TITLE -->
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
 
@@ -803,14 +753,8 @@ HISTORICAL DATA & TREND
         </div>
 
 
-        <!-- =================================================
-        6 VALUES — ONE ROW
-        ================================================= -->
-
         <div class="grid grid-cols-6 gap-6">
 
-
-            <!-- PM1 -->
 
             <div class="min-w-0">
 
@@ -818,10 +762,7 @@ HISTORICAL DATA & TREND
                     PM 1.0
                 </div>
 
-                <b
-                    id="averagePM1"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averagePM1" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -839,18 +780,13 @@ HISTORICAL DATA & TREND
             </div>
 
 
-            <!-- PM2.5 -->
-
             <div class="min-w-0">
 
                 <div class="text-xs text-slate-400">
                     PM 2.5
                 </div>
 
-                <b
-                    id="averagePM25"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averagePM25" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -868,18 +804,13 @@ HISTORICAL DATA & TREND
             </div>
 
 
-            <!-- PM10 -->
-
             <div class="min-w-0">
 
                 <div class="text-xs text-slate-400">
                     PM 10
                 </div>
 
-                <b
-                    id="averagePM10"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averagePM10" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -897,18 +828,13 @@ HISTORICAL DATA & TREND
             </div>
 
 
-            <!-- TEMPERATURE -->
-
             <div class="min-w-0">
 
                 <div class="text-xs text-slate-400">
                     อุณหภูมิ
                 </div>
 
-                <b
-                    id="averageTemp"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averageTemp" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -926,18 +852,13 @@ HISTORICAL DATA & TREND
             </div>
 
 
-            <!-- HUMIDITY -->
-
             <div class="min-w-0">
 
                 <div class="text-xs text-slate-400">
                     ความชื้น
                 </div>
 
-                <b
-                    id="averageHum"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averageHum" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -955,18 +876,13 @@ HISTORICAL DATA & TREND
             </div>
 
 
-            <!-- LIGHT -->
-
             <div class="min-w-0">
 
                 <div class="text-xs text-slate-400">
                     แสง
                 </div>
 
-                <b
-                    id="averageLight"
-                    class="block text-2xl mt-2"
-                >
+                <b id="averageLight" class="block text-2xl mt-2">
                     --
                 </b>
 
@@ -988,14 +904,9 @@ HISTORICAL DATA & TREND
     </div>
 
 
-
-    <!-- =====================================================
-    BAR 2 : SELECTED VARIABLE
-    ===================================================== -->
+    <!-- SELECTED VARIABLE -->
 
     <div class="soft rounded-2xl p-4 mt-4">
-
-        <!-- TITLE -->
 
         <div class="mb-5">
 
@@ -1019,14 +930,8 @@ HISTORICAL DATA & TREND
         </div>
 
 
-        <!-- =================================================
-        5 VALUES — ONE ROW
-        ================================================= -->
-
         <div class="grid grid-cols-5 gap-6">
 
-
-            <!-- AVERAGE -->
 
             <div class="min-w-0">
 
@@ -1034,17 +939,12 @@ HISTORICAL DATA & TREND
                     ค่าเฉลี่ย
                 </span>
 
-                <b
-                    id="trendAvg"
-                    class="block text-2xl mt-2"
-                >
+                <b id="trendAvg" class="block text-2xl mt-2">
                     --
                 </b>
-                
+
             </div>
 
-
-            <!-- MAX -->
 
             <div class="min-w-0">
 
@@ -1052,17 +952,12 @@ HISTORICAL DATA & TREND
                     ค่าสูงสุด
                 </span>
 
-                <b
-                    id="trendMax"
-                    class="block text-2xl mt-2"
-                >
+                <b id="trendMax" class="block text-2xl mt-2">
                     --
                 </b>
 
             </div>
 
-
-            <!-- MIN -->
 
             <div class="min-w-0">
 
@@ -1070,17 +965,12 @@ HISTORICAL DATA & TREND
                     ค่าต่ำสุด
                 </span>
 
-                <b
-                    id="trendMin"
-                    class="block text-2xl mt-2"
-                >
+                <b id="trendMin" class="block text-2xl mt-2">
                     --
                 </b>
 
             </div>
 
-
-            <!-- LAST -->
 
             <div class="min-w-0">
 
@@ -1088,17 +978,12 @@ HISTORICAL DATA & TREND
                     ค่าล่าสุด
                 </span>
 
-                <b
-                    id="trendLast"
-                    class="block text-2xl mt-2"
-                >
+                <b id="trendLast" class="block text-2xl mt-2">
                     --
                 </b>
 
             </div>
 
-
-            <!-- TREND -->
 
             <div class="min-w-0">
 
@@ -1106,10 +991,7 @@ HISTORICAL DATA & TREND
                     แนวโน้ม
                 </span>
 
-                <b
-                    id="trend"
-                    class="block text-2xl mt-2"
-                >
+                <b id="trend" class="block text-2xl mt-2">
                     รอข้อมูล
                 </b>
 
@@ -1120,10 +1002,7 @@ HISTORICAL DATA & TREND
     </div>
 
 
-
-    <!-- =====================================================
-    HISTORY CHART
-    ===================================================== -->
+    <!-- HISTORY CHART -->
 
     <div class="soft rounded-xl p-4 mt-4">
 
@@ -1136,1338 +1015,1297 @@ HISTORICAL DATA & TREND
     </div>
 
 </section>
-    <!-- =========================================================
-    FORECAST + AI
-    ========================================================= -->
-
-    <section class="grid lg:grid-cols-2 gap-4 mb-4">
 
 
-        <div class="glass card p-5">
+<!-- =========================================================
+FORECAST + AI
+========================================================= -->
+
+<section class="grid lg:grid-cols-2 gap-4 mb-4">
 
 
-            <div class="flex justify-between">
+    <div class="glass card p-5">
 
-                <div>
+        <div class="flex justify-between">
 
-                    <h2 class="text-xl font-black">
-                        🔮 Forecast
-                    </h2>
+            <div>
 
-                    <p class="text-xs text-slate-400 mt-1">
-                        แนวโน้มจากข้อมูลย้อนหลัง
-                    </p>
+                <h2 class="text-xl font-black">
+                    🔮 Forecast
+                </h2>
 
-                </div>
-
-
-                <span
-                    id="forecastBadge"
-                    class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
-                >
-                    PREVIEW
-                </span>
+                <p class="text-xs text-slate-400 mt-1">
+                    แนวโน้มจากข้อมูลย้อนหลัง
+                </p>
 
             </div>
 
 
-            <div
-                id="forecastMessage"
-                class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
+            <span
+                id="forecastBadge"
+                class="badge rounded-full px-3 py-1 text-xs text-cyan-300"
             >
-
-                รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
-
-            </div>
-
-
-            <canvas id="forecastChart" class="mt-4"></canvas>
+                PREVIEW
+            </span>
 
         </div>
 
 
-
-        <div class="glass card p-5">
-
-            <h2 class="text-xl font-black">
-                AI วิเคราะห์สถานการณ์
-            </h2>
-
-
-            <div
-                id="aiDetails"
-                class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
-            >
-
-                รอข้อมูลเพื่อวิเคราะห์
-
-            </div>
-
+        <div
+            id="forecastMessage"
+            class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
+        >
+            รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
         </div>
 
-    </section>
 
-
+        <canvas id="forecastChart" class="mt-4"></canvas>
 
     </div>
 
 
+    <div class="glass card p-5">
 
-    <script>
-
-
-    /* =========================================================
-    API
-    ========================================================= */
-
-    const API_URL =
-        "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
+        <h2 class="text-xl font-black">
+            AI วิเคราะห์สถานการณ์
+        </h2>
 
 
-    const HISTORY_API =
-        "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
+        <div
+            id="aiDetails"
+            class="soft rounded-xl p-5 mt-4 text-sm leading-7 text-slate-300"
+        >
+            รอข้อมูลเพื่อวิเคราะห์
+        </div>
+
+    </div>
+
+</section>
+
+</div>
 
 
-    /* =========================================================
-    CONFIG
-    ========================================================= */
+<script>
 
-    const TOTAL_NODES = 3;
+/* =========================================================
+API + CONFIG
+========================================================= */
 
-    const NODE_OFFLINE_AFTER_SECONDS = 30;
+const API_URL =
+    "https://educational-pm25-api.project2026csemn.workers.dev/api/get_latest.php";
 
+const HISTORY_API =
+    "https://educational-pm25-api.project2026csemn.workers.dev/api/get_history.php";
 
-    /* =========================================================
-    VARIABLES
-    ========================================================= */
+const TOTAL_NODES = 3;
 
-    let latestRecord = null;
+const NODE_OFFLINE_AFTER_SECONDS = 30;
 
-    let records = [];
-
-    let historyChart = null;
-
-    let forecastChart = null;
-
-    let metric = "pm25";
-
-    let averageRange = "24h";
-
-    let apiConnectionOnline = false;
+const NODE_SLEEP_OFFLINE_AFTER_SECONDS = 6 * 60;
 
 
-    /* =========================================================
-    RANGE CONFIG
-    ========================================================= */
+/* =========================================================
+STATE
+========================================================= */
 
-    const RANGE_CONFIG = {
+let latestRecord = null;
 
-        "30m": {
-            label: "30 นาที",
-            minutes: 30,
-            apiRange: "24h"
-        },
+let records = [];
 
-        "1h": {
-            label: "1 ชั่วโมง",
-            minutes: 60,
-            apiRange: "24h"
-        },
+let historyChart = null;
 
-        "3h": {
-            label: "3 ชั่วโมง",
-            minutes: 180,
-            apiRange: "24h"
-        },
+let forecastChart = null;
 
-        "6h": {
-            label: "6 ชั่วโมง",
-            minutes: 360,
-            apiRange: "24h"
-        },
+let metric = "pm25";
 
-        "12h": {
-            label: "12 ชั่วโมง",
-            minutes: 720,
-            apiRange: "24h"
-        },
+let averageRange = "24h";
 
-        "24h": {
-            label: "24 ชั่วโมง",
-            minutes: 1440,
-            apiRange: "24h"
-        },
-
-        "3d": {
-            label: "3 วัน",
-            minutes: 4320,
-            apiRange: "7d"
-        },
-
-        "7d": {
-            label: "7 วัน",
-            minutes: 10080,
-            apiRange: "7d"
-        },
-
-        "30d": {
-            label: "30 วัน",
-            minutes: 43200,
-            apiRange: "30d"
-        }
-
-    };
+let apiConnectionOnline = false;
 
 
-    /* =========================================================
-    HELPER
-    ========================================================= */
+/* =========================================================
+RANGE
+========================================================= */
 
-    const $ = id =>
-        document.getElementById(id);
+const RANGE_CONFIG = {
+
+    "30m": {
+        label: "30 นาที",
+        minutes: 30,
+        apiRange: "24h"
+    },
+
+    "1h": {
+        label: "1 ชั่วโมง",
+        minutes: 60,
+        apiRange: "24h"
+    },
+
+    "3h": {
+        label: "3 ชั่วโมง",
+        minutes: 180,
+        apiRange: "24h"
+    },
+
+    "6h": {
+        label: "6 ชั่วโมง",
+        minutes: 360,
+        apiRange: "24h"
+    },
+
+    "12h": {
+        label: "12 ชั่วโมง",
+        minutes: 720,
+        apiRange: "24h"
+    },
+
+    "24h": {
+        label: "24 ชั่วโมง",
+        minutes: 1440,
+        apiRange: "24h"
+    },
+
+    "3d": {
+        label: "3 วัน",
+        minutes: 4320,
+        apiRange: "7d"
+    },
+
+    "7d": {
+        label: "7 วัน",
+        minutes: 10080,
+        apiRange: "7d"
+    },
+
+    "30d": {
+        label: "30 วัน",
+        minutes: 43200,
+        apiRange: "30d"
+    }
+
+};
 
 
-    /* =========================================================
-    FORMAT NUMBER
-    ========================================================= */
+/* =========================================================
+HELPERS
+========================================================= */
 
-    function fmt(value){
+const $ = id =>
+    document.getElementById(id);
 
-        if(
-            value === null ||
-            value === undefined ||
-            value === "" ||
-            isNaN(value)
-        ){
 
-            return "--";
+function fmt(value){
 
-        }
+    if(
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        isNaN(value)
+    ){
 
-        return Number(value).toFixed(1);
+        return "--";
+
+    }
+
+    return Number(value).toFixed(1);
+
+}
+
+
+function parseDate(value){
+
+    if(!value){
+        return null;
+    }
+
+
+    if(value instanceof Date){
+
+        return isNaN(value.getTime())
+            ? null
+            : value;
 
     }
 
 
-    /* =========================================================
-    PARSE DATE
-    ========================================================= */
-
-    function parseDate(value){
-
-        if(!value){
-            return null;
-        }
+    let text =
+        String(value).trim();
 
 
-        if(value instanceof Date){
-
-            return isNaN(value.getTime())
-                ? null
-                : value;
-
-        }
+    if(!text){
+        return null;
+    }
 
 
-        let text =
-            String(value).trim();
-
-
-        if(!text){
-            return null;
-        }
-
-
-        if(
-            /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
-                .test(text)
-        ){
-
-            const date =
-                new Date(
-                    text.replace(" ","T") + "Z"
-                );
-
-
-            return isNaN(date.getTime())
-                ? null
-                : date;
-
-        }
-
-
-        if(
-            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
-                .test(text)
-        ){
-
-            const date =
-                new Date(text + "Z");
-
-
-            return isNaN(date.getTime())
-                ? null
-                : date;
-
-        }
-
+    if(
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+            .test(text)
+    ){
 
         const date =
-            new Date(text);
+            new Date(
+                text.replace(" ","T") + "Z"
+            );
 
 
-        if(isNaN(date.getTime())){
-            return null;
-        }
-
-
-        return date;
+        return isNaN(date.getTime())
+            ? null
+            : date;
 
     }
 
 
-    /* =========================================================
-    THAI TIME
-    ========================================================= */
-
-    function formatThaiTime(value){
+    if(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
+            .test(text)
+    ){
 
         const date =
-            parseDate(value);
+            new Date(text + "Z");
 
 
-        if(!date){
-            return "--";
-        }
-
-
-        return date.toLocaleTimeString(
-            "th-TH",
-            {
-
-                timeZone:
-                    "Asia/Bangkok",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit",
-
-                hour12:
-                    false
-
-            }
-        );
+        return isNaN(date.getTime())
+            ? null
+            : date;
 
     }
 
 
-    /* =========================================================
-    QUALITY
-    ========================================================= */
+    const date =
+        new Date(text);
 
-    function quality(value){
 
-        if(
-            value === null ||
-            value === undefined ||
-            isNaN(value)
-        ){
+    return isNaN(date.getTime())
+        ? null
+        : date;
 
-            return "รอข้อมูล";
+}
 
+
+function formatThaiTime(value){
+
+    const date =
+        parseDate(value);
+
+
+    if(!date){
+        return "--";
+    }
+
+
+    return date.toLocaleTimeString(
+        "th-TH",
+        {
+            timeZone: "Asia/Bangkok",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
         }
+    );
+
+}
 
 
-        value =
-            Number(value);
+/* =========================================================
+QUALITY
+========================================================= */
 
+function quality(value){
 
-        if(value <= 15)
-            return "ดี";
+    if(
+        value === null ||
+        value === undefined ||
+        isNaN(value)
+    ){
 
-
-        if(value <= 25)
-            return "ปานกลาง";
-
-
-        if(value <= 37.5)
-            return "เริ่มมีผลกระทบ";
-
-
-        return "มีผลกระทบ";
+        return "รอข้อมูล";
 
     }
 
 
-    /* =========================================================
-    NORMALIZE RECORD
-    ========================================================= */
-
-    function normalize(d){
-
-        if(!d){
-            return null;
-        }
+    value =
+        Number(value);
 
 
-        return {
+    if(value <= 15)
+        return "ดี";
 
-            id:
-                d.id == null
-                    ? null
-                    : Number(d.id),
 
-            device_id:
-                d.device_id == null
-                    ? ""
-                    : String(
-                        d.device_id
-                    ).trim(),
+    if(value <= 25)
+        return "ปานกลาง";
 
-            status:
-                d.status == null
-                    ? "offline"
-                    : String(
-                        d.status
-                    )
+
+    if(value <= 37.5)
+        return "เริ่มมีผลกระทบ";
+
+
+    return "มีผลกระทบ";
+
+}
+
+
+/* =========================================================
+NORMALIZE
+========================================================= */
+
+function normalize(d){
+
+    if(!d){
+        return null;
+    }
+
+
+    return {
+
+        id:
+            d.id == null
+                ? null
+                : Number(d.id),
+
+        device_id:
+            d.device_id == null
+                ? ""
+                : String(d.device_id).trim(),
+
+        status:
+            d.status == null
+                ? "offline"
+                : String(d.status)
                     .trim()
                     .toLowerCase(),
 
-            pm1:
-                d.pm1 == null
-                    ? null
-                    : Number(d.pm1),
+        pm1:
+            d.pm1 == null
+                ? null
+                : Number(d.pm1),
 
-            pm25:
-                d.pm25 == null
-                    ? null
-                    : Number(d.pm25),
+        pm25:
+            d.pm25 == null
+                ? null
+                : Number(d.pm25),
 
-            pm10:
-                d.pm10 == null
-                    ? null
-                    : Number(d.pm10),
+        pm10:
+            d.pm10 == null
+                ? null
+                : Number(d.pm10),
 
-            temperature:
-                d.temperature == null
-                    ? null
-                    : Number(d.temperature),
+        temperature:
+            d.temperature == null
+                ? null
+                : Number(d.temperature),
 
-            humidity:
-                d.humidity == null
-                    ? null
-                    : Number(d.humidity),
+        humidity:
+            d.humidity == null
+                ? null
+                : Number(d.humidity),
 
-            light:
-                d.light == null
-                    ? null
-                    : Number(d.light),
+        light:
+            d.light == null
+                ? null
+                : Number(d.light),
 
-            timestamp:
-                d.recorded_at ||
-                d.timestamp ||
-                d.created_at ||
-                null
+        timestamp:
+            d.recorded_at ||
+            d.timestamp ||
+            d.created_at ||
+            null
 
-        };
+    };
 
+}
+
+
+function normalizeNodeName(value){
+
+    if(value == null){
+        return "";
     }
 
 
-    /* =========================================================
-    NODE ID NORMALIZER
-    ========================================================= */
-
-    function normalizeNodeName(value){
-
-        if(value == null){
-            return "";
-        }
-
-
-        const text =
-            String(value)
+    const text =
+        String(value)
             .trim()
             .toLowerCase();
 
 
-        const match =
-            text.match(/(\d+)/);
+    const match =
+        text.match(/(\d+)/);
 
 
-        if(match){
-
-            return "node" + match[1];
-
-        }
-
-
-        return text;
-
+    if(match){
+        return "node" + match[1];
     }
 
 
-    /* =========================================================
-    IS SAME NODE
-    ========================================================= */
+    return text;
 
-    function isSameNode(
-        deviceId,
-        nodeNumber
-    ){
-
-        const normalized =
-            normalizeNodeName(
-                deviceId
-            );
+}
 
 
-        return normalized ===
-            "node" + nodeNumber;
+function isSameNode(
+    deviceId,
+    nodeNumber
+){
 
+    return (
+        normalizeNodeName(deviceId) ===
+        "node" + nodeNumber
+    );
+
+}
+
+
+/* =========================================================
+NODE STATUS
+========================================================= */
+
+function getNodeAgeSeconds(node){
+
+    if(!node || !node.timestamp){
+        return Infinity;
     }
 
 
-    /* =========================================================
-    NODE AGE
-    ========================================================= */
-
-    function getNodeAgeSeconds(node){
-
-        if(!node || !node.timestamp){
-            return Infinity;
-        }
+    const date =
+        parseDate(node.timestamp);
 
 
-        const date =
-            parseDate(
-                node.timestamp
-            );
-
-
-        if(!date){
-            return Infinity;
-        }
-
-
-        const age =
-            (
-                Date.now() -
-                date.getTime()
-            ) / 1000;
-
-
-        if(age < 0){
-            return 0;
-        }
-
-
-        return age;
-
+    if(!date){
+        return Infinity;
     }
 
 
-    /* =========================================================
-    NODE FRESH
-    ========================================================= */
-
-    function isNodeFresh(node){
-
-        if(!node){
-            return false;
-        }
+    const age =
+        (
+            Date.now() -
+            date.getTime()
+        ) / 1000;
 
 
-        return (
-            getNodeAgeSeconds(node) <=
-            NODE_OFFLINE_AFTER_SECONDS
-        );
+    return age < 0
+        ? 0
+        : age;
 
+}
+
+
+function isNodeFresh(node){
+
+    if(!node){
+        return false;
     }
 
 
-    /* =========================================================
-    NODE STATUS
-    ========================================================= */
+    return (
+        getNodeAgeSeconds(node) <=
+        NODE_OFFLINE_AFTER_SECONDS
+    );
 
-    function getNodeStatus(node){
+}
 
-        if(!apiConnectionOnline){
+
+function isNodeSleepExpired(node){
+
+    if(!node){
+        return true;
+    }
+
+
+    return (
+        getNodeAgeSeconds(node) >
+        NODE_SLEEP_OFFLINE_AFTER_SECONDS
+    );
+
+}
+
+
+function getNodeStatus(node){
+
+    if(!apiConnectionOnline){
+        return "offline";
+    }
+
+
+    if(!node){
+        return "offline";
+    }
+
+
+    const status =
+        String(node.status || "")
+            .trim()
+            .toLowerCase();
+
+
+    if(status === "sleep"){
+
+        if(isNodeSleepExpired(node)){
             return "offline";
         }
 
+        return "sleep";
 
-        if(!node){
-            return "offline";
-        }
+    }
 
+
+    if(status === "online"){
 
         if(!isNodeFresh(node)){
             return "offline";
         }
 
-
-        const status =
-            String(
-                node.status || ""
-            )
-            .trim()
-            .toLowerCase();
-
-
-        if(status === "online"){
-            return "online";
-        }
-
-
-        if(status === "sleep"){
-            return "sleep";
-        }
-
-
-        return "offline";
+        return "online";
 
     }
 
 
-    /* =========================================================
-    GET LATEST NODE
-    ========================================================= */
+    return "offline";
 
-    function getLatestNode(
-        nodeNumber
-    ){
-
-        const list =
-            records.filter(
-                record =>
-                    isSameNode(
-                        record.device_id,
-                        nodeNumber
-                    )
-            );
+}
 
 
-        if(!list.length){
-            return null;
+/* =========================================================
+LATEST NODE
+========================================================= */
+
+function getLatestNode(nodeNumber){
+
+    const list =
+        records.filter(
+            record =>
+                isSameNode(
+                    record.device_id,
+                    nodeNumber
+                )
+        );
+
+
+    if(!list.length){
+        return null;
+    }
+
+
+    let latest = null;
+
+
+    for(const record of list){
+
+        if(!record.timestamp){
+            continue;
         }
 
 
-        let latest = null;
+        if(!latest){
+
+            latest = record;
+
+            continue;
+
+        }
 
 
-        for(const record of list){
+        const currentDate =
+            parseDate(record.timestamp);
 
-            if(!record.timestamp){
-                continue;
+
+        const latestDate =
+            parseDate(latest.timestamp);
+
+
+        if(
+            currentDate &&
+            latestDate &&
+            currentDate.getTime() >
+            latestDate.getTime()
+        ){
+
+            latest = record;
+
+        }
+
+    }
+
+
+    return latest;
+
+}
+
+
+/* =========================================================
+NODE DATA + STATUS
+========================================================= */
+
+function setNode(
+    prefix,
+    data
+){
+
+    const fields = [
+        "pm1",
+        "pm25",
+        "pm10",
+        "temp",
+        "hum",
+        "light"
+    ];
+
+
+    if(!data){
+
+        fields.forEach(
+            field => {
+
+                const element =
+                    $(prefix + field);
+
+
+                if(element){
+                    element.textContent = "--";
+                }
+
+            }
+        );
+
+
+        return;
+
+    }
+
+
+    $(prefix+"pm1").textContent =
+        fmt(data.pm1);
+
+    $(prefix+"pm25").textContent =
+        fmt(data.pm25);
+
+    $(prefix+"pm10").textContent =
+        fmt(data.pm10);
+
+    $(prefix+"temp").textContent =
+        data.temperature == null
+            ? "--"
+            : fmt(data.temperature) + "°C";
+
+    $(prefix+"hum").textContent =
+        data.humidity == null
+            ? "--"
+            : fmt(data.humidity) + "%";
+
+    $(prefix+"light").textContent =
+        data.light == null
+            ? "--"
+            : fmt(data.light) + " lux";
+
+}
+
+
+function updateNodeStatus(
+    statusId,
+    cardId,
+    node
+){
+
+    const statusElement =
+        $(statusId);
+
+
+    const cardElement =
+        $(cardId);
+
+
+    if(!statusElement || !cardElement){
+        return;
+    }
+
+
+    const nodeStatus =
+        getNodeStatus(node);
+
+
+    if(nodeStatus === "online"){
+
+        statusElement.innerHTML = `
+
+            <span class="status-online-dot">
+                ●
+            </span>
+
+            ONLINE
+
+            <span class="badge rounded-full px-3 py-1 text-xs">
+                ESP-NOW
+            </span>
+
+        `;
+
+
+        statusElement.className =
+            "status-online text-xs font-bold";
+
+
+        cardElement.classList.remove(
+            "offline"
+        );
+
+    }
+
+
+    else if(nodeStatus === "sleep"){
+
+        statusElement.innerHTML = `
+
+            <span class="status-sleep-dot">
+                ●
+            </span>
+
+            SLEEP
+
+            <span class="badge rounded-full px-3 py-1 text-xs">
+                ESP-NOW
+            </span>
+
+        `;
+
+
+        statusElement.className =
+            "status-sleep text-xs font-bold";
+
+
+        cardElement.classList.remove(
+            "offline"
+        );
+
+    }
+
+
+    else{
+
+        statusElement.innerHTML = `
+
+            <span class="status-offline-dot">
+                ●
+            </span>
+
+            OFFLINE
+
+            <span class="badge rounded-full px-3 py-1 text-xs">
+                ESP-NOW
+            </span>
+
+        `;
+
+
+        statusElement.className =
+            "status-offline text-xs font-bold";
+
+
+        cardElement.classList.add(
+            "offline"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+SYSTEM LIVE
+========================================================= */
+
+function countActiveNodes(){
+
+    const nodes = [
+
+        getLatestNode(1),
+        getLatestNode(2),
+        getLatestNode(3)
+
+    ];
+
+
+    return nodes.filter(
+        node => {
+
+            const status =
+                getNodeStatus(node);
+
+
+            return (
+                status === "online" ||
+                status === "sleep"
+            );
+
+        }
+    ).length;
+
+}
+
+
+function updateSystemLive(){
+
+    const count =
+        countActiveNodes();
+
+
+    const countElement =
+        $("onlineCountTop");
+
+
+    const labelElement =
+        $("systemLiveLabel");
+
+
+    if(!countElement || !labelElement){
+        return;
+    }
+
+
+    if(count === 0){
+
+        countElement.textContent =
+            "OFFLINE";
+
+        labelElement.textContent =
+            "";
+
+        return;
+
+    }
+
+
+    countElement.textContent =
+        count + " / " + TOTAL_NODES;
+
+    labelElement.textContent =
+        "Nodes";
+
+}
+
+
+/* =========================================================
+LATEST API
+========================================================= */
+
+async function loadLatest(){
+
+    const response =
+        await fetch(
+
+            API_URL +
+            "?t=" +
+            Date.now(),
+
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "get_latest.php HTTP " +
+            response.status
+        );
+
+    }
+
+
+    const text =
+        await response.text();
+
+
+    let json;
+
+
+    try{
+
+        json =
+            JSON.parse(text);
+
+    }
+
+    catch(error){
+
+        console.error(
+            "LATEST RAW:",
+            text
+        );
+
+
+        throw new Error(
+            "get_latest.php ไม่ได้ส่ง JSON"
+        );
+
+    }
+
+
+    if(
+        !json ||
+        !json.success
+    ){
+
+        throw new Error(
+            json?.message ||
+            "get_latest.php ส่งข้อมูลไม่สำเร็จ"
+        );
+
+    }
+
+
+    if(
+        json.data &&
+        !Array.isArray(json.data)
+    ){
+
+        return normalize(
+            json.data
+        );
+
+    }
+
+
+    if(
+        Array.isArray(json.data) &&
+        json.data.length
+    ){
+
+        return normalize(
+            json.data[0]
+        );
+
+    }
+
+
+    throw new Error(
+        "get_latest.php ไม่มีข้อมูล"
+    );
+
+}
+
+
+/* =========================================================
+HISTORY API
+========================================================= */
+
+function getApiRange(){
+
+    const config =
+        RANGE_CONFIG[
+            averageRange
+        ];
+
+
+    return config
+        ? config.apiRange
+        : "24h";
+
+}
+
+
+async function loadHistory(){
+
+    const apiRange =
+        getApiRange();
+
+
+    const url =
+        HISTORY_API +
+        "?range=" +
+        encodeURIComponent(apiRange) +
+        "&limit=5000" +
+        "&t=" +
+        Date.now();
+
+
+    const response =
+        await fetch(
+
+            url,
+
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "get_history.php HTTP " +
+            response.status
+        );
+
+    }
+
+
+    const text =
+        await response.text();
+
+
+    let json;
+
+
+    try{
+
+        json =
+            JSON.parse(text);
+
+    }
+
+    catch(error){
+
+        console.error(
+            "HISTORY RAW:",
+            text
+        );
+
+
+        throw new Error(
+            "get_history.php ไม่ได้ส่ง JSON"
+        );
+
+    }
+
+
+    if(!json.success){
+
+        throw new Error(
+            json.message ||
+            "get_history.php ทำงานผิดพลาด"
+        );
+
+    }
+
+
+    if(!Array.isArray(json.data)){
+
+        throw new Error(
+            "get_history.php data ไม่ใช่ Array"
+        );
+
+    }
+
+
+    console.log(
+        "History rows:",
+        json.data.length,
+        "API count:",
+        json.count,
+        "API range:",
+        apiRange,
+        "Selected range:",
+        averageRange
+    );
+
+
+    return json.data
+        .map(normalize)
+        .filter(Boolean);
+
+}
+
+
+/* =========================================================
+OFFLINE
+========================================================= */
+
+function forceAllNodesOffline(){
+
+    const configs = [
+
+        {
+            status: "n1status",
+            card: "nodeCard1"
+        },
+
+        {
+            status: "n2status",
+            card: "nodeCard2"
+        },
+
+        {
+            status: "n3status",
+            card: "nodeCard3"
+        }
+
+    ];
+
+
+    configs.forEach(
+        config => {
+
+            const statusElement =
+                $(config.status);
+
+
+            const cardElement =
+                $(config.card);
+
+
+            if(statusElement){
+
+                statusElement.innerHTML = `
+
+                    <span class="status-offline-dot">
+                        ●
+                    </span>
+
+                    OFFLINE
+
+                    <span class="badge rounded-full px-3 py-1 text-xs">
+                        ESP-NOW
+                    </span>
+
+                `;
+
+
+                statusElement.className =
+                    "status-offline text-xs font-bold";
+
             }
 
 
-            if(!latest){
+            if(cardElement){
 
-                latest = record;
-
-                continue;
+                cardElement.classList.add(
+                    "offline"
+                );
 
             }
 
+        }
+    );
 
-            const currentDate =
+
+    const countElement =
+        $("onlineCountTop");
+
+
+    const labelElement =
+        $("systemLiveLabel");
+
+
+    if(countElement){
+
+        countElement.textContent =
+            "OFFLINE";
+
+    }
+
+
+    if(labelElement){
+
+        labelElement.textContent =
+            "";
+
+    }
+
+}
+
+
+/* =========================================================
+HISTORY WINDOW
+========================================================= */
+
+function getSelectedTimeWindow(){
+
+    const config =
+        RANGE_CONFIG[
+            averageRange
+        ];
+
+
+    if(!config){
+        return null;
+    }
+
+
+    const end =
+        new Date();
+
+
+    const start =
+        new Date(
+            end.getTime() -
+            config.minutes *
+            60 *
+            1000
+        );
+
+
+    return {
+        start,
+        end
+    };
+
+}
+
+
+function getRecordsInSelectedRange(){
+
+    const window =
+        getSelectedTimeWindow();
+
+
+    if(!window){
+        return [];
+    }
+
+
+    return records.filter(
+        record => {
+
+            const date =
                 parseDate(
                     record.timestamp
                 );
 
 
-            const latestDate =
-                parseDate(
-                    latest.timestamp
-                );
-
-
-            if(
-                currentDate &&
-                latestDate &&
-                currentDate.getTime() >
-                latestDate.getTime()
-            ){
-
-                latest = record;
-
+            if(!date){
+                return false;
             }
 
+
+            return (
+                date >= window.start &&
+                date <= window.end
+            );
+
         }
+    );
+
+}
 
 
-        return latest;
+/* =========================================================
+STATISTICS
+========================================================= */
 
-    }
+function calculateAverage(
+    data,
+    field
+){
 
-
-    /* =========================================================
-    SET NODE DATA
-    ========================================================= */
-
-    function setNode(
-        prefix,
+    const values =
         data
-    ){
-
-        const fields = [
-            "pm1",
-            "pm25",
-            "pm10",
-            "temp",
-            "hum",
-            "light"
-        ];
-
-
-        if(!data){
-
-            fields.forEach(
-                field => {
-
-                    const element =
-                        $(prefix + field);
-
-
-                    if(element){
-
-                        element.textContent =
-                            "--";
-
-                    }
-
-                }
-            );
-
-
-            return;
-
-        }
-
-
-        $(prefix+"pm1").textContent =
-            fmt(data.pm1);
-
-
-        $(prefix+"pm25").textContent =
-            fmt(data.pm25);
-
-
-        $(prefix+"pm10").textContent =
-            fmt(data.pm10);
-
-
-        $(prefix+"temp").textContent =
-            data.temperature == null
-                ? "--"
-                : fmt(
-                    data.temperature
-                ) + "°C";
-
-
-        $(prefix+"hum").textContent =
-            data.humidity == null
-                ? "--"
-                : fmt(
-                    data.humidity
-                ) + "%";
-
-
-        $(prefix+"light").textContent =
-            data.light == null
-                ? "--"
-                : fmt(
-                    data.light
-                ) + " lux";
-
-    }
-
-
-    /* =========================================================
-    UPDATE NODE STATUS
-    ========================================================= */
-
-    function updateNodeStatus(
-        statusId,
-        cardId,
-        node
-    ){
-
-        const statusElement =
-            $(statusId);
-
-
-        const cardElement =
-            $(cardId);
-
-
-        if(!statusElement || !cardElement){
-            return;
-        }
-
-
-        const nodeStatus =
-            getNodeStatus(node);
-
-
-        if(nodeStatus === "online"){
-
-            statusElement.innerHTML = `
-
-                <span class="status-online-dot">
-                    ●
-                </span>
-
-                ONLINE
-
-                <span class="badge rounded-full px-3 py-1 text-xs">
-                    ESP-NOW
-                </span>
-
-            `;
-
-
-            statusElement.className =
-                "status-online text-xs font-bold";
-
-
-            cardElement
-                .classList
-                .remove("offline");
-
-        }
-
-
-        else if(nodeStatus === "sleep"){
-
-            statusElement.innerHTML = `
-
-                <span class="status-sleep-dot">
-                    ●
-                </span>
-
-                SLEEP
-
-                <span class="badge rounded-full px-3 py-1 text-xs">
-                    ESP-NOW
-                </span>
-
-            `;
-
-
-            statusElement.className =
-                "status-sleep text-xs font-bold";
-
-
-            cardElement
-                .classList
-                .remove("offline");
-
-        }
-
-
-        else{
-
-            statusElement.innerHTML = `
-
-                <span class="status-offline-dot">
-                    ●
-                </span>
-
-                OFFLINE
-
-                <span class="badge rounded-full px-3 py-1 text-xs">
-                    ESP-NOW
-                </span>
-
-            `;
-
-
-            statusElement.className =
-                "status-offline text-xs font-bold";
-
-
-            cardElement
-                .classList
-                .add("offline");
-
-        }
-
-    }
-
-
-    /* =========================================================
-    COUNT ONLINE
-    ========================================================= */
-
-    function countOnlineNodes(){
-
-        const nodes = [
-
-            getLatestNode(1),
-            getLatestNode(2),
-            getLatestNode(3)
-
-        ];
-
-
-        return nodes.filter(
-            node =>
-                getNodeStatus(node) ===
-                "online"
-        ).length;
-
-    }
-
-
-    /* =========================================================
-    LOAD LATEST API
-    ========================================================= */
-
-    async function loadLatest(){
-
-        const response =
-            await fetch(
-
-                API_URL +
-                "?t=" +
-                Date.now(),
-
-                {
-
-                    method:
-                        "GET",
-
-                    cache:
-                        "no-store",
-
-                    headers:{
-
-                        "Accept":
-                            "application/json"
-
-                    }
-
-                }
-
-            );
-
-
-        if(!response.ok){
-
-            throw new Error(
-                "get_latest.php HTTP " +
-                response.status
-            );
-
-        }
-
-
-        const text =
-            await response.text();
-
-
-        let json;
-
-
-        try{
-
-            json =
-                JSON.parse(text);
-
-        }
-
-        catch(error){
-
-            console.error(
-                "LATEST RAW:",
-                text
-            );
-
-
-            throw new Error(
-                "get_latest.php ไม่ได้ส่ง JSON"
-            );
-
-        }
-
-
-        if(
-            !json ||
-            !json.success
-        ){
-
-            throw new Error(
-                json?.message ||
-                "get_latest.php ส่งข้อมูลไม่สำเร็จ"
-            );
-
-        }
-
-
-        if(
-            json.data &&
-            !Array.isArray(
-                json.data
-            )
-        ){
-
-            return normalize(
-                json.data
-            );
-
-        }
-
-
-        if(
-            Array.isArray(
-                json.data
-            ) &&
-            json.data.length
-        ){
-
-            return normalize(
-                json.data[0]
-            );
-
-        }
-
-
-        throw new Error(
-            "get_latest.php ไม่มีข้อมูล"
-        );
-
-    }
-
-
-    /* =========================================================
-    HISTORY API RANGE
-    ========================================================= */
-
-    function getApiRange(){
-
-        const config =
-            RANGE_CONFIG[
-                averageRange
-            ];
-
-
-        if(!config){
-            return "24h";
-        }
-
-
-        return config.apiRange;
-
-    }
-
-
-    /* =========================================================
-    LOAD HISTORY
-    ========================================================= */
-
-    async function loadHistory(){
-
-        const apiRange =
-            getApiRange();
-
-
-        const url =
-            HISTORY_API +
-            "?range=" +
-            encodeURIComponent(
-                apiRange
-            ) +
-            "&limit=5000" +
-            "&t=" +
-            Date.now();
-
-
-        const response =
-            await fetch(
-
-                url,
-
-                {
-
-                    method:
-                        "GET",
-
-                    cache:
-                        "no-store",
-
-                    headers:{
-
-                        "Accept":
-                            "application/json"
-
-                    }
-
-                }
-
-            );
-
-
-        if(!response.ok){
-
-            throw new Error(
-                "get_history.php HTTP " +
-                response.status
-            );
-
-        }
-
-
-        const text =
-            await response.text();
-
-
-        let json;
-
-
-        try{
-
-            json =
-                JSON.parse(text);
-
-        }
-
-        catch(error){
-
-            console.error(
-                "HISTORY RAW:",
-                text
-            );
-
-
-            throw new Error(
-                "get_history.php ไม่ได้ส่ง JSON"
-            );
-
-        }
-
-
-        if(!json.success){
-
-            throw new Error(
-                json.message ||
-                "get_history.php ทำงานผิดพลาด"
-            );
-
-        }
-
-
-        if(
-            !Array.isArray(
-                json.data
-            )
-        ){
-
-            throw new Error(
-                "get_history.php data ไม่ใช่ Array"
-            );
-
-        }
-
-
-        console.log(
-            "History rows:",
-            json.data.length,
-            "API count:",
-            json.count,
-            "API range:",
-            apiRange,
-            "Selected range:",
-            averageRange
-        );
-
-
-        return json.data
-            .map(normalize)
-            .filter(Boolean);
-
-    }
-
-
-    /* =========================================================
-    FORCE OFFLINE
-    ========================================================= */
-
-    function forceAllNodesOffline(){
-
-        const configs = [
-
-            {
-                status: "n1status",
-                card: "nodeCard1"
-            },
-
-            {
-                status: "n2status",
-                card: "nodeCard2"
-            },
-
-            {
-                status: "n3status",
-                card: "nodeCard3"
-            }
-
-        ];
-
-
-        configs.forEach(
-            config => {
-
-                const statusElement =
-                    $(config.status);
-
-
-                const cardElement =
-                    $(config.card);
-
-
-                if(statusElement){
-
-                    statusElement.innerHTML = `
-
-                        <span class="status-offline-dot">
-                            ●
-                        </span>
-
-                        OFFLINE
-
-                        <span class="badge rounded-full px-3 py-1 text-xs">
-                            ESP-NOW
-                        </span>
-
-                    `;
-
-
-                    statusElement.className =
-                        "status-offline text-xs font-bold";
-
-                }
-
-
-                if(cardElement){
-
-                    cardElement
-                        .classList
-                        .add("offline");
-
-                }
-
-            }
-        );
-
-
-        $("onlineCountTop").textContent =
-            "0 / " +
-            TOTAL_NODES;
-
-    }
-
-
-    /* =========================================================
-    GET SELECTED TIME WINDOW
-    ========================================================= */
-
-    function getSelectedTimeWindow(){
-
-        const config =
-            RANGE_CONFIG[
-                averageRange
-            ];
-
-
-        if(!config){
-            return null;
-        }
-
-
-        const end =
-            new Date();
-
-
-        const start =
-            new Date(
-                end.getTime() -
-                config.minutes * 60 * 1000
-            );
-
-
-        return {
-            start,
-            end
-        };
-
-    }
-
-
-    /* =========================================================
-    GET DATA IN SELECTED RANGE
-    ========================================================= */
-
-    function getRecordsInSelectedRange(){
-
-        const window =
-            getSelectedTimeWindow();
-
-
-        if(!window){
-            return [];
-        }
-
-
-        return records.filter(
-            record => {
-
-                const date =
-                    parseDate(
-                        record.timestamp
-                    );
-
-
-                if(!date){
-                    return false;
-                }
-
-
-                return (
-                    date >= window.start &&
-                    date <= window.end
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================
-    CALCULATE AVERAGE
-    ========================================================= */
-
-    function calculateAverage(
-        data,
-        field
-    ){
-
-        const values =
-            data
-
             .map(
                 record =>
                     record[field]
             )
-
             .filter(
                 value =>
                     value !== null &&
@@ -2476,285 +2314,252 @@ HISTORICAL DATA & TREND
             );
 
 
-        if(!values.length){
-            return null;
-        }
+    if(!values.length){
+        return null;
+    }
 
 
-        const total =
+    const total =
+        values.reduce(
+            (sum,value) =>
+                sum + Number(value),
+            0
+        );
+
+
+    return total / values.length;
+
+}
+
+
+function calculateStatistics(
+    data,
+    field
+){
+
+    const values =
+        data
+            .map(
+                record =>
+                    record[field]
+            )
+            .filter(
+                value =>
+                    value !== null &&
+                    value !== undefined &&
+                    !isNaN(value)
+            )
+            .map(Number);
+
+
+    if(!values.length){
+
+        return {
+            average: null,
+            max: null,
+            min: null,
+            last: null
+        };
+
+    }
+
+
+    return {
+
+        average:
             values.reduce(
-                (sum,value) =>
-                    sum + Number(value),
+                (a,b) => a + b,
                 0
-            );
+            ) / values.length,
+
+        max:
+            Math.max(...values),
+
+        min:
+            Math.min(...values),
+
+        last:
+            values[values.length - 1]
+
+    };
+
+}
 
 
-        return total /
-            values.length;
+function averageStatus(
+    value,
+    field
+){
 
-    }
-
-
-    /* =========================================================
-    CALCULATE STATISTICS
-    ========================================================= */
-
-    function calculateStatistics(
-        data,
-        field
+    if(
+        value === null ||
+        value === undefined ||
+        isNaN(value)
     ){
 
-        const values =
-            data
-
-            .map(
-                record =>
-                    record[field]
-            )
-
-            .filter(
-                value =>
-                    value !== null &&
-                    value !== undefined &&
-                    !isNaN(value)
-            )
-            .map(
-                Number
-            );
-
-
-        if(!values.length){
-
-            return {
-                average: null,
-                max: null,
-                min: null,
-                last: null
-            };
-
-        }
-
-
-        return {
-
-            average:
-                values.reduce(
-                    (a,b) =>
-                        a + b,
-                    0
-                ) /
-                values.length,
-
-            max:
-                Math.max(
-                    ...values
-                ),
-
-            min:
-                Math.min(
-                    ...values
-                ),
-
-            last:
-                values[
-                    values.length - 1
-                ]
-
-        };
+        return "● ไม่มีข้อมูล";
 
     }
 
 
-    /* =========================================================
-    AVERAGE STATUS TEXT
-    ========================================================= */
-
-    function averageStatus(
-        value,
-        field
-    ){
-
-        if(
-            value === null ||
-            value === undefined ||
-            isNaN(value)
-        ){
-
-            return "● ไม่มีข้อมูล";
-
-        }
-
-
-        if(
-            field === "pm25"
-        ){
-
-            const q =
-                quality(value);
-
-
-            return "● เฉลี่ย " +
-                RANGE_CONFIG[
-                    averageRange
-                ].label +
-                " • " +
-                q;
-
-        }
-
-
-        return "● เฉลี่ย " +
-            RANGE_CONFIG[
-                averageRange
-            ].label;
-
-    }
-
-
-    /* =========================================================
-    RENDER AVERAGES
-    ========================================================= */
-
-    function renderAverages(){
-
-        const data =
-            getRecordsInSelectedRange();
-
-
-        $("selectedRangeLabel").textContent =
-            RANGE_CONFIG[
-                averageRange
-            ].label;
-
-
-        const configs = [
-
-            {
-                field: "pm1",
-                value: "averagePM1",
-                status: "averagePM1Status"
-            },
-
-            {
-                field: "pm25",
-                value: "averagePM25",
-                status: "averagePM25Status"
-            },
-
-            {
-                field: "pm10",
-                value: "averagePM10",
-                status: "averagePM10Status"
-            },
-
-            {
-                field: "temperature",
-                value: "averageTemp",
-                status: "averageTempStatus"
-            },
-
-            {
-                field: "humidity",
-                value: "averageHum",
-                status: "averageHumStatus"
-            },
-
-            {
-                field: "light",
-                value: "averageLight",
-                status: "averageLightStatus"
-            }
-
-        ];
-
-
-        configs.forEach(
-            config => {
-
-                const average =
-                    calculateAverage(
-                        data,
-                        config.field
-                    );
-
-
-                $(config.value).textContent =
-                    average === null
-                        ? "--"
-                        : fmt(average);
-
-
-                $(config.status).textContent =
-                    averageStatus(
-                        average,
-                        config.field
-                    );
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================
-    METRIC LABEL
-    ========================================================= */
-
-    function metricLabel(){
-
-        const map = {
-
-            pm1:
-                "PM1.0",
-
-            pm25:
-                "PM2.5",
-
-            pm10:
-                "PM10",
-
-            temperature:
-                "อุณหภูมิ",
-
-            humidity:
-                "ความชื้น",
-
-            light:
-                "แสง"
-
-        };
-
+    if(field === "pm25"){
 
         return (
-            map[metric] ||
-            metric
+            "● เฉลี่ย " +
+            RANGE_CONFIG[
+                averageRange
+            ].label +
+            " • " +
+            quality(value)
         );
 
     }
 
 
-    /* =========================================================
-    UPDATE SELECTED METRIC LABEL
-    ========================================================= */
+    return (
+        "● เฉลี่ย " +
+        RANGE_CONFIG[
+            averageRange
+        ].label
+    );
 
-    function updateSelectedMetricLabel(){
-
-        const element =
-            $("selectedMetricLabel");
+}
 
 
-        if(element){
+/* =========================================================
+AVERAGES
+========================================================= */
 
-            element.textContent =
-                metricLabel();
+function renderAverages(){
+
+    const data =
+        getRecordsInSelectedRange();
+
+
+    $("selectedRangeLabel").textContent =
+        RANGE_CONFIG[
+            averageRange
+        ].label;
+
+
+    const configs = [
+
+        {
+            field: "pm1",
+            value: "averagePM1",
+            status: "averagePM1Status"
+        },
+
+        {
+            field: "pm25",
+            value: "averagePM25",
+            status: "averagePM25Status"
+        },
+
+        {
+            field: "pm10",
+            value: "averagePM10",
+            status: "averagePM10Status"
+        },
+
+        {
+            field: "temperature",
+            value: "averageTemp",
+            status: "averageTempStatus"
+        },
+
+        {
+            field: "humidity",
+            value: "averageHum",
+            status: "averageHumStatus"
+        },
+
+        {
+            field: "light",
+            value: "averageLight",
+            status: "averageLightStatus"
+        }
+
+    ];
+
+
+    configs.forEach(
+        config => {
+
+            const average =
+                calculateAverage(
+                    data,
+                    config.field
+                );
+
+
+            $(config.value).textContent =
+                average === null
+                    ? "--"
+                    : fmt(average);
+
+
+            $(config.status).textContent =
+                averageStatus(
+                    average,
+                    config.field
+                );
 
         }
+    );
+
+}
+
+
+/* =========================================================
+METRIC
+========================================================= */
+
+function metricLabel(){
+
+    const map = {
+
+        pm1: "PM1.0",
+
+        pm25: "PM2.5",
+
+        pm10: "PM10",
+
+        temperature: "อุณหภูมิ",
+
+        humidity: "ความชื้น",
+
+        light: "แสง"
+
+    };
+
+
+    return (
+        map[metric] ||
+        metric
+    );
+
+}
+
+
+function updateSelectedMetricLabel(){
+
+    const element =
+        $("selectedMetricLabel");
+
+
+    if(element){
+
+        element.textContent =
+            metricLabel();
 
     }
 
+}
 
-    /* =========================================================
-UPDATE SELECTED STATISTICS
+
+/* =========================================================
+TREND STATISTICS
 ========================================================= */
 
 function updateTrendStatistics(){
@@ -2770,23 +2575,11 @@ function updateTrendStatistics(){
         );
 
 
-    /*
-    ============================================================
-    AVERAGE
-    ============================================================
-    */
-
     $("trendAvg").textContent =
         stats.average === null
             ? "--"
             : fmt(stats.average);
 
-
-    /*
-    ============================================================
-    MAX
-    ============================================================
-    */
 
     $("trendMax").textContent =
         stats.max === null
@@ -2794,23 +2587,20 @@ function updateTrendStatistics(){
             : fmt(stats.max);
 
 
-    /*
-    ============================================================
-    MIN
-    ============================================================
-    */
-
     $("trendMin").textContent =
         stats.min === null
             ? "--"
             : fmt(stats.min);
 
+
     let latestMetricRecord = null;
+
 
     const allRecords =
         Array.isArray(records)
             ? records.slice()
             : [];
+
 
     if(latestRecord){
 
@@ -2854,13 +2644,12 @@ function updateTrendStatistics(){
         const value =
             record[metric];
 
+
         if(
             value === null ||
             value === undefined ||
             value === "" ||
-            isNaN(
-                Number(value)
-            )
+            isNaN(Number(value))
         ){
 
             continue;
@@ -2869,16 +2658,13 @@ function updateTrendStatistics(){
 
 
         const date =
-            parseDate(
-                record.timestamp
-            );
+            parseDate(record.timestamp);
 
 
         if(!date){
-
             continue;
-
         }
+
 
         if(
             latestMetricRecord === null ||
@@ -2895,47 +2681,35 @@ function updateTrendStatistics(){
 
     }
 
-    if(latestMetricRecord){
 
-        $("trendLast").textContent =
-            fmt(
+    $("trendLast").textContent =
+        latestMetricRecord
+            ? fmt(
                 Number(
                     latestMetricRecord[metric]
                 )
-            );
-
-    }
-
-    else{
-
-        $("trendLast").textContent =
-            "--";
-
-    }
-
-        updateSelectedMetricLabel();
-
-    }
-
-
-    /* =========================================================
-    UPDATE OLD QUALITY STATISTICS
-    ========================================================= */
-
-    function updateStatistics(){
-
-        const data =
-            getRecordsInSelectedRange();
-
-
-        const values =
-            data
-
-            .map(
-                x =>
-                    x.pm25
             )
+            : "--";
 
+
+    updateSelectedMetricLabel();
+
+}
+
+
+/* =========================================================
+QUALITY STATISTICS
+========================================================= */
+
+function updateStatistics(){
+
+    const data =
+        getRecordsInSelectedRange();
+
+
+    const values =
+        data
+            .map(x => x.pm25)
             .filter(
                 x =>
                     x != null &&
@@ -2943,420 +2717,85 @@ function updateTrendStatistics(){
             );
 
 
-        if(!values.length){
+    if(!values.length){
 
-            $("avgPM").textContent =
-                "--";
+        $("avgPM").textContent = "--";
 
+        $("maxPM").textContent = "--";
 
-            $("maxPM").textContent =
-                "--";
+        $("minPM").textContent = "--";
 
-
-            $("minPM").textContent =
-                "--";
-
-
-            return;
-
-        }
-
-
-        const avg =
-            values.reduce(
-                (a,b) =>
-                    a + b,
-                0
-            ) /
-            values.length;
-
-
-        $("avgPM").textContent =
-            avg.toFixed(1);
-
-
-        $("maxPM").textContent =
-            Math.max(
-                ...values
-            ).toFixed(1);
-
-
-        $("minPM").textContent =
-            Math.min(
-                ...values
-            ).toFixed(1);
+        return;
 
     }
 
 
-    /* =========================================================
-    DRAW CHARTS
-    ========================================================= */
+    const avg =
+        values.reduce(
+            (a,b) => a + b,
+            0
+        ) / values.length;
 
-    function drawCharts(){
 
-        const arr =
-            getRecordsInSelectedRange()
+    $("avgPM").textContent =
+        avg.toFixed(1);
 
+
+    $("maxPM").textContent =
+        Math.max(...values).toFixed(1);
+
+
+    $("minPM").textContent =
+        Math.min(...values).toFixed(1);
+
+}
+
+
+/* =========================================================
+CHARTS
+========================================================= */
+
+function drawCharts(){
+
+    const arr =
+        getRecordsInSelectedRange()
             .filter(
                 x =>
                     x &&
                     x[metric] != null &&
                     !isNaN(
-                        Number(
-                            x[metric]
-                        )
+                        Number(x[metric])
                     )
             )
-
             .sort(
                 (a,b) =>
                     parseDate(
                         a.timestamp
                     ).getTime()
-
                     -
-
                     parseDate(
                         b.timestamp
                     ).getTime()
             );
 
 
-        updateTrendStatistics();
+    updateTrendStatistics();
 
 
-        if(!arr.length){
+    if(!arr.length){
 
-            $("trend").textContent =
-                "ไม่มีข้อมูลในช่วงเวลาที่เลือก";
+        $("trend").textContent =
+            "ไม่มีข้อมูลในช่วงเวลาที่เลือก";
 
-
-            if(historyChart){
-
-                historyChart.destroy();
-
-                historyChart = null;
-
-            }
-
-
-            if(forecastChart){
-
-                forecastChart.destroy();
-
-                forecastChart = null;
-
-            }
-
-
-            $("forecastMessage").textContent =
-                "ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
-
-
-            $("forecastBadge").textContent =
-                "WAITING";
-
-
-            return;
-
-        }
-
-
-        const labels =
-            arr.map(
-                x => {
-
-                    const d =
-                        parseDate(
-                            x.timestamp
-                        );
-
-
-                    return d
-                        ? d.toLocaleString(
-                            "th-TH",
-                            {
-
-                                timeZone:
-                                    "Asia/Bangkok",
-
-                                day:
-                                    "2-digit",
-
-                                month:
-                                    "2-digit",
-
-                                hour:
-                                    "2-digit",
-
-                                minute:
-                                    "2-digit"
-
-                            }
-                        )
-
-                        : "";
-
-                }
-            );
-
-
-        const values =
-            arr.map(
-                x =>
-                    Number(
-                        x[metric]
-                    )
-            );
-
-
-        const first =
-            values[0];
-
-
-        const last =
-            values[
-                values.length - 1
-            ];
-
-
-        if(values.length < 2){
-
-            $("trend").textContent =
-                "ข้อมูลยังน้อย";
-
-        }
-
-        else{
-
-            const difference =
-                last - first;
-
-
-            const percentage =
-                first === 0
-
-                    ? 0
-
-                    :
-
-                    (
-                        difference /
-                        Math.abs(first)
-                    ) * 100;
-
-
-            if(
-                Math.abs(
-                    percentage
-                ) < 1
-            ){
-
-                $("trend").textContent =
-                    "→ คงที่";
-
-            }
-
-            else if(
-                difference > 0
-            ){
-
-                $("trend").textContent =
-                    "↑ เพิ่มขึ้น";
-
-            }
-
-            else{
-
-                $("trend").textContent =
-                    "↓ ลดลง";
-
-            }
-
-        }
-
-
-
-        /* =====================================================
-        HISTORY CHART
-        ===================================================== */
 
         if(historyChart){
 
             historyChart.destroy();
 
+            historyChart = null;
+
         }
 
-
-        historyChart =
-            new Chart(
-                $("historyChart"),
-                {
-
-                    type:
-                        "line",
-
-
-                    data:{
-
-                        labels:
-                            labels,
-
-
-                        datasets:[{
-
-                            label:
-                                metricLabel(),
-
-
-                            data:
-                                values,
-
-
-                            borderColor:
-                                "#22d3ee",
-
-
-                            backgroundColor:
-                                "rgba(34,211,238,.08)",
-
-
-                            fill:
-                                true,
-
-
-                            tension:
-                                .35,
-
-
-                            pointRadius:
-
-                                values.length > 50
-                                    ? 0
-                                    : 3,
-
-
-                            borderWidth:
-                                2
-
-                        }]
-
-                    },
-
-
-                    options:{
-
-                        responsive:
-                            true,
-
-
-                        maintainAspectRatio:
-                            true,
-
-
-                        interaction:{
-
-                            intersect:
-                                false,
-
-
-                            mode:
-                                "index"
-
-                        },
-
-
-                        plugins:{
-
-                            legend:{
-
-                                display:
-                                    false
-
-                            },
-
-
-                            tooltip:{
-
-                                callbacks:{
-
-                                    label:
-                                        context =>
-
-                                            metricLabel() +
-                                            ": " +
-
-                                            Number(
-                                                context.raw
-                                            ).toFixed(1)
-
-                                }
-
-                            }
-
-                        },
-
-
-                        scales:{
-
-                            y:{
-
-                                beginAtZero:
-                                    false,
-
-
-                                grid:{
-
-                                    color:
-                                        "rgba(148,163,184,.08)"
-
-                                }
-
-                            },
-
-
-                            x:{
-
-                                grid:{
-
-                                    display:
-                                        false
-
-                                },
-
-
-                                ticks:{
-
-                                    maxTicksLimit:
-                                        12
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-            );
-
-
-        drawForecast(
-            values
-        );
-
-    }
-
-
-    /* =========================================================
-    FORECAST
-    ========================================================= */
-
-    function drawForecast(
-        values
-    ){
 
         if(forecastChart){
 
@@ -3367,308 +2806,242 @@ function updateTrendStatistics(){
         }
 
 
-        const recent =
-            values.slice(-10);
+        $("forecastMessage").textContent =
+            "ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
 
 
-        if(recent.length < 3){
-
-            $("forecastMessage").textContent =
-                "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีข้อมูลย้อนหลังเพิ่มเติม";
+        $("forecastBadge").textContent =
+            "WAITING";
 
 
-            $("forecastBadge").textContent =
-                "WAITING";
+        return;
+
+    }
 
 
-            return;
+    const labels =
+        arr.map(
+            x => {
 
-        }
-
-
-        const n =
-            recent.length;
-
-        let sumX = 0;
-
-        let sumY = 0;
-
-        let sumXY = 0;
-
-        let sumXX = 0;
+                const d =
+                    parseDate(
+                        x.timestamp
+                    );
 
 
-        for(
-            let i = 0;
-            i < n;
-            i++
-        ){
+                return d
+                    ? d.toLocaleString(
+                        "th-TH",
+                        {
+                            timeZone:
+                                "Asia/Bangkok",
+                            day:
+                                "2-digit",
+                            month:
+                                "2-digit",
+                            hour:
+                                "2-digit",
+                            minute:
+                                "2-digit"
+                        }
+                    )
+                    : "";
 
-            const x =
-                i;
-
-
-            const y =
-                recent[i];
-
-
-            sumX +=
-                x;
-
-
-            sumY +=
-                y;
-
-
-            sumXY +=
-                x * y;
+            }
+        );
 
 
-            sumXX +=
-                x * x;
-
-        }
-
-
-        const denominator =
-            n * sumXX -
-            sumX * sumX;
-
-
-        const slope =
-            denominator === 0
-
-                ? 0
-
-                :
-
-                (
-                    n * sumXY -
-                    sumX * sumY
-                ) /
-                denominator;
-
-
-        const intercept =
-            (
-                sumY -
-                slope * sumX
-            ) /
-            n;
-
-
-        const forecast = [];
-
-
-        for(
-            let i = 0;
-            i <= 6;
-            i++
-        ){
-
-            const x =
-                n - 1 + i;
-
-
-            forecast.push(
-
-                Math.max(
-                    0,
-                    intercept +
-                    slope * x
+    const values =
+        arr.map(
+            x =>
+                Number(
+                    x[metric]
                 )
-
-            );
-
-        }
+        );
 
 
-        const labels = [
+    const first =
+        values[0];
 
-            "ตอนนี้",
 
-            "+1 ช่วง",
-
-            "+2 ช่วง",
-
-            "+3 ช่วง",
-
-            "+4 ช่วง",
-
-            "+5 ช่วง",
-
-            "+6 ช่วง"
-
+    const last =
+        values[
+            values.length - 1
         ];
 
 
-        let direction;
+    if(values.length < 2){
+
+        $("trend").textContent =
+            "ข้อมูลยังน้อย";
+
+    }
+
+    else{
+
+        const difference =
+            last - first;
+
+
+        const percentage =
+            first === 0
+                ? 0
+                : (
+                    difference /
+                    Math.abs(first)
+                ) * 100;
 
 
         if(
-            Math.abs(slope) <
-            0.05
+            Math.abs(percentage) < 1
         ){
 
-            direction =
-                "ค่อนข้างคงที่";
+            $("trend").textContent =
+                "→ คงที่";
 
         }
 
-        else if(
-            slope > 0
-        ){
+        else if(difference > 0){
 
-            direction =
-                "มีแนวโน้มเพิ่มขึ้น";
+            $("trend").textContent =
+                "↑ เพิ่มขึ้น";
 
         }
 
         else{
 
-            direction =
-                "มีแนวโน้มลดลง";
+            $("trend").textContent =
+                "↓ ลดลง";
 
         }
 
-
-        $("forecastMessage").innerHTML =
-
-            `
-
-            แนวโน้มปัจจุบัน:
-
-            <b class="text-cyan-300">
-                ${direction}
-            </b>
-
-            <br>
-
-            ค่าแนวโน้มล่าสุด:
-
-            <b>
-                ${fmt(forecast[0])}
-            </b>
-
-            <br>
-
-            คาดการณ์ปลายช่วง:
-
-            <b>
-                ${fmt(
-                    forecast[
-                        forecast.length - 1
-                    ]
-                )}
-            </b>
-
-            <br><br>
-
-            <span class="text-xs text-slate-500">
-                * เป็นการคาดการณ์จาก Linear Trend
-                ไม่ใช่ AI/ML Model จริง
-            </span>
-
-            `;
+    }
 
 
-        $("forecastBadge").textContent =
-            "ACTIVE";
+    if(historyChart){
+
+        historyChart.destroy();
+
+    }
 
 
-        forecastChart =
-            new Chart(
-                $("forecastChart"),
-                {
+    historyChart =
+        new Chart(
+            $("historyChart"),
+            {
 
-                    type:
-                        "line",
+                type: "line",
 
+                data: {
 
-                    data:{
+                    labels: labels,
 
-                        labels:
-                            labels,
+                    datasets: [{
 
+                        label:
+                            metricLabel(),
 
-                        datasets:[{
+                        data:
+                            values,
 
-                            label:
-                                "Forecast",
+                        borderColor:
+                            "#22d3ee",
 
+                        backgroundColor:
+                            "rgba(34,211,238,.08)",
 
-                            data:
-                                forecast,
+                        fill:
+                            true,
 
+                        tension:
+                            .35,
 
-                            borderColor:
-                                "#34d399",
+                        pointRadius:
+                            values.length > 50
+                                ? 0
+                                : 3,
 
+                        borderWidth:
+                            2
 
-                            backgroundColor:
-                                "rgba(52,211,153,.08)",
+                    }]
 
+                },
 
-                            borderDash:
-                                [6,5],
+                options: {
 
+                    responsive:
+                        true,
 
-                            fill:
-                                true,
+                    maintainAspectRatio:
+                        true,
 
+                    interaction: {
 
-                            tension:
-                                .3,
+                        intersect:
+                            false,
 
-
-                            pointRadius:
-                                4
-
-                        }]
+                        mode:
+                            "index"
 
                     },
 
+                    plugins: {
 
-                    options:{
+                        legend: {
 
-                        responsive:
-                            true,
+                            display:
+                                false
 
+                        },
 
-                        plugins:{
+                        tooltip: {
 
-                            legend:{
+                            callbacks: {
 
-                                display:
-                                    false
+                                label:
+                                    context =>
+                                        metricLabel() +
+                                        ": " +
+                                        Number(
+                                            context.raw
+                                        ).toFixed(1)
+
+                            }
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero:
+                                false,
+
+                            grid: {
+
+                                color:
+                                    "rgba(148,163,184,.08)"
 
                             }
 
                         },
 
+                        x: {
 
-                        scales:{
+                            grid: {
 
-                            y:{
-
-                                grid:{
-
-                                    color:
-                                        "rgba(148,163,184,.08)"
-
-                                }
+                                display:
+                                    false
 
                             },
 
+                            ticks: {
 
-                            x:{
-
-                                grid:{
-
-                                    display:
-                                        false
-
-                                }
+                                maxTicksLimit:
+                                    12
 
                             }
 
@@ -3677,19 +3050,313 @@ function updateTrendStatistics(){
                     }
 
                 }
-            );
+
+            }
+        );
+
+
+    drawForecast(values);
+
+}
+
+
+/* =========================================================
+FORECAST
+========================================================= */
+
+function drawForecast(values){
+
+    if(forecastChart){
+
+        forecastChart.destroy();
+
+        forecastChart = null;
 
     }
 
 
-    /* =========================================================
-    EXPORT CSV
-    ========================================================= */
+    const recent =
+        values.slice(-10);
 
-    function exportSelectedData(){
 
-        const data =
-            getRecordsInSelectedRange()
+    if(recent.length < 3){
+
+        $("forecastMessage").textContent =
+            "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีข้อมูลย้อนหลังเพิ่มเติม";
+
+
+        $("forecastBadge").textContent =
+            "WAITING";
+
+
+        return;
+
+    }
+
+
+    const n =
+        recent.length;
+
+    let sumX = 0;
+
+    let sumY = 0;
+
+    let sumXY = 0;
+
+    let sumXX = 0;
+
+
+    for(
+        let i = 0;
+        i < n;
+        i++
+    ){
+
+        const x = i;
+
+        const y =
+            recent[i];
+
+
+        sumX += x;
+
+        sumY += y;
+
+        sumXY += x * y;
+
+        sumXX += x * x;
+
+    }
+
+
+    const denominator =
+        n * sumXX -
+        sumX * sumX;
+
+
+    const slope =
+        denominator === 0
+            ? 0
+            : (
+                n * sumXY -
+                sumX * sumY
+            ) / denominator;
+
+
+    const intercept =
+        (
+            sumY -
+            slope * sumX
+        ) / n;
+
+
+    const forecast = [];
+
+
+    for(
+        let i = 0;
+        i <= 6;
+        i++
+    ){
+
+        const x =
+            n - 1 + i;
+
+
+        forecast.push(
+
+            Math.max(
+                0,
+                intercept +
+                slope * x
+            )
+
+        );
+
+    }
+
+
+    const labels = [
+
+        "ตอนนี้",
+        "+1 ช่วง",
+        "+2 ช่วง",
+        "+3 ช่วง",
+        "+4 ช่วง",
+        "+5 ช่วง",
+        "+6 ช่วง"
+
+    ];
+
+
+    let direction;
+
+
+    if(
+        Math.abs(slope) < 0.05
+    ){
+
+        direction =
+            "ค่อนข้างคงที่";
+
+    }
+
+    else if(slope > 0){
+
+        direction =
+            "มีแนวโน้มเพิ่มขึ้น";
+
+    }
+
+    else{
+
+        direction =
+            "มีแนวโน้มลดลง";
+
+    }
+
+
+    $("forecastMessage").innerHTML = `
+
+        แนวโน้มปัจจุบัน:
+
+        <b class="text-cyan-300">
+            ${direction}
+        </b>
+
+        <br>
+
+        ค่าแนวโน้มล่าสุด:
+
+        <b>
+            ${fmt(forecast[0])}
+        </b>
+
+        <br>
+
+        คาดการณ์ปลายช่วง:
+
+        <b>
+            ${fmt(
+                forecast[
+                    forecast.length - 1
+                ]
+            )}
+        </b>
+
+        <br><br>
+
+        <span class="text-xs text-slate-500">
+            * เป็นการคาดการณ์จาก Linear Trend
+            ไม่ใช่ AI/ML Model จริง
+        </span>
+
+    `;
+
+
+    $("forecastBadge").textContent =
+        "ACTIVE";
+
+
+    forecastChart =
+        new Chart(
+            $("forecastChart"),
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        label:
+                            "Forecast",
+
+                        data:
+                            forecast,
+
+                        borderColor:
+                            "#34d399",
+
+                        backgroundColor:
+                            "rgba(52,211,153,.08)",
+
+                        borderDash:
+                            [6,5],
+
+                        fill:
+                            true,
+
+                        tension:
+                            .3,
+
+                        pointRadius:
+                            4
+
+                    }]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    plugins: {
+
+                        legend: {
+
+                            display:
+                                false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            grid: {
+
+                                color:
+                                    "rgba(148,163,184,.08)"
+
+                            }
+
+                        },
+
+                        x: {
+
+                            grid: {
+
+                                display:
+                                    false
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+EXPORT
+========================================================= */
+
+function exportSelectedData(){
+
+    const data =
+        getRecordsInSelectedRange()
             .slice()
             .sort(
                 (a,b) => {
@@ -3719,481 +3386,952 @@ function updateTrendStatistics(){
             );
 
 
-        if(!data.length){
+    if(!data.length){
 
-            alert(
-                "ไม่มีข้อมูลในช่วงเวลาที่เลือก"
-            );
+        alert(
+            "ไม่มีข้อมูลในช่วงเวลาที่เลือก"
+        );
 
-            return;
+        return;
 
-        }
-
-
-        const headers = [
-
-            "Timestamp",
-            "Device ID",
-            "Status",
-
-            "PM1.0 (ug/m3)",
-            "PM2.5 (ug/m3)",
-            "PM10 (ug/m3)",
-
-            "Temperature (C)",
-            "Humidity (%)",
-            "Light (lux)"
-
-        ];
+    }
 
 
-        const rows =
-            data.map(
-                record => [
+    const headers = [
 
-                    formatExportDate(
-                        record.timestamp
-                    ),
+        "Timestamp",
+        "Device ID",
+        "Status",
 
-                    record.device_id || "",
+        "PM1.0 (ug/m3)",
+        "PM2.5 (ug/m3)",
+        "PM10 (ug/m3)",
 
-                    record.status || "",
+        "Temperature (C)",
+        "Humidity (%)",
+        "Light (lux)"
 
-                    exportNumber(
-                        record.pm1
-                    ),
-
-                    exportNumber(
-                        record.pm25
-                    ),
-
-                    exportNumber(
-                        record.pm10
-                    ),
-
-                    exportNumber(
-                        record.temperature
-                    ),
-
-                    exportNumber(
-                        record.humidity
-                    ),
-
-                    exportNumber(
-                        record.light
-                    )
-
-                ]
-            );
+    ];
 
 
-        const csvRows = [];
+    const rows =
+        data.map(
+            record => [
 
+                formatExportDate(
+                    record.timestamp
+                ),
 
-        csvRows.push(
-            headers.map(
-                csvEscape
-            ).join(",")
+                record.device_id || "",
+
+                record.status || "",
+
+                exportNumber(
+                    record.pm1
+                ),
+
+                exportNumber(
+                    record.pm25
+                ),
+
+                exportNumber(
+                    record.pm10
+                ),
+
+                exportNumber(
+                    record.temperature
+                ),
+
+                exportNumber(
+                    record.humidity
+                ),
+
+                exportNumber(
+                    record.light
+                )
+
+            ]
         );
 
 
-        rows.forEach(
-            row => {
+    const csvRows = [];
 
-                csvRows.push(
-                    row
-                    .map(
-                        csvEscape
-                    )
+
+    csvRows.push(
+        headers
+            .map(csvEscape)
+            .join(",")
+    );
+
+
+    rows.forEach(
+        row => {
+
+            csvRows.push(
+                row
+                    .map(csvEscape)
                     .join(",")
-                );
+            );
 
+        }
+    );
+
+
+    const csv =
+        "\uFEFF" +
+        csvRows.join("\r\n");
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
             }
         );
 
 
-        const csv =
-            "\uFEFF" +
-            csvRows.join("\r\n");
-
-
-        const blob =
-            new Blob(
-                [csv],
-                {
-                    type:
-                        "text/csv;charset=utf-8;"
-                }
-            );
-
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        const now =
-            new Date();
-
-
-        const dateText =
-            now.toLocaleDateString(
-                "th-TH",
-                {
-
-                    timeZone:
-                        "Asia/Bangkok",
-
-                    year:
-                        "numeric",
-
-                    month:
-                        "2-digit",
-
-                    day:
-                        "2-digit"
-
-                }
-            )
-            .replaceAll(
-                "/",
-                "-"
-            );
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            "PM25_Historical_" +
-            averageRange +
-            "_" +
-            dateText +
-            ".csv";
-
-
-        document.body.appendChild(
-            link
+    const url =
+        URL.createObjectURL(
+            blob
         );
 
 
-        link.click();
-
-
-        document.body.removeChild(
-            link
+    const link =
+        document.createElement(
+            "a"
         );
 
 
-        URL.revokeObjectURL(
-            url
-        );
-
-    }
+    const now =
+        new Date();
 
 
-    /* =========================================================
-    EXPORT HELPERS
-    ========================================================= */
-
-    function exportNumber(value){
-
-        if(
-            value === null ||
-            value === undefined ||
-            value === "" ||
-            isNaN(value)
-        ){
-
-            return "";
-
-        }
-
-
-        return Number(value)
-            .toFixed(2);
-
-    }
-
-
-    function formatExportDate(value){
-
-        const date =
-            parseDate(
-                value
-            );
-
-
-        if(!date){
-
-            return "";
-
-        }
-
-
-        return date.toLocaleString(
+    const dateText =
+        now.toLocaleDateString(
             "th-TH",
             {
-
                 timeZone:
                     "Asia/Bangkok",
-
                 year:
                     "numeric",
-
                 month:
                     "2-digit",
-
                 day:
-                    "2-digit",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit",
-
-                hour12:
-                    false
-
+                    "2-digit"
             }
+        )
+        .replaceAll("/", "-");
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "PM25_Historical_" +
+        averageRange +
+        "_" +
+        dateText +
+        ".csv";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+function exportNumber(value){
+
+    if(
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        isNaN(value)
+    ){
+
+        return "";
+
+    }
+
+
+    return Number(value)
+        .toFixed(2);
+
+}
+
+
+function formatExportDate(value){
+
+    const date =
+        parseDate(value);
+
+
+    if(!date){
+        return "";
+    }
+
+
+    return date.toLocaleString(
+        "th-TH",
+        {
+            timeZone:
+                "Asia/Bangkok",
+            year:
+                "numeric",
+            month:
+                "2-digit",
+            day:
+                "2-digit",
+            hour:
+                "2-digit",
+            minute:
+                "2-digit",
+            second:
+                "2-digit",
+            hour12:
+                false
+        }
+    );
+
+}
+
+
+function csvEscape(value){
+
+    const text =
+        value == null
+            ? ""
+            : String(value);
+
+
+    return '"' +
+        text.replaceAll(
+            '"',
+            '""'
+        ) +
+        '"';
+
+}
+
+
+/* =========================================================
+LOAD + RENDER
+========================================================= */
+
+async function load(){
+
+    try{
+
+        $("aiSummary").textContent =
+            "กำลังโหลดข้อมูล...";
+
+
+        const newLatest =
+            await loadLatest();
+
+
+        apiConnectionOnline =
+            true;
+
+
+        const newHistory =
+            await loadHistory();
+
+
+        latestRecord =
+            newLatest;
+
+
+        records =
+            newHistory;
+
+
+        if(
+            latestRecord &&
+            !records.some(
+                record =>
+
+                    record.id != null &&
+                    latestRecord.id != null &&
+                    record.id ===
+                    latestRecord.id
+            )
+        ){
+
+            records.push(
+                latestRecord
+            );
+
+        }
+
+
+        records =
+            records.filter(
+                record =>
+
+                    record &&
+                    record.timestamp &&
+                    parseDate(
+                        record.timestamp
+                    )
+            );
+
+
+        records.sort(
+            (a,b) =>
+
+                parseDate(
+                    a.timestamp
+                ).getTime()
+
+                -
+
+                parseDate(
+                    b.timestamp
+                ).getTime()
         );
 
-    }
 
-
-    function csvEscape(value){
-
-        const text =
-            value == null
-                ? ""
-                : String(value);
-
-
-        return '"' +
-            text.replaceAll(
-                '"',
-                '""'
-            ) +
-            '"';
+        render();
 
     }
 
 
-    /* =========================================================
-    LOAD
-    ========================================================= */
+    catch(error){
 
-    async function load(){
-
-        try{
-
-            $("aiSummary").textContent =
-                "กำลังโหลดข้อมูล...";
+        console.error(
+            "Dashboard ERROR:",
+            error
+        );
 
 
-            const newLatest =
-                await loadLatest();
+        apiConnectionOnline =
+            false;
 
 
-            apiConnectionOnline =
-                true;
+        forceAllNodesOffline();
 
 
-            const newHistory =
-                await loadHistory();
+        $("aiSummary").innerHTML = `
+
+            <span class="text-red-400 font-bold">
+                ⚠ ระบบออฟไลน์
+            </span>
+
+            <br>
+
+            <span class="text-slate-400">
+                ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ข้อมูลได้
+            </span>
+
+            <br>
+
+            <span class="text-slate-500">
+                ${escapeHtml(error.message)}
+            </span>
+
+        `;
 
 
-            latestRecord =
-                newLatest;
+        $("aiDetails").innerHTML = `
+
+            <span class="text-red-400 font-bold">
+                ⚠ ระบบออฟไลน์
+            </span>
+
+            <br><br>
+
+            <span class="text-slate-400">
+                Dashboard ไม่ได้รับข้อมูลใหม่
+                จากระบบแม่
+            </span>
+
+            <br><br>
+
+            <span class="text-slate-500">
+                ระบบจะลองเชื่อมต่อใหม่อัตโนมัติ
+            </span>
+
+        `;
+
+    }
+
+}
 
 
-            records =
-                newHistory;
+function escapeHtml(value){
+
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
 
 
-            if(
-                latestRecord &&
-                !records.some(
-                    record =>
+function render(){
 
-                        record.id != null &&
-                        latestRecord.id != null &&
-                        record.id ===
-                        latestRecord.id
+    if(!latestRecord){
+        return;
+    }
 
-                )
-            ){
 
-                records.push(
-                    latestRecord
-                );
+    const n1 =
+        getLatestNode(1);
 
+
+    const n2 =
+        getLatestNode(2);
+
+
+    const n3 =
+        getLatestNode(3);
+
+
+    setNode(
+        "n1",
+        n1
+    );
+
+
+    setNode(
+        "n2",
+        n2
+    );
+
+
+    setNode(
+        "n3",
+        n3
+    );
+
+
+    updateNodeStatus(
+        "n1status",
+        "nodeCard1",
+        n1
+    );
+
+
+    updateNodeStatus(
+        "n2status",
+        "nodeCard2",
+        n2
+    );
+
+
+    updateNodeStatus(
+        "n3status",
+        "nodeCard3",
+        n3
+    );
+
+
+    updateSystemLive();
+
+
+    $("lastUpdate1").textContent =
+        n1
+            ? formatThaiTime(
+                n1.timestamp
+            )
+            : "--";
+
+
+    $("lastUpdate2").textContent =
+        n2
+            ? formatThaiTime(
+                n2.timestamp
+            )
+            : "--";
+
+
+    $("lastUpdate3").textContent =
+        n3
+            ? formatThaiTime(
+                n3.timestamp
+            )
+            : "--";
+
+
+    $("heroPM1").textContent =
+        fmt(latestRecord.pm1);
+
+
+    $("heroPM25").textContent =
+        fmt(latestRecord.pm25);
+
+
+    $("heroPM10").textContent =
+        fmt(latestRecord.pm10);
+
+
+    $("heroTemp").textContent =
+        latestRecord.temperature == null
+            ? "--"
+            : fmt(
+                latestRecord.temperature
+            );
+
+
+    $("heroHum").textContent =
+        latestRecord.humidity == null
+            ? "--"
+            : fmt(
+                latestRecord.humidity
+            );
+
+
+    $("heroLight").textContent =
+        latestRecord.light == null
+            ? "--"
+            : fmt(
+                latestRecord.light
+            );
+
+
+    const pm25 =
+        latestRecord.pm25;
+
+
+    const q =
+        quality(pm25);
+
+
+    $("qualityBadge").textContent =
+        q;
+
+
+    $("overallStatus").textContent =
+        q;
+
+
+    updateOverallDot(pm25);
+
+    updateAlerts(pm25);
+
+    updateAI(
+        latestRecord,
+        q
+    );
+
+    renderAverages();
+
+    updateStatistics();
+
+    updateTrendStatistics();
+
+    drawCharts();
+
+}
+
+
+/* =========================================================
+AIR QUALITY
+========================================================= */
+
+function updateOverallDot(pm25){
+
+    const dot =
+        $("overallDot");
+
+
+    if(
+        pm25 == null ||
+        isNaN(pm25)
+    ){
+
+        dot.className =
+            "w-2.5 h-2.5 rounded-full bg-slate-500";
+
+        return;
+
+    }
+
+
+    if(pm25 <= 15){
+
+        dot.className =
+            "w-2.5 h-2.5 rounded-full bg-emerald-400";
+
+    }
+
+    else if(pm25 <= 25){
+
+        dot.className =
+            "w-2.5 h-2.5 rounded-full bg-lime-400";
+
+    }
+
+    else if(pm25 <= 37.5){
+
+        dot.className =
+            "w-2.5 h-2.5 rounded-full bg-amber-400";
+
+    }
+
+    else{
+
+        dot.className =
+            "w-2.5 h-2.5 rounded-full bg-red-500";
+
+    }
+
+}
+
+
+function updateAlerts(pm25){
+
+    if(
+        pm25 == null ||
+        isNaN(pm25)
+    ){
+
+        $("alerts").innerHTML = `
+
+            <span class="text-slate-400">
+                ยังไม่มีข้อมูล PM2.5
+            </span>
+
+        `;
+
+        return;
+
+    }
+
+
+    if(pm25 > 37.5){
+
+        $("alerts").innerHTML = `
+
+            <span class="text-red-400 font-bold">
+                ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
+            </span>
+
+            <br>
+
+            <span class="text-slate-400">
+                ควรเฝ้าระวังและติดตามสถานการณ์
+            </span>
+
+        `;
+
+    }
+
+    else if(pm25 > 25){
+
+        $("alerts").innerHTML = `
+
+            <span class="text-amber-400 font-bold">
+                ⚠ PM2.5 เริ่มสูง
+            </span>
+
+            <br>
+
+            <span class="text-slate-400">
+                ควรติดตามแนวโน้มอย่างต่อเนื่อง
+            </span>
+
+        `;
+
+    }
+
+    else{
+
+        $("alerts").innerHTML = `
+
+            <span class="text-emerald-400 font-bold">
+                ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
+            </span>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+AI
+========================================================= */
+
+function updateAI(
+    latest,
+    q
+){
+
+    const pm25 =
+        latest.pm25;
+
+
+    if(
+        pm25 == null ||
+        isNaN(pm25)
+    ){
+
+        $("aiSummary").textContent =
+            "กำลังรอข้อมูลจากอุปกรณ์...";
+
+
+        $("aiDetails").textContent =
+            "ยังไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์";
+
+
+        return;
+
+    }
+
+
+    let recommendation;
+
+
+    if(pm25 <= 15){
+
+        recommendation =
+            "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
+
+    }
+
+    else if(pm25 <= 25){
+
+        recommendation =
+            "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
+
+    }
+
+    else if(pm25 <= 37.5){
+
+        recommendation =
+            "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
+
+    }
+
+    else{
+
+        recommendation =
+            "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
+
+    }
+
+
+    $("aiSummary").innerHTML = `
+
+        <b class="text-cyan-300">
+            PM2.5 ${fmt(pm25)} µg/m³
+        </b>
+
+        <br>
+
+        สถานะ:
+
+        <b>
+            ${q}
+        </b>
+
+        <br>
+
+        ${recommendation}
+
+    `;
+
+
+    $("aiDetails").innerHTML = `
+
+        <b class="text-white">
+            🤖 วิเคราะห์สถานการณ์
+        </b>
+
+        <br>
+
+        PM2.5 ล่าสุด:
+
+        <b class="text-cyan-300">
+            ${fmt(pm25)} µg/m³
+        </b>
+
+        <br>
+
+        อุณหภูมิ:
+
+        <b>
+            ${fmt(latest.temperature)} °C
+        </b>
+
+        <br>
+
+        ความชื้น:
+
+        <b>
+            ${fmt(latest.humidity)} %
+        </b>
+
+        <br>
+
+        แสง:
+
+        <b>
+            ${
+                latest.light == null
+                    ? "--"
+                    : fmt(latest.light) + " lux"
             }
+        </b>
+
+        <br><br>
+
+        <b class="text-white">
+            คำแนะนำ
+        </b>
+
+        <br>
+
+        ${recommendation}
+
+        <br><br>
+
+        <span class="text-xs text-slate-500">
+            * การวิเคราะห์นี้เป็นกฎพื้นฐานของระบบ
+            ยังไม่ใช่ AI/ML Model จริง
+        </span>
+
+    `;
+
+}
 
 
-            records =
-                records.filter(
-                    record =>
+/* =========================================================
+EVENTS
+========================================================= */
 
-                        record &&
-                        record.timestamp &&
-                        parseDate(
-                            record.timestamp
-                        )
+$("metric")
+    .addEventListener(
+        "change",
+        e => {
 
-                );
+            metric =
+                e.target.value;
 
 
-            records.sort(
-                (a,b) => {
+            updateSelectedMetricLabel();
 
-                    return (
+            drawCharts();
 
-                        parseDate(
-                            a.timestamp
-                        ).getTime()
+        }
+    );
 
-                        -
 
-                        parseDate(
-                            b.timestamp
-                        ).getTime()
+$("historyRange")
+    .addEventListener(
+        "change",
+        async e => {
 
-                    );
+            averageRange =
+                e.target.value;
 
+
+            await load();
+
+        }
+    );
+
+
+$("exportButton")
+    .addEventListener(
+        "click",
+        exportSelectedData
+    );
+
+
+/* =========================================================
+CLOCK
+========================================================= */
+
+function updateClock(){
+
+    $("clock").textContent =
+        new Date()
+            .toLocaleString(
+                "th-TH",
+                {
+                    timeZone:
+                        "Asia/Bangkok",
+                    dateStyle:
+                        "medium",
+                    timeStyle:
+                        "medium"
                 }
             );
 
-
-            render();
-
-        }
+}
 
 
-        catch(error){
-
-            console.error(
-                "Dashboard ERROR:",
-                error
-            );
+updateClock();
 
 
-            apiConnectionOnline =
-                false;
+setInterval(
+    updateClock,
+    1000
+);
 
 
-            forceAllNodesOffline();
+/* =========================================================
+INITIAL LOAD
+========================================================= */
+
+load();
 
 
-            $("aiSummary").innerHTML =
-
-                `
-
-                <span class="text-red-400 font-bold">
-                    ⚠ ระบบออฟไลน์
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ข้อมูลได้
-                </span>
-
-                <br>
-
-                <span class="text-slate-500">
-                    ${escapeHtml(error.message)}
-                </span>
-
-                `;
+setInterval(
+    load,
+    10000
+);
 
 
-            $("aiDetails").innerHTML =
+/* =========================================================
+STATUS REFRESH
+========================================================= */
 
-                `
-
-                <span class="text-red-400 font-bold">
-                    ⚠ ระบบออฟไลน์
-                </span>
-
-                <br><br>
-
-                <span class="text-slate-400">
-                    Dashboard ไม่ได้รับข้อมูลใหม่
-                    จากระบบแม่
-                </span>
-
-                <br><br>
-
-                <span class="text-slate-500">
-                    ระบบจะลองเชื่อมต่อใหม่อัตโนมัติ
-                </span>
-
-                `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-    ESCAPE HTML
-    ========================================================= */
-
-    function escapeHtml(value){
-
-        return String(value)
-
-            .replaceAll(
-                "&",
-                "&amp;"
-            )
-
-            .replaceAll(
-                "<",
-                "&lt;"
-            )
-
-            .replaceAll(
-                ">",
-                "&gt;"
-            )
-
-            .replaceAll(
-                '"',
-                "&quot;"
-            )
-
-            .replaceAll(
-                "'",
-                "&#039;"
-            );
-
-    }
-
-
-    /* =========================================================
-    RENDER
-    ========================================================= */
-
-    function render(){
-
-        if(!latestRecord){
-            return;
-        }
-
+setInterval(
+    () => {
 
         const n1 =
             getLatestNode(1);
@@ -4207,655 +4345,62 @@ function updateTrendStatistics(){
             getLatestNode(3);
 
 
-        setNode(
-            "n1",
-            n1
-        );
+        if(apiConnectionOnline){
 
-
-        setNode(
-            "n2",
-            n2
-        );
-
-
-        setNode(
-            "n3",
-            n3
-        );
-
-
-        updateNodeStatus(
-            "n1status",
-            "nodeCard1",
-            n1
-        );
-
-
-        updateNodeStatus(
-            "n2status",
-            "nodeCard2",
-            n2
-        );
-
-
-        updateNodeStatus(
-            "n3status",
-            "nodeCard3",
-            n3
-        );
-
-
-        const online =
-            countOnlineNodes();
-
-
-        $("onlineCountTop").textContent =
-            online +
-            " / " +
-            TOTAL_NODES;
-
-
-        $("lastUpdate1").textContent =
-            n1
-                ? formatThaiTime(
-                    n1.timestamp
-                )
-                : "--";
-
-
-        $("lastUpdate2").textContent =
-            n2
-                ? formatThaiTime(
-                    n2.timestamp
-                )
-                : "--";
-
-
-        $("lastUpdate3").textContent =
-            n3
-                ? formatThaiTime(
-                    n3.timestamp
-                )
-                : "--";
-
-
-        $("heroPM1").textContent =
-            fmt(
-                latestRecord.pm1
+            updateNodeStatus(
+                "n1status",
+                "nodeCard1",
+                n1
             );
 
 
-        $("heroPM25").textContent =
-            fmt(
-                latestRecord.pm25
+            updateNodeStatus(
+                "n2status",
+                "nodeCard2",
+                n2
             );
 
 
-        $("heroPM10").textContent =
-            fmt(
-                latestRecord.pm10
+            updateNodeStatus(
+                "n3status",
+                "nodeCard3",
+                n3
             );
 
 
-        $("heroTemp").textContent =
-            latestRecord.temperature == null
-                ? "--"
-                : fmt(
-                    latestRecord.temperature
-                );
-
-
-        $("heroHum").textContent =
-            latestRecord.humidity == null
-                ? "--"
-                : fmt(
-                    latestRecord.humidity
-                );
-
-
-        $("heroLight").textContent =
-            latestRecord.light == null
-                ? "--"
-                : fmt(
-                    latestRecord.light
-                );
-
-
-        const pm25 =
-            latestRecord.pm25;
-
-
-        const q =
-            quality(pm25);
-
-
-        $("qualityBadge").textContent =
-            q;
-
-
-        $("overallStatus").textContent =
-            q;
-
-
-        updateOverallDot(
-            pm25
-        );
-
-
-        updateAlerts(
-            pm25
-        );
-
-
-        updateAI(
-            latestRecord,
-            q
-        );
-
-
-        renderAverages();
-
-
-        updateStatistics();
-
-
-        updateTrendStatistics();
-
-
-        drawCharts();
-
-    }
-
-
-    /* =========================================================
-    OVERALL DOT
-    ========================================================= */
-
-    function updateOverallDot(
-        pm25
-    ){
-
-        const dot =
-            $("overallDot");
-
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-slate-500";
-
-            return;
-
-        }
-
-
-        if(pm25 <= 15){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-emerald-400";
-
-        }
-
-        else if(pm25 <= 25){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-lime-400";
-
-        }
-
-        else if(pm25 <= 37.5){
-
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-amber-400";
+            updateSystemLive();
 
         }
 
         else{
 
-            dot.className =
-                "w-2.5 h-2.5 rounded-full bg-red-500";
+            forceAllNodesOffline();
 
         }
 
-    }
+    },
+    5000
+);
 
+</script>
 
-    /* =========================================================
-    ALERTS
-    ========================================================= */
 
-    function updateAlerts(
-        pm25
-    ){
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-slate-400">
-                    ยังไม่มีข้อมูล PM2.5
-                </span>
-
-                `;
-
-            return;
-
-        }
-
-
-        if(pm25 > 37.5){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-red-400 font-bold">
-                    ⚠ PM2.5 สูง ${fmt(pm25)} µg/m³
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรเฝ้าระวังและติดตามสถานการณ์
-                </span>
-
-                `;
-
-        }
-
-        else if(pm25 > 25){
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-amber-400 font-bold">
-                    ⚠ PM2.5 เริ่มสูง
-                </span>
-
-                <br>
-
-                <span class="text-slate-400">
-                    ควรติดตามแนวโน้มอย่างต่อเนื่อง
-                </span>
-
-                `;
-
-        }
-
-        else{
-
-            $("alerts").innerHTML =
-                `
-
-                <span class="text-emerald-400 font-bold">
-                    ✓ คุณภาพอากาศอยู่ในเกณฑ์ปกติ
-                </span>
-
-                `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-    AI
-    ========================================================= */
-
-    function updateAI(
-        latest,
-        q
-    ){
-
-        const pm25 =
-            latest.pm25;
-
-
-        if(
-            pm25 == null ||
-            isNaN(pm25)
-        ){
-
-            $("aiSummary").textContent =
-                "กำลังรอข้อมูลจากอุปกรณ์...";
-
-
-            $("aiDetails").textContent =
-                "ยังไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์";
-
-
-            return;
-
-        }
-
-
-        let recommendation;
-
-
-        if(pm25 <= 15){
-
-            recommendation =
-                "คุณภาพอากาศอยู่ในระดับดี สามารถทำกิจกรรมได้ตามปกติ";
-
-        }
-
-        else if(pm25 <= 25){
-
-            recommendation =
-                "คุณภาพอากาศอยู่ในระดับปานกลาง ควรติดตามค่าฝุ่นต่อเนื่อง";
-
-        }
-
-        else if(pm25 <= 37.5){
-
-            recommendation =
-                "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้งที่ใช้เวลานาน";
-
-        }
-
-        else{
-
-            recommendation =
-                "มีผลกระทบ ควรหลีกเลี่ยงกิจกรรมกลางแจ้งและเฝ้าระวังอย่างใกล้ชิด";
-
-        }
-
-
-        $("aiSummary").innerHTML =
-
-            `
-
-            <b class="text-cyan-300">
-                PM2.5 ${fmt(pm25)} µg/m³
-            </b>
-
-            <br>
-
-            สถานะ:
-
-            <b>
-                ${q}
-            </b>
-
-            <br>
-
-            ${recommendation}
-
-            `;
-
-
-        $("aiDetails").innerHTML =
-
-            `
-
-            <b class="text-white">
-                🤖 วิเคราะห์สถานการณ์
-            </b>
-
-            <br>
-
-            PM2.5 ล่าสุด:
-
-            <b class="text-cyan-300">
-                ${fmt(pm25)} µg/m³
-            </b>
-
-            <br>
-
-            อุณหภูมิ:
-
-            <b>
-                ${fmt(latest.temperature)} °C
-            </b>
-
-            <br>
-
-            ความชื้น:
-
-            <b>
-                ${fmt(latest.humidity)} %
-            </b>
-
-            <br>
-
-            แสง:
-
-            <b>
-                ${
-                    latest.light == null
-                        ? "--"
-                        : fmt(latest.light) +
-                        " lux"
-                }
-            </b>
-
-            <br><br>
-
-            <b class="text-white">
-                คำแนะนำ
-            </b>
-
-            <br>
-
-            ${recommendation}
-
-            <br><br>
-
-            <span class="text-xs text-slate-500">
-                * การวิเคราะห์นี้เป็นกฎพื้นฐานของระบบ
-                ยังไม่ใช่ AI/ML Model จริง
-            </span>
-
-            `;
-
-    }
-
-
-    /* =========================================================
-    METRIC CHANGE
-    ========================================================= */
-
-    $("metric")
-        .addEventListener(
-            "change",
-            e => {
-
-                metric =
-                    e.target.value;
-
-
-                updateSelectedMetricLabel();
-
-
-                drawCharts();
-
-            }
-        );
-
-
-    /* =========================================================
-    RANGE CHANGE
-    ========================================================= */
-
-    $("historyRange")
-        .addEventListener(
-            "change",
-            async e => {
-
-                averageRange =
-                    e.target.value;
-
-
-                await load();
-
-            }
-        );
-
-
-    /* =========================================================
-    EXPORT BUTTON
-    ========================================================= */
-
-    $("exportButton")
-        .addEventListener(
-            "click",
-            exportSelectedData
-        );
-
-
-    /* =========================================================
-    CLOCK
-    ========================================================= */
-
-    function updateClock(){
-
-        $("clock").textContent =
-            new Date()
-                .toLocaleString(
-                    "th-TH",
-                    {
-
-                        timeZone:
-                            "Asia/Bangkok",
-
-                        dateStyle:
-                            "medium",
-
-                        timeStyle:
-                            "medium"
-
-                    }
-                );
-
-    }
-
-
-    updateClock();
-
-
-    setInterval(
-        updateClock,
-        1000
-    );
-
-
-    /* =========================================================
-    INITIAL LOAD
-    ========================================================= */
-
-    load();
-
-
-    /* =========================================================
-    AUTO REFRESH
-    ========================================================= */
-
-    setInterval(
-        load,
-        10000
-    );
-
-
-    /* =========================================================
-    STATUS REFRESH
-    ========================================================= */
-
-    setInterval(
-        () => {
-
-            const n1 =
-                getLatestNode(1);
-
-
-            const n2 =
-                getLatestNode(2);
-
-
-            const n3 =
-                getLatestNode(3);
-
-
-            if(apiConnectionOnline){
-
-                updateNodeStatus(
-                    "n1status",
-                    "nodeCard1",
-                    n1
-                );
-
-
-                updateNodeStatus(
-                    "n2status",
-                    "nodeCard2",
-                    n2
-                );
-
-
-                updateNodeStatus(
-                    "n3status",
-                    "nodeCard3",
-                    n3
-                );
-
-
-                const online =
-                    countOnlineNodes();
-
-
-                $("onlineCountTop").textContent =
-                    online +
-                    " / " +
-                    TOTAL_NODES;
-
-            }
-
-            else{
-
-                forceAllNodesOffline();
-
-            }
-
-        },
-        5000
-    );
-
-
-    </script>
-<!-- =====================================================
-     PREMIUM CREDIT BAR
-     ===================================================== -->
+<!-- =========================================================
+CREDIT
+========================================================= -->
 
 <footer class="credit-bar">
-
-    <!-- =================================================
-         BACKGROUND DECORATION
-         ================================================= -->
 
     <div class="credit-glow credit-glow-1"></div>
     <div class="credit-glow credit-glow-2"></div>
 
 
-    <!-- =================================================
-         CREDIT INNER
-         ================================================= -->
-
     <div class="credit-inner">
 
 
-        <!-- =================================================
-             01. COLLEGE
-             ================================================= -->
+        <!-- COLLEGE -->
 
         <div class="credit-box credit-college">
-
-            <!-- College Logo -->
 
             <div
                 class="credit-icon credit-image-button"
@@ -4873,8 +4418,6 @@ function updateTrendStatistics(){
             </div>
 
 
-            <!-- College Content -->
-
             <div class="credit-content">
 
                 <div class="credit-label">
@@ -4887,8 +4430,6 @@ function updateTrendStatistics(){
 
 
                 <div class="credit-links">
-
-                    <!-- Website -->
 
                     <a
                         href="https://www.spscollege.ac.th/"
@@ -4907,8 +4448,6 @@ function updateTrendStatistics(){
 
                     </a>
 
-
-                    <!-- Facebook -->
 
                     <a
                         href="https://www.facebook.com/spscollege.ac.th?locale=th_TH"
@@ -4934,14 +4473,9 @@ function updateTrendStatistics(){
         </div>
 
 
-
-        <!-- =================================================
-             02. DEPARTMENT
-             ================================================= -->
+        <!-- DEPARTMENT -->
 
         <div class="credit-box credit-department">
-
-            <!-- Department Logo -->
 
             <div
                 class="credit-icon credit-image-button"
@@ -4958,8 +4492,6 @@ function updateTrendStatistics(){
 
             </div>
 
-
-            <!-- Department Content -->
 
             <div class="credit-content">
 
@@ -4998,14 +4530,9 @@ function updateTrendStatistics(){
         </div>
 
 
-
-        <!-- =================================================
-             03. ADVISOR
-             ================================================= -->
+        <!-- ADVISOR -->
 
         <div class="credit-box credit-advisor">
-
-            <!-- Advisor Image -->
 
             <div
                 class="credit-icon credit-image-button"
@@ -5022,8 +4549,6 @@ function updateTrendStatistics(){
 
             </div>
 
-
-            <!-- Advisor Content -->
 
             <div class="credit-content">
 
@@ -5044,14 +4569,9 @@ function updateTrendStatistics(){
         </div>
 
 
-
-        <!-- =================================================
-             04. DEVELOPER 1
-             ================================================= -->
+        <!-- DEVELOPER 1 -->
 
         <div class="credit-box credit-developer">
-
-            <!-- Developer 1 Image -->
 
             <div
                 class="credit-icon credit-image-button credit-placeholder"
@@ -5068,8 +4588,6 @@ function updateTrendStatistics(){
 
             </div>
 
-
-            <!-- Developer 1 Content -->
 
             <div class="credit-content">
 
@@ -5090,14 +4608,9 @@ function updateTrendStatistics(){
         </div>
 
 
-
-        <!-- =================================================
-             05. DEVELOPER 2
-             ================================================= -->
+        <!-- DEVELOPER 2 -->
 
         <div class="credit-box credit-developer">
-
-            <!-- Developer 2 Image -->
 
             <div
                 class="credit-icon credit-image-button credit-placeholder"
@@ -5114,8 +4627,6 @@ function updateTrendStatistics(){
 
             </div>
 
-
-            <!-- Developer 2 Content -->
 
             <div class="credit-content">
 
@@ -5139,11 +4650,6 @@ function updateTrendStatistics(){
     </div>
 
 
-
-    <!-- =================================================
-         BOTTOM SYSTEM STATUS
-         ================================================= -->
-
     <div class="credit-bottom">
 
         <span class="credit-status-dot"></span>
@@ -5163,10 +4669,9 @@ function updateTrendStatistics(){
 </footer>
 
 
-
-<!-- =====================================================
-     CREDIT IMAGE VIEWER / LIGHTBOX
-     ===================================================== -->
+<!-- =========================================================
+CREDIT IMAGE VIEWER
+========================================================= -->
 
 <div
     id="creditImageModal"
@@ -5174,21 +4679,11 @@ function updateTrendStatistics(){
     aria-hidden="true"
 >
 
-
-    <!-- =================================================
-         DARK BACKGROUND
-         ================================================= -->
-
     <div
         class="credit-image-overlay"
         onclick="closeCreditImage()"
     ></div>
 
-
-
-    <!-- =================================================
-         CLOSE BUTTON
-         ================================================= -->
 
     <button
         type="button"
@@ -5196,16 +4691,9 @@ function updateTrendStatistics(){
         onclick="closeCreditImage()"
         aria-label="ปิดรูปภาพ"
     >
-
         ×
-
     </button>
 
-
-
-    <!-- =================================================
-         IMAGE WINDOW
-         ================================================= -->
 
     <div
         class="credit-image-window"
@@ -5230,28 +4718,28 @@ function updateTrendStatistics(){
 </div>
 
 
-
-<!-- =====================================================
-     CREDIT IMAGE JAVASCRIPT
-     ================================================= -->
+<!-- =========================================================
+CREDIT IMAGE JAVASCRIPT
+========================================================= -->
 
 <script>
 
-/* =====================================================
-   OPEN CREDIT IMAGE
-   ===================================================== */
-
-function openCreditImage(imageSrc, imageAlt) {
+function openCreditImage(
+    imageSrc,
+    imageAlt
+){
 
     const modal =
         document.getElementById(
             "creditImageModal"
         );
 
+
     const image =
         document.getElementById(
             "creditFullImage"
         );
+
 
     const caption =
         document.getElementById(
@@ -5259,23 +4747,22 @@ function openCreditImage(imageSrc, imageAlt) {
         );
 
 
-    /* ใส่รูป */
-
-    image.src = imageSrc;
-
-    image.alt = imageAlt;
+    image.src =
+        imageSrc;
 
 
-    /* ใส่คำอธิบาย */
+    image.alt =
+        imageAlt;
 
-    caption.textContent = imageAlt;
 
+    caption.textContent =
+        imageAlt;
 
-    /* เปิด Modal */
 
     modal.classList.add(
         "active"
     );
+
 
     modal.setAttribute(
         "aria-hidden",
@@ -5283,19 +4770,13 @@ function openCreditImage(imageSrc, imageAlt) {
     );
 
 
-    /* ป้องกันหน้าเว็บด้านหลังเลื่อน */
-
     document.body.style.overflow =
         "hidden";
 
 }
 
 
-/* =====================================================
-   CLOSE CREDIT IMAGE
-   ===================================================== */
-
-function closeCreditImage() {
+function closeCreditImage(){
 
     const modal =
         document.getElementById(
@@ -5303,11 +4784,10 @@ function closeCreditImage() {
         );
 
 
-    /* ปิด Modal */
-
     modal.classList.remove(
         "active"
     );
+
 
     modal.setAttribute(
         "aria-hidden",
@@ -5315,23 +4795,21 @@ function closeCreditImage() {
     );
 
 
-    /* คืนการเลื่อนหน้าเว็บ */
-
     document.body.style.overflow =
         "";
 
 
-    /* ล้างรูป */
-
     setTimeout(
-        function() {
+        function(){
 
             const image =
                 document.getElementById(
                     "creditFullImage"
                 );
 
-            image.src = "";
+
+            image.src =
+                "";
 
         },
         200
@@ -5340,17 +4818,13 @@ function closeCreditImage() {
 }
 
 
-/* =====================================================
-   ESC KEY TO CLOSE
-   ===================================================== */
-
 document.addEventListener(
     "keydown",
-    function(event) {
+    function(event){
 
-        if (
+        if(
             event.key === "Escape"
-        ) {
+        ){
 
             const modal =
                 document.getElementById(
@@ -5358,11 +4832,11 @@ document.addEventListener(
                 );
 
 
-            if (
+            if(
                 modal.classList.contains(
                     "active"
                 )
-            ) {
+            ){
 
                 closeCreditImage();
 
@@ -5374,6 +4848,7 @@ document.addEventListener(
 );
 
 </script>
+
 </body>
 
 </html>
