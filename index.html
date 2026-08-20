@@ -638,35 +638,48 @@ FORECAST + AI
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <div class="text-xs font-bold text-slate-300">
-                        วิธีอ่านกราฟ
+                        การแสดงผลกราฟ
                     </div>
                     <div class="text-[11px] text-slate-500 mt-1">
-                        สีและรูปแบบเส้นมีไว้บอกชนิดข้อมูล ไม่ใช่ปุ่มกด
+                        กดปุ่ม Forecast เพื่อเปิดหรือซ่อนเส้นคาดการณ์
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-4 text-xs">
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-3 text-xs">
+
+                    <div
+                        class="flex items-center gap-2 rounded-lg px-3 py-2"
+                        style="background:rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.12);"
+                    >
                         <span
                             class="inline-block w-8 h-[3px] rounded-full"
                             style="background:#22d3ee;"
                         ></span>
-                        <span class="text-slate-300">
+                        <span class="text-slate-300 font-medium">
                             ข้อมูลจริง
                         </span>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="inline-block w-8 h-0"
-                            style="border-top:2px dashed #34d399;"
-                        ></span>
-                        <span class="text-slate-300">
-                            ค่าคาดการณ์
+                    <button
+                        id="forecastToggle"
+                        type="button"
+                        aria-pressed="true"
+                        class="rounded-lg px-3 py-2 font-bold transition-all duration-200"
+                        style="background:rgba(52,211,153,.10); border:1px solid rgba(52,211,153,.26); color:#6ee7b7; cursor:pointer;"
+                        title="กดเพื่อเปิดหรือซ่อนเส้นคาดการณ์"
+                    >
+                        <span class="inline-flex items-center gap-2">
+                            <span
+                                class="inline-block w-8 h-0"
+                                style="border-top:2px dashed currentColor;"
+                            ></span>
+                            <span id="forecastToggleLabel">
+                                ✓ Forecast เปิดอยู่
+                            </span>
                         </span>
-                    </div>
+                    </button>
 
-                    <div class="text-slate-500">
+                    <div class="text-[11px] text-slate-500">
                         ● จุดล่าสุด
                     </div>
                 </div>
@@ -722,6 +735,7 @@ let latestNodes = [];
 let records = [];
 let historyChart = null;
 let forecastChart = null;
+let forecastVisible = true;
 let metric = "pm25";
 let averageRange = "24h";
 let apiConnectionOnline = false;
@@ -2129,6 +2143,91 @@ function drawCharts(){
     drawForecast(arr);
 }
 /* =========================================================
+FORECAST TOGGLE
+========================================================= */
+
+function updateForecastToggleUI(){
+
+    const button =
+        $("forecastToggle");
+
+    const label =
+        $("forecastToggleLabel");
+
+    if(
+        !button ||
+        !label
+    ){
+        return;
+    }
+
+    button.setAttribute(
+        "aria-pressed",
+        forecastVisible
+            ? "true"
+            : "false"
+    );
+
+    if(forecastVisible){
+
+        label.textContent =
+            "✓ Forecast เปิดอยู่";
+
+        button.style.background =
+            "rgba(52,211,153,.10)";
+
+        button.style.borderColor =
+            "rgba(52,211,153,.26)";
+
+        button.style.color =
+            "#6ee7b7";
+
+        button.title =
+            "กดเพื่อซ่อนเส้นคาดการณ์";
+    }
+    else{
+
+        label.textContent =
+            "○ Forecast ซ่อนอยู่";
+
+        button.style.background =
+            "rgba(100,116,139,.08)";
+
+        button.style.borderColor =
+            "rgba(100,116,139,.18)";
+
+        button.style.color =
+            "#94a3b8";
+
+        button.title =
+            "กดเพื่อแสดงเส้นคาดการณ์";
+    }
+}
+
+
+function setForecastDatasetVisibility(){
+
+    if(
+        !forecastChart ||
+        !forecastChart.data ||
+        !forecastChart.data.datasets ||
+        forecastChart.data.datasets.length < 2
+    ){
+        return;
+    }
+
+    forecastChart.setDatasetVisibility(
+        1,
+        forecastVisible
+    );
+
+    forecastChart.update();
+
+    updateForecastToggleUI();
+}
+
+
+/* =========================================================
 FORECAST
 ========================================================= */
 
@@ -2575,6 +2674,8 @@ function drawForecast(arr){
                 }
             }
         );
+
+    setForecastDatasetVisibility();
 }
 
 
@@ -3891,6 +3992,25 @@ $("metric")
             drawCharts();
         }
     );
+const forecastToggleButton =
+    $("forecastToggle");
+
+if(forecastToggleButton){
+
+    forecastToggleButton
+        .addEventListener(
+            "click",
+            () => {
+
+                forecastVisible =
+                    !forecastVisible;
+
+                setForecastDatasetVisibility();
+            }
+        );
+}
+
+
 $("historyRange")
     .addEventListener(
         "change",
@@ -3923,6 +4043,8 @@ function updateClock(){
                 }
             );
 }
+updateForecastToggleUI();
+
 updateClock();
 setInterval(
     updateClock,
