@@ -1154,10 +1154,12 @@ function countActiveNodes(){
         getLatestNode(2),
         getLatestNode(3)
     ];
+
     return nodes.filter(
         node => {
             const status =
                 getNodeStatus(node);
+
             return (
                 status === "online" ||
                 status === "sleep"
@@ -1165,23 +1167,21 @@ function countActiveNodes(){
         }
     ).length;
 }
+
 function updateSystemLive(){
     const count =
         countActiveNodes();
+
     const countElement =
         $("onlineCountTop");
+
     const labelElement =
         $("systemLiveLabel");
+
     if(!countElement || !labelElement){
         return;
     }
-    if(count === 0){
-        countElement.textContent =
-            "OFFLINE";
-        labelElement.textContent =
-            "";
-        return;
-    }
+
     countElement.textContent =
         count + " / " + TOTAL_NODES;
 
