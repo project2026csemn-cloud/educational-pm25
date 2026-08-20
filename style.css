@@ -4629,3 +4629,306 @@ body.export-modal-open {
     }
 }
 
+/* =========================================================
+   HISTORICAL TOOLBAR CONTROLS
+   PM2.5 / DATE RANGE / EXPORT
+   ========================================================= */
+
+.history-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ---------------------------------------------------------
+   ตัวเลือกตัวแปร เช่น PM2.5
+   --------------------------------------------------------- */
+
+.history-metric-select {
+    height: 42px;
+    min-width: 110px;
+
+    padding: 0 36px 0 14px;
+
+    border:
+        1px solid rgba(90, 132, 165, 0.46);
+
+    border-radius: 12px;
+
+    background-color: #10263b;
+
+    color: #eaf6ff;
+    color-scheme: dark;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+    outline: none;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.15s ease;
+}
+
+.history-metric-select:hover {
+    background-color: #143049;
+
+    border-color:
+        rgba(34, 211, 238, 0.48);
+}
+
+.history-metric-select:focus {
+    border-color: #22d3ee;
+
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.08);
+}
+
+/* ทำ dropdown option ให้อยู่ในธีมเข้ม */
+.history-metric-select option {
+    background: #102338;
+    color: #eaf2f8;
+}
+
+/* ---------------------------------------------------------
+   ปุ่มร่วมของ Range + Export
+   --------------------------------------------------------- */
+
+.history-toolbar-button {
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 14px;
+
+    border:
+        1px solid rgba(90, 132, 165, 0.46);
+
+    border-radius: 12px;
+
+    background: #10263b;
+
+    color: #eaf6ff;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+    outline: none;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.15s ease;
+}
+
+.history-toolbar-button:hover {
+    background: #143049;
+
+    border-color:
+        rgba(34, 211, 238, 0.48);
+}
+
+.history-toolbar-button:active {
+    transform: translateY(1px);
+}
+
+/* ---------------------------------------------------------
+   Icon + Arrow
+   --------------------------------------------------------- */
+
+.history-control-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #67e8f9;
+
+    font-size: 13px;
+    line-height: 1;
+}
+
+.history-control-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #8aa6bc;
+
+    font-size: 12px;
+    line-height: 1;
+
+    transition:
+        transform 0.18s ease,
+        color 0.18s ease;
+}
+
+/* ---------------------------------------------------------
+   ปุ่มเลือกช่วงเวลา
+   --------------------------------------------------------- */
+
+#historyRangeButton.history-toolbar-button {
+    min-width: 132px;
+
+    /* override style ของ Date Picker เดิม */
+    min-height: 42px;
+
+    border:
+        1px solid rgba(90, 132, 165, 0.46);
+
+    background: #10263b;
+
+    color: #eaf6ff;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#historyRangeButton.history-toolbar-button:hover {
+    background: #143049;
+
+    border-color:
+        rgba(34, 211, 238, 0.48);
+
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.055);
+}
+
+#historyRangeButton.history-toolbar-button[aria-expanded="true"] {
+    background: #143149;
+
+    border-color: #22d3ee;
+
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.08),
+        0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+#historyRangeButton[aria-expanded="true"] .history-control-arrow {
+    color: #67e8f9;
+
+    transform: rotate(180deg);
+}
+
+/* ---------------------------------------------------------
+   ปุ่มส่งออก
+   --------------------------------------------------------- */
+
+#exportButton.history-export-button {
+    min-width: 106px;
+
+    border-color:
+        rgba(34, 211, 238, 0.40);
+
+    background:
+        linear-gradient(
+            180deg,
+            #12324a 0%,
+            #10283e 100%
+        );
+
+    color: #ecfeff;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+#exportButton.history-export-button:hover {
+    background:
+        linear-gradient(
+            180deg,
+            #174159 0%,
+            #123149 100%
+        );
+
+    border-color: #22d3ee;
+
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.075),
+        0 7px 18px rgba(0, 0, 0, 0.16);
+}
+
+#exportButton.history-export-button:active {
+    transform: translateY(1px);
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 720px) {
+
+    .history-toolbar {
+        width: 100%;
+
+        justify-content: flex-start;
+
+        gap: 7px;
+    }
+
+    .history-metric-select,
+    .history-toolbar-button,
+    #historyRangeButton.history-toolbar-button {
+        height: 40px;
+        min-height: 40px;
+
+        font-size: 12px;
+    }
+
+    .history-metric-select {
+        min-width: 100px;
+    }
+
+    #historyRangeButton.history-toolbar-button {
+        min-width: 122px;
+    }
+
+    #exportButton.history-export-button {
+        min-width: 98px;
+    }
+}
+
+@media (max-width: 460px) {
+
+    .history-toolbar {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1.25fr);
+
+        width: 100%;
+    }
+
+    .history-metric-select,
+    #historyRangeButton.history-toolbar-button {
+        width: 100%;
+    }
+
+    #exportButton.history-export-button {
+        grid-column: 1 / -1;
+
+        width: 100%;
+    }
+}
+
