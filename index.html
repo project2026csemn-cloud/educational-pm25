@@ -61,21 +61,29 @@ MONITORING NODES + AI
                 </p>
             </div>
             <div class="flex justify-center">
-                <div class="badge rounded-2xl px-4 py-3 min-w-[80px]">
+                <div class="badge rounded-2xl px-4 py-3 min-w-[150px]">
                     <div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                        System Live
+                        Gateway
                     </div>
+
                     <div class="font-bold mt-1">
-                        <span class="text-emerald-400">
+                        <span
+                            id="gatewayDotTop"
+                            class="text-slate-500"
+                        >
                             ●
                         </span>
-                        <span id="onlineCountTop">
-                            0 / 3
-                        </span>
 
-                        <span id="systemLiveLabel">
-                            Nodes
+                        <span id="gatewayStatusTop">
+                            CHECKING
                         </span>
+                    </div>
+
+                    <div
+                        id="nodesActiveTop"
+                        class="text-[10px] text-slate-500 mt-1"
+                    >
+                        0 / 3 Nodes active
                     </div>
                 </div>
             </div>
@@ -250,7 +258,7 @@ MONITORING NODES + AI
                     Smart Summary
                 </h2>
                 <p class="text-xs text-slate-400">
-                    สรุปสถานการณ์ปัจจุบันอัตโนมัติ
+                    สรุปสถานการณ์อัตโนมัติแบบ Rule-based
                 </p>
             </div>
         </div>
@@ -1091,9 +1099,10 @@ const EXPORT_API =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/export.php";
 const MOTHER_STATUS_API =
     "https://educational-pm25-api.project2026csemn.workers.dev/api/mother_status";
+const ALERT_STATES_API =
+    "https://educational-pm25-api.project2026csemn.workers.dev/api/alert_states";
+
 const TOTAL_NODES = 3;
-const NODE_OFFLINE_AFTER_SECONDS = 6 * 60;
-const NODE_SLEEP_OFFLINE_AFTER_SECONDS = 6 * 60;
 /* =========================================================
 STATE
 ========================================================= */
@@ -1117,6 +1126,7 @@ let calendarSelectionStep =
 
 let apiConnectionOnline = false;
 let motherStatus = null;
+let alertStates = [];
 /* =========================================================
 RANGE
 ========================================================= */
@@ -2168,67 +2178,44 @@ function isSameNode(
 /* =========================================================
 NODE STATUS
 ========================================================= */
-function getNodeAgeSeconds(node){
-    if(!node || !node.timestamp){
-        return Infinity;
-    }
-    const date =
-        parseDate(node.timestamp);
-    if(!date){
-        return Infinity;
-    }
-    const age =
-        (
-            Date.now() -
-            date.getTime()
-        ) / 1000;
-    return age < 0
-        ? 0
-        : age;
-}
-function isNodeFresh(node){
-    if(!node){
-        return false;
-    }
-    return (
-        getNodeAgeSeconds(node) <=
-        NODE_OFFLINE_AFTER_SECONDS
-    );
-}
-function isNodeSleepExpired(node){
-    if(!node){
-        return true;
-    }
-    return (
-        getNodeAgeSeconds(node) >
-        NODE_SLEEP_OFFLINE_AFTER_SECONDS
-    );
-}
 function getNodeStatus(node){
+
+    /*
+     * สถานะหลักมาจาก Cloudflare Worker
+     *
+     * Worker เป็นผู้จัดการ:
+     * - Mother timeout = 2 นาที
+     * - Node timeout = 6 นาที
+     * - Mother offline -> ลูกทุกตัว offline
+     *
+     * Dashboard จึงไม่คำนวณ timeout ซ้ำอีกชั้น
+     * เพื่อป้องกัน SLEEP ถูกเปลี่ยนเป็น OFFLINE ผิดเวลา
+     */
+
     if(!apiConnectionOnline){
         return "offline";
     }
+
     if(!node){
         return "offline";
     }
+
     const status =
         String(node.status || "")
             .trim()
             .toLowerCase();
-    if(status === "sleep"){
-        if(isNodeSleepExpired(node)){
-            return "offline";
-        }
-        return "sleep";
+
+    if(
+        status === "online" ||
+        status === "sleep" ||
+        status === "offline"
+    ){
+        return status;
     }
-    if(status === "online"){
-        if(!isNodeFresh(node)){
-            return "offline";
-        }
-        return "online";
-    }
+
     return "offline";
 }
+
 /* =========================================================
 LATEST NODE
 ========================================================= */
@@ -2353,16 +2340,12 @@ function updateNodeStatus(
     }
 }
 /* =========================================================
-SYSTEM LIVE
+SYSTEM HEALTH
 ========================================================= */
-function countActiveNodes(){
-    const nodes = [
-        getLatestNode(1),
-        getLatestNode(2),
-        getLatestNode(3)
-    ];
 
-    return nodes.filter(
+function countActiveNodes(){
+
+    return latestNodes.filter(
         node => {
             const status =
                 getNodeStatus(node);
@@ -2375,26 +2358,80 @@ function countActiveNodes(){
     ).length;
 }
 
-function updateSystemLive(){
-    const count =
-        countActiveNodes();
 
-    const countElement =
-        $("onlineCountTop");
+function updateSystemHealth(){
 
-    const labelElement =
-        $("systemLiveLabel");
+    const gatewayDot =
+        $("gatewayDotTop");
 
-    if(!countElement || !labelElement){
+    const gatewayStatus =
+        $("gatewayStatusTop");
+
+    const nodesActive =
+        $("nodesActiveTop");
+
+
+    if(
+        !gatewayDot ||
+        !gatewayStatus ||
+        !nodesActive
+    ){
         return;
     }
 
-    countElement.textContent =
-        count + " / " + TOTAL_NODES;
 
-    labelElement.textContent =
-        "Nodes";
+    if(!apiConnectionOnline){
+
+        gatewayDot.className =
+            "text-red-400";
+
+        gatewayStatus.textContent =
+            "API ERROR";
+
+        nodesActive.textContent =
+            "ไม่สามารถตรวจสอบระบบได้";
+
+        return;
+    }
+
+
+    const mother =
+        motherStatus &&
+        String(
+            motherStatus.status || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if(mother === "online"){
+
+        gatewayDot.className =
+            "text-emerald-400";
+
+        gatewayStatus.textContent =
+            "ONLINE";
+    }
+    else{
+
+        gatewayDot.className =
+            "text-red-400";
+
+        gatewayStatus.textContent =
+            "OFFLINE";
+    }
+
+
+    const active =
+        countActiveNodes();
+
+    nodesActive.textContent =
+        active +
+        " / " +
+        TOTAL_NODES +
+        " Nodes active";
 }
+
 /* =========================================================
 LATEST API
 ========================================================= */
@@ -2517,6 +2554,76 @@ async function loadMotherStatus(){
         updated_at:
             json.data.updated_at || null
     };
+}
+
+
+/* =========================================================
+ALERT STATES API
+========================================================= */
+
+async function loadAlertStates(){
+
+    const response =
+        await fetch(
+            ALERT_STATES_API +
+            "?t=" +
+            Date.now(),
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+        );
+
+
+    if(!response.ok){
+        throw new Error(
+            "alert_states HTTP " +
+            response.status
+        );
+    }
+
+
+    const json =
+        await response.json();
+
+
+    if(
+        !json ||
+        !json.success
+    ){
+        throw new Error(
+            json?.message ||
+            "alert_states ส่งข้อมูลไม่สำเร็จ"
+        );
+    }
+
+
+    if(!Array.isArray(json.data)){
+        return [];
+    }
+
+
+    return json.data;
+}
+
+
+function getAlertStateForNode(nodeNumber){
+
+    return (
+        alertStates.find(
+            state =>
+                state &&
+                isSameNode(
+                    state.device_id,
+                    nodeNumber
+                )
+        ) ||
+        null
+    );
 }
 
 
@@ -2651,17 +2758,28 @@ function forceAllNodesOffline(){
             }
         }
     );
-    const countElement =
-        $("onlineCountTop");
-    const labelElement =
-        $("systemLiveLabel");
-    if(countElement){
-        countElement.textContent =
-            "OFFLINE";
+    const gatewayDot =
+        $("gatewayDotTop");
+
+    const gatewayStatus =
+        $("gatewayStatusTop");
+
+    const nodesActive =
+        $("nodesActiveTop");
+
+    if(gatewayDot){
+        gatewayDot.className =
+            "text-red-400";
     }
-    if(labelElement){
-        labelElement.textContent =
-            "";
+
+    if(gatewayStatus){
+        gatewayStatus.textContent =
+            "API ERROR";
+    }
+
+    if(nodesActive){
+        nodesActive.textContent =
+            "ไม่สามารถตรวจสอบระบบได้";
     }
 }
 /* =========================================================
@@ -5582,22 +5700,46 @@ function renderMonitoringNodes(){
         n3
     );
 
-    updateSystemLive();
+    updateSystemHealth();
 }
 
 
 function updateSmartSummary(){
-    const element = $("aiSummary");
+
+    const element =
+        $("aiSummary");
+
 
     if(!element){
         return;
     }
 
+
     if(!apiConnectionOnline){
-        element.innerHTML =
-            '<span class="text-red-300">ไม่สามารถเชื่อมต่อ API ได้</span>';
+
+        element.innerHTML = `
+            <b class="text-red-300">
+                🔴 ไม่สามารถเชื่อมต่อ API
+            </b>
+
+            <div class="text-xs text-slate-500 mt-2">
+                ข้อมูลปัจจุบันไม่สามารถยืนยันได้
+            </div>
+        `;
+
         return;
     }
+
+
+    const motherOnline =
+        motherStatus &&
+        String(
+            motherStatus.status || ""
+        )
+        .trim()
+        .toLowerCase() ===
+        "online";
+
 
     const nodes =
         latestNodes
@@ -5609,17 +5751,20 @@ function updateSmartSummary(){
                 })
             );
 
+
     const online =
         nodes.filter(
             item =>
                 item.status === "online"
         ).length;
 
+
     const sleep =
         nodes.filter(
             item =>
                 item.status === "sleep"
         ).length;
+
 
     const offline =
         Math.max(
@@ -5628,6 +5773,29 @@ function updateSmartSummary(){
             online -
             sleep
         );
+
+
+    if(!motherOnline){
+
+        element.innerHTML = `
+            <b class="text-red-300">
+                🔴 Gateway Offline
+            </b>
+
+            <div class="mt-2">
+                ไม่สามารถยืนยันการเชื่อมต่อของอุปกรณ์ลูกได้
+            </div>
+
+            <div class="mt-2 text-xs text-slate-400">
+                ONLINE ${online}
+                • SLEEP ${sleep}
+                • OFFLINE ${offline}
+            </div>
+        `;
+
+        return;
+    }
+
 
     const usable =
         nodes
@@ -5640,134 +5808,409 @@ function updateSmartSummary(){
                     item.node &&
                     item.node.pm25 !== null &&
                     item.node.pm25 !== undefined &&
-                    !isNaN(Number(item.node.pm25))
+                    !isNaN(
+                        Number(
+                            item.node.pm25
+                        )
+                    )
             );
+
+
+    let headline =
+        "🟢 ระบบทำงานปกติ";
+
+    let headlineClass =
+        "text-emerald-300";
 
     let pmText =
         "ยังไม่มีข้อมูล PM2.5 ที่ใช้ประเมินได้";
 
+
     if(usable.length){
+
         const avg =
             usable.reduce(
                 (sum,item) =>
                     sum +
-                    Number(item.node.pm25),
+                    Number(
+                        item.node.pm25
+                    ),
                 0
             ) /
             usable.length;
+
 
         pmText =
             "PM2.5 ภาพรวม " +
             fmt(avg) +
             " µg/m³ • " +
             quality(avg);
+
+
+        if(avg > 37.5){
+
+            headline =
+                "🔴 คุณภาพอากาศควรเฝ้าระวัง";
+
+            headlineClass =
+                "text-red-300";
+        }
+        else if(avg > 25){
+
+            headline =
+                "🟡 มีค่าที่ควรติดตาม";
+
+            headlineClass =
+                "text-amber-300";
+        }
     }
 
+
+    if(offline > 0){
+
+        headline =
+            "🟠 มีอุปกรณ์ที่ต้องตรวจสอบ";
+
+        headlineClass =
+            "text-amber-300";
+    }
+
+
     element.innerHTML = `
-        <div>
+        <b class="${headlineClass}">
+            ${headline}
+        </b>
+
+        <div class="mt-2">
             ${pmText}
         </div>
+
         <div class="mt-2 text-xs text-slate-400">
-            ONLINE ${online} • SLEEP ${sleep} • OFFLINE ${offline}
+            Gateway ONLINE
+            • ONLINE ${online}
+            • SLEEP ${sleep}
+            • OFFLINE ${offline}
         </div>
     `;
 }
 
 
+function getSensorAlertItems(
+    nodeNumber,
+    node
+){
+
+    const state =
+        getAlertStateForNode(
+            nodeNumber
+        );
+
+
+    if(
+        !state ||
+        !node
+    ){
+        return [];
+    }
+
+
+    const definitions = [
+        {
+            levelKey:
+                "pm1_level",
+            label:
+                "PM1.0",
+            valueKey:
+                "pm1",
+            unit:
+                "µg/m³"
+        },
+        {
+            levelKey:
+                "pm25_level",
+            label:
+                "PM2.5",
+            valueKey:
+                "pm25",
+            unit:
+                "µg/m³"
+        },
+        {
+            levelKey:
+                "pm10_level",
+            label:
+                "PM10",
+            valueKey:
+                "pm10",
+            unit:
+                "µg/m³"
+        },
+        {
+            levelKey:
+                "temperature_level",
+            label:
+                "อุณหภูมิ",
+            valueKey:
+                "temperature",
+            unit:
+                "°C"
+        },
+        {
+            levelKey:
+                "humidity_level",
+            label:
+                "ความชื้น",
+            valueKey:
+                "humidity",
+            unit:
+                "%"
+        },
+        {
+            levelKey:
+                "light_level",
+            label:
+                "แสง",
+            valueKey:
+                "light",
+            unit:
+                "lux"
+        }
+    ];
+
+
+    return definitions
+        .map(
+            definition => {
+
+                const level =
+                    String(
+                        state[
+                            definition.levelKey
+                        ] ||
+                        "normal"
+                    )
+                    .trim()
+                    .toLowerCase();
+
+
+                if(level === "normal"){
+                    return null;
+                }
+
+
+                return {
+                    type:
+                        level,
+
+                    title:
+                        "อุปกรณ์ " +
+                        nodeNumber +
+                        " • " +
+                        definition.label,
+
+                    detail:
+                        fmt(
+                            node[
+                                definition.valueKey
+                            ]
+                        ) +
+                        " " +
+                        definition.unit
+                };
+            }
+        )
+        .filter(Boolean);
+}
+
+
 function updateAlerts(){
-    const element = $("alerts");
+
+    const element =
+        $("alerts");
+
 
     if(!element){
         return;
     }
 
+
     if(!apiConnectionOnline){
+
         element.innerHTML = `
             <div class="soft rounded-xl p-3">
                 <b class="text-red-300">
                     🔴 ไม่สามารถเชื่อมต่อ API
                 </b>
+
                 <div class="text-xs text-slate-400 mt-1">
                     กรุณาตรวจสอบ Cloudflare Worker หรือการเชื่อมต่ออินเทอร์เน็ต
                 </div>
             </div>
         `;
+
         return;
     }
 
+
+    const motherOnline =
+        motherStatus &&
+        String(
+            motherStatus.status || ""
+        )
+        .trim()
+        .toLowerCase() ===
+        "online";
+
+
+    /*
+     * ถ้า Mother Offline:
+     * แสดง System Alert เพียงรายการเดียว
+     * เพราะ Node Cards แสดง OFFLINE อยู่แล้ว
+     */
+    if(!motherOnline){
+
+        element.innerHTML = `
+            <div class="soft rounded-xl p-3">
+                <b class="text-red-300">
+                    🔴 Gateway OFFLINE
+                </b>
+
+                <div class="text-xs text-slate-400 mt-1">
+                    Worker ไม่สามารถยืนยันสถานะอุปกรณ์ลูกได้ และกำหนดทุก Node เป็น OFFLINE
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+
     const alerts = [];
 
-    for(let number = 1; number <= TOTAL_NODES; number++){
+
+    for(
+        let number = 1;
+        number <= TOTAL_NODES;
+        number++
+    ){
+
         const node =
-            getLatestNode(number);
+            getLatestNode(
+                number
+            );
+
 
         const status =
-            getNodeStatus(node);
+            getNodeStatus(
+                node
+            );
+
 
         if(status === "offline"){
+
             alerts.push({
-                type: "offline",
-                text:
+                type:
+                    "offline",
+
+                title:
                     "อุปกรณ์ " +
                     number +
-                    " OFFLINE"
+                    " OFFLINE",
+
+                detail:
+                    "ไม่สามารถติดต่ออุปกรณ์ได้"
             });
 
             continue;
         }
 
-        if(
-            node &&
-            node.pm25 !== null &&
-            node.pm25 !== undefined &&
-            !isNaN(Number(node.pm25)) &&
-            Number(node.pm25) > 25
-        ){
-            alerts.push({
-                type: "pm25",
-                text:
-                    "อุปกรณ์ " +
-                    number +
-                    " PM2.5 " +
-                    fmt(node.pm25) +
-                    " µg/m³"
-            });
-        }
+
+        alerts.push(
+            ...getSensorAlertItems(
+                number,
+                node
+            )
+        );
     }
 
+
     if(!alerts.length){
+
         element.innerHTML = `
             <div class="soft rounded-xl p-3">
                 <b class="text-emerald-300">
                     ✅ ไม่พบรายการที่ต้องตรวจสอบ
                 </b>
+
                 <div class="text-xs text-slate-400 mt-1">
-                    สถานะอุปกรณ์และค่า PM2.5 ยังอยู่ในเงื่อนไขปกติ
+                    Gateway, สถานะอุปกรณ์ และค่าตรวจวัดยังอยู่ในเงื่อนไขปกติ
                 </div>
             </div>
         `;
+
         return;
     }
+
+
+    const visual = {
+        offline: {
+            icon:
+                "🔴",
+            className:
+                "text-red-300"
+        },
+        critical: {
+            icon:
+                "🔴",
+            className:
+                "text-red-300"
+        },
+        high: {
+            icon:
+                "🟠",
+            className:
+                "text-orange-300"
+        },
+        warning: {
+            icon:
+                "🟡",
+            className:
+                "text-amber-300"
+        },
+        info: {
+            icon:
+                "🔵",
+            className:
+                "text-cyan-300"
+        }
+    };
+
 
     element.innerHTML =
         alerts
             .map(
-                alert => `
-                    <div class="soft rounded-xl p-3 mb-2">
-                        <b class="${
-                            alert.type === "offline"
-                                ? "text-red-300"
-                                : "text-amber-300"
-                        }">
-                            ${
-                                alert.type === "offline"
-                                    ? "🔴"
-                                    : "⚠️"
-                            }
-                            ${escapeHtml(alert.text)}
-                        </b>
-                    </div>
-                `
+                alert => {
+
+                    const style =
+                        visual[
+                            alert.type
+                        ] ||
+                        visual.warning;
+
+
+                    return `
+                        <div class="soft rounded-xl p-3 mb-2">
+                            <b class="${style.className}">
+                                ${style.icon}
+                                ${escapeHtml(alert.title)}
+                            </b>
+
+                            <div class="text-xs text-slate-400 mt-1">
+                                ${escapeHtml(alert.detail)}
+                            </div>
+                        </div>
+                    `;
+                }
             )
             .join("");
 }
@@ -5781,12 +6224,24 @@ async function load(){
         const [
             latestResult,
             historyResult,
-            motherResult
+            motherResult,
+            alertResult
         ] =
             await Promise.all([
                 loadLatest(),
                 loadHistory(),
-                loadMotherStatus()
+                loadMotherStatus(),
+                loadAlertStates()
+                    .catch(
+                        error => {
+                            console.warn(
+                                "Alert states unavailable:",
+                                error
+                            );
+
+                            return [];
+                        }
+                    )
             ]);
 
         apiConnectionOnline = true;
@@ -5804,12 +6259,18 @@ async function load(){
         motherStatus =
             motherResult;
 
+        alertStates =
+            Array.isArray(alertResult)
+                ? alertResult
+                : [];
+
         latestRecord =
             getLatestTimestampRecord(
                 latestNodes
             );
 
         renderMonitoringNodes();
+        updateSystemHealth();
         updateCurrentAirQuality();
         updateSmartSummary();
         updateAlerts();
@@ -5825,6 +6286,7 @@ async function load(){
 
         apiConnectionOnline = false;
         motherStatus = null;
+        alertStates = [];
 
         forceAllNodesOffline();
         updateCurrentAirQuality();
@@ -6207,6 +6669,7 @@ setInterval(
     () => {
         if(apiConnectionOnline){
             renderMonitoringNodes();
+            updateSystemHealth();
             updateCurrentAirQuality();
             updateSmartSummary();
             updateAlerts();
