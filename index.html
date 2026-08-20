@@ -765,7 +765,7 @@ FORECAST + AI
                     🔮 Forecast
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">
-                    คาดการณ์แนวโน้มจากข้อมูลย้อนหลังด้วยวิธีทางสถิติ
+                    คาดการณ์ระยะสั้นของตัวแปรที่เลือกจากข้อมูลย้อนหลัง 60 นาที
                 </p>
             </div>
 
@@ -3424,10 +3424,20 @@ function setForecastDatasetVisibility(){
         return;
     }
 
-    forecastChart.setDatasetVisibility(
-        1,
-        forecastVisible
-    );
+    /*
+     * Dataset 0 = ข้อมูลจริง
+     * Dataset 1 เป็นต้นไป = ช่วงคาดการณ์ / เส้น Forecast
+     */
+    for(
+        let index = 1;
+        index < forecastChart.data.datasets.length;
+        index++
+    ){
+        forecastChart.setDatasetVisibility(
+            index,
+            forecastVisible
+        );
+    }
 
     forecastChart.update();
 
@@ -3454,6 +3464,7 @@ function linearRegression(points){
     let sumXX = 0;
 
     for(const point of points){
+
         sumX += point.x;
         sumY += point.y;
         sumXY += point.x * point.y;
@@ -3488,7 +3499,7 @@ function linearRegression(points){
 
     for(const point of points){
 
-        const predicted =
+        const fitted =
             intercept +
             slope * point.x;
 
@@ -3500,7 +3511,7 @@ function linearRegression(points){
 
         ssResidual +=
             Math.pow(
-                point.y - predicted,
+                point.y - fitted,
                 2
             );
     }
@@ -3518,29 +3529,164 @@ function linearRegression(points){
                 )
             );
 
+    const rmse =
+        Math.sqrt(
+            ssResidual /
+            Math.max(
+                1,
+                n - 2
+            )
+        );
+
     return {
         slope,
         intercept,
-        r2
+        r2,
+        rmse
     };
+}
+
+
+function metricUnit(){
+
+    const units = {
+        pm1:
+            "µg/m³",
+
+        pm25:
+            "µg/m³",
+
+        pm10:
+            "µg/m³",
+
+        temperature:
+            "°C",
+
+        humidity:
+            "%",
+
+        light:
+            "lux"
+    };
+
+    return units[metric] || "";
+}
+
+
+function clampForecastValue(
+    field,
+    value
+){
+
+    if(!Number.isFinite(value)){
+        return null;
+    }
+
+    if(field === "humidity"){
+
+        return Math.max(
+            0,
+            Math.min(
+                100,
+                value
+            )
+        );
+    }
+
+    /*
+     * ฝุ่นและแสงติดลบไม่ได้
+     * อุณหภูมิไม่บังคับเป็น 0 เพราะอาจต่ำกว่า 0 ได้ในเชิงข้อมูล
+     */
+    if(
+        field === "pm1" ||
+        field === "pm25" ||
+        field === "pm10" ||
+        field === "light"
+    ){
+        return Math.max(
+            0,
+            value
+        );
+    }
+
+    return value;
+}
+
+
+function getForecastMinimumUncertainty(
+    field
+){
+
+    const values = {
+        pm1:
+            1.0,
+
+        pm25:
+            1.0,
+
+        pm10:
+            2.0,
+
+        temperature:
+            0.5,
+
+        humidity:
+            2.0,
+
+        light:
+            15.0
+    };
+
+    return values[field] || 1;
+}
+
+
+function getForecastStabilityThreshold(
+    field
+){
+
+    const values = {
+        pm1:
+            1.0,
+
+        pm25:
+            1.0,
+
+        pm10:
+            2.0,
+
+        temperature:
+            0.5,
+
+        humidity:
+            2.0,
+
+        light:
+            20.0
+    };
+
+    return values[field] || 1;
 }
 
 
 function getForecastConfidence(
     r2,
-    sampleCount
+    sampleCount,
+    coveredMinutes
 ){
 
     if(
-        sampleCount >= 10 &&
-        r2 >= 0.65
+        sampleCount >= 20 &&
+        coveredMinutes >= 30 &&
+        r2 >= 0.60
     ){
-        return "สูง";
+        return "ค่อนข้างสูง";
     }
 
     if(
-        sampleCount >= 6 &&
-        r2 >= 0.30
+        sampleCount >= 12 &&
+        coveredMinutes >= 20 &&
+        r2 >= 0.25
     ){
         return "ปานกลาง";
     }
@@ -3549,9 +3695,87 @@ function getForecastConfidence(
 }
 
 
+function getForecastAssessment(
+    field,
+    value
+){
+
+    if(
+        value === null ||
+        value === undefined ||
+        isNaN(value)
+    ){
+        return "ไม่มีข้อมูล";
+    }
+
+    if(field === "pm25"){
+        return quality(
+            Number(value)
+        );
+    }
+
+    const levelMap = {
+        normal:
+            "ปกติ",
+
+        warning:
+            "ควรเฝ้าระวัง",
+
+        high:
+            "สูง",
+
+        critical:
+            "วิกฤต",
+
+        info:
+            "แสงน้อย"
+    };
+
+    let level =
+        "normal";
+
+    if(field === "pm1"){
+        level =
+            getPM1Level(
+                Number(value)
+            );
+    }
+    else if(field === "pm10"){
+        level =
+            getPM10Level(
+                Number(value)
+            );
+    }
+    else if(field === "temperature"){
+        level =
+            getTemperatureLevel(
+                Number(value)
+            );
+    }
+    else if(field === "humidity"){
+        level =
+            getHumidityLevel(
+                Number(value)
+            );
+    }
+    else if(field === "light"){
+        level =
+            getLightLevel(
+                Number(value)
+            );
+    }
+
+    return (
+        levelMap[level] ||
+        level
+    );
+}
+
+
 function drawForecast(arr){
 
     if(forecastChart){
+
         forecastChart.destroy();
         forecastChart = null;
     }
@@ -3564,31 +3788,100 @@ function drawForecast(arr){
                     row.timestamp &&
                     row[metric] !== null &&
                     row[metric] !== undefined &&
-                    !isNaN(Number(row[metric]))
+                    !isNaN(
+                        Number(
+                            row[metric]
+                        )
+                    )
             )
             .sort(
                 (a,b) =>
-                    parseDate(a.timestamp).getTime() -
-                    parseDate(b.timestamp).getTime()
+                    parseDate(
+                        a.timestamp
+                    ).getTime() -
+                    parseDate(
+                        b.timestamp
+                    ).getTime()
             );
 
-    if(valid.length < 4){
+    if(valid.length < 10){
 
         $("forecastMessage").textContent =
-            "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีอย่างน้อย 4 จุดข้อมูล";
+            "ข้อมูลยังไม่เพียงพอสำหรับคาดการณ์ ต้องมีอย่างน้อย 10 จุดข้อมูลของตัวแปรที่เลือก";
 
         $("forecastBadge").textContent =
-            "WAITING";
+            metricLabel() +
+            " • รอข้อมูล";
 
         return;
     }
 
+
     /*
-     * ใช้ข้อมูลล่าสุดไม่เกิน 30 จุด
-     * เพื่อให้ Forecast สะท้อนสถานการณ์ช่วงล่าสุด
+     * ใช้เฉพาะข้อมูลย้อนหลัง 60 นาทีจากจุดล่าสุด
+     * เพื่อไม่เอาพฤติกรรมเก่าหลายชั่วโมง/หลายวันมาปนกับแนวโน้มระยะสั้น
      */
+    const latestDate =
+        parseDate(
+            valid[
+                valid.length - 1
+            ].timestamp
+        );
+
+    if(!latestDate){
+
+        $("forecastMessage").textContent =
+            "ไม่สามารถอ่านเวลาของข้อมูลล่าสุดได้";
+
+        $("forecastBadge").textContent =
+            metricLabel() +
+            " • รอข้อมูล";
+
+        return;
+    }
+
+    const windowStart =
+        new Date(
+            latestDate.getTime() -
+            60 *
+            60 *
+            1000
+        );
+
     const recent =
-        valid.slice(-30);
+        valid
+            .filter(
+                row => {
+
+                    const date =
+                        parseDate(
+                            row.timestamp
+                        );
+
+                    return (
+                        date &&
+                        date >= windowStart &&
+                        date <= latestDate
+                    );
+                }
+            )
+            /*
+             * กันกรณีมีข้อมูลถี่มากเกินไป
+             * ใช้สูงสุด 90 จุดล่าสุด
+             */
+            .slice(-90);
+
+    if(recent.length < 10){
+
+        $("forecastMessage").textContent =
+            "ข้อมูลใน 60 นาทีล่าสุดยังไม่พอสำหรับคาดการณ์ ต้องมีอย่างน้อย 10 จุดข้อมูล";
+
+        $("forecastBadge").textContent =
+            metricLabel() +
+            " • รอข้อมูล";
+
+        return;
+    }
 
     const firstDate =
         parseDate(
@@ -3606,25 +3899,39 @@ function drawForecast(arr){
         !firstDate ||
         !lastDate
     ){
+
         $("forecastMessage").textContent =
-            "ไม่สามารถอ่านเวลาของข้อมูลเพื่อสร้าง Forecast ได้";
+            "ไม่สามารถอ่านช่วงเวลาของข้อมูลเพื่อสร้าง Forecast ได้";
 
         $("forecastBadge").textContent =
-            "WAITING";
+            metricLabel() +
+            " • รอข้อมูล";
 
         return;
     }
 
+    const coveredMinutes =
+        Math.max(
+            0,
+            (
+                lastDate.getTime() -
+                firstDate.getTime()
+            ) /
+            60000
+        );
+
     const points =
         recent.map(
             row => ({
+
                 x:
                     (
                         parseDate(
                             row.timestamp
                         ).getTime() -
                         firstDate.getTime()
-                    ) / 60000,
+                    ) /
+                    60000,
 
                 y:
                     Number(
@@ -3641,10 +3948,11 @@ function drawForecast(arr){
     if(!model){
 
         $("forecastMessage").textContent =
-            "ข้อมูลช่วงนี้ไม่เหมาะสำหรับการคำนวณ Forecast";
+            "รูปแบบข้อมูลช่วงนี้ไม่เหมาะกับการคาดการณ์เชิงเส้น";
 
         $("forecastBadge").textContent =
-            "WAITING";
+            metricLabel() +
+            " • รอข้อมูล";
 
         return;
     }
@@ -3653,7 +3961,8 @@ function drawForecast(arr){
         (
             lastDate.getTime() -
             firstDate.getTime()
-        ) / 60000;
+        ) /
+        60000;
 
     const currentValue =
         Number(
@@ -3662,28 +3971,174 @@ function drawForecast(arr){
             ][metric]
         );
 
-    const forecastMinutes = 30;
+    const forecastSteps =
+        [
+            10,
+            20,
+            30
+        ];
 
-    const futureX =
-        currentX +
-        forecastMinutes;
-
-    const predicted =
+    /*
+     * ความไม่แน่นอนพื้นฐาน:
+     * ใช้ RMSE ของเส้น regression
+     * และมีค่าขั้นต่ำต่างกันตามชนิด sensor
+     */
+    const baseUncertainty =
         Math.max(
-            0,
-            model.intercept +
-            model.slope *
-            futureX
+            getForecastMinimumUncertainty(
+                metric
+            ),
+            Number.isFinite(
+                model.rmse
+            )
+                ? model.rmse * 1.5
+                : 0
         );
 
+    /*
+     * ป้องกัน extrapolation รุนแรงเกินข้อมูลจริง:
+     * จำกัดการเปลี่ยนแปลง 30 นาที
+     * ไม่ให้เกิน 3 เท่าของส่วนเบี่ยงเบนมาตรฐานล่าสุด
+     * โดยยังมี floor ตามชนิดข้อมูล
+     */
+    const recentValues =
+        recent.map(
+            row =>
+                Number(
+                    row[metric]
+                )
+        );
+
+    const mean =
+        recentValues.reduce(
+            (sum,value) =>
+                sum + value,
+            0
+        ) /
+        recentValues.length;
+
+    const variance =
+        recentValues.reduce(
+            (sum,value) =>
+                sum +
+                Math.pow(
+                    value - mean,
+                    2
+                ),
+            0
+        ) /
+        recentValues.length;
+
+    const stdDev =
+        Math.sqrt(
+            variance
+        );
+
+    const maxThirtyMinuteChange =
+        Math.max(
+            getForecastStabilityThreshold(
+                metric
+            ) *
+            3,
+            stdDev *
+            3
+        );
+
+    const predictions =
+        forecastSteps.map(
+            minutes => {
+
+                const futureX =
+                    currentX +
+                    minutes;
+
+                const raw =
+                    model.intercept +
+                    model.slope *
+                    futureX;
+
+                const maximumChangeAtStep =
+                    maxThirtyMinuteChange *
+                    (
+                        minutes /
+                        30
+                    );
+
+                const bounded =
+                    Math.max(
+                        currentValue -
+                        maximumChangeAtStep,
+                        Math.min(
+                            currentValue +
+                            maximumChangeAtStep,
+                            raw
+                        )
+                    );
+
+                const center =
+                    clampForecastValue(
+                        metric,
+                        bounded
+                    );
+
+                /*
+                 * ช่วงกว้างขึ้นตามระยะเวลาที่มองไปข้างหน้า
+                 */
+                const uncertainty =
+                    baseUncertainty *
+                    (
+                        0.85 +
+                        0.5 *
+                        (
+                            minutes /
+                            30
+                        )
+                    );
+
+                const lower =
+                    clampForecastValue(
+                        metric,
+                        center -
+                        uncertainty
+                    );
+
+                const upper =
+                    clampForecastValue(
+                        metric,
+                        center +
+                        uncertainty
+                    );
+
+                return {
+                    minutes,
+                    center,
+                    lower,
+                    upper
+                };
+            }
+        );
+
+    const finalForecast =
+        predictions[
+            predictions.length - 1
+        ];
+
     const change =
-        predicted -
+        finalForecast.center -
         currentValue;
+
+    const stabilityThreshold =
+        getForecastStabilityThreshold(
+            metric
+        );
 
     let direction =
         "→ ค่อนข้างคงที่";
 
-    if(Math.abs(change) >= 0.5){
+    if(
+        Math.abs(change) >=
+        stabilityThreshold
+    ){
 
         direction =
             change > 0
@@ -3694,11 +4149,31 @@ function drawForecast(arr){
     const confidence =
         getForecastConfidence(
             model.r2,
-            recent.length
+            recent.length,
+            coveredMinutes
+        );
+
+    const unit =
+        metricUnit();
+
+    const assessment =
+        getForecastAssessment(
+            metric,
+            finalForecast.center
         );
 
     $("forecastMessage").innerHTML = `
-        <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1 mb-3">
+            <div class="text-[11px] text-slate-500">
+                ตัวแปรที่กำลังคาดการณ์
+            </div>
+            <b class="text-cyan-300">
+                ${metricLabel()}
+                ${unit ? " (" + unit + ")" : ""}
+            </b>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
             <div>
                 <span class="text-xs text-slate-500">
                     ค่าปัจจุบัน
@@ -3710,43 +4185,82 @@ function drawForecast(arr){
 
             <div>
                 <span class="text-xs text-slate-500">
-                    คาดการณ์ +30 นาที
+                    ช่วงคาดการณ์ +30 นาที
                 </span>
                 <b class="block text-xl text-cyan-300 mt-1">
-                    ${fmt(predicted)}
+                    ${fmt(finalForecast.lower)}
+                    –
+                    ${fmt(finalForecast.upper)}
+                </b>
+            </div>
+
+            <div>
+                <span class="text-xs text-slate-500">
+                    ค่ากลางประมาณ
+                </span>
+                <b class="block text-xl text-emerald-300 mt-1">
+                    ${fmt(finalForecast.center)}
                 </b>
             </div>
         </div>
 
-        <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-                <b>${direction}</b>
-                <div class="text-xs text-slate-400 mt-1">
-                    ใช้ ${recent.length} จุดข้อมูลล่าสุด
+        <div class="mt-4 grid sm:grid-cols-3 gap-2">
+            <div
+                class="rounded-lg px-3 py-2"
+                style="background:rgba(15,23,42,.42);"
+            >
+                <div class="text-[10px] text-slate-500">
+                    แนวโน้ม
                 </div>
+                <b class="text-xs">
+                    ${direction}
+                </b>
             </div>
 
             <div
-                class="rounded-lg px-3 py-2 text-xs"
+                class="rounded-lg px-3 py-2"
                 style="background:rgba(15,23,42,.42);"
             >
-                ความเชื่อมั่น
-                <b class="text-cyan-300 ml-1">
+                <div class="text-[10px] text-slate-500">
+                    ระดับคาดการณ์
+                </div>
+                <b class="text-xs text-cyan-300">
+                    ${assessment}
+                </b>
+            </div>
+
+            <div
+                class="rounded-lg px-3 py-2"
+                style="background:rgba(15,23,42,.42);"
+            >
+                <div class="text-[10px] text-slate-500">
+                    ความเชื่อมั่น
+                </div>
+                <b class="text-xs text-cyan-300">
                     ${confidence}
                 </b>
             </div>
         </div>
 
-        <div class="text-[11px] text-slate-500 mt-3">
-            แบบจำลอง: Linear Regression ตามเวลา • ไม่ใช่ AI/ML • เป็นค่าประมาณ ไม่ใช่ค่ารับประกัน
+        <div class="text-[11px] text-slate-400 mt-3">
+            ใช้ข้อมูลล่าสุด ${recent.length} จุด
+            • ครอบคลุมประมาณ ${Math.round(coveredMinutes)} นาที
+        </div>
+
+        <div class="text-[10px] text-slate-500 mt-2 leading-5">
+            Forecast นี้ใช้ Linear Regression + ค่าความคลาดเคลื่อนของข้อมูลล่าสุด
+            เพื่อประมาณช่วงในอีก 30 นาที
+            • ไม่ใช่ AI/ML
+            • ไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
         </div>
     `;
 
     $("forecastBadge").textContent =
-        "⏱ 30 นาทีข้างหน้า";
+        metricLabel() +
+        " • +30 นาที";
 
     const actualToShow =
-        recent.slice(-10);
+        recent.slice(-12);
 
     const actualLabels =
         actualToShow.map(
@@ -3764,17 +4278,27 @@ function drawForecast(arr){
                 )
         );
 
+    const futureLabels =
+        forecastSteps.map(
+            minutes =>
+                "+" +
+                minutes +
+                " นาที"
+        );
+
     const labels = [
         ...actualLabels,
-        "+30 นาที"
+        ...futureLabels
     ];
 
     const actualDataset = [
         ...actualValues,
-        null
+        ...new Array(
+            forecastSteps.length
+        ).fill(null)
     ];
 
-    const forecastDataset =
+    const leadingNulls =
         new Array(
             Math.max(
                 0,
@@ -3783,24 +4307,52 @@ function drawForecast(arr){
         )
         .fill(null);
 
-    forecastDataset.push(
+    /*
+     * เริ่ม Forecast จากจุดข้อมูลจริงล่าสุด
+     */
+    const lowerDataset = [
+        ...leadingNulls,
         actualValues[
             actualValues.length - 1
-        ]
-    );
+        ],
+        ...predictions.map(
+            item =>
+                item.lower
+        )
+    ];
 
-    forecastDataset.push(
-        predicted
-    );
+    const upperDataset = [
+        ...leadingNulls,
+        actualValues[
+            actualValues.length - 1
+        ],
+        ...predictions.map(
+            item =>
+                item.upper
+        )
+    ];
+
+    const forecastDataset = [
+        ...leadingNulls,
+        actualValues[
+            actualValues.length - 1
+        ],
+        ...predictions.map(
+            item =>
+                item.center
+        )
+    ];
 
     forecastChart =
         new Chart(
             $("forecastChart"),
             {
-                type: "line",
+                type:
+                    "line",
 
                 data: {
-                    labels: labels,
+                    labels:
+                        labels,
 
                     datasets: [
                         {
@@ -3823,8 +4375,67 @@ function drawForecast(arr){
                                 .3,
 
                             pointRadius:
-                                2
+                                actualValues.length > 30
+                                    ? 0
+                                    : 2
                         },
+
+                        /*
+                         * Lower bound
+                         * ใช้เป็นฐานของช่วงคาดการณ์
+                         */
+                        {
+                            label:
+                                "ขอบล่าง Forecast",
+
+                            data:
+                                lowerDataset,
+
+                            borderColor:
+                                "rgba(52,211,153,0)",
+
+                            backgroundColor:
+                                "rgba(52,211,153,0)",
+
+                            borderWidth:
+                                0,
+
+                            pointRadius:
+                                0,
+
+                            tension:
+                                .2
+                        },
+
+                        /*
+                         * Upper bound fill ลงมาหา lower bound
+                         */
+                        {
+                            label:
+                                "ช่วงคาดการณ์",
+
+                            data:
+                                upperDataset,
+
+                            borderColor:
+                                "rgba(52,211,153,.22)",
+
+                            backgroundColor:
+                                "rgba(52,211,153,.10)",
+
+                            borderWidth:
+                                1,
+
+                            pointRadius:
+                                0,
+
+                            tension:
+                                .2,
+
+                            fill:
+                                "-1"
+                        },
+
                         {
                             label:
                                 "Forecast",
@@ -3839,7 +4450,10 @@ function drawForecast(arr){
                                 "rgba(52,211,153,.06)",
 
                             borderDash:
-                                [6,5],
+                                [
+                                    6,
+                                    5
+                                ],
 
                             borderWidth:
                                 2,
@@ -3848,7 +4462,7 @@ function drawForecast(arr){
                                 .2,
 
                             pointRadius:
-                                4
+                                3
                         }
                     ]
                 },
@@ -3857,10 +4471,59 @@ function drawForecast(arr){
                     responsive:
                         true,
 
+                    maintainAspectRatio:
+                        true,
+
+                    interaction: {
+                        intersect:
+                            false,
+
+                        mode:
+                            "index"
+                    },
+
                     plugins: {
                         legend: {
                             display:
                                 false
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label:
+                                    context => {
+
+                                        if(
+                                            context.dataset.label ===
+                                            "ขอบล่าง Forecast"
+                                        ){
+                                            return null;
+                                        }
+
+                                        const value =
+                                            context.raw;
+
+                                        if(
+                                            value === null ||
+                                            value === undefined
+                                        ){
+                                            return null;
+                                        }
+
+                                        return (
+                                            context.dataset.label +
+                                            ": " +
+                                            fmt(
+                                                Number(value)
+                                            ) +
+                                            (
+                                                unit
+                                                    ? " " + unit
+                                                    : ""
+                                            )
+                                        );
+                                    }
+                            }
                         }
                     },
 
