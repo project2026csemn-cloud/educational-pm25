@@ -8,6 +8,123 @@
     <link rel="stylesheet" href="style.css">
     <script src="chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+    /* =========================================================
+       HISTORICAL TOOLBAR CONTROLS
+       ปรับเฉพาะ PM2.5 / ช่วงเวลา / ส่งออก
+       ========================================================= */
+    .history-toolbar{
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:flex-end;
+        gap:8px;
+    }
+
+    .history-metric-select,
+    .history-toolbar-button{
+        height:42px;
+        border:1px solid rgba(90,132,165,.46);
+        border-radius:12px;
+        background:#10263b;
+        color:#eaf6ff;
+        font-family:inherit;
+        font-size:13px;
+        font-weight:700;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+        transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .15s ease;
+    }
+
+    .history-metric-select{
+        min-width:104px;
+        padding:0 36px 0 14px;
+        cursor:pointer;
+        outline:none;
+        color-scheme:dark;
+    }
+
+    .history-metric-select:hover,
+    .history-toolbar-button:hover{
+        background:#143049;
+        border-color:rgba(34,211,238,.48);
+    }
+
+    .history-metric-select:focus{
+        border-color:#22d3ee;
+        box-shadow:0 0 0 3px rgba(34,211,238,.08);
+    }
+
+    .history-toolbar-button{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:0 14px;
+        white-space:nowrap;
+        cursor:pointer;
+        outline:none;
+    }
+
+    .history-toolbar-button:active{
+        transform:translateY(1px);
+    }
+
+    #historyRangeButton{
+        min-width:128px;
+    }
+
+    #historyRangeButton[aria-expanded="true"]{
+        background:#143149;
+        border-color:#22d3ee;
+        box-shadow:0 0 0 3px rgba(34,211,238,.08);
+    }
+
+    .history-control-icon{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#67e8f9;
+        font-size:13px;
+        line-height:1;
+    }
+
+    .history-control-arrow{
+        color:#8aa6bc;
+        font-size:12px;
+        line-height:1;
+        transition:transform .18s ease;
+    }
+
+    #historyRangeButton[aria-expanded="true"] .history-control-arrow{
+        transform:rotate(180deg);
+    }
+
+    #exportButton.history-export-button{
+        min-width:104px;
+        border-color:rgba(34,211,238,.36);
+        background:linear-gradient(180deg,#12324a 0%,#10283e 100%);
+        color:#ecfeff;
+    }
+
+    #exportButton.history-export-button:hover{
+        background:linear-gradient(180deg,#174159 0%,#123149 100%);
+        border-color:#22d3ee;
+        box-shadow:0 0 0 3px rgba(34,211,238,.075);
+    }
+
+    @media(max-width:640px){
+        .history-toolbar{
+            width:100%;
+            justify-content:flex-start;
+        }
+        .history-metric-select,
+        .history-toolbar-button{
+            height:40px;
+        }
+    }
+    </style>
+
 </head>
 <body>
 <div class="max-w-[1800px] mx-auto p-4 md:p-6">
@@ -367,10 +484,11 @@ HISTORICAL DATA & TREND
                 วิเคราะห์ข้อมูลย้อนหลัง ค่าเฉลี่ย และแนวโน้มในช่วงเวลาที่เลือก
             </p>
         </div>
-        <div class="flex flex-wrap gap-2 items-center justify-end">
+        <div class="history-toolbar">
             <select
                 id="metric"
-                class="rounded-xl px-3 py-2 text-sm font-medium"
+                class="history-metric-select"
+                aria-label="เลือกตัวแปร"
             >
                 <option value="pm25">PM2.5</option>
                 <option value="pm1">PM1.0</option>
@@ -387,15 +505,13 @@ HISTORICAL DATA & TREND
                     id="historyRangeButton"
                     type="button"
                     aria-expanded="false"
-                    class="rounded-xl px-3 py-2 text-sm font-medium flex items-center gap-2"
+                    class="history-toolbar-button"
                 >
-                    <span>🗓️</span>
+                    <span class="history-control-icon">▣</span>
                     <span id="historyRangeButtonLabel">
                         24 ชั่วโมง
                     </span>
-                    <span class="text-slate-500">
-                        ▾
-                    </span>
+                    <span class="history-control-arrow">▾</span>
                 </button>
 
                 <div
@@ -569,9 +685,10 @@ HISTORICAL DATA & TREND
             <button
                 id="exportButton"
                 type="button"
-                class="rounded-xl px-4 py-2 text-sm font-bold"
+                class="history-toolbar-button history-export-button"
             >
-                📤 ส่งออก
+                <span class="history-control-icon">⇩</span>
+                <span>ส่งออก</span>
             </button>
         </div>
     </div>
