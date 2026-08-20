@@ -276,77 +276,6 @@ MONITORING NODES + AI
     </div>
 </section>
 <!-- =========================================================
-HERO METRICS
-========================================================= -->
-<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            PM 1.0
-        </div>
-        <b id="heroPM1" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-    </div>
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            PM 2.5
-        </div>
-        <b id="heroPM25" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-    </div>
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            PM 10
-        </div>
-        <b id="heroPM10" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            µg/m³
-        </div>
-    </div>
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            อุณหภูมิ
-        </div>
-        <b id="heroTemp" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            °C
-        </div>
-    </div>
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            ความชื้น
-        </div>
-        <b id="heroHum" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            %
-        </div>
-    </div>
-    <div class="glass card metric p-5">
-        <div class="text-slate-400 text-sm">
-            แสง
-        </div>
-        <b id="heroLight" class="text-4xl mt-4 block">
-            --
-        </b>
-        <div class="text-xs text-slate-500 mt-1">
-            lux
-        </div>
-    </div>
-</section>
-<!-- =========================================================
 QUALITY + ALERT
 ========================================================= -->
 <section class="grid lg:grid-cols-3 gap-4 mb-4">
@@ -2441,31 +2370,7 @@ function render(){
                 n3.timestamp
             )
             : "--";
-    $("heroPM1").textContent =
-        fmt(latestRecord.pm1);
-    $("heroPM25").textContent =
-        fmt(latestRecord.pm25);
-    $("heroPM10").textContent =
-        fmt(latestRecord.pm10);
-    $("heroTemp").textContent =
-        latestRecord.temperature == null
-            ? "--"
-            : fmt(
-                latestRecord.temperature
-            );
-    $("heroHum").textContent =
-        latestRecord.humidity == null
-            ? "--"
-            : fmt(
-                latestRecord.humidity
-            );
-    $("heroLight").textContent =
-        latestRecord.light == null
-            ? "--"
-            : fmt(
-                latestRecord.light
-            );
-    const pm25 =
+const pm25 =
         latestRecord.pm25;
     const q =
         quality(pm25);
