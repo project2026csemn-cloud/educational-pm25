@@ -1673,45 +1673,34 @@ HISTORICAL DATA & TREND
             return "offline";
         }
 
-        const status =
-            String(
-                node.status || ""
-            )
-            .trim()
-            .toLowerCase();
-
         /*
-         * SLEEP = สถานะที่ตัวแม่ประกาศอย่างตั้งใจ
-         * จึงห้ามใช้ timeout ไปทับเป็น OFFLINE
-         * เพราะระหว่าง sleep อุปกรณ์อาจไม่ส่งข้อมูลใหม่
+         * สถานะจริงมาจากตัวแม่ แต่ข้อมูลเกิน 6 นาทีให้บังคับ OFFLINE
+         * เพื่อป้องกันสถานะเก่าค้างเมื่อแม่ถูกถอดไฟหรือหยุดส่งข้อมูล
+         * กฎ 6 นาทีใช้กับ SLEEP ด้วย
          */
+        if(!isNodeFresh(node)){
+            return "offline";
+        }
+
+        const status =
+            String(node.status || "")
+                .trim()
+                .toLowerCase();
+
         if(status === "sleep"){
             return "sleep";
         }
 
-        /*
-         * ถ้าตัวแม่ประกาศ OFFLINE ให้เชื่อตัวแม่โดยตรง
-         */
         if(status === "offline"){
             return "offline";
         }
 
-        /*
-         * ONLINE ต้องมีข้อมูลสดตามเวลาที่กำหนด
-         * ถ้าเงียบเกิน timeout ให้เป็น OFFLINE
-         */
         if(status === "online"){
-            return isNodeFresh(node)
-                ? "online"
-                : "offline";
+            return "online";
         }
 
-        /*
-         * สถานะไม่รู้จัก: ใช้ freshness เป็น fallback
-         */
-        return isNodeFresh(node)
-            ? "online"
-            : "offline";
+        /* สถานะไม่รู้จัก แต่ข้อมูลยังสด */
+        return "online";
 
     }
 
@@ -1932,23 +1921,19 @@ HISTORICAL DATA & TREND
         else if(nodeStatus === "sleep"){
 
             statusElement.innerHTML = `
-
-                <span class="status-sleep-dot">
+                <span class="status-sleep-dot" style="color:#facc15;">
                     ●
                 </span>
-
-                SLEEP
-
+                <span style="color:#facc15;">SLEEP</span>
                 <span class="badge rounded-full px-3 py-1 text-xs">
                     ESP-NOW
                 </span>
-
             `;
-
 
             statusElement.className =
                 "status-sleep text-xs font-bold";
 
+            statusElement.style.color = "#facc15";
 
             cardElement
                 .classList
@@ -2003,9 +1988,10 @@ HISTORICAL DATA & TREND
 
 
         return nodes.filter(
-            node =>
-                getNodeStatus(node) ===
-                "online"
+            node => {
+                const status = getNodeStatus(node);
+                return status === "online" || status === "sleep";
+            }
         ).length;
 
     }
@@ -5465,17 +5451,7 @@ function render(){
     ===================================================== */
 
     const online =
-        [
-            n1,
-            n2,
-            n3
-        ]
-        .filter(
-            node =>
-                getNodeStatus(node) ===
-                "online"
-        )
-        .length;
+        countOnlineNodes();
 
 
     $("onlineCountTop").textContent =
