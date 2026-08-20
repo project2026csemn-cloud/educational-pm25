@@ -378,20 +378,193 @@ HISTORICAL DATA & TREND
                 <option value="humidity">ความชื้น</option>
                 <option value="light">แสง</option>
             </select>
-            <select
-                id="historyRange"
-                class="rounded-xl px-3 py-2 text-sm font-medium"
+            <div
+                id="historyRangePicker"
+                class="relative"
             >
-                <option value="30m">30 นาที</option>
-                <option value="1h">1 ชั่วโมง</option>
-                <option value="3h">3 ชั่วโมง</option>
-                <option value="6h">6 ชั่วโมง</option>
-                <option value="12h">12 ชั่วโมง</option>
-                <option value="24h" selected>24 ชั่วโมง</option>
-                <option value="3d">3 วัน</option>
-                <option value="7d">7 วัน</option>
-                <option value="30d">30 วัน</option>
-            </select>
+                <button
+                    id="historyRangeButton"
+                    type="button"
+                    aria-expanded="false"
+                    class="rounded-xl px-3 py-2 text-sm font-medium flex items-center gap-2"
+                >
+                    <span>🗓️</span>
+                    <span id="historyRangeButtonLabel">
+                        24 ชั่วโมง
+                    </span>
+                    <span class="text-slate-500">
+                        ▾
+                    </span>
+                </button>
+
+                <div
+                    id="historyRangePanel"
+                    class="hidden absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
+                    style="
+                        width:min(720px,calc(100vw - 32px));
+                        background:#091827;
+                        border:1px solid rgba(148,163,184,.18);
+                        box-shadow:0 22px 60px rgba(0,0,0,.42);
+                    "
+                >
+                    <div class="grid md:grid-cols-[1.25fr_.75fr]">
+
+                        <!-- CALENDAR -->
+                        <div class="p-4 md:border-r border-slate-800">
+
+                            <div class="flex items-center justify-between mb-4">
+                                <b
+                                    id="rangeCalendarTitle"
+                                    class="text-sm text-slate-200"
+                                >
+                                    --
+                                </b>
+
+                                <div class="flex gap-2">
+                                    <button
+                                        id="calendarPrev"
+                                        type="button"
+                                        class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition"
+                                        aria-label="เดือนก่อนหน้า"
+                                    >
+                                        ‹
+                                    </button>
+
+                                    <button
+                                        id="calendarNext"
+                                        type="button"
+                                        class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition"
+                                        aria-label="เดือนถัดไป"
+                                    >
+                                        ›
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-500 mb-2">
+                                <div>อา</div>
+                                <div>จ</div>
+                                <div>อ</div>
+                                <div>พ</div>
+                                <div>พฤ</div>
+                                <div>ศ</div>
+                                <div>ส</div>
+                            </div>
+
+                            <div
+                                id="rangeCalendarGrid"
+                                class="grid grid-cols-7 gap-1"
+                            ></div>
+
+                            <div class="text-[11px] text-slate-500 mt-3">
+                                คลิกวันแรกเพื่อเลือก Start และคลิกอีกวันเพื่อเลือก End
+                            </div>
+                        </div>
+
+                        <!-- QUICK RANGE -->
+                        <div class="p-3">
+                            <div class="text-[11px] uppercase tracking-wider text-slate-500 px-2 py-1">
+                                ช่วงเวลาสำเร็จรูป
+                            </div>
+
+                            <div
+                                id="quickRangeList"
+                                class="space-y-1 mt-1"
+                            >
+                                <button type="button" data-range="30m" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    30 นาทีล่าสุด
+                                </button>
+                                <button type="button" data-range="1h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    1 ชั่วโมงล่าสุด
+                                </button>
+                                <button type="button" data-range="3h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    3 ชั่วโมงล่าสุด
+                                </button>
+                                <button type="button" data-range="6h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    6 ชั่วโมงล่าสุด
+                                </button>
+                                <button type="button" data-range="12h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    12 ชั่วโมงล่าสุด
+                                </button>
+                                <button type="button" data-range="24h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    24 ชั่วโมงล่าสุด
+                                </button>
+                                <button type="button" data-range="3d" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    3 วันล่าสุด
+                                </button>
+                                <button type="button" data-range="7d" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    7 วันล่าสุด
+                                </button>
+                                <button type="button" data-range="30d" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    30 วันล่าสุด
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- START / END -->
+                    <div class="border-t border-slate-800 p-4 grid sm:grid-cols-2 gap-3">
+                        <label class="block">
+                            <span class="text-xs text-slate-400">
+                                Start
+                            </span>
+                            <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
+                                <input
+                                    id="customRangeStart"
+                                    type="datetime-local"
+                                    class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none"
+                                >
+                            </div>
+                        </label>
+
+                        <label class="block">
+                            <span class="text-xs text-slate-400">
+                                End
+                            </span>
+                            <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
+                                <input
+                                    id="customRangeEnd"
+                                    type="datetime-local"
+                                    class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none"
+                                >
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="border-t border-slate-800 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="text-xs text-slate-400">
+                            🌏 Indochina Time
+                            <span class="text-slate-500">
+                                (GMT+7)
+                            </span>
+                            <div
+                                id="customRangeError"
+                                class="text-red-400 mt-1 hidden"
+                            ></div>
+                        </div>
+
+                        <div class="flex justify-end gap-2">
+                            <button
+                                id="historyRangeCancel"
+                                type="button"
+                                class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300"
+                            >
+                                ยกเลิก
+                            </button>
+
+                            <button
+                                id="historyRangeApply"
+                                type="button"
+                                class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200"
+                                style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <button
                 id="exportButton"
                 type="button"
@@ -738,6 +911,16 @@ let forecastChart = null;
 let forecastVisible = true;
 let metric = "pm25";
 let averageRange = "24h";
+
+let customRangeStart = null;
+let customRangeEnd = null;
+
+let calendarDisplayDate =
+    new Date();
+
+let calendarSelectionStep =
+    "start";
+
 let apiConnectionOnline = false;
 let motherStatus = null;
 /* =========================================================
@@ -790,6 +973,831 @@ const RANGE_CONFIG = {
         apiRange: "30d"
     }
 };
+
+/* =========================================================
+DATE / TIME RANGE PICKER
+========================================================= */
+
+function getRangeLabel(){
+
+    if(
+        averageRange === "custom" &&
+        customRangeStart &&
+        customRangeEnd
+    ){
+        return (
+            customRangeStart.toLocaleString(
+                "th-TH",
+                {
+                    timeZone:
+                        "Asia/Bangkok",
+                    day:
+                        "2-digit",
+                    month:
+                        "short",
+                    hour:
+                        "2-digit",
+                    minute:
+                        "2-digit"
+                }
+            ) +
+            " – " +
+            customRangeEnd.toLocaleString(
+                "th-TH",
+                {
+                    timeZone:
+                        "Asia/Bangkok",
+                    day:
+                        "2-digit",
+                    month:
+                        "short",
+                    hour:
+                        "2-digit",
+                    minute:
+                        "2-digit"
+                }
+            )
+        );
+    }
+
+    return (
+        RANGE_CONFIG[
+            averageRange
+        ]?.label ||
+        "ช่วงเวลาที่เลือก"
+    );
+}
+
+
+function toDateTimeLocalValue(date){
+
+    if(!date){
+        return "";
+    }
+
+    const pad =
+        value =>
+            String(value)
+                .padStart(
+                    2,
+                    "0"
+                );
+
+    return (
+        date.getFullYear() +
+        "-" +
+        pad(
+            date.getMonth() + 1
+        ) +
+        "-" +
+        pad(
+            date.getDate()
+        ) +
+        "T" +
+        pad(
+            date.getHours()
+        ) +
+        ":" +
+        pad(
+            date.getMinutes()
+        )
+    );
+}
+
+
+function setPickerInputs(
+    start,
+    end
+){
+
+    $("customRangeStart").value =
+        toDateTimeLocalValue(
+            start
+        );
+
+    $("customRangeEnd").value =
+        toDateTimeLocalValue(
+            end
+        );
+}
+
+
+function setQuickRange(
+    rangeKey
+){
+
+    const config =
+        RANGE_CONFIG[
+            rangeKey
+        ];
+
+    if(!config){
+        return;
+    }
+
+    const end =
+        new Date();
+
+    const start =
+        new Date(
+            end.getTime() -
+            config.minutes *
+            60 *
+            1000
+        );
+
+    setPickerInputs(
+        start,
+        end
+    );
+
+    calendarDisplayDate =
+        new Date(end);
+
+    calendarSelectionStep =
+        "start";
+
+    updateQuickRangeUI(
+        rangeKey
+    );
+
+    renderRangeCalendar();
+}
+
+
+function updateQuickRangeUI(
+    activeRange
+){
+
+    document
+        .querySelectorAll(
+            ".quick-range-option"
+        )
+        .forEach(
+            button => {
+
+                const active =
+                    button.dataset.range ===
+                    activeRange;
+
+                button.style.background =
+                    active
+                        ? "rgba(34,211,238,.10)"
+                        : "transparent";
+
+                button.style.color =
+                    active
+                        ? "#67e8f9"
+                        : "#cbd5e1";
+
+                button.style.border =
+                    active
+                        ? "1px solid rgba(34,211,238,.18)"
+                        : "1px solid transparent";
+            }
+        );
+}
+
+
+function openHistoryRangePicker(){
+
+    const panel =
+        $("historyRangePanel");
+
+    panel.classList.remove(
+        "hidden"
+    );
+
+    $("historyRangeButton")
+        .setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+    const currentWindow =
+        getSelectedTimeWindow();
+
+    const start =
+        currentWindow
+            ? currentWindow.start
+            : new Date(
+                Date.now() -
+                24 *
+                60 *
+                60 *
+                1000
+            );
+
+    const end =
+        currentWindow
+            ? currentWindow.end
+            : new Date();
+
+    setPickerInputs(
+        start,
+        end
+    );
+
+    calendarDisplayDate =
+        new Date(end);
+
+    calendarSelectionStep =
+        "start";
+
+    updateQuickRangeUI(
+        averageRange === "custom"
+            ? null
+            : averageRange
+    );
+
+    renderRangeCalendar();
+}
+
+
+function closeHistoryRangePicker(){
+
+    $("historyRangePanel")
+        .classList.add(
+            "hidden"
+        );
+
+    $("historyRangeButton")
+        .setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+    $("customRangeError")
+        .classList.add(
+            "hidden"
+        );
+}
+
+
+function sameCalendarDay(
+    a,
+    b
+){
+
+    return (
+        a &&
+        b &&
+        a.getFullYear() ===
+            b.getFullYear() &&
+        a.getMonth() ===
+            b.getMonth() &&
+        a.getDate() ===
+            b.getDate()
+    );
+}
+
+
+function dateOnlyFromInput(
+    inputId
+){
+
+    const value =
+        $(inputId).value;
+
+    if(!value){
+        return null;
+    }
+
+    const date =
+        new Date(value);
+
+    return isNaN(
+        date.getTime()
+    )
+        ? null
+        : date;
+}
+
+
+function renderRangeCalendar(){
+
+    const grid =
+        $("rangeCalendarGrid");
+
+    if(!grid){
+        return;
+    }
+
+    const year =
+        calendarDisplayDate
+            .getFullYear();
+
+    const month =
+        calendarDisplayDate
+            .getMonth();
+
+    $("rangeCalendarTitle")
+        .textContent =
+            calendarDisplayDate
+                .toLocaleDateString(
+                    "th-TH",
+                    {
+                        timeZone:
+                            "Asia/Bangkok",
+                        month:
+                            "long",
+                        year:
+                            "numeric"
+                    }
+                );
+
+    grid.innerHTML =
+        "";
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        );
+
+    const firstWeekday =
+        firstDay.getDay();
+
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+    const prevMonthDays =
+        new Date(
+            year,
+            month,
+            0
+        ).getDate();
+
+    const selectedStart =
+        dateOnlyFromInput(
+            "customRangeStart"
+        );
+
+    const selectedEnd =
+        dateOnlyFromInput(
+            "customRangeEnd"
+        );
+
+    const totalCells =
+        42;
+
+    for(
+        let index = 0;
+        index < totalCells;
+        index++
+    ){
+
+        let dayNumber;
+        let cellMonth =
+            month;
+        let cellYear =
+            year;
+        let muted =
+            false;
+
+        if(index < firstWeekday){
+
+            dayNumber =
+                prevMonthDays -
+                firstWeekday +
+                index +
+                1;
+
+            cellMonth =
+                month - 1;
+
+            muted =
+                true;
+        }
+        else if(
+            index >=
+            firstWeekday +
+            daysInMonth
+        ){
+
+            dayNumber =
+                index -
+                (
+                    firstWeekday +
+                    daysInMonth
+                ) +
+                1;
+
+            cellMonth =
+                month + 1;
+
+            muted =
+                true;
+        }
+        else{
+
+            dayNumber =
+                index -
+                firstWeekday +
+                1;
+        }
+
+        const cellDate =
+            new Date(
+                cellYear,
+                cellMonth,
+                dayNumber
+            );
+
+        const selectedStartDay =
+            sameCalendarDay(
+                cellDate,
+                selectedStart
+            );
+
+        const selectedEndDay =
+            sameCalendarDay(
+                cellDate,
+                selectedEnd
+            );
+
+        const inRange =
+            selectedStart &&
+            selectedEnd &&
+            cellDate >=
+                new Date(
+                    selectedStart.getFullYear(),
+                    selectedStart.getMonth(),
+                    selectedStart.getDate()
+                ) &&
+            cellDate <=
+                new Date(
+                    selectedEnd.getFullYear(),
+                    selectedEnd.getMonth(),
+                    selectedEnd.getDate()
+                );
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type =
+            "button";
+
+        button.textContent =
+            dayNumber;
+
+        button.className =
+            "h-9 rounded-lg text-xs transition";
+
+        if(muted){
+            button.style.color =
+                "#475569";
+        }
+        else{
+            button.style.color =
+                "#e2e8f0";
+        }
+
+        if(inRange){
+            button.style.background =
+                "rgba(34,211,238,.07)";
+        }
+
+        if(
+            selectedStartDay ||
+            selectedEndDay
+        ){
+            button.style.background =
+                "rgba(34,211,238,.28)";
+
+            button.style.color =
+                "#cffafe";
+
+            button.style.fontWeight =
+                "800";
+
+            button.style.border =
+                "1px solid rgba(103,232,249,.34)";
+        }
+        else{
+            button.style.border =
+                "1px solid transparent";
+        }
+
+        button.addEventListener(
+            "mouseenter",
+            () => {
+                if(
+                    !selectedStartDay &&
+                    !selectedEndDay
+                ){
+                    button.style.background =
+                        "rgba(148,163,184,.10)";
+                }
+            }
+        );
+
+        button.addEventListener(
+            "mouseleave",
+            () => {
+                if(
+                    !selectedStartDay &&
+                    !selectedEndDay
+                ){
+                    button.style.background =
+                        inRange
+                            ? "rgba(34,211,238,.07)"
+                            : "transparent";
+                }
+            }
+        );
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const startInput =
+                    $("customRangeStart");
+
+                const endInput =
+                    $("customRangeEnd");
+
+                if(
+                    calendarSelectionStep ===
+                    "start"
+                ){
+
+                    const oldStart =
+                        dateOnlyFromInput(
+                            "customRangeStart"
+                        );
+
+                    const hour =
+                        oldStart
+                            ? oldStart.getHours()
+                            : 0;
+
+                    const minute =
+                        oldStart
+                            ? oldStart.getMinutes()
+                            : 0;
+
+                    const newStart =
+                        new Date(
+                            cellDate
+                        );
+
+                    newStart.setHours(
+                        hour,
+                        minute,
+                        0,
+                        0
+                    );
+
+                    startInput.value =
+                        toDateTimeLocalValue(
+                            newStart
+                        );
+
+                    const currentEnd =
+                        dateOnlyFromInput(
+                            "customRangeEnd"
+                        );
+
+                    if(
+                        !currentEnd ||
+                        currentEnd <
+                            newStart
+                    ){
+                        const newEnd =
+                            new Date(
+                                newStart
+                            );
+
+                        newEnd.setHours(
+                            23,
+                            59,
+                            0,
+                            0
+                        );
+
+                        endInput.value =
+                            toDateTimeLocalValue(
+                                newEnd
+                            );
+                    }
+
+                    calendarSelectionStep =
+                        "end";
+                }
+                else{
+
+                    const oldEnd =
+                        dateOnlyFromInput(
+                            "customRangeEnd"
+                        );
+
+                    const hour =
+                        oldEnd
+                            ? oldEnd.getHours()
+                            : 23;
+
+                    const minute =
+                        oldEnd
+                            ? oldEnd.getMinutes()
+                            : 59;
+
+                    const newEnd =
+                        new Date(
+                            cellDate
+                        );
+
+                    newEnd.setHours(
+                        hour,
+                        minute,
+                        0,
+                        0
+                    );
+
+                    const currentStart =
+                        dateOnlyFromInput(
+                            "customRangeStart"
+                        );
+
+                    if(
+                        currentStart &&
+                        newEnd <
+                            currentStart
+                    ){
+                        $("customRangeStart").value =
+                            toDateTimeLocalValue(
+                                newEnd
+                            );
+
+                        $("customRangeEnd").value =
+                            toDateTimeLocalValue(
+                                currentStart
+                            );
+                    }
+                    else{
+                        endInput.value =
+                            toDateTimeLocalValue(
+                                newEnd
+                            );
+                    }
+
+                    calendarSelectionStep =
+                        "start";
+                }
+
+                updateQuickRangeUI(
+                    null
+                );
+
+                renderRangeCalendar();
+            }
+        );
+
+        grid.appendChild(
+            button
+        );
+    }
+}
+
+
+async function applyHistoryRange(){
+
+    const start =
+        dateOnlyFromInput(
+            "customRangeStart"
+        );
+
+    const end =
+        dateOnlyFromInput(
+            "customRangeEnd"
+        );
+
+    const errorElement =
+        $("customRangeError");
+
+    if(
+        !start ||
+        !end
+    ){
+        errorElement.textContent =
+            "กรุณาเลือก Start และ End";
+
+        errorElement.classList.remove(
+            "hidden"
+        );
+
+        return;
+    }
+
+    if(start >= end){
+
+        errorElement.textContent =
+            "End ต้องอยู่หลัง Start";
+
+        errorElement.classList.remove(
+            "hidden"
+        );
+
+        return;
+    }
+
+    const maxRange =
+        30 *
+        24 *
+        60 *
+        60 *
+        1000;
+
+    if(
+        end.getTime() -
+        start.getTime() >
+        maxRange
+    ){
+        errorElement.textContent =
+            "เลือกช่วงเวลาได้สูงสุด 30 วัน";
+
+        errorElement.classList.remove(
+            "hidden"
+        );
+
+        return;
+    }
+
+    /*
+     * ตรวจว่าตรงกับ Quick Range หรือไม่
+     * ถ้าไม่ตรง จะเข้าสู่ custom range
+     */
+    let matchedRange =
+        null;
+
+    const durationMinutes =
+        (
+            end.getTime() -
+            start.getTime()
+        ) / 60000;
+
+    for(
+        const [
+            key,
+            config
+        ] of Object.entries(
+            RANGE_CONFIG
+        )
+    ){
+
+        if(
+            Math.abs(
+                durationMinutes -
+                config.minutes
+            ) < 1.5
+        ){
+            matchedRange =
+                key;
+
+            break;
+        }
+    }
+
+    if(matchedRange){
+
+        averageRange =
+            matchedRange;
+
+        customRangeStart =
+            null;
+
+        customRangeEnd =
+            null;
+    }
+    else{
+
+        averageRange =
+            "custom";
+
+        customRangeStart =
+            start;
+
+        customRangeEnd =
+            end;
+    }
+
+    $("historyRangeButtonLabel")
+        .textContent =
+            getRangeLabel();
+
+    closeHistoryRangePicker();
+
+    await load();
+}
+
+
 /* =========================================================
 HELPERS
 ========================================================= */
@@ -1322,10 +2330,16 @@ async function loadMotherStatus(){
 HISTORY API
 ========================================================= */
 function getApiRange(){
+
+    if(averageRange === "custom"){
+        return "30d";
+    }
+
     const config =
         RANGE_CONFIG[
             averageRange
         ];
+
     return config
         ? config.apiRange
         : "24h";
@@ -1460,15 +2474,42 @@ function forceAllNodesOffline(){
 HISTORY WINDOW
 ========================================================= */
 function getSelectedTimeWindow(){
+
+    if(
+        averageRange === "custom"
+    ){
+        if(
+            !customRangeStart ||
+            !customRangeEnd
+        ){
+            return null;
+        }
+
+        return {
+            start:
+                new Date(
+                    customRangeStart
+                ),
+
+            end:
+                new Date(
+                    customRangeEnd
+                )
+        };
+    }
+
     const config =
         RANGE_CONFIG[
             averageRange
         ];
+
     if(!config){
         return null;
     }
+
     const end =
         new Date();
+
     const start =
         new Date(
             end.getTime() -
@@ -1476,6 +2517,7 @@ function getSelectedTimeWindow(){
             60 *
             1000
         );
+
     return {
         start,
         end
@@ -1586,9 +2628,7 @@ function averageStatus(
     if(field === "pm25"){
         return (
             "● เฉลี่ย " +
-            RANGE_CONFIG[
-                averageRange
-            ].label +
+            getRangeLabel() +
             " • " +
             quality(value)
         );
@@ -1607,9 +2647,7 @@ function renderAverages(){
     const data =
         getRecordsInSelectedRange();
     $("selectedRangeLabel").textContent =
-        RANGE_CONFIG[
-            averageRange
-        ].label;
+        getRangeLabel();
     const configs = [
         {
             field: "pm1",
@@ -4011,15 +5049,162 @@ if(forecastToggleButton){
 }
 
 
-$("historyRange")
+$("historyRangeButton")
     .addEventListener(
-        "change",
-        async e => {
-            averageRange =
-                e.target.value;
-            await load();
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            const panel =
+                $("historyRangePanel");
+
+            if(
+                panel.classList.contains(
+                    "hidden"
+                )
+            ){
+                openHistoryRangePicker();
+            }
+            else{
+                closeHistoryRangePicker();
+            }
         }
     );
+
+
+document
+    .querySelectorAll(
+        ".quick-range-option"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    setQuickRange(
+                        button.dataset.range
+                    );
+                }
+            );
+        }
+    );
+
+
+$("calendarPrev")
+    .addEventListener(
+        "click",
+        () => {
+
+            calendarDisplayDate =
+                new Date(
+                    calendarDisplayDate
+                        .getFullYear(),
+                    calendarDisplayDate
+                        .getMonth() - 1,
+                    1
+                );
+
+            renderRangeCalendar();
+        }
+    );
+
+
+$("calendarNext")
+    .addEventListener(
+        "click",
+        () => {
+
+            calendarDisplayDate =
+                new Date(
+                    calendarDisplayDate
+                        .getFullYear(),
+                    calendarDisplayDate
+                        .getMonth() + 1,
+                    1
+                );
+
+            renderRangeCalendar();
+        }
+    );
+
+
+$("customRangeStart")
+    .addEventListener(
+        "change",
+        () => {
+
+            calendarSelectionStep =
+                "end";
+
+            updateQuickRangeUI(
+                null
+            );
+
+            renderRangeCalendar();
+        }
+    );
+
+
+$("customRangeEnd")
+    .addEventListener(
+        "change",
+        () => {
+
+            calendarSelectionStep =
+                "start";
+
+            updateQuickRangeUI(
+                null
+            );
+
+            renderRangeCalendar();
+        }
+    );
+
+
+$("historyRangeApply")
+    .addEventListener(
+        "click",
+        applyHistoryRange
+    );
+
+
+$("historyRangeCancel")
+    .addEventListener(
+        "click",
+        closeHistoryRangePicker
+    );
+
+
+$("historyRangePanel")
+    .addEventListener(
+        "click",
+        event => {
+            event.stopPropagation();
+        }
+    );
+
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const picker =
+            $("historyRangePicker");
+
+        if(
+            picker &&
+            !picker.contains(
+                event.target
+            )
+        ){
+            closeHistoryRangePicker();
+        }
+    }
+);
 $("exportButton")
     .addEventListener(
         "click",
@@ -4043,6 +5228,10 @@ function updateClock(){
                 }
             );
 }
+$("historyRangeButtonLabel")
+    .textContent =
+        getRangeLabel();
+
 updateForecastToggleUI();
 
 updateClock();
