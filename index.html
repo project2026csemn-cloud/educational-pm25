@@ -704,6 +704,7 @@ const NODE_SLEEP_OFFLINE_AFTER_SECONDS = 6 * 60;
 STATE
 ========================================================= */
 let latestRecord = null;
+let latestNodes = [];
 let records = [];
 let historyChart = null;
 let forecastChart = null;
@@ -1001,40 +1002,15 @@ function getNodeStatus(node){
 LATEST NODE
 ========================================================= */
 function getLatestNode(nodeNumber){
-    const list =
-        records.filter(
-            record =>
+    return (
+        latestNodes.find(
+            node =>
                 isSameNode(
-                    record.device_id,
+                    node.device_id,
                     nodeNumber
                 )
-        );
-    if(!list.length){
-        return null;
-    }
-    let latest = null;
-    for(const record of list){
-        if(!record.timestamp){
-            continue;
-        }
-        if(!latest){
-            latest = record;
-            continue;
-        }
-        const currentDate =
-            parseDate(record.timestamp);
-        const latestDate =
-            parseDate(latest.timestamp);
-        if(
-            currentDate &&
-            latestDate &&
-            currentDate.getTime() >
-            latestDate.getTime()
-        ){
-            latest = record;
-        }
-    }
-    return latest;
+        ) || null
+    );
 }
 /* =========================================================
 NODE DATA + STATUS
@@ -1237,25 +1213,19 @@ async function loadLatest(){
             "get_latest.php ส่งข้อมูลไม่สำเร็จ"
         );
     }
-    if(
-        json.data &&
-        !Array.isArray(json.data)
-    ){
-        return normalize(
-            json.data
-        );
+    if(Array.isArray(json.data)){
+        return json.data
+            .map(normalize)
+            .filter(Boolean);
     }
-    if(
-        Array.isArray(json.data) &&
-        json.data.length
-    ){
-        return normalize(
-            json.data[0]
-        );
+    if(json.data){
+        const node =
+            normalize(json.data);
+        return node
+            ? [node]
+            : [];
     }
-    throw new Error(
-        "get_latest.php ไม่มีข้อมูล"
-    );
+    return [];
 }
 /* =========================================================
 HISTORY API
@@ -2311,30 +2281,27 @@ async function load(){
     try{
         $("aiSummary").textContent =
             "กำลังโหลดข้อมูล...";
-        const newLatest =
+
+        const newLatestNodes =
             await loadLatest();
+
         apiConnectionOnline =
             true;
+
         const newHistory =
             await loadHistory();
+
+        latestNodes =
+            newLatestNodes;
+
         latestRecord =
-            newLatest;
+            latestNodes.length
+                ? latestNodes[0]
+                : null;
+
         records =
             newHistory;
-        if(
-            latestRecord &&
-            !records.some(
-                record =>
-                    record.id != null &&
-                    latestRecord.id != null &&
-                    record.id ===
-                    latestRecord.id
-            )
-        ){
-            records.push(
-                latestRecord
-            );
-        }
+
         records =
             records.filter(
                 record =>
@@ -2344,6 +2311,7 @@ async function load(){
                         record.timestamp
                     )
             );
+
         records.sort(
             (a,b) =>
                 parseDate(
@@ -2354,6 +2322,7 @@ async function load(){
                     b.timestamp
                 ).getTime()
         );
+
         render();
     }
     catch(error){
