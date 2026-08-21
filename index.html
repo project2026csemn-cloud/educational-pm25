@@ -2,53 +2,81 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport"
           content="width=device-width, initial-scale=1">
-
     <title>ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร</title>
-
     <meta name="description"
           content="ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และการวิเคราะห์คุณภาพอากาศด้วย AI">
-
     <meta name="keywords"
           content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, วัดนิเวศธรรมประวัติราชวรวิหาร, แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร, ระบบตรวจสอบฝุ่น PM2.5, PM2.5 ในสถานศึกษา, ระบบตรวจสอบคุณภาพอากาศ, PM2.5 Monitoring, ESP32, IoT, AI วิเคราะห์คุณภาพอากาศ, PM1.0, PM10">
-
     <meta name="author"
           content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-
     <meta name="robots"
           content="index, follow">
-
     <meta name="googlebot"
           content="index, follow">
-
     <link rel="canonical"
           href="https://project2026csemn-cloud.github.io/educational-pm25/">
-
     <meta property="og:locale"
           content="th_TH">
-
     <meta property="og:type"
           content="website">
-
     <meta property="og:site_name"
           content="Educational PM2.5 Monitoring System">
-
     <meta property="og:title"
           content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-
     <meta property="og:description"
           content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-
     <meta property="og:url"
           content="https://project2026csemn-cloud.github.io/educational-pm25/">
-
     <link rel="stylesheet" href="style.css">
-
     <script src="chart.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script type="application/ld+json">
+    {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา",
+  "alternateName": "Educational Institution PM2.5 Dust Monitoring System",
+  "url": "https://project2026csemn-cloud.github.io/educational-pm25/",
+  "description": "ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร",
+  "inLanguage": "th-TH",
+  "about": [
+    {
+      "@type": "Thing",
+      "name": "PM2.5"
+    },
+    {
+      "@type": "Thing",
+      "name": "ระบบตรวจสอบคุณภาพอากาศ"
+    },
+    {
+      "@type": "Thing",
+      "name": "ESP32"
+    },
+    {
+      "@type": "Thing",
+      "name": "IoT"
+    },
+    {
+      "@type": "Thing",
+      "name": "AI วิเคราะห์คุณภาพอากาศ"
+    }
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "วิทยาลัยเสริมทักษะพระภิกษุ สามเณร",
+    "department": {
+      "@type": "Organization",
+      "name": "แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร"
+    },
+    "location": {
+      "@type": "Place",
+      "name": "วัดนิเวศธรรมประวัติราชวรวิหาร"
+    }
+  }
+}
+</script>
 </head>
 <body>
 <div class="max-w-[1800px] mx-auto p-4 md:p-6">
