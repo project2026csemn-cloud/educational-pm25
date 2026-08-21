@@ -3770,3 +3770,172 @@ body.export-modal-open {
     width: auto !important;
     text-align : center !important;
 }
+
+/* =========================================================
+   FINAL HISTORY DATE/TIME RANGE PICKER
+   Quick ranges = one vertical column
+   Removed ranges: 3 hours / 3 days
+   ========================================================= */
+
+#historyRangePicker {
+    position: relative;
+}
+
+#historyRangePanel.history-range-panel {
+    width: min(720px, calc(100vw - 32px)) !important;
+    max-width: 720px;
+    background: #091827 !important;
+    border: 1px solid rgba(148,163,184,.18) !important;
+    border-radius: 16px;
+    box-shadow: 0 22px 60px rgba(0,0,0,.42) !important;
+    overflow: hidden;
+}
+
+#historyRangePanel.history-range-panel.hidden {
+    display: none !important;
+}
+
+#historyRangePanel .history-range-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 150px !important;
+    min-height: 306px;
+}
+
+#historyRangePanel .history-range-calendar {
+    min-width: 0;
+    padding: 16px;
+    border-right: 1px solid #1e293b;
+}
+
+#historyRangePanel .history-range-quick {
+    min-width: 0;
+    padding: 12px;
+}
+
+#historyRangePanel #quickRangeList.quick-range-list {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    width: 100%;
+    margin-top: 4px;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 34px;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option:hover {
+    background: rgba(34,211,238,.08);
+    border-color: rgba(34,211,238,.16);
+    color: #e2f9ff;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option.active,
+#historyRangePanel #quickRangeList .quick-range-option[aria-current="true"] {
+    background: rgba(34,211,238,.12) !important;
+    border-color: rgba(34,211,238,.28) !important;
+    color: #67e8f9 !important;
+}
+
+#rangeCalendarTitle {
+    min-height: 20px;
+}
+
+#rangeCalendarGrid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0,1fr)) !important;
+    gap: 4px !important;
+}
+
+#rangeCalendarGrid button {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+    #historyRangePanel.history-range-panel {
+        position: fixed !important;
+        top: 72px !important;
+        right: 16px !important;
+        left: 16px !important;
+        width: auto !important;
+        max-height: calc(100vh - 88px);
+        overflow-y: auto;
+    }
+
+    #historyRangePanel .history-range-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    #historyRangePanel .history-range-calendar {
+        border-right: 0;
+        border-bottom: 1px solid #1e293b;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+        gap: 6px !important;
+    }
+}
+
+#rangeCalendarGrid .range-calendar-day {
+    border: 1px solid transparent;
+    background: transparent;
+    color: #dbe7f3;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+#rangeCalendarGrid .range-calendar-day:hover {
+    background: rgba(34,211,238,.09);
+    border-color: rgba(34,211,238,.18);
+    color: #ffffff;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-muted {
+    color: #475569;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-in-range {
+    background: rgba(34,211,238,.07);
+}
+
+#rangeCalendarGrid .range-calendar-day.is-start,
+#rangeCalendarGrid .range-calendar-day.is-end {
+    background: rgba(34,211,238,.24);
+    border-color: rgba(103,232,249,.42);
+    color: #e6fbff;
+    font-weight: 800;
+}
+
+@media (max-width: 700px) {
+    #historyRangePanel #quickRangeList.quick-range-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+}
