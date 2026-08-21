@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://project2026csemn-cloud.github.io/educational-pm25/sitemap.xml
