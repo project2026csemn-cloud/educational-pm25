@@ -604,7 +604,7 @@ last:null
 function averageStatus(value,field){
 return value==null
 ?"● ไม่มีข้อมูล"
-:`● เฉลี่ย ${getRangeLabel()}${field==="pm25"?" • "+quality(value):""}`;
+:`● เฉลี่ย ${getRangeLabel()}`;
 }
 function renderAverages(){
 const d=getRecordsInSelectedRange();
