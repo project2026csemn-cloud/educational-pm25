@@ -1,3772 +1,3536 @@
-/* =========================================================
-   PM2.5 DASHBOARD - CUSTOM CSS
-   Tailwind utility classes used by the original dashboard
-   have been converted to local CSS. No Tailwind CDN required.
-   ========================================================= */
-
-* {
-    box-sizing: border-box;
+const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
+
+const API={
+latest:`${BASE}/api/get_latest.php`,
+history:`${BASE}/api/get_history.php`,
+export:`${BASE}/api/export.php`,
+mother:`${BASE}/api/mother_status`,
+alerts:`${BASE}/api/alert_states`,
+standards:`${BASE}/api/standards.php`
+};
+
+const TOTAL_NODES=3;
+const NODE_OFFLINE_MS=6*60*1000;
+const $=id=>document.getElementById(id);
+
+let latestNodes=[];
+let records=[];
+let motherStatus=null;
+let alertStates=[];
+let standardsData=null;
+let latestRecord=null;
+let historyChart=null;
+let forecastChart=null;
+let forecastVisible=true;
+let metric="pm25";
+let currentMetric="pm25";
+let averageRange="24h";
+let customRangeStart=null;
+let customRangeEnd=null;
+let apiConnectionOnline=false;
+let exportRows=[];
+let activeHelpButton=null;
+
+const RANGE_CONFIG={
+"30m":{
+label:"30 นาที",
+minutes:30,
+apiRange:"24h"
+},
+"1h":{
+label:"1 ชั่วโมง",
+minutes:60,
+apiRange:"24h"
+},
+"3h":{
+label:"3 ชั่วโมง",
+minutes:180,
+apiRange:"24h"
+},
+"6h":{
+label:"6 ชั่วโมง",
+minutes:360,
+apiRange:"24h"
+},
+"12h":{
+label:"12 ชั่วโมง",
+minutes:720,
+apiRange:"24h"
+},
+"24h":{
+label:"24 ชั่วโมง",
+minutes:1440,
+apiRange:"24h"
+},
+"3d":{
+label:"3 วัน",
+minutes:4320,
+apiRange:"7d"
+},
+"7d":{
+label:"7 วัน",
+minutes:10080,
+apiRange:"7d"
+},
+"30d":{
+label:"30 วัน",
+minutes:43200,
+apiRange:"30d"
+}
+};
+
+const CURRENT_METRIC_CONFIG={
+pm1:{
+label:"PM1.0",
+unit:"µg/m³"
+},
+pm25:{
+label:"PM2.5",
+unit:"µg/m³"
+},
+pm10:{
+label:"PM10",
+unit:"µg/m³"
+},
+temperature:{
+label:"อุณหภูมิ",
+unit:"°C"
+},
+humidity:{
+label:"ความชื้น",
+unit:"%"
+},
+light:{
+label:"แสง",
+unit:"lux"
 }
+};
 
-html {
-    scroll-behavior: smooth;
-}
+function fmt(v){
 
-body {
-    margin: 0;
-    font-family: Inter, system-ui, "Noto Sans Thai", sans-serif;
-    background: radial-gradient(circle at 10% 0%, rgba(14,165,233,.13), transparent 30%),
-        radial-gradient(circle at 95% 8%, rgba(16,185,129,.10), transparent 28%),
-        #07111f;
-    color: #eaf2f8;
+return(
+v==null||
+v===""||
+!Number.isFinite(
+Number(v)
+)
+)
+?"--"
+:Number(v).toFixed(1);
+
 }
 
-/* -------------------------
-   Original project components
-   ------------------------- */
+function esc(v){
 
-.glass {
-    background: rgba(13,27,45,.88);
-    border: 1px solid rgba(148,163,184,.16);
-    box-shadow: 0 14px 40px rgba(0,0,0,.22);
-}
+return String(
+v??""
+)
+.replace(
+/&/g,
+"&amp;"
+)
+.replace(
+/</g,
+"&lt;"
+)
+.replace(
+/>/g,
+"&gt;"
+)
+.replace(
+/"/g,
+"&quot;"
+)
+.replace(
+/'/g,
+"&#039;"
+);
 
-.soft {
-    background: #091827;
 }
 
-.card {
-    border-radius: 22px;
-}
+function parseDate(v){
 
-.node {
-    position: relative;
-    overflow: hidden;
+if(!v){
+return null;
 }
 
-.node:before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-    background: #22c55e;
-}
+if(
+v instanceof Date
+){
 
-.node.offline:before {
-    background: #64748b;
-}
+return isNaN(v)
+?null
+:v;
 
-.metric {
-    position: relative;
-    overflow: hidden;
-    transition: .2s;
 }
 
-.metric:hover {
-    transform: translateY(-2px);
-    border-color: rgba(34,211,238,.35);
-}
+const t=
+String(v)
+.trim();
 
-.metric:after {
-    content: "";
-    position: absolute;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    right: -45px;
-    top: -50px;
-    background: rgba(34,211,238,.07);
-}
+const d=
+new Date(
 
-.live {
-    font-size: 11px;
-    color: #67e8f9;
-    letter-spacing: .12em;
-}
+/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+.test(t)
 
-.badge {
-    border: 1px solid rgba(148,163,184,.18);
-    background: #102338;
-}
+?t.replace(
+" ",
+"T"
+)+"Z"
 
-select,
-.range {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 42px;
-    min-height: 42px;
-    padding: 0 0.75rem;
-    border-radius: 0.75rem;
-    background: #102338;
-    color: #eaf2f8;
-    border: 1px solid rgba(148,163,184,.2);
-    white-space: nowrap;
-    cursor: pointer;
-}
+:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
+.test(t)
 
-.flex-wrap {
-    flex-wrap: wrap;
-    align-items: center;
-}
+?t+"Z"
 
-canvas {
-    max-height: 300px;
-}
+:t
 
-.status-online {
-    color: #34d399;
-}
+);
 
-.status-offline {
-    color: #64748b;
-}
+return isNaN(d)
+?null
+:d;
 
-.status-error {
-    color: #f87171;
 }
 
-.status-sleep {
-    color: #b7df09;
-}
+function thaiTime(v){
 
-/* -------------------------
-   Layout utilities converted from Tailwind
-   ------------------------- */
+const d=
+parseDate(v);
 
-.max-w-\[1800px\] {
-    max-width: 1800px;
-}
+return d
+?d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok",
 
-.mx-auto {
-    margin-left: auto;
-    margin-right: auto;
-}
+hour:
+"2-digit",
 
-.flex {
-    display: flex;
-}
+minute:
+"2-digit",
 
-.flex-col {
-    flex-direction: column;
-}
+second:
+"2-digit",
 
-.grid {
-    display: grid;
+hour12:
+false
 }
+)
+:"--";
 
-.block {
-    display: block;
 }
 
-.hidden {
-    display: none;
-}
+function normalize(d){
 
-.justify-between {
-    justify-content: space-between;
+if(!d){
+return null;
 }
 
-.justify-end {
-    justify-content: flex-end;
-}
+return{
 
-.justify-center {
-    justify-content: center;
-}
+id:
+d.id==null
+?null
+:Number(d.id),
 
-.items-center {
-    align-items: center;
-}
+device_id:
+String(
+d.device_id??""
+)
+.trim(),
 
-.text-right {
-    text-align: right;
-}
+status:
+String(
+d.status??"offline"
+)
+.toLowerCase(),
 
-.overflow-hidden {
-    overflow: hidden;
-}
+pm1:
+d.pm1==null
+?null
+:Number(d.pm1),
 
-.grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+pm25:
+d.pm25==null
+?null
+:Number(d.pm25),
 
-.grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+pm10:
+d.pm10==null
+?null
+:Number(d.pm10),
 
-/* =========================================================
-   เพิ่มเฉพาะส่วนนี้
-   สำหรับ Historical Data & Trend
-   ========================================================= */
+temperature:
+d.temperature==null
+?null
+:Number(d.temperature),
 
-.grid-cols-5 {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-}
+humidity:
+d.humidity==null
+?null
+:Number(d.humidity),
 
-.grid-cols-6 {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-}
+light:
+d.light==null
+?null
+:Number(d.light),
 
-/* gaps */
+timestamp:
+d.recorded_at||
+d.timestamp||
+null,
 
-.gap-2 {
-    gap: .5rem;
-}
+status_recorded_at:
+d.status_recorded_at||
+d.recorded_at||
+null,
 
-.gap-3 {
-    gap: .75rem;
-}
+reading_recorded_at:
+d.reading_recorded_at||
+null,
 
-.gap-4 {
-    gap: 1rem;
-}
+last_seen:
+d.last_seen||
+null,
 
-.gap-5 {
-    gap: 1.25rem;
-}
+connection_status:
+d.connection_status||
+null,
 
-.gap-x-4 {
-    column-gap: 1rem;
-}
+command_status:
+d.command_status||
+null
 
-.gap-y-2 {
-    row-gap: .5rem;
+};
+
 }
 
-/* spacing */
+function nodeNo(id){
 
-.p-4 {
-    padding: 1rem;
-}
+const m=
+String(
+id||""
+)
+.match(
+/(\d+)/
+);
 
-.p-5 {
-    padding: 1.25rem;
-}
+return m
+?Number(m[1])
+:null;
 
-.px-3 {
-    padding-left: .75rem;
-    padding-right: .75rem;
 }
 
-.px-4 {
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
+function getNode(n){
 
-.px-5 {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-}
+return latestNodes
+.find(
+x=>
+nodeNo(
+x.device_id
+)===n
+)||
+null;
 
-.py-1 {
-    padding-top: .25rem;
-    padding-bottom: .25rem;
 }
 
-.py-2 {
-    padding-top: .5rem;
-    padding-bottom: .5rem;
-}
+function motherOnline(){
 
-.py-3 {
-    padding-top: .75rem;
-    padding-bottom: .75rem;
-}
+return!!(
+apiConnectionOnline&&
+motherStatus&&
+String(
+motherStatus.status
+)
+.toLowerCase()==="online"
+);
 
-.py-4 {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
 }
 
-.m-0 {
-    margin: 0;
-}
 
-.mt-1 {
-    margin-top: .25rem;
-}
+// =====================================================
+// NODE STATUS RULE
+//
+// Gateway OFFLINE
+// -> ทุก Node OFFLINE
+//
+// ONLINE / SLEEP
+// -> ต้องมีข้อมูลล่าสุดไม่เกิน 6 นาที
+//
+// เกิน 6 นาที
+// -> OFFLINE
+// =====================================================
 
-.mt-4 {
-    margin-top: 1rem;
-}
+function getNodeStatus(node){
 
-.mt-5 {
-    margin-top: 1.25rem;
+if(
+!motherOnline()||
+!node
+){
+return"offline";
 }
 
-.mb-3 {
-    margin-bottom: .75rem;
-}
+const s=
+String(
+node.status||
+"offline"
+)
+.toLowerCase();
 
-.mb-4 {
-    margin-bottom: 1rem;
+if(
+s==="offline"
+){
+return"offline";
 }
 
-.mb-5 {
-    margin-bottom: 1.25rem;
-}
+const d=
+parseDate(
+node.last_seen||
+node.status_recorded_at||
+node.timestamp
+);
 
-.my-4 {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-}
+if(
+!d||
+Date.now()-
+d.getTime()>
+NODE_OFFLINE_MS
+){
+
+return"offline";
 
-.ml-1 {
-    margin-left: .25rem;
 }
 
-/* sizing */
+return s==="sleep"
+?"sleep"
+:s==="online"
+?"online"
+:"offline";
 
-.w-20 {
-    width: 5rem;
 }
 
-.h-20 {
-    height: 5rem;
-}
+function activeCount(){
 
-.w-10 {
-    width: 2.5rem;
-}
+return latestNodes
+.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)
+)
+.length;
 
-.h-10 {
-    height: 2.5rem;
 }
 
-.w-2\.5 {
-    width: .625rem;
-}
+async function fetchJson(url){
 
-.h-2\.5 {
-    height: .625rem;
-}
+const r=
+await fetch(
 
-.min-w-\[180px\] {
-    min-width: 180px;
-}
+url+
+(
+url.includes("?")
+?"&"
+:"?"
+)+
+"t="+
+Date.now(),
 
-/* borders / radius */
+{
+cache:
+"no-store",
 
-.border {
-    border-width: 1px;
-    border-style: solid;
+headers:{
+Accept:
+"application/json"
 }
-
-.border-slate-800 {
-    border-color: #1e293b;
 }
 
-.rounded-xl {
-    border-radius: .75rem;
-}
+);
 
-.rounded-2xl {
-    border-radius: 1rem;
-}
+if(!r.ok){
 
-.rounded-full {
-    border-radius: 9999px;
+throw new Error(
+`HTTP ${r.status}`
+);
+
 }
 
-/* typography */
+const j=
+await r.json();
 
-.text-xs {
-    font-size: .75rem;
-    line-height: 1rem;
-}
+if(!j?.success){
 
-.text-sm {
-    font-size: .875rem;
-    line-height: 1.25rem;
-}
+throw new Error(
+j?.message||
+"API error"
+);
 
-.text-lg {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
 }
 
-.text-xl {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-}
+return j;
 
-.text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
 }
 
-.text-4xl {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-}
+async function loadLatest(){
 
-.text-\[11px\] {
-    font-size: 11px;
-    line-height: 1rem;
-}
+const j=
+await fetchJson(
+API.latest
+);
 
-.font-bold {
-    font-weight: 700;
-}
+return(
+Array.isArray(
+j.data
+)
+?j.data
+:j.data
+?[j.data]
+:[]
+)
+.map(
+normalize
+)
+.filter(
+Boolean
+);
 
-.font-black {
-    font-weight: 900;
 }
 
-.uppercase {
-    text-transform: uppercase;
-}
+async function loadMother(){
 
-.tracking-tight {
-    letter-spacing: -.025em;
-}
+const j=
+await fetchJson(
+API.mother
+);
 
-.tracking-wider {
-    letter-spacing: .05em;
-}
+return j.data
+?{
+status:
+String(
+j.data.status||
+"offline"
+)
+.toLowerCase(),
 
-.leading-tight {
-    line-height: 1.25;
-}
+last_seen:
+j.data.last_seen||
+null,
 
-.leading-6 {
-    line-height: 1.5rem;
+updated_at:
+j.data.updated_at||
+null
 }
+:null;
 
-.leading-7 {
-    line-height: 1.75rem;
 }
 
-/* colors */
+async function loadAlerts(){
 
-.text-white {
-    color: #fff;
-}
+const j=
+await fetchJson(
+API.alerts
+);
 
-.text-slate-300 {
-    color: #cbd5e1;
-}
+return Array.isArray(
+j.data
+)
+?j.data
+:[];
 
-.text-slate-400 {
-    color: #94a3b8;
 }
 
-.text-slate-500 {
-    color: #64748b;
-}
+async function loadStandards(){
 
-.text-cyan-300 {
-    color: #67e8f9;
-}
+return fetchJson(
+API.standards
+);
 
-.text-cyan-400 {
-    color: #22d3ee;
 }
 
-.text-emerald-400 {
-    color: #34d399;
-}
+function apiRange(){
 
-.text-amber-400 {
-    color: #fbbf24;
-}
+return averageRange==="custom"
+?"30d"
+:RANGE_CONFIG[
+averageRange
+]?.apiRange||
+"24h";
 
-.text-red-400 {
-    color: #f87171;
 }
 
-.text-lime-400 {
-    color: #a3e635;
-}
+async function loadHistory(){
 
-.bg-slate-500 {
-    background-color: #64748b;
-}
+const j=
+await fetchJson(
+`${API.history}?range=${encodeURIComponent(apiRange())}`
+);
 
-.bg-emerald-400 {
-    background-color: #34d399;
-}
+return(
+Array.isArray(
+j.data
+)
+?j.data
+:[]
+)
+.map(
+normalize
+)
+.filter(
+Boolean
+);
 
-.bg-lime-400 {
-    background-color: #a3e635;
 }
 
-.bg-amber-400 {
-    background-color: #fbbf24;
-}
 
-.bg-red-500 {
-    background-color: #ef4444;
-}
+// =====================================================
+// MONITORING NODES
+// =====================================================
 
-.bg-cyan-500\/10 {
-    background-color: rgba(6,182,212,.10);
-}
+function setNodeValues(
+prefix,
+n
+){
 
-/* -------------------------
-   Responsive utilities
-   ------------------------- */
+for(
+const k of[
+"pm1",
+"pm25",
+"pm10"
+]
+){
 
-@media (min-width: 768px) {
+const e=
+$(prefix+k);
 
-.md\:block {
-    display: block;
-}
+if(e){
 
-.md\:p-6 {
-    padding: 1.5rem;
-}
+e.textContent=
+n
+?fmt(n[k])
+:"--";
 
-.md\:text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
 }
 
-.md\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-}
+const m={
 
-@media (min-width: 1024px) {
+temp:[
+"temperature",
+"°C"
+],
 
-.lg\:flex-row {
-    flex-direction: row;
-}
+hum:[
+"humidity",
+"%"
+],
 
-.lg\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+light:[
+"light",
+" lux"
+]
 
-.lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+};
 
-.lg\:col-span-2 {
-    grid-column: span 2 / span 2;
-}
+for(
+const[
+k,
+[
+f,
+u
+]
+]
+of Object.entries(m)
+){
 
-}
+const e=
+$(prefix+k);
 
-@media (min-width: 1280px) {
+if(e){
 
-.xl\:grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-}
+e.textContent=
+n&&
+n[f]!=null
+?fmt(n[f])+u
+:"--";
 
-.xl\:grid-cols-6 {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.xl\:col-span-3 {
-    grid-column: span 3 / span 3;
 }
 
 }
 
-/* =========================================================
-   Small project-specific helpers for JS-generated content
-   ========================================================= */
+function renderNodeStatus(
+i,
+n
+){
 
-.status-text {
-    font-size: .75rem;
-    font-weight: 700;
-}
+const s=
+$("n"+i+"status");
+
+const card=
+$("nodeCard"+i);
 
-.dot {
-    width: .625rem;
-    height: .625rem;
-    border-radius: 9999px;
-    display: inline-block;
+if(
+!s||
+!card
+){
+return;
 }
 
-@media (max-width: 767px) {
+const st=
+getNodeStatus(n);
 
-.text-right.hidden.md\:block {
-    display: none;
-}
+const map={
 
-}
+online:[
+"status-online",
+"status-online-dot",
+"ONLINE"
+],
 
-/* =========================
-   Forecast Status Badge
-   ========================= */
+sleep:[
+"status-sleep",
+"status-sleep-dot",
+"SLEEP"
+],
 
-#forecastBadge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    align-self: center;
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 58px;
-    height: 36px;
-    padding: 0 12px;
-    border-radius: 9999px;
-    white-space: nowrap;
-    box-sizing: border-box;
-}
+offline:[
+"status-offline",
+"status-offline-dot",
+"OFFLINE"
+]
 
-/* =====================================================
-   CREDIT BAR
-   ===================================================== */
+};
 
-.credit-bar {
-    position: relative;
-    width: 100%;
-    margin-top: 38px;
-    padding: 0;
-    overflow: hidden;
-    background: linear-gradient(
-            135deg,
-            #07111f 0%,
-            #0b1728 45%,
-            #082536 100%
-        );
-    border-top: 1px solid rgba(34, 211, 238, 0.38);
-    border-bottom: 1px solid rgba(34, 211, 238, 0.24);
-    box-shadow: 0 -10px 35px rgba(6, 182, 212, 0.10),
-        inset 0 1px 0 rgba(255, 255, 255, 0.025);
-}
+const[
+cls,
+dot,
+label
+]=map[st];
 
-.credit-bar::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.18;
-    background-image: linear-gradient(
-            rgba(34, 211, 238, 0.08) 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            rgba(34, 211, 238, 0.08) 1px,
-            transparent 1px
-        );
-    background-size: 32px 32px;
-}
+s.className=
+`${cls} text-xs font-bold`;
 
-.credit-bar::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 8%;
-    width: 84%;
-    height: 1px;
-    background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(34, 211, 238, 0.75),
-            transparent
-        );
-    box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
-}
+s.innerHTML=
+`<span class="${dot}">●</span> ${label} <span class="badge rounded-full px-3 py-1 text-xs">ESP-NOW</span>`;
 
-/* =====================================================
-   CREDIT GLOW
-   ===================================================== */
+card.classList.toggle(
+"offline",
+st==="offline"
+);
 
-.credit-glow {
-    position: absolute;
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    pointer-events: none;
-    filter: blur(70px);
-    opacity: 0.10;
 }
 
-.credit-glow-1 {
-    top: -170px;
-    left: 5%;
-    background: #06b6d4;
-}
+function renderMonitoring(){
 
-.credit-glow-2 {
-    right: 5%;
-    bottom: -190px;
-    background: #0ea5e9;
-}
+for(
+let i=1;
+i<=3;
+i++
+){
 
-/* =====================================================
-   CREDIT LAYOUT
-   ===================================================== */
+const n=
+getNode(i);
 
-.credit-inner {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1.35fr
-        1.25fr
-        1fr
-        1fr
-        1fr;
-    align-items: stretch;
-}
+setNodeValues(
+"n"+i,
+n
+);
 
-.credit-box {
-    position: relative;
-    min-width: 0;
-    min-height: 128px;
-    padding: 22px 24px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-right: 1px solid rgba(148, 163, 184, 0.13);
-    transition: background 0.3s ease,
-        transform 0.3s ease;
-}
+const t=
+$("lastUpdate"+i);
 
-.credit-box:last-child {
-    border-right: none;
-}
+if(t){
 
-/* =====================================================
-   ICON FRAME
-   ===================================================== */
+t.textContent=
+n?.timestamp
+?thaiTime(
+n.timestamp
+)
+:"--";
 
-.credit-icon {
-    position: relative;
-    flex: 0 0 52px;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
-    max-width: 52px;
-    max-height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border: 1px solid rgba(34, 211, 238, 0.25);
-    border-radius: 14px;
-    background: linear-gradient(
-            145deg,
-            rgba(34, 211, 238, 0.12),
-            rgba(14, 165, 233, 0.04)
-        );
-    box-shadow: inset 0 0 15px rgba(34, 211, 238, 0.04),
-        0 0 18px rgba(34, 211, 238, 0.04);
-    font-size: 21px;
-    transition: transform 0.3s ease,
-        border-color 0.3s ease,
-        box-shadow 0.3s ease;
 }
 
-/* =====================================================
-   CREDIT IMAGES
-   ===================================================== */
+renderNodeStatus(
+i,
+n
+);
 
-.credit-icon img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    margin: 0;
-    border: 0;
-    border-radius: 12px;
-    object-fit: contain;
-    padding: 4px;
-    box-sizing: border-box;
-    transition: transform 0.25s ease;
 }
 
-/* =====================================================
-   IMAGE BUTTON
-   ===================================================== */
+const dot=
+$("gatewayDotTop");
 
-.credit-image-button {
-    cursor: pointer;
-}
+const st=
+$("gatewayStatusTop");
 
-/*
- * เมื่อเอาเมาส์ชี้รูป
- * ให้ขยายรูปเล็กน้อยเท่านั้น
- *
- * ไม่มีคำว่า "ดูรูป"
- * มาทับรูปอีกแล้ว
- */
+const ac=
+$("nodesActiveTop");
 
-.credit-image-button:hover img {
-    transform: scale(1.06);
+if(
+!dot||
+!st||
+!ac
+){
+return;
 }
 
-/*
- * ลบป้าย "ดูรูป" เดิมออก
- */
+if(!apiConnectionOnline){
 
-.credit-image-button::after {
-    content: none;
-}
+dot.className=
+"text-red-400";
 
-/* =====================================================
-   COLLEGE
-   ===================================================== */
+st.textContent=
+"API ERROR";
 
-.credit-college .credit-icon img {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    object-fit: contain;
-    box-sizing: border-box;
-    transform: scale(1.20);
-}
+ac.textContent=
+"ไม่สามารถตรวจสอบระบบได้";
 
-/* =====================================================
-   DEPARTMENT
-   ===================================================== */
+}else if(
+motherOnline()
+){
 
-.credit-department .credit-icon img {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    object-fit: contain;
-    box-sizing: border-box;
-    transform: scale(1.18);
-}
+dot.className=
+"text-emerald-400";
 
-/* =====================================================
-   DEVELOPER
-   ===================================================== */
+st.textContent=
+"ONLINE";
 
-.credit-developer .credit-icon {
-    overflow: hidden;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
-    max-width: 52px;
-    max-height: 52px;
-    border-color: rgba(56, 189, 248, 0.20);
-}
+ac.textContent=
+`${activeCount()} / ${TOTAL_NODES} Nodes active`;
 
-.credit-developer .credit-icon img {
-    position: relative;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    object-fit: cover;
-    object-position: center 10%;
-    border-radius: 13px;
-    transform: scale(1.12);
-    box-sizing: border-box;
-    transition: transform 0.3s ease;
-}
+}else{
 
-.credit-developer .credit-icon:hover img {
-    transform: scale(1.18);
-}
+dot.className=
+"text-red-400";
 
-/* =====================================================
-   CREDIT CONTENT
-   ===================================================== */
+st.textContent=
+"OFFLINE";
 
-.credit-content {
-    min-width: 0;
-    flex: 1;
-}
+ac.textContent=
+`0 / ${TOTAL_NODES} Nodes active`;
 
-.credit-label {
-    margin-bottom: 5px;
-    font-family: "Courier New", monospace;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    color: #22d3ee;
-    text-transform: uppercase;
 }
 
-.credit-title {
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.55;
-    color: #e2e8f0;
-    transition: color 0.25s ease;
 }
 
-.credit-role {
-    display: inline-flex;
-    margin-top: 7px;
-    padding: 3px 8px;
-    border: 1px solid rgba(34, 211, 238, 0.14);
-    border-radius: 5px;
-    background: rgba(34, 211, 238, 0.04);
-    font-family: "Courier New", monospace;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #64748b;
-}
 
-/* =====================================================
-   CREDIT LINKS
-   ===================================================== */
+// =====================================================
+// THRESHOLD
+// =====================================================
 
-.credit-links {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 9px;
-}
+function threshold(
+field,
+value
+){
 
-.credit-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 9px;
-    border: 1px solid rgba(34, 211, 238, 0.20);
-    border-radius: 7px;
-    background: rgba(34, 211, 238, 0.055);
-    color: #67e8f9;
-    font-size: 9px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.22s ease;
-}
+const n=
+Number(value);
 
-.credit-arrow {
-    font-size: 11px;
-    line-height: 1;
-    transition: transform 0.2s ease;
-}
+const t=
+standardsData
+?.realtime_thresholds
+?.[field];
 
-.credit-link:hover {
-    background: rgba(34, 211, 238, 0.14);
-    border-color: rgba(34, 211, 238, 0.55);
-    color: #cffafe;
-    box-shadow: 0 0 16px rgba(34, 211, 238, 0.10);
-    transform: translateY(-1px);
+if(
+!Number.isFinite(n)
+){
+return"no_data";
 }
 
-.credit-link:hover .credit-arrow {
-    transform: translate(2px, -2px);
+if(!t){
+return"normal";
 }
-
-/* =====================================================
-   HOVER
-   ===================================================== */
 
-.credit-box:hover {
-    background: linear-gradient(
-            135deg,
-            rgba(34, 211, 238, 0.055),
-            rgba(14, 165, 233, 0.018)
-        );
+if(
+t.critical!=null&&
+n>=t.critical
+){
+return"critical";
 }
 
-.credit-box:hover .credit-icon {
-    transform: translateY(-2px);
-    border-color: rgba(34, 211, 238, 0.50);
-    box-shadow: 0 0 22px rgba(34, 211, 238, 0.12);
+if(
+t.warning!=null&&
+n>=t.warning
+){
+return"warning";
 }
 
-.credit-box:hover .credit-title {
-    color: #67e8f9;
+if(
+t.low_warning!=null&&
+n<=t.low_warning
+){
+return"warning";
 }
 
-.credit-developer:hover .credit-icon {
-    border-color: rgba(56, 189, 248, 0.50);
+if(
+t.high_warning!=null&&
+n>=t.high_warning
+){
+return"warning";
 }
 
-/* =====================================================
-   SYSTEM STATUS
-   ===================================================== */
-
-.credit-bottom {
-    position: relative;
-    z-index: 3;
-    min-height: 34px;
-    padding: 0 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-top: 1px solid rgba(148, 163, 184, 0.10);
-    background: rgba(2, 6, 23, 0.32);
-    font-family: "Courier New", monospace;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    color: #475569;
+if(
+t.low_info!=null&&
+n<t.low_info
+){
+return"info";
 }
+
+return"normal";
 
-.credit-status-dot {
-    width: 6px;
-    height: 6px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #22d3ee;
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.75);
-    animation: credit-pulse 2s ease-in-out infinite;
 }
 
-@keyframes credit-pulse {
-0%,
-100% {
-        opacity: 0.45;
-        transform: scale(0.85);
-    }
+function levelText(l){
 
-50% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
+return{
 
-.credit-line {
-    width: 30px;
-    height: 1px;
-    background: rgba(34, 211, 238, 0.25);
-}
+normal:
+"ปกติ",
 
-/* =====================================================
-   IMAGE MODAL
-   ===================================================== */
+warning:
+"เฝ้าระวัง",
 
-.credit-image-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 999999;
-}
+critical:
+"สูง",
 
-.credit-image-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+info:
+"ควรตรวจสอบ",
 
-.credit-image-overlay {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(2, 6, 23, 0.90);
-    backdrop-filter: blur(8px);
-}
+no_data:
+"รอข้อมูล"
 
-.credit-image-window {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: auto;
-    max-width: 82vw;
-    max-height: 82vh;
-    padding: 10px;
-    border: 1px solid rgba(34, 211, 238, 0.35);
-    border-radius: 16px;
-    background: linear-gradient(
-            145deg,
-            rgba(15, 23, 42, 0.98),
-            rgba(8, 47, 73, 0.96)
-        );
-    box-shadow: 0 0 45px rgba(34, 211, 238, 0.12),
-        0 25px 70px rgba(0, 0, 0, 0.60);
-    animation: creditImageOpen 0.22s ease-out;
-}
+}[l]||
+"รอข้อมูล";
 
-.credit-full-image {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 78vw;
-    max-height: 70vh;
-    object-fit: contain;
-    border-radius: 10px;
 }
 
-.credit-image-caption {
-    width: 100%;
-    margin-top: 8px;
-    padding: 5px 8px 2px;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.4;
-    color: #67e8f9;
-}
 
-.credit-image-close {
-    position: fixed;
-    top: 22px;
-    right: 24px;
-    z-index: 1000000;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid rgba(103, 232, 249, 0.45);
-    border-radius: 50%;
-    background: rgba(8, 47, 73, 0.96);
-    color: #cffafe;
-    font-size: 29px;
-    font-weight: 300;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
+// =====================================================
+// CURRENT ENVIRONMENT
+// =====================================================
 
-.credit-image-close:hover {
-    background: rgba(34, 211, 238, 0.18);
-    border-color: rgba(103, 232, 249, 0.80);
-    color: #ffffff;
-    transform: rotate(90deg);
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.20);
-}
+function currentCfg(){
 
-@keyframes creditImageOpen {
-from {
-        opacity: 0;
-        transform: scale(0.90);
-    }
+return CURRENT_METRIC_CONFIG[
+currentMetric
+]||
+CURRENT_METRIC_CONFIG.pm25;
 
-to {
-        opacity: 1;
-        transform: scale(1);
-    }
 }
 
-/* =====================================================
-   TABLET
-   ===================================================== */
+function currentValue(v){
 
-@media (max-width: 1100px) {
+const c=
+currentCfg();
 
-.credit-inner {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+return(
+v==null||
+!Number.isFinite(
+Number(v)
+)
+)
+?"--"
+:`${fmt(v)} ${c.unit}`;
 
-.credit-box {
-    min-height: 115px;
 }
 
-.credit-box:nth-child(2) {
-    border-right: none;
-}
+function qualityBadge(l){
 
-.credit-box:nth-child(1),
-.credit-box:nth-child(2) {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.13);
-}
+const b=
+$("qualityBadge");
 
+if(!b){
+return;
 }
 
-/* =====================================================
-   MOBILE
-   ===================================================== */
+b.className=
+"current-quality-badge";
 
-@media (max-width: 768px) {
+const m={
 
-.credit-bar {
-    margin-top: 28px;
-}
+normal:[
+"ปกติ",
+"current-quality-normal"
+],
 
-.credit-inner {
-    grid-template-columns: 1fr;
-}
+warning:[
+"เฝ้าระวัง",
+"current-quality-warning"
+],
 
-.credit-box {
-    min-height: 100px;
-    padding: 18px 20px;
-    border-right: none;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-}
+critical:[
+"สูง",
+"current-quality-critical"
+],
 
-.credit-box:last-child {
-    border-bottom: none;
-}
+info:[
+"ควรตรวจสอบ",
+"current-quality-info"
+],
 
-.credit-icon {
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
-    max-width: 42px;
-    max-height: 42px;
-    border-radius: 12px;
-}
+no_data:[
+"รอข้อมูล",
+"current-quality-unavailable"
+]
 
-.credit-icon img {
-    border-radius: 10px;
-}
+};
 
-.credit-developer .credit-icon {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
-    max-width: 42px;
-    max-height: 42px;
-    overflow: hidden;
-}
+const x=
+m[l]||
+m.no_data;
 
-.credit-title {
-    font-size: 12px;
-}
+b.textContent=
+x[0];
 
-.credit-bottom {
-    padding: 8px 12px;
-    flex-wrap: wrap;
-    font-size: 7px;
-    line-height: 1.5;
-}
+b.classList.add(
+x[1]
+);
 
-.credit-line {
-    display: none;
 }
 
-.credit-image-window {
-    max-width: 90vw;
-    max-height: 78vh;
-    padding: 7px;
-    border-radius: 13px;
-}
+function resetCurrent(reason){
 
-.credit-full-image {
-    max-width: 86vw;
-    max-height: 65vh;
-}
+const c=
+currentCfg();
 
-.credit-image-close {
-    top: 12px;
-    right: 12px;
-    width: 40px;
-    height: 40px;
-    font-size: 25px;
-}
+if(
+$("currentOverallLabel")
+){
 
-.credit-image-caption {
-    font-size: 10px;
-}
+$("currentOverallLabel").textContent=
+c.label+
+" ภาพรวม";
 
 }
-
-/* =====================================================
-   SMALL MOBILE
-   ===================================================== */
 
-@media (max-width: 420px) {
+for(
+const id of[
+"currentOverallValue",
+"currentHighestValue",
+"currentHighestNode",
+"currentWatchNode"
+]
+){
 
-.credit-box {
-    padding: 16px 15px;
-    gap: 11px;
+if($(id)){
+$(id).textContent="--";
 }
 
-.credit-icon {
-    flex: 0 0 38px;
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
-    max-width: 38px;
-    max-height: 38px;
-    border-radius: 11px;
 }
 
-.credit-icon img {
-    border-radius: 9px;
-}
+if(
+$("currentOverallDetail")
+){
 
-.credit-developer .credit-icon {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
-    max-width: 38px;
-    max-height: 38px;
-    overflow: hidden;
-}
+$("currentOverallDetail").textContent=
+"ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP";
 
-.credit-title {
-    font-size: 11px;
 }
 
-.credit-link {
-    font-size: 8px;
-    padding: 4px 7px;
-}
+if(
+$("currentWatchDetail")
+){
 
-.credit-full-image {
-    max-width: 84vw;
-    max-height: 60vh;
-}
+$("currentWatchDetail").textContent=
+reason;
 
 }
 
-.range-ส่งออก {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 42px;
-    min-height: 42px;
-    padding: 0 0.75rem;
-    border-radius: 0.75rem;
-    background: #102338;
-    color: #eaf2f8;
-    border: 1px solid rgba(148,163,184,.2);
-    white-space: nowrap;
-    cursor: pointer;
-}
+if(
+$("currentEnvironmentFooter")
+){
 
-.status-online-dot {
-    color: #34d399;
-}
+$("currentEnvironmentFooter").textContent=
+reason;
 
-.status-offline-dot {
-    color: #64748b;
 }
 
-/* =========================================================
-   EXPORT MODAL
-========================================================= */
+qualityBadge(
+"no_data"
+);
 
-.export-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 100000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 18px;
-    box-sizing: border-box;
 }
 
-.export-modal.show {
-    display: flex;
-}
+function updateCurrent(){
 
-/* Background */
+const c=
+currentCfg();
 
-.export-modal-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(2, 8, 18, 0.76);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-}
+if(
+$("currentOverallLabel")
+){
 
-/* Dialog */
+$("currentOverallLabel").textContent=
+c.label+
+" ภาพรวม";
 
-.export-dialog {
-    position: relative;
-    width: min(1100px, 100%);
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: #071421;
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 20px;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
 }
 
-/* Header */
+if(!apiConnectionOnline){
 
-.export-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 20px 24px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-}
+return resetCurrent(
+"ไม่สามารถเชื่อมต่อ API ได้"
+);
 
-.export-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #f8fafc;
 }
 
-.export-subtitle {
-    margin-top: 5px;
-    font-size: 13px;
-    color: #94a3b8;
-}
+if(!motherOnline()){
 
-.export-close {
-    width: 38px;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 10px;
-    background: #172538;
-    color: #cbd5e1;
-    font-size: 25px;
-    cursor: pointer;
-}
+return resetCurrent(
+"Gateway Offline • ไม่สามารถประเมินข้อมูลปัจจุบันได้"
+);
 
-.export-close:hover {
-    background: #24364c;
-    color: #ffffff;
 }
 
-/* Date */
+const usable=
+latestNodes
+.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)&&
+Number.isFinite(
+Number(
+n[currentMetric]
+)
+)
+);
 
-.export-filter {
-    display: flex;
-    align-items: end;
-    gap: 12px;
-    padding: 20px 24px;
-}
+if(!usable.length){
 
-.export-date-group {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    flex: 1;
-}
+return resetCurrent(
+"ไม่มีอุปกรณ์ที่มีข้อมูลสำหรับตัวแปรนี้"
+);
 
-.export-date-group label {
-    font-size: 12px;
-    color: #94a3b8;
 }
 
-.export-date-group input {
-    width: 100%;
-    height: 42px;
-    padding: 0 12px;
-    box-sizing: border-box;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 10px;
-    background: #102338;
-    color: #f8fafc;
-    font-family: inherit;
-}
+const avg=
+usable.reduce(
+(s,n)=>
+s+
+Number(
+n[currentMetric]
+),
+0
+)/
+usable.length;
 
-.export-date-arrow {
-    padding-bottom: 10px;
-    color: #64748b;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 42px;
-}
+const high=
+usable.reduce(
+(a,b)=>
+Number(
+b[currentMetric]
+)>
+Number(
+a[currentMetric]
+)
+?b
+:a
+);
 
-/* Summary */
+const watch=
+usable
+.map(
+n=>({
+n,
+v:
+Number(
+n[currentMetric]
+),
+l:
+threshold(
+currentMetric,
+n[currentMetric]
+)
+})
+)
+.filter(
+x=>
+[
+"warning",
+"critical",
+"info"
+]
+.includes(
+x.l
+)
+)
+.sort(
+(a,b)=>
+b.v-a.v
+)
+[0];
 
-.export-summary {
-    display: flex;
-    gap: 12px;
-    padding: 0 24px 16px;
-}
+$("currentOverallValue").textContent=
+currentValue(avg);
 
-.export-summary > div {
-    min-width: 150px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    background: #0d1d2d;
-    border: 1px solid rgba(148, 163, 184, 0.12);
-}
+$("currentOverallDetail").textContent=
+`ค่าเฉลี่ยจาก ${usable.length} จุดที่ใช้งาน`;
 
-.export-summary span {
-    display: block;
-    font-size: 11px;
-    color: #64748b;
-}
+$("currentHighestValue").textContent=
+currentValue(
+high[currentMetric]
+);
 
-.export-summary strong {
-    display: block;
-    margin-top: 4px;
-    font-size: 20px;
-    color: #22d3ee;
-}
+$("currentHighestNode").textContent=
+`อุปกรณ์ ${nodeNo(high.device_id)}`;
 
-/* Preview */
+qualityBadge(
+threshold(
+currentMetric,
+avg
+)
+);
 
-.export-preview {
-    min-height: 0;
-    padding: 0 24px 20px;
-}
+$("currentWatchNode").textContent=
+watch
+?`อุปกรณ์ ${nodeNo(watch.n.device_id)}`
+:"ไม่มี";
 
-.export-preview-title {
-    margin-bottom: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #cbd5e1;
-}
+$("currentWatchDetail").textContent=
+watch
+?`${c.label} ${currentValue(watch.v)} • ${levelText(watch.l)}`
+:"ทุกจุดที่ใช้งานยังไม่เข้าเกณฑ์เฝ้าระวัง";
 
-.export-table-wrapper {
-    max-height: 300px;
-    overflow: auto;
-    border: 1px solid rgba(148, 163, 184, 0.12);
-    border-radius: 12px;
-}
+if(
+$("currentEnvironmentFooter")
+){
 
-.export-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    min-width: 900px;
-}
+$("currentEnvironmentFooter").textContent=
+`ใช้ข้อมูลล่าสุดจาก ${usable.length} / ${TOTAL_NODES} จุดตรวจวัด`;
 
-.export-table th {
-    position: sticky;
-    top: 0;
-    padding: 10px 12px;
-    text-align: left;
-    background: #102338;
-    color: #9fb7d1;
-    white-space: nowrap;
-    font-size: 10px;
-    font-weight: 800;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.82);
 }
 
-.export-table td {
-    padding: 10px 12px;
-    border-top: 1px solid rgba(148, 163, 184, 0.08);
-    color: #cbd5e1;
-    white-space: nowrap;
-    border-bottom: 1px solid rgba(30, 41, 59, 0.82);
 }
 
-.export-table tbody tr:hover {
-    background: rgba(34, 211, 238, 0.035);
-}
 
-/* แถวคั่นระหว่างกลุ่มอุปกรณ์ (N1 / N2 / N3) */
+// =====================================================
+// SMART SUMMARY
+// =====================================================
 
-.export-table tbody tr.export-group-divider {
-    background: transparent;
-}
+function updateSmart(){
 
-.export-table tbody tr.export-group-divider:hover {
-    background: transparent;
-}
+const e=
+$("aiSummary");
 
-.export-table tbody tr.export-group-divider td {
-    padding: 6px 11px;
-    border-top: 2px solid rgba(34, 211, 238, 0.25);
-    border-bottom: none;
+if(!e){
+return;
 }
 
-/* Footer */
+if(!apiConnectionOnline){
 
-.export-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 16px 24px;
-    border-top: 1px solid rgba(148, 163, 184, 0.12);
-}
+e.innerHTML=
+'<b class="text-red-300">🔴 ไม่สามารถเชื่อมต่อ API</b>';
 
-.export-btn {
-    height: 42px;
-    padding: 0 18px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-}
+return;
 
-.export-btn-cancel {
-    background: #172538;
-    color: #cbd5e1;
-    border-color: rgba(148, 163, 184, 0.15);
 }
 
-.export-btn-primary {
-    background: #0891b2;
-    color: #ffffff;
-}
+if(!motherOnline()){
+
+e.innerHTML=
+`<b class="text-red-300">🔴 Gateway Offline</b>
+<div class="mt-2 text-xs text-slate-400">
+ONLINE 0 • SLEEP 0 • OFFLINE ${TOTAL_NODES}
+</div>`;
 
-.export-btn-primary:hover {
-    background: #06b6d4;
+return;
+
 }
 
-/* Mobile */
+const a=
+latestNodes.map(
+n=>
+getNodeStatus(n)
+);
 
-@media (max-width: 640px) {
+const on=
+a.filter(
+x=>x==="online"
+).length;
 
-.export-filter {
-    flex-direction: column;
-    align-items: stretch;
-}
+const sl=
+a.filter(
+x=>x==="sleep"
+).length;
 
-.export-date-arrow {
-    display: none;
-}
+const off=
+TOTAL_NODES-
+on-
+sl;
 
-.export-summary {
-    flex-wrap: wrap;
-}
+const usable=
+latestNodes.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)&&
+Number.isFinite(
+Number(n.pm25)
+)
+);
 
-.export-footer {
-    flex-direction: column;
-}
+let headline=
+off
+?"🟠 มีอุปกรณ์ที่ต้องตรวจสอบ"
+:"🟢 ระบบทำงานปกติ";
 
-.export-btn {
-    width: 100%;
-}
+let pm=
+"ยังไม่มีข้อมูล PM2.5 ที่ใช้ประเมินได้";
 
-}
+if(usable.length){
 
-/* Export modal refinements */
+const avg=
+usable.reduce(
+(s,n)=>
+s+
+Number(n.pm25),
+0
+)/
+usable.length;
 
-#exportBtn:hover {
-    background: #0e7490;
-    border-color: #22d3ee;
-}
+const l=
+threshold(
+"pm25",
+avg
+);
 
-.export-date-group input:focus {
-    outline: none;
-    border-color: #22d3ee;
-    box-shadow: 0 0 0 3px rgba(34,211,238,.10);
-}
+pm=
+`PM2.5 ภาพรวม ${fmt(avg)} µg/m³ • ${levelText(l)}`;
 
-@media (max-width:640px) {
+if(l==="critical"){
 
-.export-dialog {
-    max-height: 94vh;
-    border-radius: 16px;
-}
+headline=
+"🔴 คุณภาพอากาศควรเฝ้าระวัง";
 
-}
+}else if(
+l==="warning"
+){
 
-/* =====================================================
-   ADVISOR
-   ===================================================== */
+headline=
+"🟡 มีค่าที่ควรติดตาม";
 
-.credit-advisor .credit-icon {
-    overflow: hidden;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
-    max-width: 52px;
-    max-height: 52px;
-    border-color: rgba(34, 211, 238, 0.20);
 }
 
-.credit-advisor .credit-icon img {
-    position: relative;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    object-fit: cover;
-    object-position: center center;
-    border-radius: 13px;
-    transform: scale(1.08);
-    box-sizing: border-box;
-    transition: transform 0.3s ease;
 }
 
-.credit-advisor .credit-icon:hover img {
-    transform: scale(1.14);
-}
+e.innerHTML=
+`<b>${headline}</b>
+<div class="mt-2">
+${pm}
+</div>
+<div class="mt-2 text-xs text-slate-400">
+Gateway ONLINE • ONLINE ${on} • SLEEP ${sl} • OFFLINE ${off}
+</div>`;
 
-.credit-advisor:hover .credit-icon {
-    border-color: rgba(34, 211, 238, 0.50);
 }
 
-/* =====================================================
-   TABLET
-   ===================================================== */
 
-@media (max-width: 1100px) {
+// =====================================================
+// ALERT UI
+// =====================================================
 
-.credit-box:nth-child(even) {
-    border-right: none;
-}
+function updateAlertUI(){
 
-.credit-box:nth-child(-n/**/+3) {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.13);
-}
+const e=
+$("alerts");
 
+if(!e){
+return;
 }
 
-/* =====================================================
-   MOBILE
-   ===================================================== */
+if(!apiConnectionOnline){
 
-@media (max-width: 768px) {
+e.innerHTML=
+'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 ไม่สามารถเชื่อมต่อ API</b></div>';
 
-.credit-advisor .credit-icon {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
-    max-width: 42px;
-    max-height: 42px;
-    overflow: hidden;
-}
-
-.credit-advisor .credit-icon img {
-    object-fit: cover;
-    object-position: center center;
-}
+return;
 
 }
 
-/* =====================================================
-   SMALL MOBILE
-   ===================================================== */
+if(!motherOnline()){
 
-@media (max-width: 420px) {
+e.innerHTML=
+'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 Gateway OFFLINE</b><div class="text-xs text-slate-400 mt-1">กำหนดทุก Node เป็น OFFLINE</div></div>';
 
-.credit-advisor .credit-icon {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
-    max-width: 38px;
-    max-height: 38px;
-    overflow: hidden;
-}
+return;
 
-.credit-advisor .credit-icon img {
-    object-fit: cover;
-    object-position: center center;
 }
 
-}
+const list=[];
 
-/* =========================================================
-   HISTORICAL DATE / TIME RANGE PICKER
-   ใช้กับ Dashboard เวอร์ชัน Date/Time Range Picker
-   ========================================================= */
+for(
+let i=1;
+i<=3;
+i++
+){
 
-/* ตัวครอบปุ่มเลือกช่วงเวลา */
+const n=
+getNode(i);
 
-#historyRangePicker {
-    position: relative;
-    z-index: 80;
-}
+const st=
+getNodeStatus(n);
 
-/* ปุ่มหลักด้านบน เช่น "24 ชั่วโมง" */
+if(st==="offline"){
 
-#historyRangeButton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    height: 42px;
-    padding: 0 13px;
-    border: 1px solid rgba(148, 163, 184, 0.20);
-    border-radius: 12px;
-    background: #102338;
-    color: #eaf2f8;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background 0.18s ease,
-        border-color 0.18s ease,
-        box-shadow 0.18s ease,
-        transform 0.18s ease;
-}
+list.push({
 
-#historyRangeButton:hover {
-    background: #132a42;
-    border-color: rgba(34, 211, 238, 0.42);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.06);
-}
+icon:
+"🔴",
 
-#historyRangeButton:active {
-    transform: translateY(1px);
-}
+title:
+`อุปกรณ์ ${i} OFFLINE`,
 
-#historyRangeButton[aria-expanded="true"] {
-    border-color: rgba(34, 211, 238, 0.55);
-    background: #12283e;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08),
-        0 12px 30px rgba(0, 0, 0, 0.18);
-}
+detail:
+"ไม่สามารถติดต่ออุปกรณ์ได้"
 
-/* =========================================================
-   PICKER PANEL
-   ========================================================= */
+});
 
-#historyRangePanel {
-    position: absolute !important;
-    top: calc(100% + 8px) !important;
-    right: 0 !important;
-    left: auto !important;
-    z-index: 99999 !important;
-    width: min(640px, calc(100vw - 28px)) !important;
-    min-width: min(600px, calc(100vw - 28px)) !important;
-    max-width: calc(100vw - 28px) !important;
-    max-height: min(560px, calc(100vh - 90px)) !important;
-    overflow: auto !important;
-    background: linear-gradient(
-            145deg,
-            rgba(8, 24, 39, 0.995),
-            rgba(7, 29, 45, 0.995)
-        ) !important;
-    border: 1px solid rgba(148, 163, 184, 0.18) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52),
-        inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
-    color: #e2e8f0;
-    scrollbar-width: thin;
-    scrollbar-color: #1e4b66 transparent;
-}
+continue;
 
-#historyRangePanel::-webkit-scrollbar {
-    width: 8px;
 }
 
-#historyRangePanel::-webkit-scrollbar-track {
-    background: transparent;
-}
+const state=
+alertStates
+.find(
+a=>
+nodeNo(
+a.device_id
+)===i
+);
 
-#historyRangePanel::-webkit-scrollbar-thumb {
-    background: #1e4b66;
-    border-radius: 999px;
+if(!state){
+continue;
 }
 
-/* สำคัญมาก:
-   เมื่อ JS ใส่ class hidden ต้องปิด Panel จริง */
+const defs=[
 
-#historyRangePanel.hidden {
-    display: none !important;
-}
+[
+"pm1_level",
+"PM1.0",
+"pm1",
+"µg/m³"
+],
 
-/* =========================================================
-   MAIN LAYOUT
-   ซ้าย = ปฏิทิน / ขวา = Quick Range
-   ========================================================= */
+[
+"pm25_level",
+"PM2.5",
+"pm25",
+"µg/m³"
+],
 
-#historyRangePanel > .grid {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.65fr)
-        minmax(100px, 0.35fr) !important;
-    width: 100% !important;
-}
+[
+"pm10_level",
+"PM10",
+"pm10",
+"µg/m³"
+],
 
-/* ฝั่งปฏิทิน */
+[
+"temperature_level",
+"อุณหภูมิ",
+"temperature",
+"°C"
+],
 
-#historyRangePanel > .grid > div:first-child {
-    min-width: 0 !important;
-    padding: 14px 14px 12px !important;
-    border-right: 1px solid rgba(51, 65, 85, 0.68) !important;
-}
+[
+"humidity_level",
+"ความชื้น",
+"humidity",
+"%"
+],
 
-/* ฝั่ง Quick Range */
+[
+"light_level",
+"แสง",
+"light",
+"lux"
+]
 
-#historyRangePanel > .grid > div:last-child {
-    min-width: 0 !important;
-    padding: 12px !important;
-    background: rgba(2, 6, 23, 0.10) !important;
-}
+];
 
-/* =========================================================
-   CALENDAR HEADER
-   ========================================================= */
+for(
+const[
+k,
+label,
+v,
+u
+]of defs
+){
 
-#rangeCalendarTitle {
-    color: #e2e8f0 !important;
-    font-size: 13px !important;
-    font-weight: 800 !important;
-    text-transform: none;
-}
+if(
+String(
+state[k]||
+"normal"
+)!=="normal"
+){
 
-/* ปุ่มเดือนก่อน / เดือนถัดไป */
+list.push({
 
-#calendarPrev,
-#calendarNext {
-    width: 30px !important;
-    height: 30px !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid rgba(71, 85, 105, 0.82);
-    border-radius: 8px !important;
-    background: rgba(15, 35, 56, 0.85);
-    color: #cbd5e1;
-    font-family: inherit;
-    font-size: 18px !important;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.16s ease,
-        color 0.16s ease,
-        border-color 0.16s ease;
-}
+icon:
+state[k]==="critical"
+?"🔴"
+:"🟡",
 
-#calendarPrev:hover,
-#calendarNext:hover {
-    background: #17314a;
-    color: #67e8f9;
-    border-color: rgba(34, 211, 238, 0.36);
-}
+title:
+`อุปกรณ์ ${i} • ${label}`,
 
-/* =========================================================
-   CALENDAR GRID
-   ========================================================= */
+detail:
+`${fmt(n?.[v])} ${u}`
 
-/* บังคับ 7 คอลัมน์จริง
-   ป้องกันปัญหาวันเรียงลงแนวตั้ง */
+});
 
-#rangeCalendarGrid {
-    display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    gap: 3px !important;
-    width: 100% !important;
-    grid-auto-rows: 32px !important;
 }
-
-/* ปุ่มแต่ละวัน */
 
-#rangeCalendarGrid button {
-    appearance: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 32px !important;
-    margin: 0;
-    padding: 0 !important;
-    border: 1px solid transparent;
-    border-radius: 8px !important;
-    background: transparent;
-    color: #e2e8f0;
-    font-family: inherit;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.14s ease,
-        border-color 0.14s ease,
-        color 0.14s ease,
-        transform 0.14s ease;
 }
 
-#rangeCalendarGrid button:hover {
-    background: rgba(34, 211, 238, 0.09) !important;
-    border-color: rgba(34, 211, 238, 0.14) !important;
-    color: #cffafe !important;
 }
 
-/* =========================================================
-   QUICK RANGE
-   ========================================================= */
+e.innerHTML=
+list.length
+?list.map(
+x=>
+`<div class="soft rounded-xl p-3 mb-2">
+<b>${x.icon} ${esc(x.title)}</b>
+<div class="text-xs text-slate-400 mt-1">
+${esc(x.detail)}
+</div>
+</div>`
+)
+.join("")
+:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b></div>';
 
-#quickRangeList {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    width: 100% !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    margin-top: 0 !important;
 }
 
-.quick-range-option {
-    appearance: none;
-    display: inline-flex !important;
-    width: auto !important;
-    min-height: 34px !important;
-    padding: 6px 8px !important;
-    border: 1px solid transparent !important;
-    border-radius: 8px !important;
-    background: transparent;
-    color: #cbd5e1 !important;
-    font-family: inherit;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-    cursor: pointer;
-    transition: background 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease;
-}
 
-.quick-range-option:hover {
-    background: rgba(34, 211, 238, 0.075) !important;
-    color: #a5f3fc !important;
-    border-color: rgba(34, 211, 238, 0.10) !important;
-}
+// =====================================================
+// HISTORY
+// =====================================================
 
-/* =========================================================
-   START / END
-   ========================================================= */
+function rangeLabel(){
 
-/* ส่วน Start / End เป็น div border-t ตัวแรก */
+if(
+averageRange==="custom"&&
+customRangeStart&&
+customRangeEnd
+){
 
-#historyRangePanel > .border-t.grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    width: 100% !important;
-    padding: 11px 14px !important;
-    border-top: 1px solid rgba(51, 65, 85, 0.68) !important;
-}
-#historyRangePanel label {
-    display: block;
-    min-width: 0;
-}
+return`${customRangeStart.toLocaleString("th-TH")} – ${customRangeEnd.toLocaleString("th-TH")}`;
 
-#historyRangePanel label > span {
-    display: block;
-    margin-bottom: 4px !important;
-    color: #94a3b8 !important;
-    font-size: 9px !important;
 }
 
-/* กล่องครอบ input */
+return RANGE_CONFIG[
+averageRange
+]?.label||
+"ช่วงเวลาที่เลือก";
 
-#historyRangePanel label > div {
-    display: flex;
-    align-items: center;
-    min-height: 36px !important;
-    padding: 0 9px !important;
-    border: 1px solid rgba(71, 85, 105, 0.78) !important;
-    border-radius: 9px !important;
-    background: rgba(2, 6, 23, 0.22) !important;
-    transition: border-color 0.15s ease,
-        box-shadow 0.15s ease;
 }
 
-#historyRangePanel label > div:focus-within {
-    border-color: rgba(34, 211, 238, 0.58) !important;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
-}
+function rangeWindow(){
 
-/* datetime-local */
+if(
+averageRange==="custom"
+){
 
-#customRangeStart,
-#customRangeEnd {
-    appearance: none;
-    width: 100% !important;
-    min-width: 0;
-    height: 34px !important;
-    margin: 0;
-    padding: 0 !important;
-    border: 0 !important;
-    outline: 0 !important;
-    background: transparent !important;
-    color: #e2e8f0 !important;
-    font-family: inherit;
-    font-size: 11px !important;
-    color-scheme: dark;
-}
+return(
+customRangeStart&&
+customRangeEnd
+)
+?{
+start:
+customRangeStart,
 
-#customRangeStart::-webkit-calendar-picker-indicator,
-#customRangeEnd::-webkit-calendar-picker-indicator {
-    opacity: 0.72;
-    filter: invert(83%)
-        sepia(9%)
-        saturate(635%)
-        hue-rotate(176deg)
-        brightness(92%);
-    cursor: pointer;
+end:
+customRangeEnd
 }
+:null;
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
+}
 
-/* footer คือ border-t ตัวสุดท้าย */
+const c=
+RANGE_CONFIG[
+averageRange
+];
 
-#historyRangePanel > .border-t:last-child {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    width: 100% !important;
-    padding: 9px 14px !important;
-    border-top: 1px solid rgba(51, 65, 85, 0.68) !important;
-    background: rgba(2, 6, 23, 0.13) !important;
+if(!c){
+return null;
 }
 
-/* Error */
+const end=
+new Date();
 
-#customRangeError {
-    color: #f87171;
-    font-size: 9px !important;
-    margin-top: 0 !important;
-    margin-left: 6px !important;
-}
+return{
 
-#customRangeError.hidden {
-    display: none !important;
-}
+start:
+new Date(
+end-
+c.minutes*
+60000
+),
 
-/* =========================================================
-   APPLY / CANCEL BUTTON
-   ========================================================= */
+end
 
-#historyRangeCancel,
-#historyRangeApply {
-    min-height: 34px !important;
-    padding: 0 13px !important;
-    border-radius: 9px !important;
-    font-family: inherit;
-    font-size: 10px !important;
-    font-weight: 800 !important;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background 0.16s ease,
-        border-color 0.16s ease,
-        color 0.16s ease,
-        transform 0.16s ease;
-}
+};
 
-#historyRangeCancel {
-    border: 1px solid rgba(71, 85, 105, 0.82) !important;
-    background: rgba(15, 35, 56, 0.72) !important;
-    color: #cbd5e1 !important;
 }
 
-#historyRangeCancel:hover {
-    background: rgba(30, 41, 59, 0.95) !important;
-    color: #ffffff !important;
-}
+function selectedRecords(){
 
-#historyRangeApply {
-    border: 1px solid rgba(34, 211, 238, 0.34) !important;
-    background: linear-gradient(
-            135deg,
-            rgba(8, 145, 178, 0.78),
-            rgba(6, 182, 212, 0.72)
-        ) !important;
-    color: #ffffff !important;
-    box-shadow: 0 8px 22px rgba(6, 182, 212, 0.12);
-}
+const w=
+rangeWindow();
 
-#historyRangeApply:hover {
-    border-color: rgba(103, 232, 249, 0.62) !important;
-    background: linear-gradient(
-            135deg,
-            rgba(8, 145, 178, 0.94),
-            rgba(6, 182, 212, 0.90)
-        ) !important;
-    transform: translateY(-1px);
-}
+return w
+?records.filter(
+r=>{
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+const d=
+parseDate(
+r.timestamp
+);
 
-@media (max-width: 900px) {
+return(
+d&&
+d>=w.start&&
+d<=w.end
+);
 
-#historyRangePanel {
-    width: min(610px, calc(100vw - 24px)) !important;
-    min-width: 0 !important;
 }
+)
+:[];
 
-#historyRangePanel > .grid {
-    grid-template-columns: minmax(0, 1.35fr)
-            minmax(180px, 0.65fr) !important;
 }
 
-}
+function metricLabel(){
 
-@media (max-width: 720px) {
+return CURRENT_METRIC_CONFIG[
+metric
+]?.label||
+metric;
 
-#historyRangePicker {
-    position: static !important;
 }
 
-#historyRangePanel {
-    position: fixed !important;
-    top: 64px !important;
-    right: 10px !important;
-    bottom: auto !important;
-    left: 10px !important;
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    max-height: calc(100vh - 78px) !important;
-    border-radius: 16px !important;
-}
+function metricUnit(){
 
-#historyRangePanel > .grid {
-    grid-template-columns: 1fr !important;
-}
+return CURRENT_METRIC_CONFIG[
+metric
+]?.unit||
+"";
 
-#historyRangePanel > .grid > div:first-child {
-    border-right: 0 !important;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.68) !important;
 }
 
-#historyRangePanel > .grid > div:last-child {
-    border-right: 0;
-}
+function stats(
+data,
+field
+){
 
-#quickRangeList {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 5px !important;
-}
+const a=
+data
+.map(
+x=>
+Number(
+x[field]
+)
+)
+.filter(
+Number.isFinite
+);
 
-#historyRangePanel > .border-t:nth-of-type(1) {
-    grid-template-columns: 1fr !important;
-}
+return a.length
+?{
+avg:
+a.reduce(
+(x,y)=>x+y,
+0
+)/
+a.length,
 
-#historyRangePanel > .border-t.grid {
-    grid-template-columns: 1fr !important;
-}
+max:
+Math.max(...a),
 
-#historyRangePanel > .border-t:last-child > div:last-child {
-    display: flex;
-    justify-content: flex-end !important;
-    gap: 8px;
-}
+min:
+Math.min(...a),
 
+last:
+a.at(-1)
 }
-
-@media (max-width: 430px) {
+:{
+avg:null,
+max:null,
+min:null,
+last:null
+};
 
-#historyRangePanel {
-    top: 56px !important;
-    right: 7px !important;
-    left: 7px !important;
-    max-height: calc(100vh - 66px) !important;
 }
 
-#historyRangePanel > .grid > div:first-child,
-#historyRangePanel > .grid > div:last-child {
-    padding: 12px !important;
-}
+function renderAverages(){
 
-#rangeCalendarGrid button {
-    height: 34px !important;
-    font-size: 11px;
-}
+const d=
+selectedRecords();
 
-#quickRangeList {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-}
+if(
+$("selectedRangeLabel")
+){
 
-#historyRangePanel > .border-t:nth-of-type(1) {
-    padding: 12px !important;
-}
+$("selectedRangeLabel").textContent=
+rangeLabel();
 
-#historyRangePanel > .border-t.grid {
-    padding: 12px !important;
 }
 
-#historyRangePanel > .border-t:last-child > div:last-child {
-    width: 100%;
-}
+const defs=[
 
-#historyRangeCancel,
-#historyRangeApply {
-    flex: 1 !important;
-}
+[
+"pm1",
+"averagePM1",
+"averagePM1Status"
+],
 
-}
+[
+"pm25",
+"averagePM25",
+"averagePM25Status"
+],
 
-/* =========================================================
-   DATE/TIME PICKER - CALENDAR ALIGNMENT FIX
-   แก้หัววัน อา จ อ พ พฤ ศ ส ที่เรียงลงแนวตั้ง
-   ========================================================= */
+[
+"pm10",
+"averagePM10",
+"averagePM10Status"
+],
 
-/* แถวชื่อวันเหนือปฏิทิน */
+[
+"temperature",
+"averageTemp",
+"averageTempStatus"
+],
 
-#historyRangePanel .grid-cols-7 {
-    display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    width: 100% !important;
-}
+[
+"humidity",
+"averageHum",
+"averageHumStatus"
+],
 
-/* เฉพาะแถวชื่อวัน ไม่กระทบช่องวันที่ */
+[
+"light",
+"averageLight",
+"averageLightStatus"
+]
 
-#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) {
-    gap: 3px !important;
-    margin-bottom: 4px !important;
-    text-align: center !important;
-    display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-}
+];
 
-#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) > div {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 0 !important;
-    height: 22px !important;
-    color: #64748b !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-    text-align: center !important;
-}
+for(
+const[
+f,
+id,
+sid
+]of defs
+){
 
-/* Desktop: panel ไม่ใหญ่เกินจำเป็น */
+const s=
+stats(
+d,
+f
+);
 
-@media (min-width: 901px) {
+if($(id)){
 
-#historyRangePanel {
-    width: 620px !important;
-    min-width: 620px !important;
-}
+$(id).textContent=
+s.avg==null
+?"--"
+:fmt(s.avg);
 
 }
 
-/* =========================================================
-   EXPORT MODAL
-   ========================================================= */
+if($(sid)){
 
-body.export-modal-open {
-    overflow: hidden;
-}
+$(sid).textContent=
+s.avg==null
+?"● ไม่มีข้อมูล"
+:`● เฉลี่ย ${rangeLabel()}`;
 
-.export-modal.active {
-    display: flex;
 }
 
-.export-modal-dialog {
-    position: relative;
-    z-index: 1;
-    width: min(1120px, calc(100vw - 36px));
-    max-height: calc(100vh - 36px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 20px;
-    background: linear-gradient(
-            145deg,
-            rgba(7, 24, 39, 0.995),
-            rgba(7, 22, 36, 0.995)
-        );
-    box-shadow: 0 35px 100px rgba(0, 0, 0, 0.62),
-        inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    color: #eaf2f8;
 }
 
-/* -------------------------
-   Header
-   ------------------------- */
-
-.export-modal-header {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 20px;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.72);
 }
 
-.export-modal-title-wrap {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+function drawCharts(){
 
-.export-modal-icon {
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(34, 211, 238, 0.18);
-    border-radius: 12px;
-    background: rgba(34, 211, 238, 0.08);
-    font-size: 18px;
-}
+const arr=
+selectedRecords()
+.filter(
+r=>
+parseDate(
+r.timestamp
+)&&
+Number.isFinite(
+Number(
+r[metric]
+)
+)
+)
+.sort(
+(a,b)=>
+parseDate(
+a.timestamp
+)-
+parseDate(
+b.timestamp
+)
+);
 
-.export-modal-title {
-    margin: 0;
-    color: #ffffff;
-    font-size: 20px;
-    font-weight: 900;
-}
+const s=
+stats(
+arr,
+metric
+);
 
-.export-modal-subtitle {
-    margin: 3px 0 0;
-    color: #64748b;
-    font-size: 11px;
-}
+if(
+$("trendAvg")
+){
 
-.export-modal-close {
-    flex: 0 0 38px;
-    width: 38px;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid rgba(71, 85, 105, 0.55);
-    border-radius: 10px;
-    background: rgba(15, 35, 56, 0.78);
-    color: #94a3b8;
-    font-family: inherit;
-    font-size: 23px;
-    line-height: 1;
-    cursor: pointer;
-    transition: background 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease;
-}
+$("trendAvg").textContent=
+s.avg==null
+?"--"
+:fmt(s.avg);
 
-.export-modal-close:hover {
-    color: #ffffff;
-    background: rgba(30, 41, 59, 0.96);
-    border-color: rgba(148, 163, 184, 0.35);
 }
 
-/* -------------------------
-   Body
-   ------------------------- */
+if(
+$("trendMax")
+){
 
-.export-modal-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
-    padding: 18px 20px;
-    scrollbar-width: thin;
-    scrollbar-color: #1e4b66 transparent;
-}
+$("trendMax").textContent=
+s.max==null
+?"--"
+:fmt(s.max);
 
-.export-modal-body::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
 }
 
-.export-modal-body::-webkit-scrollbar-thumb {
-    background: #1e4b66;
-    border-radius: 999px;
-}
+if(
+$("trendMin")
+){
 
-/* -------------------------
-   Date range
-   ------------------------- */
+$("trendMin").textContent=
+s.min==null
+?"--"
+:fmt(s.min);
 
-.export-date-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr)
-        28px
-        minmax(0, 1fr);
-    align-items: end;
-    gap: 10px;
 }
 
-.export-field {
-    display: block;
-    min-width: 0;
-}
+if(
+$("trendLast")
+){
 
-.export-field > span {
-    display: block;
-    margin-bottom: 7px;
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 600;
-}
+$("trendLast").textContent=
+s.last==null
+?"--"
+:fmt(s.last);
 
-.export-field input[type="date"] {
-    width: 100%;
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid rgba(71, 85, 105, 0.82);
-    border-radius: 11px;
-    outline: 0;
-    background: #102338;
-    color: #e2e8f0;
-    font-family: inherit;
-    font-size: 13px;
-    color-scheme: dark;
-    transition: border-color 0.15s ease,
-        box-shadow 0.15s ease;
 }
 
-.export-field input[type="date"]:focus {
-    border-color: rgba(34, 211, 238, 0.58);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
-}
+if(
+$("selectedMetricLabel")
+){
 
-/* -------------------------
-   Summary
-   ------------------------- */
+$("selectedMetricLabel").textContent=
+metricLabel();
 
-.export-summary-row {
-    display: flex;
-    align-items: stretch;
-    gap: 12px;
-    margin-top: 16px;
 }
 
-.export-count-card {
-    flex: 0 0 150px;
-    padding: 14px;
-    border: 1px solid rgba(34, 211, 238, 0.13);
-    border-radius: 13px;
-    background: rgba(34, 211, 238, 0.055);
-}
+if(!arr.length){
 
-.export-count-label,
-.export-count-unit {
-    color: #64748b;
-    font-size: 10px;
-}
+if(
+$("trend")
+){
 
-.export-count-value {
-    display: block;
-    margin: 5px 0 2px;
-    color: #22d3ee;
-    font-size: 26px;
-    line-height: 1;
-}
+$("trend").textContent=
+"ไม่มีข้อมูลในช่วงเวลาที่เลือก";
 
-.export-summary-note {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 12px 14px;
-    border-radius: 13px;
-    background: rgba(15, 35, 56, 0.36);
-    color: #94a3b8;
-    font-size: 11px;
-    line-height: 1.6;
 }
 
-/* -------------------------
-   Preview title
-   ------------------------- */
+historyChart?.destroy();
 
-.export-preview-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 18px;
-    margin-bottom: 8px;
-    color: #e2e8f0;
-    font-size: 12px;
-}
+historyChart=null;
 
-.export-preview-note {
-    margin-top: 3px;
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 400;
-}
+forecastChart?.destroy();
 
-.export-loading {
-    color: #67e8f9;
-    font-size: 11px;
-}
+forecastChart=null;
 
-.export-loading.hidden {
-    display: none;
-}
+if(
+$("forecastMessage")
+){
 
-/* -------------------------
-   Preview table
-   ------------------------- */
+$("forecastMessage").textContent=
+"ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
 
-.export-table-wrap {
-    width: 100%;
-    max-height: 330px;
-    overflow: auto;
-    border: 1px solid rgba(51, 65, 85, 0.76);
-    border-radius: 12px;
-    background: rgba(2, 12, 23, 0.22);
-    scrollbar-width: thin;
-    scrollbar-color: #31546c transparent;
 }
 
-.export-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #10273d;
-}
+return;
 
-.export-empty-cell {
-    height: 110px;
-    color: #64748b !important;
-    text-align: center !important;
 }
 
-.export-error {
-    margin-top: 10px;
-    padding: 10px 12px;
-    border: 1px solid rgba(248, 113, 113, 0.20);
-    border-radius: 10px;
-    background: rgba(239, 68, 68, 0.06);
-    color: #fca5a5;
-    font-size: 11px;
+const labels=
+arr.map(
+x=>
+parseDate(
+x.timestamp
+)
+.toLocaleString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok",
+day:
+"2-digit",
+month:
+"2-digit",
+hour:
+"2-digit",
+minute:
+"2-digit"
 }
+)
+);
 
-.export-error.hidden {
-    display: none;
-}
+const values=
+arr.map(
+x=>
+Number(
+x[metric]
+)
+);
 
-/* -------------------------
-   Footer
-   ------------------------- */
+if(
+$("trend")
+){
 
-.export-modal-footer {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 14px 20px;
-    border-top: 1px solid rgba(51, 65, 85, 0.72);
-    background: rgba(2, 8, 18, 0.20);
-}
+const diff=
+values.at(-1)-
+values[0];
 
-.export-cancel-button,
-.export-excel-button {
-    min-height: 40px;
-    padding: 0 16px;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform 0.15s ease,
-        background 0.15s ease,
-        border-color 0.15s ease,
-        opacity 0.15s ease;
-}
+const pct=
+values[0]
+?diff/
+Math.abs(
+values[0]
+)*
+100
+:0;
 
-.export-cancel-button {
-    border: 1px solid rgba(71, 85, 105, 0.82);
-    background: #102338;
-    color: #cbd5e1;
-}
+$("trend").textContent=
+Math.abs(pct)<1
+?"→ คงที่"
+:diff>0
+?"↑ เพิ่มขึ้น"
+:"↓ ลดลง";
 
-.export-cancel-button:hover {
-    background: #172d44;
 }
 
-.export-excel-button {
-    border: 1px solid rgba(34, 211, 238, 0.30);
-    background: linear-gradient(
-            135deg,
-            #0891b2,
-            #06b6d4
-        );
-    color: #ffffff;
-    box-shadow: 0 10px 24px rgba(6, 182, 212, 0.13);
-}
+historyChart?.destroy();
 
-.export-excel-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-    background: linear-gradient(
-            135deg,
-            #0e9fbe,
-            #12c3df
-        );
-}
+historyChart=
+new Chart(
+$("historyChart"),
+{
 
-.export-excel-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.42;
-    box-shadow: none;
-}
+type:
+"line",
 
-/* =========================================================
-   EXPORT RESPONSIVE
-   ========================================================= */
+data:{
+labels,
 
-@media (max-width: 760px) {
+datasets:[
+{
 
-.export-modal {
-    padding: 10px;
-}
+label:
+metricLabel(),
 
-.export-modal-dialog {
-    width: calc(100vw - 20px);
-    max-height: calc(100vh - 20px);
-    border-radius: 16px;
-}
+data:
+values,
 
-.export-modal-header,
-    .export-modal-body,
-.export-modal-footer {
-    padding-left: 14px;
-    padding-right: 14px;
-}
+borderColor:
+"#22d3ee",
+
+backgroundColor:
+"rgba(34,211,238,.08)",
 
-.export-date-grid {
-    grid-template-columns: 1fr;
+fill:
+true,
+
+tension:
+.35,
+
+pointRadius:
+values.length>50
+?0
+:3,
+
+borderWidth:
+2
+
 }
+]
+
+},
+
+options:{
 
-.export-date-arrow {
-    height: auto;
-    transform: rotate(90deg);
+responsive:
+true,
+
+plugins:{
+legend:{
+display:false
 }
+},
+
+scales:{
 
-.export-summary-row {
-    flex-direction: column;
+x:{
+grid:{
+display:false
 }
+},
 
-.export-count-card {
-    flex-basis: auto;
+y:{
+grid:{
+color:
+"rgba(148,163,184,.08)"
 }
+}
 
-.export-modal-footer {
-    display: grid;
-    grid-template-columns: 1fr 1.35fr;
 }
 
-.export-cancel-button,
-.export-excel-button {
-    width: 100%;
 }
 
 }
+);
 
-/* =========================================================
-   HISTORICAL TOOLBAR CONTROLS
-   PM2.5 / DATE RANGE / EXPORT
-   ========================================================= */
+drawForecast(
+arr
+);
 
-.history-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
 }
 
-/* ---------------------------------------------------------
-   ตัวเลือกตัวแปร เช่น PM2.5
-   --------------------------------------------------------- */
 
-.history-metric-select {
-    height: 42px;
-    min-width: 110px;
-    padding: 0 36px 0 14px;
-    border: 1px solid rgba(90, 132, 165, 0.46);
-    border-radius: 12px;
-    background-color: #10263b;
-    color: #eaf6ff;
-    color-scheme: dark;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    transition: background-color 0.18s ease,
-        border-color 0.18s ease,
-        box-shadow 0.18s ease,
-        transform 0.15s ease;
-}
+// =====================================================
+// FORECAST
+// =====================================================
 
-.history-metric-select:hover {
-    background-color: #143049;
-    border-color: rgba(34, 211, 238, 0.48);
-}
+function linear(points){
 
-.history-metric-select:focus {
-    border-color: #22d3ee;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+const n=
+points.length;
+
+if(n<2){
+return null;
 }
 
-/* ทำ dropdown option ให้อยู่ในธีมเข้ม */
+let sx=0;
+let sy=0;
+let sxy=0;
+let sxx=0;
 
-.history-metric-select option {
-    background: #102338;
-    color: #eaf2f8;
-}
+for(
+const p of
+points
+){
 
-/* ---------------------------------------------------------
-   ปุ่มร่วมของ Range + Export
-   --------------------------------------------------------- */
+sx+=p.x;
+sy+=p.y;
+sxy+=p.x*p.y;
+sxx+=p.x*p.x;
 
-.history-toolbar-button {
-    height: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 14px;
-    border: 1px solid rgba(90, 132, 165, 0.46);
-    border-radius: 12px;
-    background: #10263b;
-    color: #eaf6ff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-    outline: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
-    transition: background 0.18s ease,
-        border-color 0.18s ease,
-        box-shadow 0.18s ease,
-        transform 0.15s ease;
 }
 
-.history-toolbar-button:hover {
-    background: #143049;
-    border-color: rgba(34, 211, 238, 0.48);
-}
+const den=
+n*sxx-
+sx*sx;
 
-.history-toolbar-button:active {
-    transform: translateY(1px);
+if(!den){
+return null;
 }
 
-/* ---------------------------------------------------------
-   Icon + Arrow
-   --------------------------------------------------------- */
+const slope=
+(
+n*sxy-
+sx*sy
+)/
+den;
 
-.history-control-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #67e8f9;
-    font-size: 13px;
-    line-height: 1;
-}
+return{
 
-.history-control-arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #8aa6bc;
-    font-size: 12px;
-    line-height: 1;
-    transition: transform 0.18s ease,
-        color 0.18s ease;
-}
+slope,
 
-/* ---------------------------------------------------------
-   ปุ่มเลือกช่วงเวลา
-   --------------------------------------------------------- */
+intercept:
+(
+sy-
+slope*sx
+)/
+n
 
-#historyRangeButton.history-toolbar-button {
-    min-width: 132px;
-    min-height: 42px;
-    border: 1px solid rgba(90, 132, 165, 0.46);
-    background: #10263b;
-    color: #eaf6ff;
-    font-size: 13px;
-    font-weight: 700;
-}
+};
 
-#historyRangeButton.history-toolbar-button:hover {
-    background: #143049;
-    border-color: rgba(34, 211, 238, 0.48);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.055);
 }
 
-#historyRangeButton.history-toolbar-button[aria-expanded="true"] {
-    background: #143149;
-    border-color: #22d3ee;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08),
-        0 12px 30px rgba(0, 0, 0, 0.16);
-}
+function updateForecastToggle(){
 
-#historyRangeButton[aria-expanded="true"] .history-control-arrow {
-    color: #67e8f9;
-    transform: rotate(180deg);
-}
+const b=
+$("forecastToggle");
 
-/* ---------------------------------------------------------
-   ปุ่มส่งออก
-   --------------------------------------------------------- */
+const l=
+$("forecastToggleLabel");
 
-#exportButton.history-export-button {
-    min-width: 106px;
-    border-color: rgba(34, 211, 238, 0.40);
-    background: linear-gradient(
-            180deg,
-            #12324a 0%,
-            #10283e 100%
-        );
-    color: #ecfeff;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
-}
+const s=
+$("forecastToggleState");
 
-#exportButton.history-export-button:hover {
-    background: linear-gradient(
-            180deg,
-            #174159 0%,
-            #123149 100%
-        );
-    border-color: #22d3ee;
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.075),
-        0 7px 18px rgba(0, 0, 0, 0.16);
+if(
+!b||
+!l
+){
+return;
 }
 
-#exportButton.history-export-button:active {
-    transform: translateY(1px);
-}
+b.classList.toggle(
+"is-on",
+forecastVisible
+);
 
-/* ---------------------------------------------------------
-   Responsive
-   --------------------------------------------------------- */
+b.classList.toggle(
+"is-off",
+!forecastVisible
+);
 
-@media (max-width: 720px) {
+l.textContent=
+forecastVisible
+?"เปิดการคาดการณ์"
+:"ซ่อนการคาดการณ์";
 
-.history-toolbar {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 7px;
-}
+if(s){
 
-.history-metric-select,
-    .history-toolbar-button,
-#historyRangeButton.history-toolbar-button {
-    height: 40px;
-    min-height: 40px;
-    font-size: 12px;
-}
+s.textContent=
+forecastVisible
+?"ON"
+:"OFF";
 
-.history-metric-select {
-    min-width: 100px;
 }
 
-#historyRangeButton.history-toolbar-button {
-    min-width: 122px;
-}
+if(
+forecastChart
+?.data
+?.datasets
+){
 
-#exportButton.history-export-button {
-    min-width: 98px;
-}
+for(
+let i=1;
+i<
+forecastChart
+.data
+.datasets
+.length;
+i++
+){
 
+forecastChart
+.setDatasetVisibility(
+i,
+forecastVisible
+);
+
 }
 
-@media (max-width: 460px) {
+forecastChart.update();
 
-.history-toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr)
-            minmax(0, 1.25fr);
-    width: 100%;
 }
 
-.history-metric-select,
-#historyRangeButton.history-toolbar-button {
-    width: 100%;
 }
 
-#exportButton.history-export-button {
-    grid-column: 1 / -1;
-    width: 100%;
-}
+function drawForecast(arr){
 
-}
+forecastChart?.destroy();
 
-/* Calendar header */
+forecastChart=null;
 
-#historyRangePanel .mb-4 {
-    margin-bottom: 10px !important;
-}
+const valid=
+arr.filter(
+r=>
+parseDate(
+r.timestamp
+)&&
+Number.isFinite(
+Number(
+r[metric]
+)
+)
+);
 
-/* ข้อความช่วยใต้ปฏิทิน */
+const lastDate=
+parseDate(
+valid.at(-1)
+?.timestamp
+);
 
-#rangeCalendarGrid + div {
-    margin-top: 7px !important;
-    color: #64748b !important;
-    font-size: 9px !important;
-}
+const recent=
+lastDate
+?valid.filter(
+r=>
+parseDate(
+r.timestamp
+)>=
+new Date(
+lastDate-
+3600000
+)
+)
+:[];
 
-/* Quick range title */
+if(
+recent.length<10
+){
 
-#historyRangePanel > .grid > div:last-child > div:first-child {
-    padding: 0 2px 6px !important;
-    color: #64748b !important;
-    font-size: 9px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.08em !important;
-}
+if(
+$("forecastMessage")
+){
 
-/* ให้ selected quick range เด่นชัด */
+$("forecastMessage").textContent=
+"ข้อมูลใน 60 นาทีล่าสุดยังไม่พอสำหรับคาดการณ์";
 
-.quick-range-option.active,
-.quick-range-option[aria-current="true"] {
-    background: rgba(34, 211, 238, 0.12) !important;
-    border-color: rgba(34, 211, 238, 0.28) !important;
-    color: #67e8f9 !important;
 }
+
+if(
+$("forecastBadge")
+){
 
-#historyRangePanel > .border-t:last-child > div:first-child {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-    color: #94a3b8 !important;
-    font-size: 13px !important;
+$("forecastBadge").textContent=
+`${metricLabel()} • รอข้อมูล`;
+
 }
-#historyRangePanel > .border-t:last-child > div:last-child {
-    display: flex !important;
-    align-items: center !important;
-    gap: 7px !important;
+
+return;
+
 }
 
-/* Mobile */
+const first=
+parseDate(
+recent[0].timestamp
+);
 
-@media (max-width: 720px) {
+const pts=
+recent.map(
+r=>({
 
-#historyRangePanel > .border-t:last-child > div:first-child {
-    justify-content: center !important;
-}
+x:
+(
+parseDate(
+r.timestamp
+)-
+first
+)/
+60000,
 
-}
+y:
+Number(
+r[metric]
+)
 
-/* =========================================================
-   FORECAST DISPLAY TOGGLE
-   ========================================================= */
+})
+);
 
-.forecast-display-panel {
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 11px 12px;
-    border: 1px solid rgba(71, 85, 105, 0.34);
-    border-radius: 14px;
-    background: linear-gradient(
-            145deg,
-            rgba(8, 24, 39, 0.62),
-            rgba(7, 29, 45, 0.42)
-        );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-}
+const m=
+linear(pts);
 
-.forecast-display-copy {
-    min-width: 0;
+if(!m){
+return;
 }
 
-.forecast-display-title {
-    color: #dbeafe;
-    font-size: 11px;
-    font-weight: 800;
-}
+const last=
+pts.at(-1);
 
-.forecast-display-subtitle {
-    margin-top: 2px;
-    color: #64748b;
-    font-size: 9px;
-    line-height: 1.4;
-}
+const current=
+last.y;
 
-.forecast-display-controls {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    flex-shrink: 0;
-}
+const pred=
+Math.max(
+0,
+m.intercept+
+m.slope*
+(
+last.x+
+30
+)
+);
 
-.forecast-actual-legend {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 11px;
-    border: 1px solid rgba(34, 211, 238, 0.14);
-    border-radius: 11px;
-    background: rgba(34, 211, 238, 0.045);
-}
+const dir=
+Math.abs(
+pred-
+current
+)<1
+?"→ ค่อนข้างคงที่"
+:pred>current
+?"↗ มีแนวโน้มเพิ่มขึ้น"
+:"↘ มีแนวโน้มลดลง";
 
-.forecast-actual-line {
-    width: 28px;
-    height: 3px;
-    flex: 0 0 28px;
-    border-radius: 999px;
-    background: #22d3ee;
-    box-shadow: 0 0 10px rgba(34, 211, 238, 0.24);
-}
+if(
+$("forecastMessage")
+){
 
-.forecast-actual-label {
-    color: #dbeafe;
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
-}
+$("forecastMessage").innerHTML=
+`<b class="text-cyan-300">${metricLabel()} (${metricUnit()})</b>
+<div class="mt-2">
+ค่าปัจจุบัน <b>${fmt(current)}</b>
+• +30 นาทีประมาณ <b>${fmt(pred)}</b>
+• ${dir}
+</div>
+<div class="text-[10px] text-slate-500 mt-2">
+Forecast ใช้ Linear Regression
+• ไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
+</div>`;
 
-.forecast-actual-note {
-    margin-top: 1px;
-    color: #64748b;
-    font-size: 8px;
-    white-space: nowrap;
 }
 
-.forecast-toggle-wrap {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 6px 8px 6px 11px;
-    border: 1px solid rgba(52, 211, 153, 0.14);
-    border-radius: 11px;
-    background: rgba(52, 211, 153, 0.045);
-    transition: border-color 0.18s ease,
-        background 0.18s ease,
-        box-shadow 0.18s ease;
-}
+if(
+$("forecastBadge")
+){
 
-.forecast-toggle-copy {
-    min-width: 94px;
-}
+$("forecastBadge").textContent=
+`${metricLabel()} • +30 นาที`;
 
-.forecast-toggle-name {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    color: #d1fae5;
-    font-size: 10px;
-    font-weight: 800;
-    white-space: nowrap;
 }
 
-.forecast-dash-line {
-    width: 25px;
-    height: 0;
-    flex: 0 0 25px;
-    border-top: 2px dashed #34d399;
-}
+const actual=
+recent.slice(-12);
 
-.forecast-toggle-status {
-    margin-top: 2px;
-    color: #64748b;
-    font-size: 8px;
-    white-space: nowrap;
-}
+const labels=
+actual.map(
+r=>
+thaiTime(
+r.timestamp
+)
+);
 
-.forecast-switch {
-    min-width: 76px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 7px;
-    padding: 4px 8px 4px 5px;
-    border: 1px solid rgba(71, 85, 105, 0.58);
-    border-radius: 999px;
-    background: #102338;
-    color: #64748b;
-    font-family: inherit;
-    cursor: pointer;
-    outline: none;
-    transition: background 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.15s ease;
-}
+const vals=
+actual.map(
+r=>
+Number(
+r[metric]
+)
+);
 
-.forecast-switch:hover {
-    transform: translateY(-1px);
-}
+const future=[
+"+10 นาที",
+"+20 นาที",
+"+30 นาที"
+];
 
-.forecast-switch:focus-visible {
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
-}
+const fp=[
+10,
+20,
+30
+]
+.map(
+min=>
+Math.max(
+0,
+m.intercept+
+m.slope*
+(
+last.x+
+min
+)
+)
+);
 
-.forecast-switch-track {
-    position: relative;
-    width: 34px;
-    height: 20px;
-    flex: 0 0 34px;
-    border-radius: 999px;
-    background: #253a4d;
-    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.09);
-    transition: background 0.22s ease,
-        box-shadow 0.22s ease;
-}
+const nulls=
+new Array(
+Math.max(
+0,
+vals.length-
+1
+)
+)
+.fill(null);
 
-.forecast-switch-thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 14px;
-    height: 14px;
-    border-radius: 999px;
-    background: #94a3b8;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    transition: transform 0.22s ease,
-        background 0.22s ease,
-        box-shadow 0.22s ease;
-}
+forecastChart=
+new Chart(
+$("forecastChart"),
+{
 
-.forecast-switch-state {
-    min-width: 21px;
-    color: currentColor;
-    font-size: 9px;
-    font-weight: 900;
-    text-align: center;
-    letter-spacing: 0.04em;
-}
+type:
+"line",
 
-/* ON */
+data:{
 
-.forecast-switch.is-on {
-    border-color: rgba(52, 211, 153, 0.34);
-    background: rgba(52, 211, 153, 0.10);
-    color: #6ee7b7;
-    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.035),
-        0 6px 18px rgba(16, 185, 129, 0.08);
-}
+labels:[
+...labels,
+...future
+],
 
-.forecast-switch.is-on .forecast-switch-track {
-    background: linear-gradient(
-            90deg,
-            #0f766e,
-            #059669
-        );
-    box-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.16),
-        0 0 12px rgba(52, 211, 153, 0.15);
-}
+datasets:[
 
-.forecast-switch.is-on .forecast-switch-thumb {
-    transform: translateX(14px);
-    background: #ecfdf5;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30),
-        0 0 8px rgba(236, 253, 245, 0.22);
-}
+{
 
-/* OFF */
+label:
+"ข้อมูลจริง",
 
-.forecast-switch.is-off {
-    border-color: rgba(71, 85, 105, 0.50);
-    background: rgba(15, 35, 56, 0.74);
-    color: #64748b;
-    box-shadow: none;
-}
+data:[
+...vals,
+null,
+null,
+null
+],
+
+borderColor:
+"#22d3ee",
+
+borderWidth:
+2,
+
+tension:
+.3,
+
+pointRadius:
+2
+
+},
+
+{
+
+label:
+"Forecast",
+
+data:[
+...nulls,
+vals.at(-1),
+...fp
+],
+
+borderColor:
+"#34d399",
+
+borderDash:[
+6,
+5
+],
+
+borderWidth:
+2,
 
-.forecast-switch.is-off .forecast-switch-track {
-    background: #25384a;
+pointRadius:
+3
+
 }
+
+]
+
+},
+
+options:{
+
+responsive:
+true,
 
-.forecast-switch.is-off .forecast-switch-thumb {
-    transform: translateX(0);
-    background: #94a3b8;
+plugins:{
+legend:{
+display:false
 }
+},
 
-@media (max-width: 720px) {
+scales:{
 
-.forecast-display-panel {
-    align-items: stretch;
-    flex-direction: column;
+x:{
+grid:{
+display:false
 }
+},
 
-.forecast-display-controls {
-    width: 100%;
-    justify-content: space-between;
+y:{
+grid:{
+color:
+"rgba(148,163,184,.08)"
 }
+}
 
-.forecast-actual-legend,
-.forecast-toggle-wrap {
-    flex: 1;
 }
 
-.forecast-toggle-wrap {
-    justify-content: space-between;
 }
 
 }
+);
 
-@media (max-width: 480px) {
+updateForecastToggle();
 
-.forecast-display-controls {
-    align-items: stretch;
-    flex-direction: column;
 }
 
-.forecast-actual-legend,
-.forecast-toggle-wrap {
-    width: 100%;
-}
 
-}
+// =====================================================
+// RANGE
+// =====================================================
 
-/* =========================================================
-   PRE-AI SYSTEM HEALTH POLISH
-   ========================================================= */
+function setRange(k){
 
-#gatewayStatusTop {
-    letter-spacing: .03em;
-}
+const c=
+RANGE_CONFIG[k];
 
-#nodesActiveTop {
-    white-space: nowrap;
+if(!c){
+return;
 }
 
-@media (max-width: 640px) {
+averageRange=
+k;
 
-#nodesActiveTop {
-    white-space: normal;
-}
+customRangeStart=
+null;
 
-}
+customRangeEnd=
+null;
 
-/* =========================================================
-   SECTION HELP / INFO SYSTEM
-   ========================================================= */
+if(
+$("historyRangeButtonLabel")
+){
 
-.section-title-with-help {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
+$("historyRangeButtonLabel").textContent=
+rangeLabel();
 
-.help-button {
-    width: 22px;
-    height: 22px;
-    flex: 0 0 22px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    border: 1px solid rgba(148,163,184,.24);
-    background: rgba(15,23,42,.72);
-    color: #94a3b8;
-    font-size: 12px;
-    font-weight: 900;
-    line-height: 1;
-    cursor: pointer;
-    transition: border-color .18s ease,
-        background .18s ease,
-        color .18s ease,
-        transform .18s ease,
-        box-shadow .18s ease;
 }
 
-.help-button:hover,
-.help-button:focus-visible,
-.help-button.is-active {
-    color: #67e8f9;
-    border-color: rgba(34,211,238,.48);
-    background: rgba(34,211,238,.10);
-    box-shadow: 0 0 0 3px
-        rgba(34,211,238,.06);
-    outline: none;
-}
+loadHistorical();
 
-.help-button:hover {
-    transform: translateY(-1px);
 }
 
-.help-popover {
-    position: fixed;
-    z-index: 9999;
-    display: none;
-    max-height: min(520px,calc(100vh - 24px));
-    overflow: auto;
-    padding: 0;
-    border: 1px solid rgba(71,85,105,.72);
-    border-radius: 16px;
-    background: rgba(7,20,34,.98);
-    box-shadow: 0 22px 60px
-        rgba(0,0,0,.38);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-}
+function applyCustomRange(){
 
-.help-popover.active {
-    display: block;
-}
+const s=
+$("customRangeStart")
+?.value;
 
-.help-popover-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid rgba(51,65,85,.72);
-    background: rgba(7,20,34,.96);
-}
+const e=
+$("customRangeEnd")
+?.value;
 
-.help-popover-eyebrow {
-    margin-bottom: 3px;
-    color: #64748b;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: .13em;
+if(
+!s||
+!e
+){
+return;
 }
 
-.help-popover-header h3 {
-    margin: 0;
-    color: #f8fafc;
-    font-size: 15px;
-    font-weight: 900;
-}
+const a=
+new Date(s);
 
-.help-popover-close {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(71,85,105,.72);
-    border-radius: 9px;
-    background: rgba(15,23,42,.72);
-    color: #94a3b8;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    transition: .18s ease;
-}
+const b=
+new Date(e);
 
-.help-popover-close:hover {
-    color: #fff;
-    border-color: rgba(148,163,184,.45);
-    background: rgba(30,41,59,.88);
-}
+if(
+!Number.isFinite(
+a.getTime()
+)||
+!Number.isFinite(
+b.getTime()
+)||
+a>=b
+){
 
-.help-popover-body {
-    padding: 15px 16px 17px;
-    color: #cbd5e1;
-    font-size: 12px;
-    line-height: 1.75;
-}
+return;
 
-.help-popover-body p {
-    margin: 0 0 11px;
 }
+
+averageRange=
+"custom";
 
-.help-popover-body p:last-child {
-    margin-bottom: 0;
+customRangeStart=
+a;
+
+customRangeEnd=
+b;
+
+if(
+$("historyRangeButtonLabel")
+){
+
+$("historyRangeButtonLabel").textContent=
+rangeLabel();
+
 }
+
+$("historyRangePanel")
+?.classList
+.add(
+"hidden"
+);
 
-.help-popover-body ul {
-    margin: 8px 0 12px;
-    padding-left: 18px;
+loadHistorical();
+
 }
+
+
+// =====================================================
+// EXPORT
+// =====================================================
+
+function exportBounds(){
+
+const s=
+$("exportStartDate")
+?.value;
 
-.help-popover-body li {
-    margin: 4px 0;
+const e=
+$("exportEndDate")
+?.value;
+
+if(
+!s||
+!e
+){
+return null;
 }
+
+return{
+
+start:
+new Date(
+s+
+"T00:00:00+07:00"
+),
+
+end:
+new Date(
+new Date(
+e+
+"T00:00:00+07:00"
+)
+.getTime()+
+86400000
+)
+
+};
 
-.help-popover-body b {
-    color: #e2e8f0;
 }
 
-.help-muted {
-    color: #64748b !important;
-    font-size: 11px;
+async function refreshExport(){
+
+const body=
+$("exportPreviewBody");
+
+const b=
+exportBounds();
+
+if(
+!body||
+!b
+){
+return;
 }
+
+exportRows=[];
+
+let offset=0;
+
+while(true){
 
-.help-info-box {
-    margin: 12px 0;
-    padding: 12px;
-    border: 1px solid rgba(51,65,85,.75);
-    border-radius: 12px;
-    background: rgba(15,23,42,.52);
+const j=
+await fetchJson(
+`${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
+);
+
+const rows=
+(j.data||[])
+.map(
+normalize
+);
+
+exportRows.push(
+...rows
+);
+
+if(
+!j.has_more||
+!rows.length
+){
+break;
 }
 
-.help-info-grid {
-    display: grid;
-    grid-template-columns: minmax(0,1fr)
-        auto;
-    gap: 7px 14px;
-    margin-top: 9px;
+offset+=
+rows.length;
+
 }
+
+if(
+$("exportDataCount")
+){
 
-.help-info-grid span {
-    color: #94a3b8;
+$("exportDataCount").textContent=
+String(
+exportRows.length
+);
+
 }
+
+body.innerHTML=
+exportRows.length
+?exportRows
+.slice(
+0,
+50
+)
+.map(
+r=>
+`<tr>
+<td>${esc(parseDate(r.timestamp)?.toLocaleString("th-TH")||"")}</td>
+<td>${esc(r.device_id)}</td>
+<td>${fmt(r.pm1)}</td>
+<td>${fmt(r.pm25)}</td>
+<td>${fmt(r.pm10)}</td>
+<td>${fmt(r.temperature)}</td>
+<td>${fmt(r.humidity)}</td>
+<td>${fmt(r.light)}</td>
+</tr>`
+)
+.join("")
+:'<tr><td colspan="8" class="export-empty-cell">ไม่พบข้อมูล</td></tr>';
 
-.help-status-list {
-    display: grid;
-    gap: 8px;
-    margin: 11px 0 13px;
+if(
+$("exportExcelButton")
+){
+
+$("exportExcelButton").disabled=
+!exportRows.length;
+
 }
 
-.help-status-list > div {
-    display: grid;
-    grid-template-columns: 10px 58px
-        minmax(0,1fr);
-    align-items: center;
-    gap: 8px;
-    padding: 8px 9px;
-    border: 1px solid rgba(51,65,85,.60);
-    border-radius: 10px;
-    background: rgba(15,23,42,.40);
 }
+
+function openExport(){
 
-.help-status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
+const w=
+rangeWindow();
+
+const p=
+d=>{
+
+const x=
+new Date(d);
+
+const z=
+n=>
+String(n)
+.padStart(
+2,
+"0"
+);
+
+return`${x.getFullYear()}-${z(x.getMonth()+1)}-${z(x.getDate())}`;
+
+};
+
+if(
+$("exportStartDate")
+){
+
+$("exportStartDate").value=
+p(
+w?.start||
+Date.now()-
+86400000
+);
+
 }
 
-.help-status-dot.online {
-    background: #34d399;
+if(
+$("exportEndDate")
+){
+
+$("exportEndDate").value=
+p(
+w?.end||
+Date.now()
+);
+
 }
+
+$("exportModal")
+?.classList
+.add(
+"active"
+);
 
-.help-status-dot.sleep {
-    background: #facc15;
+refreshExport();
+
 }
+
+function closeExport(){
 
-.help-status-dot.offline {
-    background: #f87171;
+$("exportModal")
+?.classList
+.remove(
+"active"
+);
+
 }
 
-/* =========================================================
-   CURRENT AIR QUALITY + ENVIRONMENT
-   ========================================================= */
+function downloadExcel(){
 
-.current-environment-card {
-    min-width: 0;
+if(
+!exportRows.length||
+typeof XLSX===
+"undefined"
+){
+return;
 }
+
+const data=
+exportRows.map(
+r=>({
+
+"วันที่ / เวลา":
+parseDate(
+r.timestamp
+)
+?.toLocaleString(
+"th-TH"
+)||"",
+
+"อุปกรณ์":
+r.device_id,
+
+"PM1.0 (µg/m³)":
+r.pm1??"",
+
+"PM2.5 (µg/m³)":
+r.pm25??"",
+
+"PM10 (µg/m³)":
+r.pm10??"",
+
+"อุณหภูมิ (°C)":
+r.temperature??"",
+
+"ความชื้น (%)":
+r.humidity??"",
 
-.current-environment-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
+"แสง (lux)":
+r.light??""
+
+})
+);
+
+const ws=
+XLSX.utils
+.json_to_sheet(
+data
+);
+
+const wb=
+XLSX.utils
+.book_new();
+
+XLSX.utils
+.book_append_sheet(
+wb,
+ws,
+"PM2.5 Data"
+);
+
+XLSX.writeFile(
+wb,
+"PM25_export.xlsx"
+);
+
 }
+
+
+// =====================================================
+// HELP
+// =====================================================
+
+const HELP_CONTENT={
+
+monitoring:[
+"Monitoring Nodes",
+"แสดงสถานะและค่าตรวจวัดล่าสุดของอุปกรณ์ทั้ง 3 จุด ONLINE/SLEEP ที่ไม่มีข้อมูลใหม่เกิน 6 นาทีจะแสดง OFFLINE"
+],
+
+smartSummary:[
+"Smart Summary",
+"สรุปสถานการณ์อัตโนมัติแบบ Rule-based"
+],
 
-.current-environment-controls {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    flex: 0 0 auto;
+currentAir:[
+"คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน",
+"ใช้ข้อมูลล่าสุดจากจุดที่ ONLINE/SLEEP และยังไม่เกิน 6 นาที"
+],
+
+historical:[
+"Historical Data & Trend",
+"ดูข้อมูลย้อนหลัง ค่าเฉลี่ย สูงสุด ต่ำสุด แนวโน้ม และส่งออก Excel"
+],
+
+forecast:[
+"Forecast",
+"คาดการณ์ระยะสั้นด้วย Linear Regression ไม่ใช่ค่าที่วัดจริงในอนาคต"
+],
+
+ai:[
+"AI วิเคราะห์สถานการณ์",
+"พื้นที่สำหรับ AI วิเคราะห์ข้อมูลหลายส่วนร่วมกัน"
+]
+
+};
+
+function closeHelp(){
+
+const p=
+$("helpPopover");
+
+p?.classList
+.remove(
+"active"
+);
+
+activeHelpButton=
+null;
+
 }
+
+function bindHelp(){
 
-.current-metric-label {
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
+document
+.querySelectorAll(
+".help-button"
+)
+.forEach(
+b=>
+b.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const x=
+HELP_CONTENT[
+b.dataset.help
+];
+
+if(!x){
+return;
 }
+
+activeHelpButton=
+b;
+
+if(
+$("helpPopoverTitle")
+){
 
-.current-metric-select {
-    min-width: 125px;
-    height: 40px;
-    padding: 0 34px 0 13px;
-    border: 1px solid rgba(71,85,105,.72);
-    border-radius: 11px;
-    outline: none;
-    color: #f8fafc;
-    background-color: rgba(15,35,54,.86);
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: border-color .18s ease,background .18s ease,box-shadow .18s ease;
+$("helpPopoverTitle").textContent=
+x[0];
+
 }
+
+if(
+$("helpPopoverBody")
+){
+
+$("helpPopoverBody").innerHTML=
+`<p>${x[1]}</p>`;
 
-.current-metric-select:hover {
-    border-color: rgba(34,211,238,.38);
-    background-color: rgba(15,39,59,.96);
 }
+
+const p=
+$("helpPopover");
+
+if(p){
+
+p.classList.add(
+"active"
+);
 
-.current-metric-select:focus {
-    border-color: rgba(34,211,238,.68);
-    box-shadow: 0 0 0 3px rgba(34,211,238,.08);
+const r=
+b.getBoundingClientRect();
+
+p.style.left=
+Math.max(
+12,
+Math.min(
+r.left,
+window.innerWidth-
+400
+)
+)+"px";
+
+p.style.top=
+r.bottom+
+10+
+"px";
+
 }
 
-.current-metric-select option {
-    color: #e2e8f0;
-    background: #0b1c2c;
 }
+)
+);
+
+$("helpPopoverClose")
+?.addEventListener(
+"click",
+closeHelp
+);
+
+document
+.addEventListener(
+"click",
+closeHelp
+);
 
-.current-quality-badge {
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 14px;
-    border: 1px solid rgba(71,85,105,.65);
-    border-radius: 999px;
-    color: #cbd5e1;
-    background: rgba(15,23,42,.42);
-    font-size: 11px;
-    font-weight: 900;
-    white-space: nowrap;
-    transition: .2s ease;
 }
+
+
+// =====================================================
+// CREDIT IMAGE
+// =====================================================
+
+function openCreditImage(
+src,
+alt
+){
+
+const m=
+$("creditImageModal");
+
+const img=
+$("creditFullImage");
 
-.current-quality-normal {
-    color: #6ee7b7;
-    border-color: rgba(52,211,153,.22);
-    background: rgba(52,211,153,.07);
+if(
+!m||
+!img
+){
+return;
 }
 
-.current-quality-warning {
-    color: #fde047;
-    border-color: rgba(250,204,21,.24);
-    background: rgba(250,204,21,.07);
+img.src=
+src;
+
+img.alt=
+alt||"";
+
+if(
+$("creditImageCaption")
+){
+
+$("creditImageCaption").textContent=
+alt||"";
+
 }
+
+m.classList.add(
+"active"
+);
 
-.current-quality-critical {
-    color: #fca5a5;
-    border-color: rgba(248,113,113,.24);
-    background: rgba(248,113,113,.08);
+document.body.style.overflow=
+"hidden";
+
 }
+
+function closeCreditImage(){
+
+$("creditImageModal")
+?.classList
+.remove(
+"active"
+);
 
-.current-quality-info {
-    color: #67e8f9;
-    border-color: rgba(34,211,238,.22);
-    background: rgba(34,211,238,.07);
+document.body.style.overflow=
+"";
+
 }
+
+
+// =====================================================
+// EVENTS
+// =====================================================
 
-.current-quality-unavailable {
-    color: #cbd5e1;
-    border-color: rgba(100,116,139,.28);
-    background: rgba(51,65,85,.10);
+function bindEvents(){
+
+const cm=
+$("currentMetric");
+
+if(cm){
+
+cm.value=
+currentMetric;
+
+cm.addEventListener(
+"change",
+()=>{
+
+currentMetric=
+cm.value;
+
+updateCurrent();
+
 }
+);
 
-.current-environment-grid {
-    display: grid;
-    grid-template-columns: repeat(3,minmax(0,1fr));
-    gap: 12px;
-    margin-top: 20px;
 }
+
+$("metric")
+?.addEventListener(
+"change",
+e=>{
+
+metric=
+e.target.value;
+
+drawCharts();
 
-.current-environment-item {
-    position: relative;
-    min-width: 0;
-    min-height: 125px;
-    padding: 16px;
-    overflow: hidden;
-    border: 1px solid rgba(51,65,85,.26);
-    border-radius: 14px;
-    background: linear-gradient(145deg,rgba(4,21,35,.72),rgba(7,26,42,.46));
-    transition: transform .18s ease,border-color .18s ease,background .18s ease;
 }
+);
 
-.current-environment-item:hover {
-    transform: translateY(-1px);
-    border-color: rgba(34,211,238,.18);
-    background: linear-gradient(145deg,rgba(5,25,41,.84),rgba(7,29,46,.56));
+$("historyRangeButton")
+?.addEventListener(
+"click",
+()=>{
+
+$("historyRangePanel")
+?.classList
+.toggle(
+"hidden"
+);
+
 }
+);
 
-.current-environment-item-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+document
+.querySelectorAll(
+".quick-range-option"
+)
+.forEach(
+b=>
+b.addEventListener(
+"click",
+()=>{
+
+setRange(
+b.dataset.range
+);
+
 }
+)
+);
+
+$("historyRangeApply")
+?.addEventListener(
+"click",
+applyCustomRange
+);
 
-.current-environment-label {
-    color: #7dd3fc;
-    font-size: 11px;
-    font-weight: 700;
+$("historyRangeCancel")
+?.addEventListener(
+"click",
+()=>{
+
+$("historyRangePanel")
+?.classList
+.add(
+"hidden"
+);
+
 }
+);
+
+$("forecastToggle")
+?.addEventListener(
+"click",
+()=>{
 
-.current-environment-icon {
-    width: 25px;
-    height: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(34,211,238,.10);
-    border-radius: 8px;
-    color: #38bdf8;
-    background: rgba(34,211,238,.05);
-    font-size: 11px;
-    font-weight: 900;
+forecastVisible=
+!forecastVisible;
+
+updateForecastToggle();
+
 }
+);
+
+$("exportButton")
+?.addEventListener(
+"click",
+openExport
+);
 
-.current-environment-value {
-    display: block;
-    margin-top: 10px;
-    color: #f8fafc;
-    font-size: 23px;
-    font-weight: 900;
-    line-height: 1.2;
-    letter-spacing: -.025em;
+$("exportModalClose")
+?.addEventListener(
+"click",
+closeExport
+);
+
+$("exportCancelButton")
+?.addEventListener(
+"click",
+closeExport
+);
+
+$("exportStartDate")
+?.addEventListener(
+"change",
+refreshExport
+);
+
+$("exportEndDate")
+?.addEventListener(
+"change",
+refreshExport
+);
+
+$("exportExcelButton")
+?.addEventListener(
+"click",
+downloadExcel
+);
+
+document
+.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key===
+"Escape"
+){
+
+closeExport();
+closeHelp();
+closeCreditImage();
+
 }
 
-.current-watch-value {
-    font-size: 20px;
 }
+);
 
-.current-environment-detail {
-    margin-top: 7px;
-    color: #64748b;
-    font-size: 10px;
-    line-height: 1.5;
 }
+
+
+// =====================================================
+// LOAD INITIAL
+// =====================================================
+
+async function loadInitial(){
+
+try{
+
+const[
+l,
+h,
+m,
+a,
+s
+]=
+await Promise.all([
+
+loadLatest(),
+
+loadHistory(),
+
+loadMother(),
+
+loadAlerts()
+.catch(
+()=>[]
+),
+
+loadStandards()
+.catch(
+()=>null
+)
+
+]);
+
+apiConnectionOnline=
+true;
+
+latestNodes=
+l;
+
+records=
+h;
 
-.current-environment-footer {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-top: 13px;
-    padding-top: 11px;
-    border-top: 1px solid rgba(51,65,85,.30);
-    color: #526174;
-    font-size: 9px;
+motherStatus=
+m;
+
+alertStates=
+a;
+
+standardsData=
+s;
+
+latestRecord=
+latestNodes.at(-1)||
+null;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+renderAverages();
+
+drawCharts();
+
+}catch(e){
+
+console.error(e);
+
+apiConnectionOnline=
+false;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
 }
 
-.current-environment-footer-dot {
-    width: 5px;
-    height: 5px;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    background: #22d3ee;
-    box-shadow: 0 0 8px rgba(34,211,238,.35);
 }
+
+
+// =====================================================
+// REALTIME
+//
+// สำคัญ:
+// อ่านแค่ Latest + Mother + Alert
+// ทุก 10 วินาที
+//
+// ไม่โหลด History และ Standards ซ้ำ
+// =====================================================
+
+async function loadRealtime(){
+
+try{
 
-@media (max-width:900px) {
+const[
+l,
+m,
+a
+]=
+await Promise.all([
 
-.current-environment-header {
-    flex-direction: column;
+loadLatest(),
+
+loadMother(),
+
+loadAlerts()
+.catch(
+()=>alertStates
+)
+
+]);
+
+apiConnectionOnline=
+true;
+
+latestNodes=
+l;
+
+motherStatus=
+m;
+
+alertStates=
+a;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}catch(e){
+
+console.error(e);
+
+apiConnectionOnline=
+false;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
 }
 
-.current-environment-controls {
-    width: 100%;
-    justify-content: flex-start;
 }
+
+
+// =====================================================
+// HISTORY
+//
+// ทุก 60 วินาที
+// =====================================================
 
-.current-environment-grid {
-    grid-template-columns: 1fr;
+async function loadHistorical(){
+
+try{
+
+records=
+await loadHistory();
+
+renderAverages();
+
+drawCharts();
+
+}catch(e){
+
+console.error(e);
+
 }
 
 }
 
-@media (max-width:520px) {
 
-.current-environment-controls {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-}
+// =====================================================
+// STANDARDS
+//
+// ทุก 5 นาที
+// =====================================================
+
+async function loadStandardsOnly(){
+
+try{
 
-.current-metric-label {
-    grid-column: 1/-1;
+standardsData=
+await loadStandards();
+
+updateCurrent();
+
+updateAlertUI();
+
+}catch(e){
+
+console.error(e);
+
 }
 
-.current-metric-select {
-    width: 100%;
-    min-width: 0;
 }
 
-.current-environment-item {
-    min-height: 110px;
-    padding: 14px;
+
+// =====================================================
+// CLOCK
+// =====================================================
+
+function updateClock(){
+
+if(
+$("clock")
+){
+
+$("clock").textContent=
+new Date()
+.toLocaleString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok",
+dateStyle:
+"medium",
+timeStyle:
+"medium"
 }
+);
 
-.current-environment-value {
-    font-size: 20px;
 }
 
 }
+
+
+// =====================================================
+// START
+// =====================================================
 
-#quickRangeList .quick-range-option {
-    display: inline-flex !important; 
-    width: auto !important;
-    text-align : center !important;
+if(
+$("historyRangeButtonLabel")
+){
+
+$("historyRangeButtonLabel").textContent=
+rangeLabel();
+
 }
+
+updateForecastToggle();
+
+bindEvents();
+
+bindHelp();
+
+updateClock();
+
+loadInitial();
+
+
+// Clock ไม่อ่าน D1
+setInterval(
+updateClock,
+1000
+);
+
+
+// Realtime
+setInterval(
+loadRealtime,
+10000
+);
+
+
+// History
+setInterval(
+loadHistorical,
+60000
+);
+
+
+// Standards
+setInterval(
+loadStandardsOnly,
+300000
+);
+
+
+// Refresh UI จากข้อมูลที่มีอยู่ใน Browser
+// ไม่เรียก D1
+setInterval(
+()=>{
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+},
+5000
+);
