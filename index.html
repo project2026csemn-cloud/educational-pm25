@@ -17,7 +17,7 @@
 <meta content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:title"/>
 <meta content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css" rel="stylesheet"/>
+<link href="style.css?v=20260825-1615" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png"/>
 <script src="chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -378,7 +378,7 @@ FORECAST + AI
 <div class="ai-model-strip">
 <div><span class="ai-model-strip-label">FORECAST HORIZON</span><b id="forecastBadge">30 นาที</b></div>
 <div><span class="ai-model-strip-label">NUMERIC BASE</span><b>Statistical Model</b></div>
-<div><span class="ai-model-strip-label">TREND DECISION</span><b>Gemini AI</b></div>
+<div><span class="ai-model-strip-label">TREND DECISION</span><b id="aiTrendDecisionProvider">กำลังรอ AI...</b></div>
 <div><span class="ai-model-strip-label">DATA SOURCE</span><b>6 Sensors + History</b></div>
 </div>
 <div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังรอ AI Trend Analysis...</div>
@@ -948,6 +948,26 @@ CREDIT
 </div>
 </div>
 </div>
+<!-- ADVISOR -->
+<div class="credit-box credit-advisor">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
+                    'img/ฐาปกรณ์01.jpg',
+                    'นาย ฐาปกรณ์ ตรีชัยศรี'
+                )">
+<img alt="ครูที่ปรึกษา" src="img/ฐาปกรณ์01.jpg"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    ADVISOR
+                </div>
+<div class="credit-title">
+                    นาย ฐาปกรณ์ ตรีชัยศรี
+                </div>
+<div class="credit-role">
+                    PROJECT ADVISOR
+                </div>
+</div>
+</div>
 <!-- DEVELOPER 1 -->
 <div class="credit-box credit-developer">
 <div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
@@ -988,26 +1008,6 @@ CREDIT
                 </div>
 </div>
 </div>
-<!-- ADVISOR -->
-<div class="credit-box credit-advisor">
-<div class="credit-icon credit-image-button" onclick="openCreditImage(
-                    'img/ฐาปกรณ์01.jpg',
-                    'นาย ฐาปกรณ์ ตรีชัยศรี'
-                )">
-<img alt="ครูที่ปรึกษา" src="img/ฐาปกรณ์01.jpg"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    ADVISOR
-                </div>
-<div class="credit-title">
-                    นาย ฐาปกรณ์ ตรีชัยศรี
-                </div>
-<div class="credit-role">
-                    PROJECT ADVISOR
-                </div>
-</div>
-</div>
 </div>
 <div class="credit-bottom">
 <span class="credit-status-dot"></span>
@@ -1019,7 +1019,6 @@ CREDIT
             SYSTEM CREDIT
         </span>
 </div>
-
 </footer>
 <!-- =========================================================
 CREDIT IMAGE VIEWER
@@ -1037,6 +1036,19 @@ CREDIT IMAGE VIEWER
 <!-- =========================================================
 CREDIT IMAGE JAVASCRIPT
 ========================================================= -->
-<script src="app.js"></script>
+<script>
+window.addEventListener("load",()=>{
+  setTimeout(()=>{
+    const clock=document.getElementById("clock");
+    if(clock && (clock.textContent.trim()==="--" || clock.textContent.trim()==="")){
+      console.error("app.js did not start. Check that app.js exists in the repository root.");
+      clock.textContent="JS ERROR";
+      const g=document.getElementById("gatewayStatus");
+      if(g)g.textContent="APP.JS NOT LOADED";
+    }
+  },2500);
+});
+</script>
+<script src="app.js?v=20260825-1715"></script>
 </body>
 </html>
