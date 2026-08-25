@@ -4382,3 +4382,46 @@ section.grid { align-items: start; }
     font-size:17px!important;
   }
 }
+
+
+/* =========================================================
+   FINAL COMPACT FIX
+   ========================================================= */
+.ai-intelligence-section,
+.ai-environmental-intelligence,
+.ai-intelligence-card,
+.ai-analysis-panel,
+.ai-forecast-panel{
+  min-height:0!important;
+  height:auto!important;
+}
+.ai-intelligence-grid{
+  align-items:start!important;
+}
+.ai-unavailable{
+  min-height:0!important;
+  padding:12px 14px!important;
+}
+.ai-intelligence-meta-grid{
+  gap:8px!important;
+}
+.ai-intelligence-meta-grid > *{
+  min-height:58px!important;
+  padding:10px 12px!important;
+}
+@media (min-width:901px){
+  .smart-summary-grid{
+    grid-template-columns:1fr 1fr 1.45fr 1fr!important;
+  }
+  .smart-summary-sky{
+    grid-column:auto!important;
+    min-height:82px!important;
+    padding:11px 14px!important;
+  }
+  .smart-summary-sky::after{
+    font-size:34px!important;
+  }
+  .smart-summary-sky .smart-summary-stat-value{
+    font-size:16px!important;
+  }
+}
