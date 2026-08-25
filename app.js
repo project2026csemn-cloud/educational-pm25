@@ -4637,7 +4637,21 @@ function renderAIForecast(payload){
 const box=$("aiForecastDetails")||$("forecastMessage");
 const badge=$("aiForecastStatusBadge");
 const generated=$("aiForecastGeneratedAt");
+const providerLabel=$("aiTrendDecisionProvider");
+
+if(providerLabel){
+const provider=payload?.provider;
+providerLabel.textContent=
+provider==="cloudflare"
+?"Cloudflare Workers AI"
+:provider==="gemini"
+?"Gemini AI"
+:payload?.ai===false
+?"Rule Engine / AI unavailable"
+:"กำลังรอ AI...";
+}
 if(aiForecastLoading){
+if(providerLabel)providerLabel.textContent="กำลังวิเคราะห์...";
 if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
 if(badge)badge.textContent="AI • กำลังวิเคราะห์";
 return;
