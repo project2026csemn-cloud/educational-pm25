@@ -4327,3 +4327,12 @@ section.grid { align-items: start; }
     font-size:17px!important;
   }
 }
+
+
+/* =========================================================
+   NODE STATUS DISPLAY POLICY
+   Dashboard shows only ONLINE / OFFLINE.
+   Internal SLEEP remains in backend logic.
+   ========================================================= */
+.status-sleep{color:#34d399!important;}
+.status-sleep-dot{color:#34d399!important;}
