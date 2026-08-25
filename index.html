@@ -352,71 +352,37 @@ FORECAST + AI
 <span class="current-environment-footer-dot"></span>
 <span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
 </div>
-</div></section><section class="mb-4 dashboard-ai-stack"><div class="glass card p-5 ai-analysis-card dashboard-ai-block">
-<div class="ai-analysis-header">
+</div></section><section class="glass card p-5 mb-4 ai-intelligence-section">
+<div class="ai-intelligence-header">
 <div>
 <div class="section-title-with-help">
-<h2 class="text-xl font-black">🤖 AI วิเคราะห์สถานการณ์</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย AI วิเคราะห์สถานการณ์" class="help-button" data-help="ai" type="button">?</button>
+<h2 class="text-2xl font-black">🤖 AI Environmental Intelligence</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย AI Environmental Intelligence" class="help-button" data-help="ai" type="button">?</button>
 </div>
+<div class="ai-intelligence-statusline">Situation Analysis • AI Trend Analysis • 30-Min Forecast</div>
 </div>
-<div class="ai-analysis-actions">
-<button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">
-                    ↻ วิเคราะห์ใหม่
-                </button>
-<span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span>
+<div class="ai-intelligence-badges"><span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span><span class="ai-forecast-status" id="aiForecastStatusBadge">AI Forecast • รอข้อมูล</span></div>
 </div>
+<div class="ai-intelligence-grid">
+<div class="ai-intelligence-panel ai-situation-panel">
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">CURRENT SITUATION</div><h3>วิเคราะห์สถานการณ์ปัจจุบัน</h3></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-details-panel" id="aiDetails"><div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังเชื่อมต่อ AI...</div></div>
+<div class="ai-analysis-footer"><span id="aiGeneratedAt">อัปเดต AI: --</span></div>
 </div>
-<div class="ai-details-panel" id="aiDetails">
-<div class="ai-loading-state">
-<span class="ai-loading-dot"></span>
-                กำลังเชื่อมต่อ AI...
-            </div>
-</div>
-<div class="ai-analysis-footer">
-<span id="aiGeneratedAt">อัปเดต AI: --</span>
-</div>
-</div><div class="glass card p-5 ai-forecast-card dashboard-ai-block">
-<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-<div>
-<div class="section-title-with-help">
-<h2 class="text-xl font-black">🤖 AI Environmental Forecast</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย Forecast" class="help-button" data-help="forecast" type="button">
-                        ?
-                    </button>
-</div>
-</div>
-<div class="text-left sm:text-right">
-<div class="text-[10px] uppercase tracking-wider text-slate-500">
-                    ช่วงเวลาที่คาดการณ์
-                </div>
-<div class="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold text-cyan-300" id="forecastBadge" style="background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.16);">
-                    ⏱ 30 นาทีข้างหน้า
-                </div>
-</div>
-</div>
-<div class="ai-forecast-shell mt-4">
-<div class="ai-forecast-topbar">
-<div>
-<div class="ai-forecast-kicker">AI ENVIRONMENTAL FORECAST</div>
-<div class="ai-forecast-subtitle">Air • Heat • Sky • Activity • 30 นาทีข้างหน้า</div>
-</div>
-<div class="ai-forecast-actions">
-<span class="ai-forecast-status" id="aiForecastStatusBadge">AI Forecast • รอข้อมูล</span>
-<button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button>
-</div>
-</div>
+<div class="ai-intelligence-panel ai-forecast-panel">
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">AI TREND & FORECAST</div><h3>แนวโน้มและคาดการณ์ 30 นาที</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
 <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
 <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดต AI Forecast: --</div>
 </div>
-<div class="forecast-base-label">STATISTICAL FORECAST BASE</div>
-<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300" id="forecastMessage">
-            รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
-        </div>
-
-
-</div></section>
 </div>
+<div class="ai-model-strip">
+<div><span class="ai-model-strip-label">FORECAST HORIZON</span><b id="forecastBadge">30 นาที</b></div>
+<div><span class="ai-model-strip-label">NUMERIC BASE</span><b>Statistical Model</b></div>
+<div><span class="ai-model-strip-label">TREND DECISION</span><b>Gemini AI</b></div>
+<div><span class="ai-model-strip-label">DATA SOURCE</span><b>6 Sensors + History</b></div>
+</div>
+<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังรอ AI Trend Analysis...</div>
+</section>
 <!-- =========================================================
 HISTORICAL DATA & TREND
 ========================================================= -->
@@ -729,13 +695,13 @@ HISTORICAL DATA & TREND
             Historical Trend
         </div>
 <canvas id="historyChart"></canvas>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 Forecast Trend Graph</div><div class="chart-zone-subtitle">ข้อมูลจริงเทียบกับแนวโน้มคาดการณ์ระยะสั้น</div></div></div><div class="forecast-display-panel" id="forecastGuide">
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🤖 AI Trend & Forecast Graph</div><div class="chart-zone-subtitle">ข้อมูลจริงเทียบกับแนวโน้มที่ AI วิเคราะห์และค่าคาดการณ์เชิงตัวเลข</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
                     การแสดงผลกราฟ
                 </div>
 <div class="forecast-display-subtitle">
-                    เปิดหรือซ่อนช่วงคาดการณ์บนกราฟ
+                    เปิดหรือซ่อน AI Forecast Overlay บนกราฟ
                 </div>
 </div>
 <div class="forecast-display-controls">
@@ -754,7 +720,7 @@ HISTORICAL DATA & TREND
 <div class="forecast-toggle-copy">
 <div class="forecast-toggle-name">
 <span class="forecast-dash-line"></span>
-                            Forecast
+                            AI Forecast
                         </div>
 <div class="forecast-toggle-status" id="forecastToggleLabel">
                             เปิดการคาดการณ์
