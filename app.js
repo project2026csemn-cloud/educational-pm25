@@ -7,7 +7,8 @@ export:`${BASE}/api/export.php`,
 mother:`${BASE}/api/mother_status`,
 alerts:`${BASE}/api/alert_states`,
 standards:`${BASE}/api/standards.php`,
-ai:`${BASE}/api/ai_analysis`
+ai:`${BASE}/api/ai_analysis`,
+forecast:`${BASE}/api/ai_forecast`
 };
 
 const TOTAL_NODES=3;
@@ -30,7 +31,7 @@ let forecastVisible=true;
 let metric="pm25";
 let currentMetric="pm25";
 
-let averageRange="24h";
+let averageRange="today";
 
 let customRangeStart=null;
 let customRangeEnd=null;
@@ -48,6 +49,9 @@ let activeHelpButton=null;
 let aiPayload=null;
 let aiLoading=false;
 let aiLastLoadedAt=null;
+let aiForecastPayload=null;
+let aiForecastLoading=false;
+let aiForecastLastLoadedAt=null;
 
 
 // =====================================================
@@ -55,6 +59,7 @@ let aiLastLoadedAt=null;
 // =====================================================
 
 const RANGE_CONFIG={
+"today":{label:"วันนี้",minutes:null,apiRange:"today"},
 
 "30m":{
 label:"30 นาที",
@@ -265,17 +270,9 @@ false
 
 // =====================================================
 // SENSOR SANITIZER
-//
-// 0 = ไม่ใช้
-//
-// Dashboard จะเห็นเป็น --
-// และไม่ถูกนำไป Average / Graph / AI
 // =====================================================
 
-function cleanSensorNumber(
-field,
-value
-){
+function cleanSensorNumber(field,value){
 
 if(
 value===null||
@@ -289,8 +286,7 @@ const n=
 Number(value);
 
 if(
-!Number.isFinite(n)||
-n===0
+!Number.isFinite(n)
 ){
 return null;
 }
@@ -300,37 +296,56 @@ if(
 "pm1",
 "pm25",
 "pm10"
-].includes(field)&&
-n<0
+]
+.includes(field)
 ){
-return null;
-}
 
-if(
-field==="temperature"&&
-(
-n<-20||
-n>60
+return(
+n>=0&&
+n<=5000
 )
-){
-return null;
+?n
+:null;
+
 }
 
 if(
-field==="humidity"&&
-(
-n<0||
-n>100
+field==="temperature"
+){
+
+return(
+n>=-40&&
+n<=85
 )
-){
-return null;
+?n
+:null;
+
 }
 
 if(
-field==="light"&&
-n<0
+field==="humidity"
 ){
-return null;
+
+return(
+n>=0&&
+n<=100
+)
+?n
+:null;
+
+}
+
+if(
+field==="light"
+){
+
+return(
+n>=0&&
+n<=200000
+)
+?n
+:null;
+
 }
 
 return n;
@@ -348,7 +363,7 @@ if(!d){
 return null;
 }
 
-return{
+const out={
 
 id:
 d.id==null
@@ -427,9 +442,50 @@ null,
 
 command_status:
 d.command_status||
-null
+null,
+
+sensor_invalid:false
 
 };
+
+const values=[
+"pm1",
+"pm25",
+"pm10",
+"temperature",
+"humidity",
+"light"
+]
+.map(
+k=>out[k]
+);
+
+if(
+values.every(
+v=>v===0
+)
+){
+
+for(
+const k of[
+"pm1",
+"pm25",
+"pm10",
+"temperature",
+"humidity",
+"light"
+]
+){
+
+out[k]=null;
+
+}
+
+out.sensor_invalid=true;
+
+}
+
+return out;
 
 }
 
@@ -702,12 +758,18 @@ API.standards
 
 function apiRange(){
 
-return averageRange==="custom"
-?"30d"
-:RANGE_CONFIG[
+if(
+averageRange==="custom"
+){
+
+return"30d";
+
+}
+
+return RANGE_CONFIG[
 averageRange
 ]?.apiRange||
-"24h";
+"today";
 
 }
 
@@ -975,83 +1037,40 @@ ac.textContent=
 // THRESHOLD
 // =====================================================
 
-function threshold(
-field,
-value
-){
+function threshold(field,value){
 
 const n=
 Number(value);
 
-const t=
-standardsData
-?.realtime_thresholds
-?.[field];
-
 if(
 !Number.isFinite(n)
 ){
-
 return"no_data";
-
-}
-
-if(!t){
-
-return"normal";
-
 }
 
 if(
-t.critical!=null&&
-n>=t.critical
+field!=="pm25"
 ){
+return"normal";
+}
 
+if(
+n>75
+){
 return"critical";
-
 }
 
 if(
-t.warning!=null&&
-n>=t.warning
+n>37.5
 ){
-
 return"warning";
-
-}
-
-if(
-t.low_warning!=null&&
-n<=t.low_warning
-){
-
-return"warning";
-
-}
-
-if(
-t.high_warning!=null&&
-n>=t.high_warning
-){
-
-return"warning";
-
-}
-
-if(
-t.low_info!=null&&
-n<t.low_info
-){
-
-return"info";
-
 }
 
 return"normal";
 
 }
 
-function levelText(l){
+function levelText(level){
 
 return{
 
@@ -1062,16 +1081,628 @@ warning:
 "เฝ้าระวัง",
 
 critical:
-"สูง",
+"มีผลกระทบต่อสุขภาพ",
 
 info:
-"ควรตรวจสอบ",
+"ข้อมูลประกอบ",
 
 no_data:
 "รอข้อมูล"
 
-}[l]||
+}[
+level
+]||
 "รอข้อมูล";
+
+}
+
+
+// =====================================================
+// PM2.5 GUIDANCE
+// =====================================================
+
+function pm25Guidance(value){
+
+const n=
+Number(value);
+
+if(
+!Number.isFinite(n)
+){
+
+return{
+level:"no_data",
+label:"ไม่มีข้อมูล"
+};
+
+}
+
+if(
+n<=15
+){
+
+return{
+level:"normal",
+label:"ดีมาก"
+};
+
+}
+
+if(
+n<=25
+){
+
+return{
+level:"normal",
+label:"ดี"
+};
+
+}
+
+if(
+n<=37.5
+){
+
+return{
+level:"normal",
+label:"ปานกลาง"
+};
+
+}
+
+if(
+n<=75
+){
+
+return{
+level:"warning",
+label:"เริ่มมีผลกระทบต่อสุขภาพ"
+};
+
+}
+
+return{
+level:"critical",
+label:"มีผลกระทบต่อสุขภาพ"
+};
+
+}
+
+
+// =====================================================
+// HEAT INDEX
+// =====================================================
+
+function heatIndexC(
+tempC,
+rh
+){
+
+tempC=
+Number(tempC);
+
+rh=
+Number(rh);
+
+if(
+!Number.isFinite(tempC)||
+!Number.isFinite(rh)
+){
+
+return null;
+
+}
+
+const f=
+tempC*
+9/
+5+
+32;
+
+if(
+f<80||
+rh<40
+){
+
+return tempC;
+
+}
+
+let hi=
+
+-42.379+
+
+2.04901523*f+
+
+10.14333127*rh-
+
+0.22475541*f*rh-
+
+0.00683783*f*f-
+
+0.05481717*rh*rh+
+
+0.00122874*f*f*rh+
+
+0.00085282*f*rh*rh-
+
+0.00000199*f*f*rh*rh;
+
+if(
+rh<13&&
+f>=80&&
+f<=112
+){
+
+hi-=
+
+(
+(13-rh)/4
+)*
+
+Math.sqrt(
+
+(
+17-
+Math.abs(
+f-95
+)
+)/
+17
+
+);
+
+}else if(
+rh>85&&
+f>=80&&
+f<=87
+){
+
+hi+=
+
+(
+(rh-85)/10
+)*
+
+(
+(87-f)/5
+);
+
+}
+
+return(
+hi-32
+)*
+5/
+9;
+
+}
+
+
+// =====================================================
+// HEAT LEVEL
+// =====================================================
+
+function heatLevel(value){
+
+const n=
+Number(value);
+
+if(
+!Number.isFinite(n)
+){
+
+return{
+level:"no_data",
+label:"ไม่มีข้อมูล"
+};
+
+}
+
+if(
+n<27
+){
+
+return{
+level:"normal",
+label:"สภาพทั่วไป"
+};
+
+}
+
+if(
+n<33
+){
+
+return{
+level:"watch",
+label:"เฝ้าระวัง"
+};
+
+}
+
+if(
+n<42
+){
+
+return{
+level:"warning",
+label:"เตือนภัย"
+};
+
+}
+
+if(
+n<52
+){
+
+return{
+level:"critical",
+label:"อันตราย"
+};
+
+}
+
+return{
+level:"critical",
+label:"อันตรายมาก"
+};
+
+}
+
+
+// =====================================================
+// ACTIVE NODE DATA
+// =====================================================
+
+function activeNodes(){
+
+if(
+!motherOnline()
+){
+
+return[];
+
+}
+
+return latestNodes
+.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)
+);
+
+}
+
+function averageOf(
+nodes,
+field
+){
+
+const a=
+nodes
+.map(
+n=>
+Number(
+n[field]
+)
+)
+.filter(
+Number.isFinite
+);
+
+return a.length
+
+?a.reduce(
+(
+x,
+y
+)=>
+x+y,
+0
+)/
+a.length
+
+:null;
+
+}
+
+function currentEnvironmentSnapshot(){
+
+const nodes=
+activeNodes();
+
+const temperature=
+averageOf(
+nodes,
+"temperature"
+);
+
+const humidity=
+averageOf(
+nodes,
+"humidity"
+);
+
+return{
+
+nodes,
+
+pm1:
+averageOf(
+nodes,
+"pm1"
+),
+
+pm25:
+averageOf(
+nodes,
+"pm25"
+),
+
+pm10:
+averageOf(
+nodes,
+"pm10"
+),
+
+temperature,
+
+humidity,
+
+light:
+averageOf(
+nodes,
+"light"
+),
+
+heatIndex:
+heatIndexC(
+temperature,
+humidity
+)
+
+};
+
+}
+
+
+// =====================================================
+// SKY CONDITION
+// =====================================================
+
+function skyCondition(){
+
+const data=
+selectedRecords()
+.filter(
+r=>
+Number.isFinite(
+Number(
+r.light
+)
+)
+);
+
+if(
+data.length<4
+){
+
+return{
+
+level:"no_data",
+
+label:
+"ข้อมูลยังไม่พอ",
+
+detail:
+"ต้องมีข้อมูลแสงต่อเนื่องก่อนวิเคราะห์แนวโน้ม"
+
+};
+
+}
+
+const recent=
+data.slice(
+-Math.min(
+12,
+data.length
+)
+);
+
+const first=
+Number(
+recent[0].light
+);
+
+const last=
+Number(
+recent.at(-1).light
+);
+
+if(
+!Number.isFinite(first)||
+!Number.isFinite(last)
+){
+
+return{
+
+level:"no_data",
+
+label:
+"ข้อมูลยังไม่พอ",
+
+detail:
+"ไม่สามารถวิเคราะห์ความเข้มแสงได้"
+
+};
+
+}
+
+const pct=
+first===0
+
+?0
+
+:(
+last-first
+)/
+Math.max(
+Math.abs(first),
+1
+)*
+100;
+
+const hum=
+stats(
+recent,
+"humidity"
+);
+
+const temp=
+stats(
+recent,
+"temperature"
+);
+
+const humRise=
+
+hum.last!=null&&
+hum.avg!=null&&
+hum.last>
+hum.avg+
+2;
+
+const tempFall=
+
+temp.last!=null&&
+temp.avg!=null&&
+temp.last<
+temp.avg-
+.5;
+
+if(
+pct<-30&&
+humRise&&
+tempFall
+){
+
+return{
+
+level:"watch",
+
+label:
+"แสงลดลงมาก",
+
+detail:
+"แสงลดลงร่วมกับความชื้นเพิ่มและอุณหภูมิลด สภาพแวดล้อมอาจเปลี่ยนแปลงและอาจสัมพันธ์กับเมฆปกคลุมเพิ่มขึ้น"
+
+};
+
+}
+
+if(
+pct<-20
+){
+
+return{
+
+level:"watch",
+
+label:
+"แสงลดลง",
+
+detail:
+"ความเข้มแสงลดลงชัดเจน อาจสัมพันธ์กับการเปลี่ยนแปลงของสภาพท้องฟ้า"
+
+};
+
+}
+
+if(
+pct>20
+){
+
+return{
+
+level:"normal",
+
+label:
+"แสงเพิ่มขึ้น",
+
+detail:
+"ความเข้มแสงมีแนวโน้มเพิ่มขึ้น"
+
+};
+
+}
+
+return{
+
+level:"normal",
+
+label:
+"ค่อนข้างคงที่",
+
+detail:
+"ความเข้มแสงยังไม่เปลี่ยนแปลงมากในช่วงล่าสุด"
+
+};
+
+}
+
+
+// =====================================================
+// ACTIVITY RECOMMENDATION
+// =====================================================
+
+function activityRecommendation(
+pm25,
+heatIndex
+){
+
+const p=
+pm25Guidance(
+pm25
+);
+
+const h=
+heatLevel(
+heatIndex
+);
+
+if(
+p.level==="critical"
+){
+
+return"ควรลดหรือหลีกเลี่ยงกิจกรรมกลางแจ้งที่ใช้แรงมาก และติดตาม PM2.5 อย่างใกล้ชิด";
+
+}
+
+if(
+h.level==="critical"
+){
+
+return"ควรลดกิจกรรมกลางแจ้งที่ใช้แรงมาก หลีกเลี่ยงช่วงร้อนจัด และพักในบริเวณที่เหมาะสม";
+
+}
+
+if(
+p.level==="warning"||
+h.level==="warning"||
+h.level==="watch"
+){
+
+return"ทำกิจกรรมได้โดยเพิ่มความระมัดระวัง ลดกิจกรรมที่ใช้แรงมาก และติดตามค่าจากระบบ";
+
+}
+
+return"ยังไม่พบข้อจำกัดเด่นจาก PM2.5 และ Heat Index สำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
 
 }
 
@@ -1421,13 +2052,7 @@ if(
 ){
 
 e.innerHTML=
-`<div class="smart-summary-headline offline">
-🔴 ไม่สามารถเชื่อมต่อ API
-</div>
-
-<div class="smart-summary-note danger">
-Dashboard ไม่สามารถยืนยันข้อมูลปัจจุบันจาก Cloudflare Worker ได้
-</div>`;
+'<div class="smart-summary-headline offline">🔴 ไม่สามารถเชื่อมต่อ API</div><div class="smart-summary-note danger">Dashboard ไม่สามารถยืนยันข้อมูลปัจจุบันจาก Cloudflare Worker ได้</div>';
 
 return;
 
@@ -1445,21 +2070,51 @@ e.innerHTML=
 <div class="smart-summary-grid">
 
 <div class="smart-summary-stat">
+
 <div class="smart-summary-stat-label">
-NODE ACTIVE
+AIR QUALITY
 </div>
+
 <div class="smart-summary-stat-value">
-0 / ${TOTAL_NODES}
+ไม่พร้อมประเมิน
 </div>
+
 </div>
 
 <div class="smart-summary-stat">
+
 <div class="smart-summary-stat-label">
-สถานะระบบ
+HEAT STRESS
 </div>
+
 <div class="smart-summary-stat-value">
-ไม่พร้อมประเมินข้อมูลปัจจุบัน
+ไม่พร้อมประเมิน
 </div>
+
+</div>
+
+<div class="smart-summary-stat">
+
+<div class="smart-summary-stat-label">
+SKY CONDITION
+</div>
+
+<div class="smart-summary-stat-value">
+ไม่พร้อมประเมิน
+</div>
+
+</div>
+
+<div class="smart-summary-stat">
+
+<div class="smart-summary-stat-label">
+SYSTEM HEALTH
+</div>
+
+<div class="smart-summary-stat-value">
+Gateway OFFLINE
+</div>
+
 </div>
 
 </div>
@@ -1472,37 +2127,35 @@ return;
 
 }
 
-const statusRows=[];
+const snap=
+currentEnvironmentSnapshot();
 
-for(
-let i=1;
-i<=TOTAL_NODES;
-i++
-){
+const pm=
+pm25Guidance(
+snap.pm25
+);
 
-const node=
-getNode(i);
+const heat=
+heatLevel(
+snap.heatIndex
+);
 
-statusRows.push({
-i,
-node,
-status:
-getNodeStatus(node)
-});
-
-}
+const sky=
+skyCondition();
 
 const on=
-statusRows
+latestNodes
 .filter(
-x=>x.status==="online"
+n=>
+getNodeStatus(n)==="online"
 )
 .length;
 
 const sl=
-statusRows
+latestNodes
 .filter(
-x=>x.status==="sleep"
+n=>
+getNodeStatus(n)==="sleep"
 )
 .length;
 
@@ -1511,209 +2164,93 @@ TOTAL_NODES-
 on-
 sl;
 
-const active=
-statusRows
-.filter(
-x=>
-[
-"online",
-"sleep"
-].includes(
-x.status
-)&&
-x.node
-);
-
-const pmNodes=
-active
-.filter(
-x=>
-Number.isFinite(
-Number(
-x.node.pm25
-)
-)
-);
-
-const pmAvg=
-pmNodes.length
-?pmNodes.reduce(
-(
-sum,
-x
-)=>
-sum+
-Number(
-x.node.pm25
-),
-0
-)/
-pmNodes.length
-:null;
-
-const highestPM=
-pmNodes.length
-?pmNodes.reduce(
-(
-a,
-b
-)=>
-Number(
-b.node.pm25
-)>
-Number(
-a.node.pm25
-)
-?b
-:a
-)
-:null;
-
-const pmLevel=
-pmAvg==null
-?"no_data"
-:threshold(
-"pm25",
-pmAvg
-);
-
-const missing=[];
-const abnormal=[];
-
-const defs=[
-["pm25","PM2.5"],
-["pm10","PM10"],
-["temperature","อุณหภูมิ"],
-["humidity","ความชื้น"],
-["light","แสง"]
-];
-
-for(
-const x of
-active
-){
-
-for(
-const[
-field,
-label
-]of defs
-){
-
-const v=
-x.node[field];
-
-if(
-v===null||
-v===undefined||
-!Number.isFinite(
-Number(v)
-)
-){
-
-missing.push(
-`อุปกรณ์ ${x.i}: ${label} ไม่มีค่าที่เชื่อถือได้`
-);
-
-continue;
-
-}
-
-const level=
-threshold(
-field,
-v
-);
-
-if(
-[
-"warning",
-"critical",
-"info"
-].includes(level)
-){
-
-abnormal.push({
-i:x.i,
-label,
-value:Number(v),
-level
-});
-
-}
-
-}
-
-}
-
 let severity=
 "normal";
 
 let headline=
-"🟢 ระบบทำงานปกติ";
+"🟢 ภาพรวมสภาพแวดล้อมปกติ";
 
 if(
-off>0
-){
-
-severity=
-"watch";
-
-headline=
-"🟠 มีอุปกรณ์ที่ต้องตรวจสอบ";
-
-}
-
-if(
-pmLevel==="warning"||
-abnormal.some(
-x=>x.level==="warning"
-)
-){
-
-severity=
-"watch";
-
-headline=
-"🟡 พบค่าที่ควรติดตาม";
-
-}
-
-if(
-pmLevel==="critical"||
-abnormal.some(
-x=>x.level==="critical"
-)
+pm.level==="critical"||
+heat.level==="critical"
 ){
 
 severity=
 "critical";
 
 headline=
-"🔴 พบค่าระดับสูงที่ควรตรวจสอบ";
+"🔴 พบสภาพแวดล้อมที่ควรให้ความสำคัญ";
+
+}else if(
+pm.level==="warning"||
+heat.level==="warning"||
+heat.level==="watch"||
+off>0
+){
+
+severity=
+"watch";
+
+headline=
+"🟡 มีข้อมูลที่ควรติดตาม";
 
 }
 
 const pmText=
-pmAvg==null
+snap.pm25==null
 ?"รอข้อมูล"
-:`${fmt(pmAvg)} µg/m³ • ${levelText(pmLevel)}`;
+:`${fmt(snap.pm25)} µg/m³ • ${pm.label}`;
 
-const highestText=
-highestPM
-?`อุปกรณ์ ${highestPM.i} • ${fmt(highestPM.node.pm25)} µg/m³`
-:"รอข้อมูล";
+const heatText=
+snap.heatIndex==null
+?"รอข้อมูล"
+:`${fmt(snap.heatIndex)} °C • ${heat.label}`;
 
-let notes=[];
+const systemText=
+`ONLINE ${on} • SLEEP ${sl} • OFFLINE ${off}`;
+
+const activity=
+activityRecommendation(
+snap.pm25,
+snap.heatIndex
+);
+
+const notes=[];
+
+notes.push({
+
+type:
+sky.level==="watch"
+?"warn"
+:"info",
+
+text:
+`สภาพท้องฟ้า: ${sky.detail}`
+
+});
+
+notes.push({
+
+type:
+"info",
+
+text:
+`กิจกรรมกลางแจ้ง: ${activity}`
+
+});
 
 if(
 sl>0
 ){
 
 notes.push({
-type:"info",
+
+type:
+"info",
+
 text:
-`มี ${sl} อุปกรณ์อยู่ใน Deep Sleep ตามรอบการทำงาน 5 นาที`
+`มี ${sl} อุปกรณ์อยู่ใน Deep Sleep ตามรอบการทำงาน`
+
 });
 
 }
@@ -1723,69 +2260,26 @@ off>0
 ){
 
 notes.push({
-type:"danger",
+
+type:
+"danger",
+
 text:
 `มี ${off} อุปกรณ์ Offline และไม่ถูกนำมาคำนวณค่าปัจจุบัน`
+
 });
 
 }
 
-if(
-abnormal.length
-){
-
-const top=
-abnormal
-.slice()
-.sort(
-(
-a,
-b
-)=>
-(
-b.level==="critical"
-)-
-(
-a.level==="critical"
-)||
-b.value-a.value
-)[0];
-
 notes.push({
+
 type:
-top.level==="critical"
-?"danger"
-:"warn",
+"info",
 
 text:
-`จุดเด่นที่ควรติดตาม: อุปกรณ์ ${top.i} • ${top.label} ${fmt(top.value)}`
+"PM1.0 ใช้เป็นข้อมูลประกอบการวิเคราะห์ ไม่ใช้ตัดสิน Health Alert โดยตรง"
+
 });
-
-}
-
-if(
-missing.length
-){
-
-notes.push({
-type:"warn",
-text:
-`ตรวจพบข้อมูลเซนเซอร์ที่เป็น 0/ผิดช่วงและตัดออก ${missing.length} ค่า เพื่อไม่ให้กระทบค่าเฉลี่ยและ AI`
-});
-
-}
-
-if(
-!notes.length
-){
-
-notes.push({
-type:"info",
-text:
-"ยังไม่พบสถานะผิดปกติจากกฎของระบบในข้อมูลล่าสุด"
-});
-
-}
 
 e.innerHTML=
 `<div class="smart-summary-headline ${severity}">
@@ -1794,40 +2288,80 @@ ${headline}
 
 <div class="smart-summary-grid">
 
-<div class="smart-summary-stat">
+<div class="smart-summary-stat smart-summary-air">
+
 <div class="smart-summary-stat-label">
-สถานะอุปกรณ์
-</div>
-<div class="smart-summary-stat-value">
-ONLINE ${on} • SLEEP ${sl} • OFFLINE ${off}
-</div>
+🌫 AIR QUALITY
 </div>
 
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">
-PM2.5 ภาพรวม
-</div>
 <div class="smart-summary-stat-value">
 ${pmText}
 </div>
+
+<div class="smart-summary-stat-sub">
+PM2.5 ปัจจุบัน
 </div>
 
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">
-PM2.5 สูงสุด
-</div>
-<div class="smart-summary-stat-value">
-${highestText}
-</div>
 </div>
 
-<div class="smart-summary-stat">
+<div class="smart-summary-stat smart-summary-heat">
+
 <div class="smart-summary-stat-label">
-ข้อมูลที่ใช้งาน
+🌡 HEAT STRESS
 </div>
+
 <div class="smart-summary-stat-value">
-${active.length} / ${TOTAL_NODES} จุด
+${heatText}
 </div>
+
+<div class="smart-summary-stat-sub">
+Temperature + Humidity
+</div>
+
+</div>
+
+<div class="smart-summary-stat smart-summary-sky">
+
+<div class="smart-summary-stat-label">
+☁ SKY CONDITION
+</div>
+
+<div class="smart-summary-stat-value">
+${esc(sky.label)}
+</div>
+
+<div class="smart-summary-stat-sub">
+Light + Temp + Humidity
+</div>
+
+</div>
+
+<div class="smart-summary-stat smart-summary-system">
+
+<div class="smart-summary-stat-label">
+📡 SYSTEM HEALTH
+</div>
+
+<div class="smart-summary-stat-value">
+${systemText}
+</div>
+
+<div class="smart-summary-stat-sub">
+Gateway ONLINE
+</div>
+
+</div>
+
+</div>
+
+<div class="smart-summary-activity">
+
+<div class="smart-summary-activity-label">
+🏃 คำแนะนำกิจกรรมกลางแจ้ง
+</div>
+
+<div>
+${esc(activity)}
 </div>
 
 </div>
@@ -1888,7 +2422,7 @@ const list=[];
 
 for(
 let i=1;
-i<=3;
+i<=TOTAL_NODES;
 i++
 ){
 
@@ -1903,11 +2437,16 @@ st==="offline"
 ){
 
 list.push({
-icon:"🔴",
+
+icon:
+"🔴",
+
 title:
 `อุปกรณ์ ${i} OFFLINE`,
+
 detail:
 "ไม่สามารถติดต่ออุปกรณ์ได้"
+
 });
 
 continue;
@@ -1926,84 +2465,73 @@ if(!state){
 continue;
 }
 
-const defs=[
-
-[
-"pm1_level",
-"PM1.0",
-"pm1",
-"µg/m³"
-],
-
-[
-"pm25_level",
-"PM2.5",
-"pm25",
-"µg/m³"
-],
-
-[
-"pm10_level",
-"PM10",
-"pm10",
-"µg/m³"
-],
-
-[
-"temperature_level",
-"อุณหภูมิ",
-"temperature",
-"°C"
-],
-
-[
-"humidity_level",
-"ความชื้น",
-"humidity",
-"%"
-],
-
-[
-"light_level",
-"แสง",
-"light",
-"lux"
-]
-
-];
-
-for(
-const[
-k,
-label,
-field,
-unit
-]of defs
-){
+const pmLevel=
+String(
+state.pm25_level||
+"normal"
+);
 
 if(
-String(
-state[k]||
-"normal"
-)!=="normal"
+pmLevel!=="normal"
 ){
+
+const g=
+pm25Guidance(
+n?.pm25
+);
 
 list.push({
 
 icon:
-state[k]==="critical"
+pmLevel==="critical"
 ?"🔴"
 :"🟡",
 
 title:
-`อุปกรณ์ ${i} • ${label}`,
+`อุปกรณ์ ${i} • PM2.5`,
 
 detail:
-`${fmt(n?.[field])} ${unit}`
+`${fmt(n?.pm25)} µg/m³ • ${g.label}`
 
 });
 
 }
+
+const heatState=
+String(
+state.temperature_level||
+"normal"
+);
+
+if(
+heatState!=="normal"
+){
+
+const hi=
+heatIndexC(
+n?.temperature,
+n?.humidity
+);
+
+const h=
+heatLevel(
+hi
+);
+
+list.push({
+
+icon:
+heatState==="critical"
+?"🔴"
+:"🟡",
+
+title:
+`อุปกรณ์ ${i} • Heat Index`,
+
+detail:
+`${fmt(hi)} °C • ${h.label}`
+
+});
 
 }
 
@@ -2012,10 +2540,13 @@ detail:
 e.innerHTML=
 list.length
 
-?list.map(
+?list
+.map(
 x=>
 `<div class="soft rounded-xl p-3 mb-2">
-<b>${x.icon} ${esc(x.title)}</b>
+<b>
+${x.icon} ${esc(x.title)}
+</b>
 <div class="text-xs text-slate-400 mt-1">
 ${esc(x.detail)}
 </div>
@@ -2023,7 +2554,7 @@ ${esc(x.detail)}
 )
 .join("")
 
-:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b></div>';
+:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b><div class="text-xs text-slate-400 mt-1">PM1.0 และ Light ใช้เป็นข้อมูลประกอบ ไม่สร้าง Health Alert</div></div>';
 
 }
 
@@ -2064,10 +2595,55 @@ customRangeEnd
 ?{
 start:
 customRangeStart,
+
 end:
 customRangeEnd
 }
 :null;
+
+}
+
+const end=
+new Date();
+
+if(
+averageRange==="today"
+){
+
+const parts=
+new Intl.DateTimeFormat(
+"en-CA",
+{
+timeZone:
+"Asia/Bangkok",
+year:
+"numeric",
+month:
+"2-digit",
+day:
+"2-digit"
+}
+)
+.formatToParts(
+end
+);
+
+const get=
+t=>
+parts.find(
+p=>
+p.type===t
+)?.value;
+
+const start=
+new Date(
+`${get("year")}-${get("month")}-${get("day")}T00:00:00+07:00`
+);
+
+return{
+start,
+end
+};
 
 }
 
@@ -2076,18 +2652,22 @@ RANGE_CONFIG[
 averageRange
 ];
 
-if(!c){
-return null;
-}
+if(
+!c||
+!Number.isFinite(
+c.minutes
+)
+){
 
-const end=
-new Date();
+return null;
+
+}
 
 return{
 
 start:
 new Date(
-end-
+end.getTime()-
 c.minutes*
 60000
 ),
@@ -2164,7 +2744,11 @@ return values.length
 
 avg:
 values.reduce(
-(a,b)=>a+b,
+(
+a,
+b
+)=>
+a+b,
 0
 )/
 values.length,
@@ -2253,7 +2837,8 @@ const[
 field,
 id,
 statusId
-]of defs
+]
+of defs
 ){
 
 const s=
@@ -2385,9 +2970,11 @@ $("trend").textContent=
 }
 
 historyChart?.destroy();
+
 historyChart=null;
 
 forecastChart?.destroy();
+
 forecastChart=null;
 
 if(
@@ -2840,7 +3427,9 @@ $("forecastBadge").textContent=
 }
 
 const actual=
-recent.slice(-12);
+recent.slice(
+-12
+);
 
 const labels=
 actual.map(
@@ -2890,7 +3479,9 @@ Math.max(
 values.length-1
 )
 )
-.fill(null);
+.fill(
+null
+);
 
 forecastChart=
 new Chart(
@@ -3283,9 +3874,12 @@ month,
 .toLocaleDateString(
 "th-TH",
 {
-timeZone:"Asia/Bangkok",
-month:"long",
-year:"numeric"
+timeZone:
+"Asia/Bangkok",
+month:
+"long",
+year:
+"numeric"
 }
 );
 
@@ -3326,6 +3920,7 @@ i++
 ){
 
 let day;
+
 let displayMonth=
 month;
 
@@ -3573,34 +4168,39 @@ button
 
 }
 
-function setRange(k){
+function setRange(key){
 
 const c=
-RANGE_CONFIG[k];
+RANGE_CONFIG[key];
 
 if(!c){
 return;
 }
 
-averageRange=k;
+averageRange=
+key;
 
-customRangeStart=null;
-customRangeEnd=null;
+customRangeStart=
+null;
 
-const end=
-new Date();
+customRangeEnd=
+null;
 
-const start=
-new Date(
-end.getTime()-
-c.minutes*
-60000
-);
+const w=
+rangeWindow();
+
+if(w){
 
 setPickerInputs(
-start,
-end
+w.start,
+w.end
 );
+
+}
+
+const end=
+w?.end||
+new Date();
 
 calendarDisplayDate=
 new Date(
@@ -3613,7 +4213,7 @@ calendarSelectionStep=
 "start";
 
 updateQuickRangeUI(
-k
+key
 );
 
 if(
@@ -4094,9 +4694,14 @@ function confidenceText(v){
 
 return{
 
-high:"สูง",
-medium:"ปานกลาง",
-low:"ต่ำ"
+high:
+"สูง",
+
+medium:
+"ปานกลาง",
+
+low:
+"ต่ำ"
 
 }[
 String(
@@ -4186,7 +4791,8 @@ generatedDate
 ?`อัปเดต AI: ${generatedDate.toLocaleString(
 "th-TH",
 {
-timeZone:"Asia/Bangkok"
+timeZone:
+"Asia/Bangkok"
 }
 )}`
 :"อัปเดต AI: --";
@@ -4267,7 +4873,8 @@ aiLoading
 return;
 }
 
-aiLoading=true;
+aiLoading=
+true;
 
 renderAI(
 aiPayload
@@ -4308,11 +4915,13 @@ console.error(
 e
 );
 
-aiPayload=null;
+aiPayload=
+null;
 
 }finally{
 
-aiLoading=false;
+aiLoading=
+false;
 
 if(button){
 
@@ -4323,6 +4932,253 @@ false;
 
 renderAI(
 aiPayload
+);
+
+}
+
+}
+
+
+// =====================================================
+// AI FORECAST
+// =====================================================
+
+function renderAIForecast(payload){
+
+const box=
+$("aiForecastDetails")||
+$("forecastMessage");
+
+const badge=
+$("aiForecastStatusBadge")||
+$("forecastBadge");
+
+const generated=
+$("aiForecastGeneratedAt");
+
+if(
+aiForecastLoading
+){
+
+if(box){
+
+box.innerHTML=
+'<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังคาดการณ์สภาพแวดล้อม...</div>';
+
+}
+
+if(badge){
+
+badge.textContent=
+"AI • กำลังคาดการณ์";
+
+}
+
+return;
+
+}
+
+if(
+!payload
+){
+
+if(box){
+
+box.innerHTML=
+'<div class="ai-result-summary">ยังไม่มีผล AI Forecast • กราฟเชิงสถิติยังใช้เป็นข้อมูลฐานได้</div>';
+
+}
+
+if(badge){
+
+badge.textContent=
+"AI Forecast • รอข้อมูล";
+
+}
+
+return;
+
+}
+
+const d=
+payload.data||
+{};
+
+if(generated){
+
+const dt=
+parseDate(
+payload.generated_at
+);
+
+generated.textContent=
+dt
+?`อัปเดต AI Forecast: ${dt.toLocaleString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok"
+}
+)}`
+:"อัปเดต AI Forecast: --";
+
+}
+
+if(badge){
+
+badge.textContent=
+`AI Forecast • ${confidenceText(d.confidence||"low")}`;
+
+}
+
+if(!box){
+return;
+}
+
+box.innerHTML=
+`
+<div class="ai-forecast-headline">
+${esc(d.headline||"AI Environmental Forecast")}
+</div>
+
+<div class="ai-forecast-grid">
+
+<div class="ai-forecast-item">
+
+<div class="ai-forecast-label">
+🌫 AIR
+</div>
+
+<div>
+${esc(d.air_forecast||"ยังไม่มีข้อมูล")}
+</div>
+
+</div>
+
+<div class="ai-forecast-item">
+
+<div class="ai-forecast-label">
+🌡 HEAT
+</div>
+
+<div>
+${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}
+</div>
+
+</div>
+
+<div class="ai-forecast-item">
+
+<div class="ai-forecast-label">
+☁ SKY
+</div>
+
+<div>
+${esc(d.sky_forecast||"ยังไม่มีข้อมูล")}
+</div>
+
+</div>
+
+<div class="ai-forecast-item">
+
+<div class="ai-forecast-label">
+🏃 ACTIVITY
+</div>
+
+<div>
+${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}
+</div>
+
+</div>
+
+</div>
+
+<div class="ai-meta-row">
+
+<span>
+โมเดล:
+${esc(payload.model||"Rule-based fallback")}
+</span>
+
+<span class="ai-confidence">
+ความเชื่อมั่น:
+${confidenceText(d.confidence||"low")}
+</span>
+
+</div>
+`;
+
+}
+
+async function loadAIForecast(
+force=false
+){
+
+if(
+aiForecastLoading
+){
+return;
+}
+
+aiForecastLoading=
+true;
+
+renderAIForecast(
+aiForecastPayload
+);
+
+const button=
+$("aiForecastRefreshButton");
+
+if(button){
+
+button.disabled=
+true;
+
+}
+
+try{
+
+const url=
+API.forecast+
+(
+force
+?"?refresh=1"
+:""
+);
+
+aiForecastPayload=
+await fetchJson(
+url
+);
+
+aiForecastLastLoadedAt=
+new Date();
+
+}catch(e){
+
+console.error(
+"AI forecast error:",
+e
+);
+
+aiForecastPayload=
+null;
+
+}finally{
+
+aiForecastLoading=
+false;
+
+if(button){
+
+button.disabled=
+false;
+
+}
+
+renderAIForecast(
+aiForecastPayload
 );
 
 }
@@ -4343,7 +5199,7 @@ monitoring:[
 
 smartSummary:[
 "Smart Summary",
-"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, จุดสูงสุด, ความผิดปกติ และข้อมูลเซนเซอร์ที่ถูกตัดออก โดยทำงานได้แม้ AI ใช้งานไม่ได้"
+"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Sky Condition และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
 ],
 
 currentAir:[
@@ -4353,17 +5209,17 @@ currentAir:[
 
 historical:[
 "Historical Data & Trend",
-"ดูข้อมูลย้อนหลัง ค่าเฉลี่ย สูงสุด ต่ำสุด แนวโน้ม และส่งออก Excel"
+"ดูข้อมูลย้อนหลัง ค่าเฉลี่ย สูงสุด ต่ำสุด แนวโน้ม และส่งออก Excel โดยค่าเริ่มต้นเป็นข้อมูลของวันนี้ตั้งแต่ 00:00 น. ตามเวลาไทย"
 ],
 
 forecast:[
 "Forecast",
-"คาดการณ์ระยะสั้นด้วย Linear Regression ไม่ใช่ค่าที่วัดจริงในอนาคต"
+"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Sky และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
 ],
 
 ai:[
 "AI วิเคราะห์สถานการณ์",
-"เชื่อม Gemini ผ่าน Cloudflare Worker เพื่อวิเคราะห์ข้อมูลปัจจุบัน สถานะอุปกรณ์ Alerts และข้อมูลย้อนหลังร่วมกัน โดย Smart Summary จะยังทำงานเป็นระบบสำรองหาก AI ไม่พร้อม"
+"เชื่อม Gemini ผ่าน Cloudflare Worker เพื่อวิเคราะห์ความสัมพันธ์ของ PM1.0, PM2.5, PM10, Temperature, Humidity, Light, Heat Index, สถานะระบบ และข้อมูลย้อนหลัง โดยแยกหน้าที่จาก AI Forecast"
 ]
 
 };
@@ -4378,7 +5234,8 @@ p?.classList
 "active"
 );
 
-activeHelpButton=null;
+activeHelpButton=
+null;
 
 }
 
@@ -4422,7 +5279,7 @@ $("helpPopoverBody")
 ){
 
 $("helpPopoverBody").innerHTML=
-`<p>${x[1]}</p>`;
+`<p>${esc(x[1])}</p>`;
 
 }
 
@@ -4562,8 +5419,15 @@ updateCurrent();
 
 }
 
-$("metric")
-?.addEventListener(
+const metricSelect=
+$("metric");
+
+if(metricSelect){
+
+metricSelect.value=
+metric;
+
+metricSelect.addEventListener(
 "change",
 e=>{
 
@@ -4574,6 +5438,8 @@ drawCharts();
 
 }
 );
+
+}
 
 $("historyRangeButton")
 ?.addEventListener(
@@ -4768,6 +5634,18 @@ true
 }
 );
 
+$("aiForecastRefreshButton")
+?.addEventListener(
+"click",
+()=>{
+
+loadAIForecast(
+true
+);
+
+}
+);
+
 $("exportButton")
 ?.addEventListener(
 "click",
@@ -4814,8 +5692,11 @@ e.key==="Escape"
 ){
 
 closeExport();
+
 closeHelp();
+
 closeCreditImage();
+
 closeHistoryRangePicker();
 
 }
@@ -4895,10 +5776,11 @@ renderAverages();
 
 drawCharts();
 
-// AI แยกจาก realtime
-// ไม่บังคับให้ Dashboard ทั้งหน้ารอ Gemini
-
 loadAI(
+false
+);
+
+loadAIForecast(
 false
 );
 
@@ -4927,11 +5809,6 @@ updateAlertUI();
 
 // =====================================================
 // REALTIME
-//
-// Latest + Mother + Alerts
-// ทุก 10 วินาที
-//
-// ไม่ยิง History / AI ทุก 10 วินาที
 // =====================================================
 
 async function loadRealtime(){
@@ -5000,7 +5877,7 @@ updateAlertUI();
 
 
 // =====================================================
-// HISTORY — 60s
+// HISTORY
 // =====================================================
 
 async function loadHistorical(){
@@ -5013,6 +5890,8 @@ await loadHistory();
 renderAverages();
 
 drawCharts();
+
+updateSmart();
 
 }catch(e){
 
@@ -5027,7 +5906,7 @@ e
 
 
 // =====================================================
-// STANDARDS — 5 MIN
+// STANDARDS
 // =====================================================
 
 async function loadStandardsOnly(){
@@ -5070,9 +5949,12 @@ new Date()
 .toLocaleString(
 "th-TH",
 {
-timeZone:"Asia/Bangkok",
-dateStyle:"medium",
-timeStyle:"medium"
+timeZone:
+"Asia/Bangkok",
+dateStyle:
+"medium",
+timeStyle:
+"medium"
 }
 );
 
@@ -5094,9 +5976,17 @@ rangeLabel();
 
 }
 
+updateQuickRangeUI(
+averageRange
+);
+
 updateForecastToggle();
 
 renderAI(
+null
+);
+
+renderAIForecast(
 null
 );
 
@@ -5109,8 +5999,9 @@ updateClock();
 loadInitial();
 
 
-// Clock
-// ไม่อ่าน D1
+// =====================================================
+// CLOCK
+// =====================================================
 
 setInterval(
 updateClock,
@@ -5118,7 +6009,9 @@ updateClock,
 );
 
 
-// Latest / Mother / Alerts
+// =====================================================
+// REALTIME
+// =====================================================
 
 setInterval(
 loadRealtime,
@@ -5126,7 +6019,9 @@ loadRealtime,
 );
 
 
-// Historical
+// =====================================================
+// HISTORICAL
+// =====================================================
 
 setInterval(
 loadHistorical,
@@ -5134,7 +6029,9 @@ loadHistorical,
 );
 
 
-// Standards
+// =====================================================
+// STANDARDS
+// =====================================================
 
 setInterval(
 loadStandardsOnly,
@@ -5142,10 +6039,9 @@ loadStandardsOnly,
 );
 
 
-// AI
-//
-// 5 นาที
-// Worker มี Cache อีกชั้น
+// =====================================================
+// AI ANALYSIS
+// =====================================================
 
 setInterval(
 ()=>{
@@ -5159,9 +6055,25 @@ false
 );
 
 
-// Refresh UI จากข้อมูลที่มีใน Browser
-//
-// ไม่ยิง Worker / D1
+// =====================================================
+// AI FORECAST
+// =====================================================
+
+setInterval(
+()=>{
+
+loadAIForecast(
+false
+);
+
+},
+300000
+);
+
+
+// =====================================================
+// LOCAL STATUS REFRESH
+// =====================================================
 
 setInterval(
 ()=>{
