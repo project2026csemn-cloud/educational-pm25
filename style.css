@@ -4225,3 +4225,36 @@ section.grid { align-items: start; }
 @media(max-width:480px){
   .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:1fr!important;}
 }
+
+
+/* =========================================================
+   AI ENVIRONMENTAL INTELLIGENCE / AI TREND
+   ========================================================= */
+.ai-intelligence-section{align-self:start;min-height:0!important;height:auto!important;overflow:visible}
+.ai-intelligence-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.ai-intelligence-statusline{margin-top:6px;font-size:11px;color:#64748b;letter-spacing:.04em}
+.ai-intelligence-badges{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ai-intelligence-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+.ai-intelligence-panel{min-width:0;height:auto!important;align-self:start;padding:16px;border:1px solid rgba(148,163,184,.13);border-radius:16px;background:rgba(4,17,31,.42)}
+.ai-forecast-panel{border-color:rgba(34,211,238,.22);background:linear-gradient(145deg,rgba(6,31,46,.62),rgba(4,17,31,.5))}
+.ai-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.ai-panel-head h3{font-size:15px;font-weight:900;color:#e2e8f0;margin-top:3px}
+.ai-panel-kicker{font-size:9px;font-weight:900;letter-spacing:.16em;color:#22d3ee}
+.ai-model-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.ai-model-strip>div{padding:11px 12px;border:1px solid rgba(148,163,184,.12);border-radius:12px;background:rgba(2,13,25,.46);min-width:0}
+.ai-model-strip-label{display:block;font-size:8px;font-weight:800;letter-spacing:.12em;color:#64748b;margin-bottom:4px}
+.ai-model-strip b{display:block;font-size:11px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-trend-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.ai-trend-item{padding:10px 11px;border-radius:11px;border:1px solid rgba(34,211,238,.13);background:rgba(2,18,31,.5)}
+.ai-trend-variable{font-size:9px;font-weight:900;color:#67e8f9;letter-spacing:.08em}
+.ai-trend-direction{font-size:12px;font-weight:900;color:#f1f5f9;margin-top:4px}
+.ai-trend-explanation{font-size:10px;line-height:1.45;color:#94a3b8;margin-top:4px}
+.ai-trend-driver{margin-top:10px;padding:10px 12px;border-left:2px solid #22d3ee;background:rgba(34,211,238,.055);border-radius:0 10px 10px 0;font-size:10px;color:#cbd5e1}
+.ai-numeric-base{min-height:0!important}
+.ai-unavailable{padding:12px;border:1px solid rgba(248,113,113,.2);border-radius:12px;background:rgba(127,29,29,.09);color:#fca5a5}
+.dashboard-charts-zone{align-items:start!important}
+.dashboard-chart-card{height:auto!important;min-height:0!important;align-self:start!important}
+.bottom-forecast-canvas{max-height:290px!important}
+#historyChart{max-height:310px!important}
+@media(max-width:1100px){.ai-intelligence-grid{grid-template-columns:1fr}.ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-trend-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.ai-intelligence-header,.ai-panel-head{flex-direction:column}.ai-intelligence-badges{justify-content:flex-start}.ai-model-strip,.ai-trend-summary{grid-template-columns:1fr}}
