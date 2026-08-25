@@ -4137,3 +4137,91 @@ section.grid { align-items: start; }
         grid-column:auto!important;
     }
 }
+
+
+/* =========================================================
+   PRIORITY LAYOUT — NO EMPTY TRACKS
+   2026-08-25
+   ========================================================= */
+.dashboard-monitoring-section,
+.dashboard-summary-section,
+.dashboard-current-section,
+.dashboard-ai-stack,
+.historical-section,
+.dashboard-charts-zone{width:100%;}
+
+/* Each major block owns a full row. This removes the large blank areas
+   created when a short card shared a CSS-grid row with a taller card. */
+.monitoring-card,.smart-summary-card,.current-environment-card,
+.ai-analysis-card,.ai-forecast-card,.historical-section,.dashboard-chart-card{
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+}
+
+/* 1. Monitoring */
+.monitoring-card{padding:18px!important;}
+.monitoring-card > .grid{gap:12px!important;}
+.monitoring-card .node{min-height:0!important;padding:14px!important;}
+
+/* 2. Smart Summary — wide horizontal status center */
+.smart-summary-card{padding:18px!important;}
+.smart-summary-body{margin-top:12px!important;gap:8px!important;}
+.smart-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;}
+.smart-summary-stat{padding:11px 12px!important;min-height:86px!important;}
+.smart-summary-activity{margin-top:8px!important;padding:10px 12px!important;}
+.smart-summary-notes{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-top:7px!important;}
+.smart-summary-note{height:100%;margin:0!important;}
+
+/* 3. Current + Alerts are one coherent section */
+.current-environment-card{padding:18px!important;}
+.current-environment-grid{margin-top:16px!important;}
+.current-alerts-strip{margin-top:14px;padding-top:14px;border-top:1px solid rgba(148,163,184,.10);}
+.current-alerts-strip .section-title-with-help{margin-bottom:9px;}
+.current-alerts-strip h2{font-size:15px!important;}
+.current-alerts-strip #alerts{margin-top:0!important;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.current-alerts-strip #alerts > *{margin:0!important;}
+.current-environment-footer{margin-top:12px!important;}
+
+/* 4. AI blocks are stacked, never forced into equal-height columns */
+.dashboard-ai-stack{display:grid;grid-template-columns:1fr;gap:16px;}
+.dashboard-ai-block{margin:0!important;}
+.ai-analysis-card,.ai-forecast-card{padding:18px!important;}
+.ai-details-panel{min-height:0!important;padding:14px!important;}
+.ai-forecast-shell{margin-top:12px!important;}
+#forecastMessage{margin-top:12px!important;}
+.forecast-base-label{margin-top:12px!important;}
+
+/* 5. Historical statistics before all graphs */
+.historical-section{padding:18px!important;}
+.historical-section .soft{padding:14px!important;}
+.historical-section .grid.grid-cols-6{gap:18px!important;}
+.historical-section .grid.grid-cols-5{gap:18px!important;}
+
+/* 6. Graphs live at the bottom */
+.dashboard-charts-zone{display:grid;grid-template-columns:1fr;gap:16px;margin-top:0!important;}
+.dashboard-chart-card{padding:18px!important;}
+.chart-zone-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.chart-zone-title{font-size:18px;font-weight:900;color:#f8fafc;}
+.chart-zone-subtitle{margin-top:3px;font-size:11px;color:#64748b;}
+.bottom-chart-wrap{margin-top:0!important;padding:12px!important;}
+#historyChart{width:100%!important;max-height:330px!important;}
+#forecastChart{width:100%!important;max-height:280px!important;margin-top:12px!important;}
+.forecast-display-panel{margin-top:0!important;}
+
+/* Global section rhythm */
+.dashboard-monitoring-section,.dashboard-summary-section,.dashboard-current-section,
+.dashboard-ai-stack,.historical-section,.dashboard-charts-zone{margin-bottom:16px!important;}
+
+@media(max-width:1200px){
+  .smart-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .smart-summary-notes{grid-template-columns:1fr!important;}
+  .current-alerts-strip #alerts{grid-template-columns:1fr!important;}
+}
+@media(max-width:760px){
+  .smart-summary-grid{grid-template-columns:1fr!important;}
+  .monitoring-card > .grid{grid-template-columns:1fr!important;}
+  .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;}
+  .chart-zone-title{font-size:16px;}
+}
+@media(max-width:480px){
+  .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:1fr!important;}
+}
