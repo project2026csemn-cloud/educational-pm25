@@ -8,8 +8,7 @@ mother:`${BASE}/api/mother_status`,
 alerts:`${BASE}/api/alert_states`,
 standards:`${BASE}/api/standards.php`,
 ai:`${BASE}/api/ai_analysis`,
-forecast:`${BASE}/api/ai_forecast`,
-intelligence:`${BASE}/api/ai_intelligence`
+forecast:`${BASE}/api/ai_forecast`
 };
 
 const TOTAL_NODES=3;
@@ -4543,57 +4542,206 @@ ${confidenceText(data.confidence)}
 
 }
 
-async function loadAIIntelligence(force=false){
-if(aiLoading||aiForecastLoading)return;
+async function loadAI(
+force=false
+){
 
-aiLoading=true;
-aiForecastLoading=true;
-renderAI(aiPayload);
-renderAIForecast(aiForecastPayload);
+if(
+aiLoading
+){
+return;
+}
 
-const b1=$("aiRefreshButton");
-const b2=$("aiForecastRefreshButton");
-if(b1)b1.disabled=true;
-if(b2)b2.disabled=true;
+aiLoading=
+true;
+
+renderAI(
+aiPayload
+);
+
+const button=
+$("aiRefreshButton");
+
+if(button){
+
+button.disabled=
+true;
+
+}
 
 try{
-const url=API.intelligence+(force?"?refresh=1":"");
-const payload=await fetchJson(url);
-const common={
-success:payload.success,
-ai:payload.ai,
-cached:payload.cached,
-model:payload.model,
-generated_at:payload.generated_at,
-reason:payload.reason,
-retry_after_seconds:payload.retry_after_seconds,
-error:payload.error
-};
-aiPayload={...common,data:payload.analysis||{},context:payload.context?.analysis||null};
-aiForecastPayload={...common,data:payload.forecast||{},context:payload.context?.forecast||null};
-aiLastLoadedAt=new Date();
-aiForecastLastLoadedAt=new Date();
+
+const url=
+API.ai+
+(
+force
+?"?refresh=1"
+:""
+);
+
+aiPayload=
+await fetchJson(
+url
+);
+
+aiLastLoadedAt=
+new Date();
+
 }catch(e){
-console.error("AI intelligence error:",e);
-aiPayload=null;
-aiForecastPayload=null;
+
+console.error(
+"AI analysis error:",
+e
+);
+
+aiPayload=
+null;
+
 }finally{
-aiLoading=false;
-aiForecastLoading=false;
-if(b1)b1.disabled=false;
-if(b2)b2.disabled=false;
-renderAI(aiPayload);
-renderAIForecast(aiForecastPayload);
+
+aiLoading=
+false;
+
+if(button){
+
+button.disabled=
+false;
+
+}
+
+renderAI(
+aiPayload
+);
+
+}
+
+}
+
+// =====================================================
+// AI FORECAST
+// =====================================================
+
+function renderAIForecast(payload){
+const box=$("aiForecastDetails")||$("forecastMessage");
+const badge=$("aiForecastStatusBadge");
+const generated=$("aiForecastGeneratedAt");
+if(aiForecastLoading){
+if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
+if(badge)badge.textContent="AI • กำลังวิเคราะห์";
+return;
+}
+if(!payload){
+if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลจาก AI Trend & Forecast</div>';
+if(badge)badge.textContent="AI • รอข้อมูล";
+return;
+}
+const d=payload.data||{};
+const isAI=payload.ai===true;
+if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดต AI: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดต AI: --";}
+if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;badge.textContent=isAI?`AI Trend • ${confidenceText(d.confidence||"low")}`:"AI UNAVAILABLE";}
+if(!box)return;
+if(!isAI){
+const reasonText=
+payload.reason==="gemini_quota_exhausted"
+?"โควตา Gemini ฟรีถึงขีดจำกัดแล้ว ระบบข้อมูลจริงยังทำงานตามปกติ"
+:payload.reason==="gemini_secret_not_configured"
+?"ยังไม่ได้ตั้งค่า GEMINI_API_KEY"
+:"ไม่สามารถเชื่อม Gemini ได้ในขณะนี้";
+
+box.innerHTML=`<div class="ai-unavailable"><b>AI Trend ยังไม่พร้อมใช้งาน</b><div class="mt-1">${esc(reasonText)}</div></div>`;
+return;
+}
+const trends=Array.isArray(d.trend_analysis)?d.trend_analysis:[];
+const preferred=["pm25","temperature","humidity","light"];
+const trendCards=preferred.map(field=>trends.find(x=>x?.field===field)).filter(Boolean);
+box.innerHTML=`
+<div class="ai-forecast-headline">${esc(d.headline||"AI Environmental Trend & Forecast")}</div>
+<div class="ai-trend-summary">${trendCards.map(x=>`<div class="ai-trend-item"><div class="ai-trend-variable">${esc(CURRENT_METRIC_CONFIG[x.field]?.label||x.field)}</div><div class="ai-trend-direction">${esc(aiDirectionText(x.direction))}</div><div class="ai-trend-explanation">${esc(x.explanation||"")}</div></div>`).join("")}</div>
+<div class="ai-trend-driver"><b>ตัวแปรหลัก:</b> ${esc(d.primary_driver||"--")}<br><b>รูปแบบผิดปกติ:</b> ${esc(d.anomaly_summary||"--")}</div>
+<div class="ai-forecast-grid mt-3">
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌫 AIR</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 HEAT</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">☁ SKY</div><div>${esc(d.sky_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🏃 ACTIVITY</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
+</div>
+<div class="ai-meta-row"><span>โมเดล: ${esc(payload.model||"Gemini")}</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
+}
+
+async function loadAIForecast(
+force=false
+){
+
+if(
+aiForecastLoading
+){
+return;
+}
+
+aiForecastLoading=
+true;
+
+renderAIForecast(
+aiForecastPayload
+);
+
+const button=
+$("aiForecastRefreshButton");
+
+if(button){
+
+button.disabled=
+true;
+
+}
+
+try{
+
+const url=
+API.forecast+
+(
+force
+?"?refresh=1"
+:""
+);
+
+aiForecastPayload=
+await fetchJson(
+url
+);
+
+aiForecastLastLoadedAt=
+new Date();
+
+}catch(e){
+
+console.error(
+"AI forecast error:",
+e
+);
+
+aiForecastPayload=
+null;
+
+}finally{
+
+aiForecastLoading=
+false;
+
+if(button){
+
+button.disabled=
+false;
+
+}
+
+renderAIForecast(
+aiForecastPayload
+);
+
 drawCharts();
-}
+
 }
 
-async function loadAI(force=false){
-return loadAIIntelligence(force);
-}
-
-async function loadAIForecast(force=false){
-return loadAIIntelligence(force);
 }
 
 // =====================================================
@@ -5188,7 +5336,11 @@ renderAverages();
 
 drawCharts();
 
-loadAIIntelligence(
+loadAI(
+false
+);
+
+loadAIForecast(
 false
 );
 
