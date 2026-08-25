@@ -614,6 +614,19 @@ getNodeStatus(n)
 }
 
 // =====================================================
+// DASHBOARD DISPLAY STATUS
+//
+// Backend ยังเก็บ online / sleep / offline ตามจริง
+// แต่ Dashboard แสดง sleep เป็น ONLINE
+// =====================================================
+
+function getNodeDisplayStatus(node){
+const st=getNodeStatus(node);
+return st==="offline"?"offline":"online";
+}
+
+
+// =====================================================
 // FETCH
 // =====================================================
 
@@ -883,7 +896,7 @@ return;
 }
 
 const st=
-getNodeStatus(n);
+getNodeDisplayStatus(n);
 
 const map={
 
@@ -891,12 +904,6 @@ online:[
 "status-online",
 "status-online-dot",
 "ONLINE"
-],
-
-sleep:[
-"status-sleep",
-"status-sleep-dot",
-"SLEEP"
 ],
 
 offline:[
@@ -1809,7 +1816,7 @@ $("currentOverallDetail")
 ){
 
 $("currentOverallDetail").textContent=
-"ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP";
+"ค่าเฉลี่ยจากจุดที่ ONLINE";
 
 }
 
@@ -2127,22 +2134,13 @@ const on=
 latestNodes
 .filter(
 n=>
-getNodeStatus(n)==="online"
-)
-.length;
-
-const sl=
-latestNodes
-.filter(
-n=>
-getNodeStatus(n)==="sleep"
+getNodeDisplayStatus(n)==="online"
 )
 .length;
 
 const off=
 TOTAL_NODES-
-on-
-sl;
+on;
 
 let severity=
 "normal";
@@ -2187,7 +2185,7 @@ snap.heatIndex==null
 :`${fmt(snap.heatIndex)} °C • ${heat.label}`;
 
 const systemText=
-`ONLINE ${on} • SLEEP ${sl} • OFFLINE ${off}`;
+`ONLINE ${on} • OFFLINE ${off}`;
 
 const activity=
 activityRecommendation(
@@ -2218,22 +2216,6 @@ text:
 `กิจกรรมกลางแจ้ง: ${activity}`
 
 });
-
-if(
-sl>0
-){
-
-notes.push({
-
-type:
-"info",
-
-text:
-`มี ${sl} อุปกรณ์อยู่ใน Deep Sleep ตามรอบการทำงาน`
-
-});
-
-}
 
 if(
 off>0
@@ -4749,7 +4731,7 @@ const HELP_CONTENT={
 
 monitoring:[
 "Monitoring Nodes",
-"แสดงสถานะและค่าตรวจวัดล่าสุดของอุปกรณ์ทั้ง 3 จุด ONLINE/SLEEP ที่ไม่มีข้อมูลใหม่เกิน 6 นาทีจะแสดง OFFLINE"
+`แสดงสถานะบน Dashboard เพียง ONLINE / OFFLINE โดยสถานะ Deep Sleep ของอุปกรณ์ยังถูกเก็บไว้ภายในระบบเพื่อแยกการหลับตามรอบออกจากการขาดการเชื่อมต่อ อุปกรณ์ที่ไม่มีข้อมูลใหม่เกิน 6 นาทีจะแสดง OFFLINE`
 ],
 
 smartSummary:[
@@ -4759,7 +4741,7 @@ smartSummary:[
 
 currentAir:[
 "คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน",
-"ใช้ข้อมูลล่าสุดจากจุดที่ ONLINE/SLEEP และยังไม่เกิน 6 นาที"
+"ใช้ข้อมูลล่าสุดจากจุดที่ระบบถือว่า ONLINE และยังไม่เกิน 6 นาที"
 ],
 
 alerts:[
