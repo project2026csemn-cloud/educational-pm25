@@ -2251,16 +2251,6 @@ text:
 
 }
 
-notes.push({
-
-type:
-"info",
-
-text:
-"PM1.0 ใช้เป็นข้อมูลประกอบการวิเคราะห์ ไม่ใช้ตัดสิน Health Alert โดยตรง"
-
-});
-
 e.innerHTML=
 `<div class="smart-summary-headline ${severity}">
 ${headline}
@@ -2533,7 +2523,7 @@ ${esc(x.detail)}
 )
 .join("")
 
-:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b><div class="text-xs text-slate-400 mt-1">PM1.0 และ Light ใช้เป็นข้อมูลประกอบ ไม่สร้าง Health Alert</div></div>';
+:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b></div>';
 
 }
 
@@ -5177,6 +5167,11 @@ smartSummary:[
 currentAir:[
 "คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน",
 "ใช้ข้อมูลล่าสุดจากจุดที่ ONLINE/SLEEP และยังไม่เกิน 6 นาที"
+],
+
+alerts:[
+"Alerts",
+"ระบบแจ้งเตือนสถานะอุปกรณ์, PM2.5 และ Heat Index ตามเงื่อนไขที่กำหนดไว้ ส่วน PM1.0 และ Light ใช้เป็นข้อมูลประกอบการวิเคราะห์และ AI Forecast ไม่ใช้เป็น Health Alert โดยตรง"
 ],
 
 historical:[
