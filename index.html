@@ -1,39 +1,27 @@
 <!DOCTYPE html>
+
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
-    <title>ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร</title>
-    <meta name="description"
-          content="ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และการวิเคราะห์คุณภาพอากาศด้วย AI">
-    <meta name="keywords"
-          content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, วัดนิเวศธรรมประวัติราชวรวิหาร, แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร, ระบบตรวจสอบฝุ่น PM2.5, PM2.5 ในสถานศึกษา, ระบบตรวจสอบคุณภาพอากาศ, PM2.5 Monitoring, ESP32, IoT, AI วิเคราะห์คุณภาพอากาศ, PM1.0, PM10">
-    <meta name="author"
-          content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-    <meta name="robots"
-          content="index, follow">
-    <meta name="googlebot"
-          content="index, follow">
-    <link rel="canonical"
-          href="https://project2026csemn-cloud.github.io/educational-pm25/">
-    <meta property="og:locale"
-          content="th_TH">
-    <meta property="og:type"
-          content="website">
-    <meta property="og:site_name"
-          content="Educational PM2.5 Monitoring System">
-    <meta property="og:title"
-          content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-    <meta property="og:description"
-          content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร">
-    <meta property="og:url"
-          content="https://project2026csemn-cloud.github.io/educational-pm25/">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="img/icon.png">
-    <script src="chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script type="application/ld+json">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร</title>
+<meta content="ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และการวิเคราะห์คุณภาพอากาศด้วย AI" name="description"/>
+<meta content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, วัดนิเวศธรรมประวัติราชวรวิหาร, แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร, ระบบตรวจสอบฝุ่น PM2.5, PM2.5 ในสถานศึกษา, ระบบตรวจสอบคุณภาพอากาศ, PM2.5 Monitoring, ESP32, IoT, AI วิเคราะห์คุณภาพอากาศ, PM1.0, PM10" name="keywords"/>
+<meta content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" name="author"/>
+<meta content="index, follow" name="robots"/>
+<meta content="index, follow" name="googlebot"/>
+<link href="https://project2026csemn-cloud.github.io/educational-pm25/" rel="canonical"/>
+<meta content="th_TH" property="og:locale"/>
+<meta content="website" property="og:type"/>
+<meta content="Educational PM2.5 Monitoring System" property="og:site_name"/>
+<meta content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:title"/>
+<meta content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:description"/>
+<meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
+<link href="style.css" rel="stylesheet"/>
+<link href="img/icon.png" rel="icon" type="image/png"/>
+<script src="chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="application/ld+json">
     {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -85,1370 +73,1003 @@
 HEADER
 ========================================================= -->
 <header class="glass card px-5 py-4 mb-5 flex flex-col lg:flex-row justify-between gap-5">
-    <div class="flex items-center gap-4">
-        <div>
-            <img src="img/โลโก.png"
-                 alt="Logo"
-                 class="w-20 h-20 rounded-xl">
-            <img src="img/ICT.jpg"
-                 alt="Logo"
-                 class="w-20 h-20 rounded-full">
-        </div>
-        <div>
-            <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
+<div class="flex items-center gap-4">
+<div>
+<img alt="Logo" class="w-20 h-20 rounded-xl" src="img/โลโก.png"/>
+<img alt="Logo" class="w-20 h-20 rounded-full" src="img/ICT.jpg"/>
+</div>
+<div>
+<div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
                 Educational Institution
                 <span class="text-cyan-400">
                     PM2.5
                 </span>
                 Dust Monitoring System
             </div>
-            <div class="text-sm text-slate-400 mt-1">
+<div class="text-sm text-slate-400 mt-1">
                 ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
             </div>
-        </div>
-    </div>
-    <div class="flex flex-wrap items-center justify-end gap-3">
-        <div class="text-right hidden md:block">
-            <div id="clock" class="font-bold">
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-end gap-3">
+<div class="text-right hidden md:block">
+<div class="font-bold" id="clock">
                 --
             </div>
-            <div class="text-xs text-slate-400 mt-1"></div>
-        </div>
-    </div>
+<div class="text-xs text-slate-400 mt-1"></div>
+</div>
+</div>
 </header>
 <!-- =========================================================
 MONITORING NODES + AI
 ========================================================= -->
-<section class="grid xl:grid-cols-4 gap-4 mb-4 dashboard-top-row">
-    <div class="glass card p-4 xl:col-span-3 monitoring-card">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <div class="section-title-with-help">
-                    <h2 class="text-xl font-black">
+<section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
+<div class="flex justify-between items-center mb-3">
+<div>
+<div class="section-title-with-help">
+<h2 class="text-xl font-black">
                         📡 Monitoring Nodes
                     </h2>
-                    <button
-                        type="button"
-                        class="help-button"
-                        data-help="monitoring"
-                        aria-label="ดูคำอธิบาย Monitoring Nodes"
-                        aria-expanded="false"
-                    >
+<button aria-expanded="false" aria-label="ดูคำอธิบาย Monitoring Nodes" class="help-button" data-help="monitoring" type="button">
                         ?
                     </button>
-                </div>
-            </div>
-            <div class="flex justify-center">
-                <div class="badge rounded-2xl px-4 py-3 min-w-[150px]">
-                    <div class="text-[11px] text-slate-400 uppercase tracking-wider">
+</div>
+</div>
+<div class="flex justify-center">
+<div class="badge rounded-2xl px-4 py-3 min-w-[150px]">
+<div class="text-[11px] text-slate-400 uppercase tracking-wider">
                         Gateway
                     </div>
-
-                    <div class="font-bold mt-1">
-                        <span
-                            id="gatewayDotTop"
-                            class="text-slate-500"
-                        >
+<div class="font-bold mt-1">
+<span class="text-slate-500" id="gatewayDotTop">
                             ●
                         </span>
-
-                        <span id="gatewayStatusTop">
+<span id="gatewayStatusTop">
                             CHECKING
                         </span>
-                    </div>
-
-                    <div
-                        id="nodesActiveTop"
-                        class="text-[10px] text-slate-500 mt-1"
-                    >
+</div>
+<div class="text-[10px] text-slate-500 mt-1" id="nodesActiveTop">
                         0 / 3 Nodes active
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="grid md:grid-cols-3 gap-3">
-            <!-- NODE 1 -->
-            <div
-                id="nodeCard1"
-                class="node offline soft rounded-2xl p-4 border border-slate-800"
-            >
-                <div class="flex justify-between">
-                    <b class="text-xl">
+</div>
+</div>
+</div>
+<div class="grid md:grid-cols-3 gap-3">
+<!-- NODE 1 -->
+<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard1">
+<div class="flex justify-between">
+<b class="text-xl">
                         อุปกรณ์ 1
                         <div class="text-xs text-slate-400 mt-1">
                             Last update
                             <span id="lastUpdate1">
                                 --
                             </span>
-                        </div>
-                    </b>
-                    <span
-                        id="n1status"
-                        class="text-slate-500 text-xs font-bold"
-                    >
+</div>
+</b>
+<span class="text-slate-500 text-xs font-bold" id="n1status">
                         ● OFFLINE
                         <span class="badge rounded-full px-3 py-1 text-xs">
                             ESP-NOW
                         </span>
-                    </span>
-                </div>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-                    <span class="text-slate-400">
+</span>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+<span class="text-slate-400">
                         PM1.0
-                        <b id="n1pm1" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n1pm1">--</b>
+</span>
+<span class="text-slate-400">
                         PM2.5
-                        <b id="n1pm25" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n1pm25">--</b>
+</span>
+<span class="text-slate-400">
                         PM10
-                        <b id="n1pm10" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n1pm10">--</b>
+</span>
+<span class="text-slate-400">
                         Temp
-                        <b id="n1temp" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n1temp">--</b>
+</span>
+<span class="text-slate-400">
                         Humidity
-                        <b id="n1hum" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n1hum">--</b>
+</span>
+<span class="text-slate-400">
                         Light
-                        <b id="n1light" class="text-white ml-1">--</b>
-                    </span>
-                </div>
-            </div>
-            <!-- NODE 2 -->
-            <div
-                id="nodeCard2"
-                class="node offline soft rounded-2xl p-4 border border-slate-800"
-            >
-                <div class="flex justify-between">
-                    <b class="text-xl">
+                        <b class="text-white ml-1" id="n1light">--</b>
+</span>
+</div>
+</div>
+<!-- NODE 2 -->
+<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard2">
+<div class="flex justify-between">
+<b class="text-xl">
                         อุปกรณ์ 2
                         <div class="text-xs text-slate-400 mt-1">
                             Last update
                             <span id="lastUpdate2">
                                 --
                             </span>
-                        </div>
-                    </b>
-                    <span
-                        id="n2status"
-                        class="text-slate-500 text-xs font-bold"
-                    >
+</div>
+</b>
+<span class="text-slate-500 text-xs font-bold" id="n2status">
                         ● OFFLINE
                         <span class="badge rounded-full px-3 py-1 text-xs">
                             ESP-NOW
                         </span>
-                    </span>
-                </div>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-                    <span class="text-slate-400">
+</span>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+<span class="text-slate-400">
                         PM1.0
-                        <b id="n2pm1" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n2pm1">--</b>
+</span>
+<span class="text-slate-400">
                         PM2.5
-                        <b id="n2pm25" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n2pm25">--</b>
+</span>
+<span class="text-slate-400">
                         PM10
-                        <b id="n2pm10" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n2pm10">--</b>
+</span>
+<span class="text-slate-400">
                         Temp
-                        <b id="n2temp" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n2temp">--</b>
+</span>
+<span class="text-slate-400">
                         Humidity
-                        <b id="n2hum" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n2hum">--</b>
+</span>
+<span class="text-slate-400">
                         Light
-                        <b id="n2light" class="text-white ml-1">--</b>
-                    </span>
-                </div>
-            </div>
-            <!-- NODE 3 -->
-            <div
-                id="nodeCard3"
-                class="node offline soft rounded-2xl p-4 border border-slate-800"
-            >
-                <div class="flex justify-between">
-                    <b class="text-xl">
+                        <b class="text-white ml-1" id="n2light">--</b>
+</span>
+</div>
+</div>
+<!-- NODE 3 -->
+<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard3">
+<div class="flex justify-between">
+<b class="text-xl">
                         อุปกรณ์ 3
                         <div class="text-xs text-slate-400 mt-1">
                             Last update
                             <span id="lastUpdate3">
                                 --
                             </span>
-                        </div>
-                    </b>
-                    <span
-                        id="n3status"
-                        class="text-slate-500 text-xs font-bold"
-                    >
+</div>
+</b>
+<span class="text-slate-500 text-xs font-bold" id="n3status">
                         ● OFFLINE
                         <span class="badge rounded-full px-3 py-1 text-xs">
                             ESP-NOW
                         </span>
-                    </span>
-                </div>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-                    <span class="text-slate-400">
+</span>
+</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+<span class="text-slate-400">
                         PM1.0
-                        <b id="n3pm1" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n3pm1">--</b>
+</span>
+<span class="text-slate-400">
                         PM2.5
-                        <b id="n3pm25" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n3pm25">--</b>
+</span>
+<span class="text-slate-400">
                         PM10
-                        <b id="n3pm10" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n3pm10">--</b>
+</span>
+<span class="text-slate-400">
                         Temp
-                        <b id="n3temp" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n3temp">--</b>
+</span>
+<span class="text-slate-400">
                         Humidity
-                        <b id="n3hum" class="text-white ml-1">--</b>
-                    </span>
-                    <span class="text-slate-400">
+                        <b class="text-white ml-1" id="n3hum">--</b>
+</span>
+<span class="text-slate-400">
                         Light
-                        <b id="n3light" class="text-white ml-1">--</b>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- SMART SUMMARY -->
-    <div class="glass card p-5 smart-summary-card">
-        <div class="smart-summary-header">
-            <div class="smart-summary-title-wrap">
-                <div class="smart-summary-icon">✦</div>
-                <div>
-                    <div class="section-title-with-help">
-                        <h2 class="font-black text-lg">Smart Summary</h2>
-                        <button type="button" class="help-button" data-help="smartSummary"
-                            aria-label="ดูคำอธิบาย Smart Summary" aria-expanded="false">?</button>
-                    </div>
-                </div>
-            </div>
-            <span class="smart-summary-mode">RULE ENGINE</span>
-        </div>
-        <div id="aiSummary" class="smart-summary-body">
-            <div class="smart-summary-loading">กำลังรอข้อมูล...</div>
-        </div>
-    </div>
-</section>
+                        <b class="text-white ml-1" id="n3light">--</b>
+</span>
+</div>
+</div>
+</div>
+</div></section>
 <!-- =========================================================
 CURRENT ENVIRONMENT + ALERT
 ========================================================= -->
-<section class="grid lg:grid-cols-3 gap-4 mb-4 dashboard-current-row">
-    <div class="glass card p-5 lg:col-span-2 current-environment-card">
-        <div class="current-environment-header">
-            <div>
-                <div class="section-title-with-help">
-                    <h2 class="text-xl font-black">คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน</h2>
-                    <button type="button" class="help-button" data-help="currentAir"
-                        aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" aria-expanded="false">?</button>
-                </div>
-            </div>
-            <div class="current-environment-controls">
-                <label for="currentMetric" class="current-metric-label">ตัวแปร</label>
-                <select id="currentMetric" class="current-metric-select" aria-label="เลือกตัวแปรข้อมูลปัจจุบัน">
-                    <option value="pm25" selected>PM2.5</option>
-                    <option value="pm1">PM1.0</option>
-                    <option value="pm10">PM10</option>
-                    <option value="temperature">อุณหภูมิ</option>
-                    <option value="humidity">ความชื้น</option>
-                    <option value="light">แสง</option>
-                </select>
-                <div id="qualityBadge" class="current-quality-badge">รอข้อมูล</div>
-            </div>
-        </div>
-
-        <div class="current-environment-grid">
-            <div class="current-environment-item">
-                <div class="current-environment-item-top">
-                    <span id="currentOverallLabel" class="current-environment-label">PM2.5 ภาพรวม</span>
-                    <span class="current-environment-icon">◎</span>
-                </div>
-                <b id="currentOverallValue" class="current-environment-value">--</b>
-                <div id="currentOverallDetail" class="current-environment-detail">ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP</div>
-            </div>
-
-            <div class="current-environment-item">
-                <div class="current-environment-item-top">
-                    <span class="current-environment-label">จุดที่มีค่าสูงสุด</span>
-                    <span class="current-environment-icon">↑</span>
-                </div>
-                <b id="currentHighestValue" class="current-environment-value">--</b>
-                <div id="currentHighestNode" class="current-environment-detail">--</div>
-            </div>
-
-            <div class="current-environment-item">
-                <div class="current-environment-item-top">
-                    <span class="current-environment-label">จุดที่ต้องเฝ้าระวัง</span>
-                    <span class="current-environment-icon">!</span>
-                </div>
-                <b id="currentWatchNode" class="current-environment-value current-watch-value">--</b>
-                <div id="currentWatchDetail" class="current-environment-detail">รอข้อมูล</div>
-            </div>
-        </div>
-
-        <div class="current-environment-footer">
-            <span class="current-environment-footer-dot"></span>
-            <span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
-        </div>
-    </div>
-
-    <div class="glass card p-5 alerts-card">
-        <div class="section-title-with-help">
-            <h2 class="text-xl font-black">🚨 Alerts</h2>
-            <button type="button" class="help-button" data-help="alerts"
-                aria-label="ดูคำอธิบาย Alerts" aria-expanded="false">?</button>
-        </div>
-        <div id="alerts" class="text-sm text-slate-300">กำลังตรวจสอบ...</div>
-    </div>
-</section>
+<section class="mb-4 dashboard-summary-section"><div class="glass card p-5 smart-summary-card">
+<div class="smart-summary-header">
+<div class="smart-summary-title-wrap">
+<div class="smart-summary-icon">✦</div>
+<div>
+<div class="section-title-with-help">
+<h2 class="font-black text-lg">Smart Summary</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย Smart Summary" class="help-button" data-help="smartSummary" type="button">?</button>
+</div>
+</div>
+</div>
+<span class="smart-summary-mode">RULE ENGINE</span>
+</div>
+<div class="smart-summary-body" id="aiSummary">
+<div class="smart-summary-loading">กำลังรอข้อมูล...</div>
+</div>
+</div></section>
 <!-- =========================================================
 FORECAST + AI
 ========================================================= -->
-<section class="grid lg:grid-cols-2 gap-4 mb-4 dashboard-ai-row">
-    <div class="glass card p-5 ai-analysis-card">
-        <div class="ai-analysis-header">
-            <div>
-                <div class="section-title-with-help">
-                    <h2 class="text-xl font-black">🤖 AI วิเคราะห์สถานการณ์</h2>
-                    <button type="button" class="help-button" data-help="ai"
-                        aria-label="ดูคำอธิบาย AI วิเคราะห์สถานการณ์" aria-expanded="false">?</button>
-                </div>
-            </div>
-            <div class="ai-analysis-actions">
-                <button id="aiRefreshButton" type="button" class="ai-refresh-button" title="วิเคราะห์ใหม่ทันที">
+<section class="mb-4 dashboard-current-section"><div class="glass card p-5 lg:col-span-2 current-environment-card">
+<div class="current-environment-header">
+<div>
+<div class="section-title-with-help">
+<h2 class="text-xl font-black">คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" class="help-button" data-help="currentAir" type="button">?</button>
+</div>
+</div>
+<div class="current-environment-controls">
+<label class="current-metric-label" for="currentMetric">ตัวแปร</label>
+<select aria-label="เลือกตัวแปรข้อมูลปัจจุบัน" class="current-metric-select" id="currentMetric">
+<option selected="" value="pm25">PM2.5</option>
+<option value="pm1">PM1.0</option>
+<option value="pm10">PM10</option>
+<option value="temperature">อุณหภูมิ</option>
+<option value="humidity">ความชื้น</option>
+<option value="light">แสง</option>
+</select>
+<div class="current-quality-badge" id="qualityBadge">รอข้อมูล</div>
+</div>
+</div>
+<div class="current-environment-grid">
+<div class="current-environment-item">
+<div class="current-environment-item-top">
+<span class="current-environment-label" id="currentOverallLabel">PM2.5 ภาพรวม</span>
+<span class="current-environment-icon">◎</span>
+</div>
+<b class="current-environment-value" id="currentOverallValue">--</b>
+<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดที่ ONLINE / SLEEP</div>
+</div>
+<div class="current-environment-item">
+<div class="current-environment-item-top">
+<span class="current-environment-label">จุดที่มีค่าสูงสุด</span>
+<span class="current-environment-icon">↑</span>
+</div>
+<b class="current-environment-value" id="currentHighestValue">--</b>
+<div class="current-environment-detail" id="currentHighestNode">--</div>
+</div>
+<div class="current-environment-item">
+<div class="current-environment-item-top">
+<span class="current-environment-label">จุดที่ต้องเฝ้าระวัง</span>
+<span class="current-environment-icon">!</span>
+</div>
+<b class="current-environment-value current-watch-value" id="currentWatchNode">--</b>
+<div class="current-environment-detail" id="currentWatchDetail">รอข้อมูล</div>
+</div>
+</div>
+<div class="current-alerts-strip"><div class="section-title-with-help">
+<h2 class="text-xl font-black">🚨 Alerts</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย Alerts" class="help-button" data-help="alerts" type="button">?</button>
+</div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
+<span class="current-environment-footer-dot"></span>
+<span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
+</div>
+</div></section><section class="mb-4 dashboard-ai-stack"><div class="glass card p-5 ai-analysis-card dashboard-ai-block">
+<div class="ai-analysis-header">
+<div>
+<div class="section-title-with-help">
+<h2 class="text-xl font-black">🤖 AI วิเคราะห์สถานการณ์</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย AI วิเคราะห์สถานการณ์" class="help-button" data-help="ai" type="button">?</button>
+</div>
+</div>
+<div class="ai-analysis-actions">
+<button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">
                     ↻ วิเคราะห์ใหม่
                 </button>
-                <span id="aiStatusBadge" class="ai-status-badge is-loading">LOADING</span>
-            </div>
-        </div>
-        <div id="aiDetails" class="ai-details-panel">
-            <div class="ai-loading-state">
-                <span class="ai-loading-dot"></span>
+<span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span>
+</div>
+</div>
+<div class="ai-details-panel" id="aiDetails">
+<div class="ai-loading-state">
+<span class="ai-loading-dot"></span>
                 กำลังเชื่อมต่อ AI...
             </div>
-        </div>
-        <div class="ai-analysis-footer">
-            <span id="aiGeneratedAt">อัปเดต AI: --</span>
-        </div>
-    </div>
-    <div class="glass card p-5 ai-forecast-card">
-        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-            <div>
-                <div class="section-title-with-help">
-                    <h2 class="text-xl font-black">
-                        🤖 AI Forecast + Trend
-                    </h2>
-                    <button
-                        type="button"
-                        class="help-button"
-                        data-help="forecast"
-                        aria-label="ดูคำอธิบาย Forecast"
-                        aria-expanded="false"
-                    >
+</div>
+<div class="ai-analysis-footer">
+<span id="aiGeneratedAt">อัปเดต AI: --</span>
+</div>
+</div><div class="glass card p-5 ai-forecast-card dashboard-ai-block">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+<div>
+<div class="section-title-with-help">
+<h2 class="text-xl font-black">🤖 AI Environmental Forecast</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย Forecast" class="help-button" data-help="forecast" type="button">
                         ?
                     </button>
-                </div>
-            </div>
-
-            <div class="text-left sm:text-right">
-                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+</div>
+</div>
+<div class="text-left sm:text-right">
+<div class="text-[10px] uppercase tracking-wider text-slate-500">
                     ช่วงเวลาที่คาดการณ์
                 </div>
-                <div
-                    id="forecastBadge"
-                    class="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold text-cyan-300"
-                    style="background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.16);"
-                >
+<div class="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold text-cyan-300" id="forecastBadge" style="background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.16);">
                     ⏱ 30 นาทีข้างหน้า
                 </div>
-            </div>
-        </div>
-
-                <div class="ai-forecast-shell mt-4">
-            <div class="ai-forecast-topbar">
-                <div>
-                    <div class="ai-forecast-kicker">AI ENVIRONMENTAL FORECAST</div>
-                    <div class="ai-forecast-subtitle">Air • Heat • Sky • Activity • 30 นาทีข้างหน้า</div>
-                </div>
-                <div class="ai-forecast-actions">
-                    <span id="aiForecastStatusBadge" class="ai-forecast-status">AI Forecast • รอข้อมูล</span>
-                    <button id="aiForecastRefreshButton" type="button" class="ai-forecast-refresh">↻ วิเคราะห์ใหม่</button>
-                </div>
-            </div>
-            <div id="aiForecastDetails" class="ai-forecast-details">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
-            <div id="aiForecastGeneratedAt" class="ai-forecast-generated">อัปเดต AI Forecast: --</div>
-        </div>
-
-        <div class="forecast-base-label">STATISTICAL FORECAST BASE</div>
-<div
-            id="forecastMessage"
-            class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
-        >
+</div>
+</div>
+<div class="ai-forecast-shell mt-4">
+<div class="ai-forecast-topbar">
+<div>
+<div class="ai-forecast-kicker">AI ENVIRONMENTAL FORECAST</div>
+<div class="ai-forecast-subtitle">Air • Heat • Sky • Activity • 30 นาทีข้างหน้า</div>
+</div>
+<div class="ai-forecast-actions">
+<span class="ai-forecast-status" id="aiForecastStatusBadge">AI Forecast • รอข้อมูล</span>
+<button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button>
+</div>
+</div>
+<div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
+<div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดต AI Forecast: --</div>
+</div>
+<div class="forecast-base-label">STATISTICAL FORECAST BASE</div>
+<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300" id="forecastMessage">
             รวบรวมข้อมูลย้อนหลังเพิ่มเติมเพื่อสร้างการพยากรณ์
         </div>
 
-        <div
-            id="forecastGuide"
-            class="forecast-display-panel"
-        >
-            <div class="forecast-display-copy">
-                <div class="forecast-display-title">
-                    การแสดงผลกราฟ
-                </div>
-                <div class="forecast-display-subtitle">
-                    เปิดหรือซ่อนช่วงคาดการณ์บนกราฟ
-                </div>
-            </div>
 
-            <div class="forecast-display-controls">
-
-                <div class="forecast-actual-legend">
-                    <span class="forecast-actual-line"></span>
-
-                    <div>
-                        <div class="forecast-actual-label">
-                            ข้อมูลจริง
-                        </div>
-                        <div class="forecast-actual-note">
-                            ค่าที่วัดจากอุปกรณ์
-                        </div>
-                    </div>
-                </div>
-
-                <div class="forecast-toggle-wrap">
-                    <div class="forecast-toggle-copy">
-                        <div class="forecast-toggle-name">
-                            <span class="forecast-dash-line"></span>
-                            Forecast
-                        </div>
-
-                        <div
-                            id="forecastToggleLabel"
-                            class="forecast-toggle-status"
-                        >
-                            เปิดการคาดการณ์
-                        </div>
-                    </div>
-
-                    <button
-                        id="forecastToggle"
-                        type="button"
-                        role="switch"
-                        aria-checked="true"
-                        aria-pressed="true"
-                        class="forecast-switch is-on"
-                        title="กดเพื่อซ่อน Forecast"
-                    >
-                        <span class="forecast-switch-track">
-                            <span class="forecast-switch-thumb"></span>
-                        </span>
-
-                        <span
-                            id="forecastToggleState"
-                            class="forecast-switch-state"
-                        >
-                            ON
-                        </span>
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <canvas id="forecastChart" class="mt-3"></canvas>
-    </div>
-</section>
+</div></section>
 </div>
-
 <!-- =========================================================
 HISTORICAL DATA & TREND
 ========================================================= -->
 <section class="glass card p-5 mb-4 historical-section">
-    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-        <div>
-            <div class="section-title-with-help">
-                <h2 class="text-2xl font-black">
-                    📈 Historical Data & Trend
-                </h2>
-                <button
-                        type="button"
-                        class="help-button"
-                        data-help="historical"
-                        aria-label="ดูคำอธิบาย Historical Data & Trend"
-                        aria-expanded="false"
-                    >
+<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+<div>
+<div class="section-title-with-help">
+<h2 class="text-2xl font-black">📊 Historical Statistics</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย Historical Data &amp; Trend" class="help-button" data-help="historical" type="button">
                         ?
                     </button>
-            </div>
-        </div>
-        <div class="history-toolbar">
-            <select
-                id="metric"
-                class="history-metric-select"
-                aria-label="เลือกตัวแปร"
-            >
-                <option value="pm25">PM2.5</option>
-                <option value="pm1">PM1.0</option>
-                <option value="pm10">PM10</option>
-                <option value="temperature">อุณหภูมิ</option>
-                <option value="humidity">ความชื้น</option>
-                <option value="light">แสง</option>
-            </select>
-            <div
-                id="historyRangePicker"
-                class="relative"
-            >
-                <button
-                    id="historyRangeButton"
-                    type="button"
-                    aria-expanded="false"
-                    class="history-toolbar-button"
-                >
-                    <span class="history-control-icon">▣</span>
-                    <span id="historyRangeButtonLabel">
+</div>
+</div>
+<div class="history-toolbar">
+<select aria-label="เลือกตัวแปร" class="history-metric-select" id="metric">
+<option value="pm25">PM2.5</option>
+<option value="pm1">PM1.0</option>
+<option value="pm10">PM10</option>
+<option value="temperature">อุณหภูมิ</option>
+<option value="humidity">ความชื้น</option>
+<option value="light">แสง</option>
+</select>
+<div class="relative" id="historyRangePicker">
+<button aria-expanded="false" class="history-toolbar-button" id="historyRangeButton" type="button">
+<span class="history-control-icon">▣</span>
+<span id="historyRangeButtonLabel">
                         วันนี้
                     </span>
-                    <span class="history-control-arrow">▾</span>
-                </button>
-
-                <div
-                    id="historyRangePanel"
-                    class="history-range-panel hidden absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
-                    style="
+<span class="history-control-arrow">▾</span>
+</button>
+<div class="history-range-panel hidden absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" id="historyRangePanel" style="
                         width:min(720px,calc(100vw - 32px));
                         background:#091827;
                         border:1px solid rgba(148,163,184,.18);
                         box-shadow:0 22px 60px rgba(0,0,0,.42);
-                    "
-                >
-                    <div class="history-range-layout">
-
-                        <!-- CALENDAR -->
-                        <div class="history-range-calendar">
-
-                            <div class="flex items-center justify-between mb-4">
-                                <b
-                                    id="rangeCalendarTitle"
-                                    class="text-sm text-slate-200"
-                                >
+                    ">
+<div class="history-range-layout">
+<!-- CALENDAR -->
+<div class="history-range-calendar">
+<div class="flex items-center justify-between mb-4">
+<b class="text-sm text-slate-200" id="rangeCalendarTitle">
                                     --
                                 </b>
-
-                                <div class="flex gap-2">
-                                    <button
-                                        id="calendarPrev"
-                                        type="button"
-                                        class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition"
-                                        aria-label="เดือนก่อนหน้า"
-                                    >
+<div class="flex gap-2">
+<button aria-label="เดือนก่อนหน้า" class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition" id="calendarPrev" type="button">
                                         ‹
                                     </button>
-
-                                    <button
-                                        id="calendarNext"
-                                        type="button"
-                                        class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition"
-                                        aria-label="เดือนถัดไป"
-                                    >
+<button aria-label="เดือนถัดไป" class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition" id="calendarNext" type="button">
                                         ›
                                     </button>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-500 mb-2">
-                                <div>อา</div>
-                                <div>จ</div>
-                                <div>อ</div>
-                                <div>พ</div>
-                                <div>พฤ</div>
-                                <div>ศ</div>
-                                <div>ส</div>
-                            </div>
-
-                            <div
-                                id="rangeCalendarGrid"
-                                class="grid grid-cols-7 gap-1"
-                            ></div>
-
-                            <div class="text-[11px] text-slate-500 mt-3">
+</div>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-500 mb-2">
+<div>อา</div>
+<div>จ</div>
+<div>อ</div>
+<div>พ</div>
+<div>พฤ</div>
+<div>ศ</div>
+<div>ส</div>
+</div>
+<div class="grid grid-cols-7 gap-1" id="rangeCalendarGrid"></div>
+<div class="text-[11px] text-slate-500 mt-3">
                                 เลือกวันเริ่มต้น แล้วเลือกวันสิ้นสุด
                             </div>
-                        </div>
-
-                        <!-- QUICK RANGE -->
-                        <div class="history-range-quick">
-                            <div class="text-[11px] uppercase tracking-wider text-slate-500 px-2 py-1">
+</div>
+<!-- QUICK RANGE -->
+<div class="history-range-quick">
+<div class="text-[11px] uppercase tracking-wider text-slate-500 px-2 py-1">
                                 ช่วงเวลาด่วน
                             </div>
-
-                            <div
-                                id="quickRangeList"
-                                class="quick-range-list"
-                            >
-                                <button type="button" data-range="today" class="quick-range-option active w-full text-left rounded-lg px-3 py-2 text-sm">
+<div class="quick-range-list" id="quickRangeList">
+<button class="quick-range-option active w-full text-left rounded-lg px-3 py-2 text-sm" data-range="today" type="button">
                                     วันนี้
                                 </button>
-                                <button type="button" data-range="30m" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30m" type="button">
                                     30 นาที
                                 </button>
-                                <button type="button" data-range="1h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="1h" type="button">
                                     1 ชั่วโมง
                                 </button>
-
-                                <button type="button" data-range="6h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="6h" type="button">
                                     6 ชั่วโมง
                                 </button>
-                                <button type="button" data-range="12h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="12h" type="button">
                                     12 ชั่วโมง
                                 </button>
-                                <button type="button" data-range="24h" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="24h" type="button">
                                     24 ชั่วโมง
                                 </button>
-
-                                <button type="button" data-range="7d" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" type="button">
                                     7 วัน
                                 </button>
-                                <button type="button" data-range="30d" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" type="button">
                                     30 วัน
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- START / END -->
-                    <div class="border-t border-slate-800 p-4 grid sm:grid-cols-2 gap-3">
-                        <label class="block">
-                            <span class="text-xs text-slate-400">
+</div>
+</div>
+</div>
+<!-- START / END -->
+<div class="border-t border-slate-800 p-4 grid sm:grid-cols-2 gap-3">
+<label class="block">
+<span class="text-xs text-slate-400">
                                 เริ่มต้น
                             </span>
-                            <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-                                <input
-                                    id="customRangeStart"
-                                    type="datetime-local"
-                                    class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none"
-                                >
-                            </div>
-                        </label>
-
-                        <label class="block">
-                            <span class="text-xs text-slate-400">
+<div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" type="datetime-local"/>
+</div>
+</label>
+<label class="block">
+<span class="text-xs text-slate-400">
                                 สิ้นสุด
                             </span>
-                            <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-                                <input
-                                    id="customRangeEnd"
-                                    type="datetime-local"
-                                    class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none"
-                                >
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- FOOTER -->
-                    <div class="border-t border-slate-800 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="text-xs text-slate-400">
+<div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" type="datetime-local"/>
+</div>
+</label>
+</div>
+<!-- FOOTER -->
+<div class="border-t border-slate-800 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="text-xs text-slate-400">
                             🌏 เวลาไทย
                             <span class="text-slate-500">
                                 (GMT+7)
                             </span>
-                            <div
-                                id="customRangeError"
-                                class="text-red-400 mt-1 hidden"
-                            ></div>
-                        </div>
-
-                        <div class="flex justify-end gap-2">
-                            <button
-                                id="historyRangeCancel"
-                                type="button"
-                                class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300"
-                            >
+<div class="text-red-400 mt-1 hidden" id="customRangeError"></div>
+</div>
+<div class="flex justify-end gap-2">
+<button class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300" id="historyRangeCancel" type="button">
                                 ยกเลิก
                             </button>
-
-                            <button
-                                id="historyRangeApply"
-                                type="button"
-                                class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200"
-                                style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);"
-                            >
+<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
                                 ใช้งาน
                             </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button
-                id="exportButton"
-                type="button"
-                class="history-toolbar-button history-export-button"
-            >
-                <span class="history-control-icon">⇩</span>
-                <span>ส่งออก</span>
-            </button>
-        </div>
-    </div>
-    <!-- OVERALL AVERAGE -->
-    <div class="soft rounded-2xl p-4 mt-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
-            <div>
-                <div class="text-sm font-bold">
+</div>
+</div>
+</div>
+</div>
+<button class="history-toolbar-button history-export-button" id="exportButton" type="button">
+<span class="history-control-icon">⇩</span>
+<span>ส่งออก</span>
+</button>
+</div>
+</div>
+<!-- OVERALL AVERAGE -->
+<div class="soft rounded-2xl p-4 mt-5">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+<div>
+<div class="text-sm font-bold">
                     📊 ค่าเฉลี่ยรวม
                 </div>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     ค่าเฉลี่ยของทุกตัวแปรในช่วงเวลาที่เลือก
                 </div>
-            </div>
-            <div class="text-xs text-slate-400">
+</div>
+<div class="text-xs text-slate-400">
                 ช่วงที่เลือก:
-                <b
-                    id="selectedRangeLabel"
-                    class="text-cyan-300"
-                >
+                <b class="text-cyan-300" id="selectedRangeLabel">
                     วันนี้
                 </b>
-            </div>
-        </div>
-        <div class="grid grid-cols-6 gap-6">
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+</div>
+<div class="grid grid-cols-6 gap-6">
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     PM 1.0
                 </div>
-                <b id="averagePM1" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averagePM1">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     µg/m³
                 </div>
-                <div
-                    id="averagePM1Status"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM1Status">
                     ● รอข้อมูล
                 </div>
-            </div>
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     PM 2.5
                 </div>
-                <b id="averagePM25" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averagePM25">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     µg/m³
                 </div>
-                <div
-                    id="averagePM25Status"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM25Status">
                     ● รอข้อมูล
                 </div>
-            </div>
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     PM 10
                 </div>
-                <b id="averagePM10" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averagePM10">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     µg/m³
                 </div>
-                <div
-                    id="averagePM10Status"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM10Status">
                     ● รอข้อมูล
                 </div>
-            </div>
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     อุณหภูมิ
                 </div>
-                <b id="averageTemp" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averageTemp">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     °C
                 </div>
-                <div
-                    id="averageTempStatus"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averageTempStatus">
                     ● รอข้อมูล
                 </div>
-            </div>
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     ความชื้น
                 </div>
-                <b id="averageHum" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averageHum">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     %
                 </div>
-                <div
-                    id="averageHumStatus"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averageHumStatus">
                     ● รอข้อมูล
                 </div>
-            </div>
-            <div class="min-w-0">
-                <div class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<div class="text-xs text-slate-400">
                     แสง
                 </div>
-                <b id="averageLight" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="averageLight">
                     --
                 </b>
-                <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                     lux
                 </div>
-                <div
-                    id="averageLightStatus"
-                    class="text-xs text-cyan-300 mt-2 truncate"
-                >
+<div class="text-xs text-cyan-300 mt-2 truncate" id="averageLightStatus">
                     ● รอข้อมูล
                 </div>
-            </div>
-        </div>
-    </div>
-    <!-- SELECTED VARIABLE -->
-    <div class="soft rounded-2xl p-4 mt-4">
-        <div class="mb-5">
-            <div class="text-sm font-bold">
+</div>
+</div>
+</div>
+<!-- SELECTED VARIABLE -->
+<div class="soft rounded-2xl p-4 mt-4">
+<div class="mb-5">
+<div class="text-sm font-bold">
                 📈 ข้อมูลตามตัวแปรที่เลือก
             </div>
-            <div class="text-xs text-slate-500 mt-1">
+<div class="text-xs text-slate-500 mt-1">
                 ตัวแปร:
-                <b
-                    id="selectedMetricLabel"
-                    class="text-cyan-300"
-                >
+                <b class="text-cyan-300" id="selectedMetricLabel">
                     PM2.5
                 </b>
-            </div>
-        </div>
-        <div class="grid grid-cols-5 gap-6">
-            <div class="min-w-0">
-                <span class="text-xs text-slate-400">
+</div>
+</div>
+<div class="grid grid-cols-5 gap-6">
+<div class="min-w-0">
+<span class="text-xs text-slate-400">
                     ค่าเฉลี่ย
                 </span>
-                <b id="trendAvg" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="trendAvg">
                     --
                 </b>
-            </div>
-            <div class="min-w-0">
-                <span class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<span class="text-xs text-slate-400">
                     ค่าสูงสุด
                 </span>
-                <b id="trendMax" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="trendMax">
                     --
                 </b>
-            </div>
-            <div class="min-w-0">
-                <span class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<span class="text-xs text-slate-400">
                     ค่าต่ำสุด
                 </span>
-                <b id="trendMin" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="trendMin">
                     --
                 </b>
-            </div>
-            <div class="min-w-0">
-                <span class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<span class="text-xs text-slate-400">
                     ค่าล่าสุด
                 </span>
-                <b id="trendLast" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="trendLast">
                     --
                 </b>
-            </div>
-            <div class="min-w-0">
-                <span class="text-xs text-slate-400">
+</div>
+<div class="min-w-0">
+<span class="text-xs text-slate-400">
                     แนวโน้ม
                 </span>
-                <b id="trend" class="block text-2xl mt-2">
+<b class="block text-2xl mt-2" id="trend">
                     รอข้อมูล
                 </b>
-            </div>
-        </div>
-    </div>
-    <!-- HISTORY CHART -->
-    <div class="soft rounded-xl p-4 mt-4">
-        <div class="text-xs text-slate-400 mb-3">
+</div>
+</div>
+</div>
+<!-- HISTORY CHART -->
+
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 Historical Trend Graph</div><div class="chart-zone-subtitle">กราฟข้อมูลจริงตามตัวแปรและช่วงเวลาที่เลือก</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
+<div class="text-xs text-slate-400 mb-3">
             Historical Trend
         </div>
-        <canvas id="historyChart"></canvas>
-    </div>
-</section>
+<canvas id="historyChart"></canvas>
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 Forecast Trend Graph</div><div class="chart-zone-subtitle">ข้อมูลจริงเทียบกับแนวโน้มคาดการณ์ระยะสั้น</div></div></div><div class="forecast-display-panel" id="forecastGuide">
+<div class="forecast-display-copy">
+<div class="forecast-display-title">
+                    การแสดงผลกราฟ
+                </div>
+<div class="forecast-display-subtitle">
+                    เปิดหรือซ่อนช่วงคาดการณ์บนกราฟ
+                </div>
+</div>
+<div class="forecast-display-controls">
+<div class="forecast-actual-legend">
+<span class="forecast-actual-line"></span>
+<div>
+<div class="forecast-actual-label">
+                            ข้อมูลจริง
+                        </div>
+<div class="forecast-actual-note">
+                            ค่าที่วัดจากอุปกรณ์
+                        </div>
+</div>
+</div>
+<div class="forecast-toggle-wrap">
+<div class="forecast-toggle-copy">
+<div class="forecast-toggle-name">
+<span class="forecast-dash-line"></span>
+                            Forecast
+                        </div>
+<div class="forecast-toggle-status" id="forecastToggleLabel">
+                            เปิดการคาดการณ์
+                        </div>
+</div>
+<button aria-checked="true" aria-pressed="true" class="forecast-switch is-on" id="forecastToggle" role="switch" title="กดเพื่อซ่อน Forecast" type="button">
+<span class="forecast-switch-track">
+<span class="forecast-switch-thumb"></span>
+</span>
+<span class="forecast-switch-state" id="forecastToggleState">
+                            ON
+                        </span>
+</button>
+</div>
+</div>
+</div><canvas class="mt-3 bottom-forecast-canvas" id="forecastChart"></canvas></div></section>
 <!-- =========================================================
 HELP / INFO POPOVER
 ========================================================= -->
-<div
-    id="helpPopover"
-    class="help-popover"
-    aria-hidden="true"
-    role="dialog"
-    aria-modal="false"
->
-    <div class="help-popover-header">
-        <div>
-            <div class="help-popover-eyebrow">
+<div aria-hidden="true" aria-modal="false" class="help-popover" id="helpPopover" role="dialog">
+<div class="help-popover-header">
+<div>
+<div class="help-popover-eyebrow">
                 DASHBOARD HELP
             </div>
-            <h3 id="helpPopoverTitle">
+<h3 id="helpPopoverTitle">
                 คำอธิบาย
             </h3>
-        </div>
-
-        <button
-            id="helpPopoverClose"
-            type="button"
-            class="help-popover-close"
-            aria-label="ปิดคำอธิบาย"
-        >
+</div>
+<button aria-label="ปิดคำอธิบาย" class="help-popover-close" id="helpPopoverClose" type="button">
             ×
         </button>
-    </div>
-
-    <div
-        id="helpPopoverBody"
-        class="help-popover-body"
-    ></div>
 </div>
-
+<div class="help-popover-body" id="helpPopoverBody"></div>
+</div>
 <!-- =========================================================
 EXPORT MODAL
 ========================================================= -->
-<div
-    id="exportModal"
-    class="export-modal"
-    aria-hidden="true"
->
-    <div
-        class="export-modal-backdrop"
-        data-export-close="true"
-    ></div>
-
-    <div
-        class="export-modal-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="exportModalTitle"
-    >
-        <!-- HEADER -->
-        <div class="export-modal-header">
-            <div class="export-modal-title-wrap">
-                <div class="export-modal-icon">
+<div aria-hidden="true" class="export-modal" id="exportModal">
+<div class="export-modal-backdrop" data-export-close="true"></div>
+<div aria-labelledby="exportModalTitle" aria-modal="true" class="export-modal-dialog" role="dialog">
+<!-- HEADER -->
+<div class="export-modal-header">
+<div class="export-modal-title-wrap">
+<div class="export-modal-icon">
                     📤
                 </div>
-
-                <div>
-                    <h2
-                        id="exportModalTitle"
-                        class="export-modal-title"
-                    >
+<div>
+<h2 class="export-modal-title" id="exportModalTitle">
                         ส่งออกข้อมูล
                     </h2>
-
-                    <p class="export-modal-subtitle">
+<p class="export-modal-subtitle">
                         เลือกช่วงวันที่เพื่อดาวน์โหลดข้อมูลการตรวจวัด
                     </p>
-                </div>
-            </div>
-
-            <button
-                id="exportModalClose"
-                type="button"
-                class="export-modal-close"
-                aria-label="ปิด"
-            >
+</div>
+</div>
+<button aria-label="ปิด" class="export-modal-close" id="exportModalClose" type="button">
                 ×
             </button>
-        </div>
-
-        <!-- BODY -->
-        <div class="export-modal-body">
-
-            <!-- DATE RANGE -->
-            <div class="export-date-grid">
-                <label class="export-field">
-                    <span>
+</div>
+<!-- BODY -->
+<div class="export-modal-body">
+<!-- DATE RANGE -->
+<div class="export-date-grid">
+<label class="export-field">
+<span>
                         วันที่เริ่มต้น
                     </span>
-                    <input
-                        id="exportStartDate"
-                        type="date"
-                    >
-                </label>
-
-                <div class="export-date-arrow">
+<input id="exportStartDate" type="date"/>
+</label>
+<div class="export-date-arrow">
                     →
                 </div>
-
-                <label class="export-field">
-                    <span>
+<label class="export-field">
+<span>
                         วันที่สิ้นสุด
                     </span>
-                    <input
-                        id="exportEndDate"
-                        type="date"
-                    >
-                </label>
-            </div>
-
-            <!-- SUMMARY -->
-            <div class="export-summary-row">
-                <div class="export-count-card">
-                    <div class="export-count-label">
+<input id="exportEndDate" type="date"/>
+</label>
+</div>
+<!-- SUMMARY -->
+<div class="export-summary-row">
+<div class="export-count-card">
+<div class="export-count-label">
                         จำนวนข้อมูล
                     </div>
-
-                    <b
-                        id="exportDataCount"
-                        class="export-count-value"
-                    >
+<b class="export-count-value" id="exportDataCount">
                         0
                     </b>
-
-                    <div class="export-count-unit">
+<div class="export-count-unit">
                         รายการ
                     </div>
-                </div>
-
-                <div class="export-summary-note">
-                    <div>
+</div>
+<div class="export-summary-note">
+<div>
                         ส่งออกเฉพาะข้อมูล Sensor ที่สถานะ
                         <b class="text-emerald-400">
                             ONLINE
                         </b>
-                    </div>
-
-                    <div class="mt-1">
+</div>
+<div class="mt-1">
                         เวลาในไฟล์:
                         <b>
                             Asia/Bangkok (GMT+7)
                         </b>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PREVIEW -->
-            <div class="export-preview-head">
-                <div>
-                    <b>
+</div>
+</div>
+</div>
+<!-- PREVIEW -->
+<div class="export-preview-head">
+<div>
+<b>
                         ตัวอย่างข้อมูล
                     </b>
-                    <div class="export-preview-note">
+<div class="export-preview-note">
                         แสดงสูงสุด 50 รายการแรกจากช่วงวันที่ที่เลือก
                     </div>
-                </div>
-
-                <div
-                    id="exportLoading"
-                    class="export-loading hidden"
-                >
+</div>
+<div class="export-loading hidden" id="exportLoading">
                     กำลังโหลด...
                 </div>
-            </div>
-
-            <div class="export-table-wrap">
-                <table class="export-table">
-                    <thead>
-                        <tr>
-                            <th>วันที่ / เวลา</th>
-                            <th>อุปกรณ์</th>
-                            <th>PM1.0</th>
-                            <th>PM2.5</th>
-                            <th>PM10</th>
-                            <th>อุณหภูมิ</th>
-                            <th>ความชื้น</th>
-                            <th>แสง</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="exportPreviewBody">
-                        <tr>
-                            <td
-                                colspan="8"
-                                class="export-empty-cell"
-                            >
+</div>
+<div class="export-table-wrap">
+<table class="export-table">
+<thead>
+<tr>
+<th>วันที่ / เวลา</th>
+<th>อุปกรณ์</th>
+<th>PM1.0</th>
+<th>PM2.5</th>
+<th>PM10</th>
+<th>อุณหภูมิ</th>
+<th>ความชื้น</th>
+<th>แสง</th>
+</tr>
+</thead>
+<tbody id="exportPreviewBody">
+<tr>
+<td class="export-empty-cell" colspan="8">
                                 เลือกช่วงวันที่เพื่อดูตัวอย่างข้อมูล
                             </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div
-                id="exportError"
-                class="export-error hidden"
-            ></div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="export-modal-footer">
-            <button
-                id="exportCancelButton"
-                type="button"
-                class="export-cancel-button"
-            >
+</tr>
+</tbody>
+</table>
+</div>
+<div class="export-error hidden" id="exportError"></div>
+</div>
+<!-- FOOTER -->
+<div class="export-modal-footer">
+<button class="export-cancel-button" id="exportCancelButton" type="button">
                 ยกเลิก
             </button>
-
-            <button
-                id="exportExcelButton"
-                type="button"
-                class="export-excel-button"
-                disabled
-            >
+<button class="export-excel-button" disabled="" id="exportExcelButton" type="button">
                 📊 ดาวน์โหลด Excel
             </button>
-        </div>
-    </div>
 </div>
-
+</div>
+</div>
 <!-- =========================================================
 CREDIT
 ========================================================= -->
 <footer class="credit-bar">
-    <div class="credit-glow credit-glow-1"></div>
-    <div class="credit-glow credit-glow-2"></div>
-    <div class="credit-inner">
-        <!-- COLLEGE -->
-        <div class="credit-box credit-college">
-            <div
-                class="credit-icon credit-image-button"
-                onclick="openCreditImage(
+<div class="credit-glow credit-glow-1"></div>
+<div class="credit-glow credit-glow-2"></div>
+<div class="credit-inner">
+<!-- COLLEGE -->
+<div class="credit-box credit-college">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ตราวิทลัยใหม่.png',
                     'โลโก้วิทยาลัย'
-                )"
-            >
-                <img
-                    src="img/ตราวิทลัยใหม่.png"
-                    alt="โลโก้วิทยาลัย"
-                >
-            </div>
-            <div class="credit-content">
-                <div class="credit-label">
+                )">
+<img alt="โลโก้วิทยาลัย" src="img/ตราวิทลัยใหม่.png"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
                     COLLEGE
                 </div>
-                <div class="credit-title">
+<div class="credit-title">
                     วิทยาลัยเสริมทักษะพระภิกษุ สามเณร
                 </div>
-                <div class="credit-links">
-                    <a
-                        href="https://www.spscollege.ac.th/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="credit-link"
-                    >
-                        <span>
+<div class="credit-links">
+<a class="credit-link" href="https://www.spscollege.ac.th/" rel="noopener noreferrer" target="_blank">
+<span>
                             เว็บไซต์วิทยาลัย
                         </span>
-                        <span class="credit-arrow">
+<span class="credit-arrow">
                             ↗
                         </span>
-                    </a>
-                    <a
-                        href="https://www.facebook.com/spscollege.ac.th?locale=th_TH"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="credit-link facebook-link"
-                    >
-                        <span>
+</a>
+<a class="credit-link facebook-link" href="https://www.facebook.com/spscollege.ac.th?locale=th_TH" rel="noopener noreferrer" target="_blank">
+<span>
                             Facebook วิทยาลัย
                         </span>
-                        <span class="credit-arrow">
+<span class="credit-arrow">
                             ↗
                         </span>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <!-- DEPARTMENT -->
-        <div class="credit-box credit-department">
-            <div
-                class="credit-icon credit-image-button"
-                onclick="openCreditImage(
+</a>
+</div>
+</div>
+</div>
+<!-- DEPARTMENT -->
+<div class="credit-box credit-department">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ICT.jpg',
                     'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
-                )"
-            >
-                <img
-                    src="img/ICT.jpg"
-                    alt="โลโก้แผนก"
-                >
-            </div>
-            <div class="credit-content">
-                <div class="credit-label">
+                )">
+<img alt="โลโก้แผนก" src="img/ICT.jpg"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
                     DEPARTMENT
                 </div>
-                <div class="credit-title">
+<div class="credit-title">
                     แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร
                 </div>
-                <div class="credit-links">
-                    <a
-                        href="https://www.facebook.com/ICT.CSEMN"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="credit-link facebook-link"
-                    >
-                        <span>
+<div class="credit-links">
+<a class="credit-link facebook-link" href="https://www.facebook.com/ICT.CSEMN" rel="noopener noreferrer" target="_blank">
+<span>
                             Facebook แผนก
                         </span>
-                        <span class="credit-arrow">
+<span class="credit-arrow">
                             ↗
                         </span>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <!-- ADVISOR -->
-        <div class="credit-box credit-advisor">
-            <div
-                class="credit-icon credit-image-button"
-                onclick="openCreditImage(
+</a>
+</div>
+</div>
+</div>
+<!-- ADVISOR -->
+<div class="credit-box credit-advisor">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ฐาปกรณ์01.jpg',
                     'นาย ฐาปกรณ์ ตรีชัยศรี'
-                )"
-            >
-                <img
-                    src="img/ฐาปกรณ์01.jpg"
-                    alt="ครูที่ปรึกษา"
-                >
-            </div>
-            <div class="credit-content">
-                <div class="credit-label">
+                )">
+<img alt="ครูที่ปรึกษา" src="img/ฐาปกรณ์01.jpg"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
                     ADVISOR
                 </div>
-                <div class="credit-title">
+<div class="credit-title">
                     นาย ฐาปกรณ์ ตรีชัยศรี
                 </div>
-                <div class="credit-role">
+<div class="credit-role">
                     PROJECT ADVISOR
                 </div>
-            </div>
-        </div>
-        <!-- DEVELOPER 1 -->
-        <div class="credit-box credit-developer">
-            <div
-                class="credit-icon credit-image-button credit-placeholder"
-                onclick="openCreditImage(
+</div>
+</div>
+<!-- DEVELOPER 1 -->
+<div class="credit-box credit-developer">
+<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
                     'img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
                     'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
-                )"
-            >
-                <img
-                    src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"
-                    alt="สามเณร ธรรมปพน"
-                >
-            </div>
-            <div class="credit-content">
-                <div class="credit-label">
+                )">
+<img alt="สามเณร ธรรมปพน" src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
                     DEVELOPER
                 </div>
-                <div class="credit-title">
+<div class="credit-title">
                     สามเณร ธรรมปพน พุทธศาสน์ศรัทธา
                 </div>
-                <div class="credit-role">
+<div class="credit-role">
                     SYSTEM DEVELOPER
                 </div>
-            </div>
-        </div>
-        <!-- DEVELOPER 2 -->
-        <div class="credit-box credit-developer">
-            <div
-                class="credit-icon credit-image-button credit-placeholder"
-                onclick="openCreditImage(
+</div>
+</div>
+<!-- DEVELOPER 2 -->
+<div class="credit-box credit-developer">
+<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
                     'img/สามเณรรัฐภูมิสร้อยคำ.jpg',
                     'สามเณร รัฐภูมิ สร้อยคำ'
-                )"
-            >
-                <img
-                    src="img/สามเณรรัฐภูมิสร้อยคำ.jpg"
-                    alt="สามเณร รัฐภูมิ"
-                >
-            </div>
-            <div class="credit-content">
-                <div class="credit-label">
+                )">
+<img alt="สามเณร รัฐภูมิ" src="img/สามเณรรัฐภูมิสร้อยคำ.jpg"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
                     DEVELOPER
                 </div>
-                <div class="credit-title">
+<div class="credit-title">
                     สามเณร รัฐภูมิ สร้อยคำ
                 </div>
-                <div class="credit-role">
+<div class="credit-role">
                     SYSTEM DEVELOPER
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="credit-bottom">
-        <span class="credit-status-dot"></span>
-        <span>
+</div>
+</div>
+</div>
+<div class="credit-bottom">
+<span class="credit-status-dot"></span>
+<span>
             EDUCATIONAL INSTITUTION PM2.5 DUST MONITORING SYSTEM
         </span>
-        <span class="credit-line"></span>
-        <span>
+<span class="credit-line"></span>
+<span>
             SYSTEM CREDIT
         </span>
-    </div>
+</div>
 </footer>
 <!-- =========================================================
 CREDIT IMAGE VIEWER
 ========================================================= -->
-<div
-    id="creditImageModal"
-    class="credit-image-modal"
-    aria-hidden="true"
->
-    <div
-        class="credit-image-overlay"
-        onclick="closeCreditImage()"
-    ></div>
-    <button
-        type="button"
-        class="credit-image-close"
-        onclick="closeCreditImage()"
-        aria-label="ปิดรูปภาพ"
-    >
+<div aria-hidden="true" class="credit-image-modal" id="creditImageModal">
+<div class="credit-image-overlay" onclick="closeCreditImage()"></div>
+<button aria-label="ปิดรูปภาพ" class="credit-image-close" onclick="closeCreditImage()" type="button">
         ×
     </button>
-    <div
-        class="credit-image-window"
-        onclick="event.stopPropagation()"
-    >
-        <img
-            id="creditFullImage"
-            class="credit-full-image"
-            src=""
-            alt=""
-        >
-        <div
-            id="creditImageCaption"
-            class="credit-image-caption"
-        ></div>
-    </div>
+<div class="credit-image-window" onclick="event.stopPropagation()">
+<img alt="" class="credit-full-image" id="creditFullImage" src=""/>
+<div class="credit-image-caption" id="creditImageCaption"></div>
+</div>
 </div>
 <!-- =========================================================
 CREDIT IMAGE JAVASCRIPT
 ========================================================= -->
-
-    <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
