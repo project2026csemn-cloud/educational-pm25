@@ -1,4 +1,4 @@
-const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
+﻿const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
 
 const API={
 latest:`${BASE}/api/get_latest.php`,
@@ -3231,327 +3231,46 @@ forecastChart.update();
 
 }
 
+function aiTrendFor(field){
+const list=aiForecastPayload?.data?.trend_analysis;
+if(!Array.isArray(list))return null;
+return list.find(x=>x?.field===field)||null;
+}
+function aiDirectionText(direction){
+return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
+}
 function drawForecast(arr){
-
 forecastChart?.destroy();
-
 forecastChart=null;
-
-const valid=
-arr.filter(
-r=>
-parseDate(
-r.timestamp
-)&&
-Number.isFinite(
-Number(
-r[metric]
-)
-)
-);
-
-const lastDate=
-parseDate(
-valid.at(-1)
-?.timestamp
-);
-
-const recent=
-lastDate
-?valid.filter(
-r=>
-parseDate(
-r.timestamp
-)>=
-new Date(
-lastDate-
-3600000
-)
-)
-:[];
-
-if(
-recent.length<10
-){
-
-if(
-$("forecastMessage")
-){
-
-$("forecastMessage").textContent=
-"ข้อมูลใน 60 นาทีล่าสุดยังไม่พอสำหรับคาดการณ์";
-
-}
-
-if(
-$("forecastBadge")
-){
-
-$("forecastBadge").textContent=
-`${metricLabel()} • รอข้อมูล`;
-
-}
-
-return;
-
-}
-
-const first=
-parseDate(
-recent[0].timestamp
-);
-
-const points=
-recent.map(
-r=>({
-
-x:
-(
-parseDate(
-r.timestamp
-)-
-first
-)/
-60000,
-
-y:
-Number(
-r[metric]
-)
-
-})
-);
-
-const model=
-linear(
-points
-);
-
-if(!model){
+const canvas=$("forecastChart");
+if(!canvas)return;
+const valid=arr.filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
+const actual=valid.slice(-12);
+if(!actual.length){
+if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
 return;
 }
-
-const last=
-points.at(-1);
-
-const current=
-last.y;
-
-const pred=
-Math.max(
-0,
-model.intercept+
-model.slope*
-(
-last.x+
-30
-)
-);
-
-const direction=
-Math.abs(
-pred-
-current
-)<1
-?"→ ค่อนข้างคงที่"
-:pred>current
-?"↗ มีแนวโน้มเพิ่มขึ้น"
-:"↘ มีแนวโน้มลดลง";
-
-if(
-$("forecastMessage")
-){
-
-$("forecastMessage").innerHTML=
-`<b class="text-cyan-300">
-${metricLabel()} (${metricUnit()})
-</b>
-
-<div class="mt-2">
-ค่าปัจจุบัน
-<b>${fmt(current)}</b>
-
-• +30 นาทีประมาณ
-<b>${fmt(pred)}</b>
-
-• ${direction}
-</div>
-
-<div class="text-[10px] text-slate-500 mt-2">
-Forecast ใช้ Linear Regression
-• ไม่ใช่ค่าที่เซนเซอร์วัดจริงในอนาคต
-</div>`;
-
+const labels=actual.map(r=>thaiTime(r.timestamp));
+const values=actual.map(r=>Number(r[metric]));
+const datasets=[{label:"ข้อมูลจริง",data:[...values,null,null,null],borderWidth:2,tension:.3,pointRadius:2}];
+const chartLabels=[...labels,"+10 นาที","+20 นาที","+30 นาที"];
+const isAI=aiForecastPayload?.ai===true;
+const numeric=aiForecastPayload?.context?.forecast_numeric?.[metric];
+const trend=aiTrendFor(metric);
+if(isAI&&numeric&&Number.isFinite(Number(numeric.value))&&forecastVisible){
+const current=values.at(-1),target=Number(numeric.value);
+const f10=current+(target-current)/3;
+const f20=current+(target-current)*2/3;
+const nulls=new Array(Math.max(0,values.length-1)).fill(null);
+datasets.push({label:"AI Forecast",data:[...nulls,current,f10,f20,target],borderDash:[6,5],borderWidth:2,pointRadius:3,tension:.22});
+if($("forecastMessage"))$("forecastMessage").innerHTML=`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b><div class="mt-2">${esc(aiDirectionText(trend?.direction))} • +30 นาทีฐานเชิงคำนวณ <b>${fmt(target)} ${metricUnit()}</b></div><div class="text-[10px] text-slate-500 mt-2">AI เป็นผู้วิเคราะห์ทิศทางและความสัมพันธ์ • ตัวเลข Forecast มาจากโมเดลเชิงคำนวณเพื่อป้องกัน AI สร้างค่าขึ้นเอง</div>`;
+}else if(!isAI){
+if($("forecastMessage"))$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Trend ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริง และจะไม่แสดง Rule-based fallback เป็นผล AI</div></div>';
+}else if($("forecastMessage")){
+$("forecastMessage").textContent="AI ทำงานแล้ว แต่ข้อมูลของตัวแปรนี้ยังไม่พอสำหรับ Forecast";
 }
-
-if(
-$("forecastBadge")
-){
-
-$("forecastBadge").textContent=
-`${metricLabel()} • +30 นาที`;
-
-}
-
-const actual=
-recent.slice(
--12
-);
-
-const labels=
-actual.map(
-r=>
-thaiTime(
-r.timestamp
-)
-);
-
-const values=
-actual.map(
-r=>
-Number(
-r[metric]
-)
-);
-
-const future=[
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
-];
-
-const forecasts=
-[
-10,
-20,
-30
-]
-.map(
-minutes=>
-Math.max(
-0,
-model.intercept+
-model.slope*
-(
-last.x+
-minutes
-)
-)
-);
-
-const nulls=
-new Array(
-Math.max(
-0,
-values.length-1
-)
-)
-.fill(
-null
-);
-
-forecastChart=
-new Chart(
-$("forecastChart"),
-{
-
-type:"line",
-
-data:{
-
-labels:[
-...labels,
-...future
-],
-
-datasets:[
-
-{
-
-label:
-"ข้อมูลจริง",
-
-data:[
-...values,
-null,
-null,
-null
-],
-
-borderColor:
-"#22d3ee",
-
-borderWidth:2,
-
-tension:.3,
-
-pointRadius:2
-
-},
-
-{
-
-label:
-"Forecast",
-
-data:[
-...nulls,
-values.at(-1),
-...forecasts
-],
-
-borderColor:
-"#34d399",
-
-borderDash:[
-6,
-5
-],
-
-borderWidth:2,
-
-pointRadius:3
-
-}
-
-]
-
-},
-
-options:{
-
-responsive:true,
-
-plugins:{
-legend:{
-display:false
-}
-},
-
-scales:{
-
-x:{
-grid:{
-display:false
-}
-},
-
-y:{
-grid:{
-color:
-"rgba(148,163,184,.08)"
-}
-}
-
-}
-
-}
-
-}
-);
-
+forecastChart=new Chart(canvas,{type:"line",data:{labels:chartLabels,datasets},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"rgba(148,163,184,.08)"}}}}});
 updateForecastToggle();
-
 }
 
 // =====================================================
@@ -4907,170 +4626,42 @@ aiPayload
 // =====================================================
 
 function renderAIForecast(payload){
-
-const box=
-$("aiForecastDetails")||
-$("forecastMessage");
-
-const badge=
-$("aiForecastStatusBadge")||
-$("forecastBadge");
-
-const generated=
-$("aiForecastGeneratedAt");
-
-if(
-aiForecastLoading
-){
-
-if(box){
-
-box.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังคาดการณ์สภาพแวดล้อม...</div>';
-
-}
-
-if(badge){
-
-badge.textContent=
-"AI • กำลังคาดการณ์";
-
-}
-
-return;
-
-}
-
-if(
-!payload
-){
-
-if(box){
-
-box.innerHTML=
-'<div class="ai-result-summary">ยังไม่มีผล AI Forecast • กราฟเชิงสถิติยังใช้เป็นข้อมูลฐานได้</div>';
-
-}
-
-if(badge){
-
-badge.textContent=
-"AI Forecast • รอข้อมูล";
-
-}
-
-return;
-
-}
-
-const d=
-payload.data||
-{};
-
-if(generated){
-
-const dt=
-parseDate(
-payload.generated_at
-);
-
-generated.textContent=
-dt
-?`อัปเดต AI Forecast: ${dt.toLocaleString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok"
-}
-)}`
-:"อัปเดต AI Forecast: --";
-
-}
-
-if(badge){
-
-badge.textContent=
-`AI Forecast • ${confidenceText(d.confidence||"low")}`;
-
-}
-
-if(!box){
+const box=$("aiForecastDetails")||$("forecastMessage");
+const badge=$("aiForecastStatusBadge");
+const generated=$("aiForecastGeneratedAt");
+if(aiForecastLoading){
+if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
+if(badge)badge.textContent="AI • กำลังวิเคราะห์";
 return;
 }
-
-box.innerHTML=
-`
-<div class="ai-forecast-headline">
-${esc(d.headline||"AI Environmental Forecast")}
+if(!payload){
+if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลจาก AI Trend & Forecast</div>';
+if(badge)badge.textContent="AI • รอข้อมูล";
+return;
+}
+const d=payload.data||{};
+const isAI=payload.ai===true;
+if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดต AI: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดต AI: --";}
+if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;badge.textContent=isAI?`AI Trend • ${confidenceText(d.confidence||"low")}`:"AI UNAVAILABLE";}
+if(!box)return;
+if(!isAI){
+box.innerHTML=`<div class="ai-unavailable"><b>AI Trend ไม่พร้อมใช้งาน</b><div class="mt-1">${esc(payload.reason||"ไม่สามารถเชื่อม Gemini ได้")} • ระบบจะไม่แสดงผลสำรองเป็น AI</div></div>`;
+return;
+}
+const trends=Array.isArray(d.trend_analysis)?d.trend_analysis:[];
+const preferred=["pm25","temperature","humidity","light"];
+const trendCards=preferred.map(field=>trends.find(x=>x?.field===field)).filter(Boolean);
+box.innerHTML=`
+<div class="ai-forecast-headline">${esc(d.headline||"AI Environmental Trend & Forecast")}</div>
+<div class="ai-trend-summary">${trendCards.map(x=>`<div class="ai-trend-item"><div class="ai-trend-variable">${esc(CURRENT_METRIC_CONFIG[x.field]?.label||x.field)}</div><div class="ai-trend-direction">${esc(aiDirectionText(x.direction))}</div><div class="ai-trend-explanation">${esc(x.explanation||"")}</div></div>`).join("")}</div>
+<div class="ai-trend-driver"><b>ตัวแปรหลัก:</b> ${esc(d.primary_driver||"--")}<br><b>รูปแบบผิดปกติ:</b> ${esc(d.anomaly_summary||"--")}</div>
+<div class="ai-forecast-grid mt-3">
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌫 AIR</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 HEAT</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">☁ SKY</div><div>${esc(d.sky_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🏃 ACTIVITY</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
 </div>
-
-<div class="ai-forecast-grid">
-
-<div class="ai-forecast-item">
-
-<div class="ai-forecast-label">
-🌫 AIR
-</div>
-
-<div>
-${esc(d.air_forecast||"ยังไม่มีข้อมูล")}
-</div>
-
-</div>
-
-<div class="ai-forecast-item">
-
-<div class="ai-forecast-label">
-🌡 HEAT
-</div>
-
-<div>
-${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}
-</div>
-
-</div>
-
-<div class="ai-forecast-item">
-
-<div class="ai-forecast-label">
-☁ SKY
-</div>
-
-<div>
-${esc(d.sky_forecast||"ยังไม่มีข้อมูล")}
-</div>
-
-</div>
-
-<div class="ai-forecast-item">
-
-<div class="ai-forecast-label">
-🏃 ACTIVITY
-</div>
-
-<div>
-${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}
-</div>
-
-</div>
-
-</div>
-
-<div class="ai-meta-row">
-
-<span>
-โมเดล:
-${esc(payload.model||"Rule-based fallback")}
-</span>
-
-<span class="ai-confidence">
-ความเชื่อมั่น:
-${confidenceText(d.confidence||"low")}
-</span>
-
-</div>
-`;
-
+<div class="ai-meta-row"><span>โมเดล: ${esc(payload.model||"Gemini")}</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
 }
 
 async function loadAIForecast(
@@ -5144,6 +4735,8 @@ renderAIForecast(
 aiForecastPayload
 );
 
+drawCharts();
+
 }
 
 }
@@ -5185,8 +4778,8 @@ forecast:[
 ],
 
 ai:[
-"AI วิเคราะห์สถานการณ์",
-"เชื่อม Gemini ผ่าน Cloudflare Worker เพื่อวิเคราะห์ความสัมพันธ์ของ PM1.0, PM2.5, PM10, Temperature, Humidity, Light, Heat Index, สถานะระบบ และข้อมูลย้อนหลัง โดยแยกหน้าที่จาก AI Forecast"
+"AI Environmental Intelligence",
+"รวม AI Situation Analysis และ AI Trend & Forecast โดย Gemini วิเคราะห์ข้อมูลจริงทั้ง 6 ตัวแปรร่วมกับ Heat Index สถานะระบบ และข้อมูลย้อนหลัง"
 ]
 
 };
