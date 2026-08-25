@@ -4258,3 +4258,72 @@ section.grid { align-items: start; }
 #historyChart{max-height:310px!important}
 @media(max-width:1100px){.ai-intelligence-grid{grid-template-columns:1fr}.ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-trend-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.ai-intelligence-header,.ai-panel-head{flex-direction:column}.ai-intelligence-badges{justify-content:flex-start}.ai-model-strip,.ai-trend-summary{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   SKY CONDITION — FEATURED ENVIRONMENT CARD
+   Make weather/sky information visually more prominent.
+   ========================================================= */
+@media (min-width: 901px){
+  .smart-summary-grid{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    align-items:stretch;
+  }
+  .smart-summary-air,
+  .smart-summary-heat,
+  .smart-summary-system{
+    grid-column:span 1;
+  }
+  .smart-summary-sky{
+    grid-column:span 3;
+    min-height:112px!important;
+    padding:15px 18px!important;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    border-color:rgba(125,211,252,.28)!important;
+    background:
+      radial-gradient(circle at 88% 20%,rgba(125,211,252,.12),transparent 34%),
+      linear-gradient(145deg,rgba(8,34,54,.96),rgba(7,24,42,.88))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 26px rgba(0,0,0,.10);
+  }
+  .smart-summary-sky::after{
+    content:"☁";
+    position:absolute;
+    right:18px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:48px;
+    line-height:1;
+    opacity:.10;
+    pointer-events:none;
+  }
+  .smart-summary-sky .smart-summary-stat-label{
+    font-size:10px!important;
+    color:#7dd3fc!important;
+  }
+  .smart-summary-sky .smart-summary-stat-value{
+    margin-top:7px!important;
+    padding-right:62px;
+    font-size:20px!important;
+    line-height:1.25!important;
+    color:#f0f9ff!important;
+  }
+  .smart-summary-sky .smart-summary-stat-sub{
+    margin-top:7px!important;
+    font-size:10px!important;
+    color:#94a3b8!important;
+  }
+}
+@media (max-width:900px){
+  .smart-summary-sky{
+    min-height:104px!important;
+    padding:14px!important;
+    border-color:rgba(125,211,252,.25)!important;
+  }
+  .smart-summary-sky .smart-summary-stat-value{
+    font-size:17px!important;
+  }
+}
