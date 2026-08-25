@@ -474,7 +474,7 @@ HISTORICAL DATA & TREND
                 >
                     <span class="history-control-icon">▣</span>
                     <span id="historyRangeButtonLabel">
-                        24 ชั่วโมง
+                        วันนี้
                     </span>
                     <span class="history-control-arrow">▾</span>
                 </button>
@@ -553,6 +553,9 @@ HISTORICAL DATA & TREND
                                 id="quickRangeList"
                                 class="quick-range-list"
                             >
+                                <button type="button" data-range="today" class="quick-range-option active w-full text-left rounded-lg px-3 py-2 text-sm">
+                                    วันนี้
+                                </button>
                                 <button type="button" data-range="30m" class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm">
                                     30 นาที
                                 </button>
@@ -670,7 +673,7 @@ HISTORICAL DATA & TREND
                     id="selectedRangeLabel"
                     class="text-cyan-300"
                 >
-                    24 ชั่วโมง
+                    วันนี้
                 </b>
             </div>
         </div>
@@ -855,7 +858,7 @@ FORECAST + AI
             <div>
                 <div class="section-title-with-help">
                     <h2 class="text-xl font-black">
-                        🔮 Forecast
+                        🤖 AI Forecast + Trend
                     </h2>
                     <button
                         type="button"
@@ -868,7 +871,7 @@ FORECAST + AI
                     </button>
                 </div>
                 <p class="text-xs text-slate-400 mt-1">
-                    คาดการณ์ระยะสั้นของตัวแปรที่เลือกจากข้อมูลย้อนหลัง 60 นาที
+                    คาดการณ์ 30 นาทีแบบ Hybrid: แนวโน้มเชิงสถิติ + Gemini AI โดยใช้ข้อมูลหลายตัวแปรร่วมกัน
                 </p>
             </div>
 
@@ -886,7 +889,23 @@ FORECAST + AI
             </div>
         </div>
 
-        <div
+                <div class="ai-forecast-shell mt-4">
+            <div class="ai-forecast-topbar">
+                <div>
+                    <div class="ai-forecast-kicker">AI ENVIRONMENTAL FORECAST</div>
+                    <div class="ai-forecast-subtitle">Air • Heat • Sky • Activity • 30 นาทีข้างหน้า</div>
+                </div>
+                <div class="ai-forecast-actions">
+                    <span id="aiForecastStatusBadge" class="ai-forecast-status">AI Forecast • รอข้อมูล</span>
+                    <button id="aiForecastRefreshButton" type="button" class="ai-forecast-refresh">↻ วิเคราะห์ใหม่</button>
+                </div>
+            </div>
+            <div id="aiForecastDetails" class="ai-forecast-details">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
+            <div id="aiForecastGeneratedAt" class="ai-forecast-generated">อัปเดต AI Forecast: --</div>
+        </div>
+
+        <div class="forecast-base-label">STATISTICAL FORECAST BASE</div>
+<div
             id="forecastMessage"
             class="soft rounded-xl p-4 mt-4 text-sm text-slate-300"
         >
