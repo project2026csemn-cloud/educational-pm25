@@ -4005,3 +4005,135 @@ section.grid { align-items: start; }
 .section-title-with-help { align-items:center; }
 .help-button { flex:0 0 auto; }
 .ai-analysis-footer { justify-content:flex-start; }
+
+
+/* =========================================================
+   2026-08-25 FINAL LAYOUT BALANCE
+   ลดช่องว่างจาก grid stretch และทำให้แต่ละการ์ดสูงตามเนื้อหา
+   ========================================================= */
+.dashboard-top-row,
+.dashboard-current-row,
+.dashboard-ai-row{
+    align-items:start!important;
+    grid-auto-rows:max-content!important;
+}
+
+.monitoring-card,
+.smart-summary-card,
+.current-environment-card,
+.alerts-card,
+.ai-analysis-card,
+.ai-forecast-card{
+    align-self:start!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+}
+
+/* Monitoring: ไม่ให้กล่องถูกยืดตาม Smart Summary */
+.monitoring-card{
+    display:block!important;
+}
+.monitoring-card .node{
+    height:auto!important;
+    min-height:0!important;
+}
+
+/* Smart Summary: กระชับ แต่ยังอ่านง่าย */
+.smart-summary-card{
+    padding:16px!important;
+}
+.smart-summary-header{
+    margin-bottom:0!important;
+}
+.smart-summary-body{
+    margin-top:12px!important;
+    gap:8px!important;
+}
+.smart-summary-headline{
+    margin-bottom:8px!important;
+}
+.smart-summary-grid{
+    gap:8px!important;
+}
+.smart-summary-stat{
+    padding:10px!important;
+    min-height:0!important;
+}
+.smart-summary-activity{
+    margin-top:8px!important;
+    padding:10px 11px!important;
+}
+.smart-summary-notes{
+    margin-top:7px!important;
+    gap:5px!important;
+}
+.smart-summary-note{
+    padding:7px 9px!important;
+}
+
+/* Current / Alerts: card สูงตามข้อมูลจริง */
+.current-environment-card,
+.alerts-card{
+    display:block!important;
+}
+#alerts{
+    margin-top:12px;
+    min-height:0!important;
+}
+
+/* AI: ป้องกันสองฝั่งบังคับความสูงเท่ากัน */
+.ai-analysis-card,
+.ai-forecast-card{
+    display:block!important;
+}
+.ai-details-panel{
+    min-height:0!important;
+    height:auto!important;
+}
+.ai-forecast-shell,
+.ai-forecast-details{
+    min-height:0!important;
+    height:auto!important;
+}
+
+/* กราฟเป็นข้อมูลเชิงลึก จึงกระชับและอยู่ช่วงล่าง */
+#forecastChart{
+    width:100%!important;
+    max-height:230px!important;
+}
+#historyChart{
+    width:100%!important;
+    max-height:310px!important;
+}
+.historical-section{
+    margin-top:0!important;
+}
+
+/* ช่องไฟระหว่าง section ให้สม่ำเสมอ */
+.dashboard-top-row,
+.dashboard-current-row,
+.dashboard-ai-row,
+.historical-section{
+    margin-bottom:16px!important;
+}
+
+@media (max-width:1279px){
+    .dashboard-top-row{
+        grid-template-columns:1fr!important;
+    }
+    .monitoring-card,
+    .smart-summary-card{
+        grid-column:auto!important;
+    }
+}
+
+@media (max-width:900px){
+    .dashboard-current-row,
+    .dashboard-ai-row{
+        grid-template-columns:1fr!important;
+    }
+    .current-environment-card{
+        grid-column:auto!important;
+    }
+}
