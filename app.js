@@ -3226,31 +3226,43 @@ forecastChart?.destroy();
 forecastChart=null;
 const canvas=$("forecastChart");
 if(!canvas)return;
-const valid=arr.filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
+
+const valid=(arr||[]).filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
 const actual=valid.slice(-12);
 if(!actual.length){
 if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
 return;
 }
+
 const labels=actual.map(r=>thaiTime(r.timestamp));
 const values=actual.map(r=>Number(r[metric]));
-const datasets=[{label:"ข้อมูลจริง",data:[...values,null,null,null],borderWidth:2,tension:.3,pointRadius:2}];
-const chartLabels=[...labels,"+10 นาที","+20 นาที","+30 นาที"];
+const current=values.at(-1);
+const chartLabels=[...labels];
+const datasets=[{label:"ข้อมูลจริง",data:[...values],borderWidth:2,tension:.3,pointRadius:2}];
+
 const isAI=aiForecastPayload?.ai===true;
-const numeric=aiForecastPayload?.context?.forecast_numeric?.[metric];
 const trend=aiTrendFor(metric);
-if(isAI&&numeric&&Number.isFinite(Number(numeric.value))&&forecastVisible){
-const current=values.at(-1),target=Number(numeric.value);
-const f10=current+(target-current)/3;
-const f20=current+(target-current)*2/3;
+const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
+?aiForecastPayload.data.forecast_points.find(x=>x?.field===metric)
+:null;
+const validFP=fp&&Number.isFinite(Number(fp.p10))&&Number.isFinite(Number(fp.p20))&&Number.isFinite(Number(fp.p30));
+
+if(isAI&&validFP&&forecastVisible){
+chartLabels.push("+10 นาที","+20 นาที","+30 นาที");
 const nulls=new Array(Math.max(0,values.length-1)).fill(null);
-datasets.push({label:"AI Forecast",data:[...nulls,current,f10,f20,target],borderDash:[6,5],borderWidth:2,pointRadius:3,tension:.22});
-if($("forecastMessage"))$("forecastMessage").innerHTML=`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b><div class="mt-2">${esc(aiDirectionText(trend?.direction))} • +30 นาทีฐานเชิงคำนวณ <b>${fmt(target)} ${metricUnit()}</b></div><div class="text-[10px] text-slate-500 mt-2">AI เป็นผู้วิเคราะห์ทิศทางและความสัมพันธ์ • ตัวเลข Forecast มาจากโมเดลเชิงคำนวณเพื่อป้องกัน AI สร้างค่าขึ้นเอง</div>`;
+datasets.push({
+label:"AI Forecast",
+data:[...nulls,current,Number(fp.p10),Number(fp.p20),Number(fp.p30)],
+borderDash:[6,5],borderWidth:2,pointRadius:3,tension:.3
+});
+const provider=aiForecastPayload?.provider==="cloudflare"?"Cloudflare Workers AI":aiForecastPayload?.provider==="gemini"?"Gemini AI":"AI";
+if($("forecastMessage"))$("forecastMessage").innerHTML=`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b><div class="mt-2">${esc(aiDirectionText(trend?.direction))} • AI คาดการณ์ +30 นาที <b>${fmt(fp.p30)} ${metricUnit()}</b></div><div class="text-[10px] text-slate-500 mt-2">จุด +10/+20/+30 นาทีเป็นผลจาก ${esc(provider)} โดยใช้ข้อมูลย้อนหลังและฐานเชิงสถิติประกอบการตัดสินใจ</div>`;
 }else if(!isAI){
-if($("forecastMessage"))$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Trend ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริง และจะไม่แสดง Rule-based fallback เป็นผล AI</div></div>';
+if($("forecastMessage"))$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง และจะไม่ใช้ Linear Regression หรือ Rule-based fallback แสดงเป็น AI</div></div>';
 }else if($("forecastMessage")){
-$("forecastMessage").textContent="AI ทำงานแล้ว แต่ข้อมูลของตัวแปรนี้ยังไม่พอสำหรับ Forecast";
+$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>ยังไม่มี AI Forecast Points สำหรับตัวแปรนี้</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริงจนกว่า AI จะสร้างผล +10/+20/+30 นาทีสำเร็จ</div></div>';
 }
+
 forecastChart=new Chart(canvas,{type:"line",data:{labels:chartLabels,datasets},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"rgba(148,163,184,.08)"}}}}});
 updateForecastToggle();
 }
@@ -4638,7 +4650,7 @@ return;
 const d=payload.data||{};
 const isAI=payload.ai===true;
 if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดต AI: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดต AI: --";}
-if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;badge.textContent=isAI?`AI Trend • ${confidenceText(d.confidence||"low")}`:"AI UNAVAILABLE";}
+if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;const p=payload?.provider==="cloudflare"?"CLOUDFLARE AI":payload?.provider==="gemini"?"GEMINI AI":"AI";badge.textContent=isAI?`${p} • ${confidenceText(d.confidence||"low")}`:"AI UNAVAILABLE";}
 if(!box)return;
 if(!isAI){
 const reasonText=
