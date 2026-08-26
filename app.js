@@ -1,4 +1,4 @@
-const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
+﻿const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
 
 const API={
 latest:`${BASE}/api/get_latest.php`,
@@ -26,6 +26,8 @@ let standardsData=null;
 let latestRecord=null;
 let historyChart=null;
 let forecastChart=null;
+let historyGroupCharts=[];
+let forecastGroupCharts=[];
 let forecastVisible=true;
 
 let metric="all";
@@ -2879,39 +2881,113 @@ const mobile=isMobileChart();
 return{maxTicksLimit:mobile?5:8,font:{size:mobile?10:12}};
 }
 
+
+function destroyChartSafe(chart){
+try{chart?.destroy();}catch{}
+}
+function destroyChartList(list){
+for(const c of list||[])destroyChartSafe(c);
+return [];
+}
+function chartTickLimit(){
+return window.innerWidth<=640?5:10;
+}
+function chartFontSize(){
+return window.innerWidth<=640?12:13;
+}
+function groupedChartShell(title, subtitle, canvasId, legendHtml=""){
+return `<section class="metric-chart-panel">
+<div class="metric-chart-head">
+<div><div class="metric-chart-title">${title}</div><div class="metric-chart-subtitle">${subtitle}</div></div>
+${legendHtml?`<div class="metric-chart-legend">${legendHtml}</div>`:""}
+</div>
+<div class="metric-chart-canvas-wrap"><canvas id="${canvasId}"></canvas></div>
+</section>`;
+}
+function miniLegend(fields){
+return fields.map(field=>`<span><i style="background:${metricColor(field)}"></i>${metricLabelFor(field)}</span>`).join("");
+}
+function groupedChartOptions(yTitle){
+return{
+responsive:true,
+maintainAspectRatio:false,
+animation:false,
+interaction:{mode:"index",intersect:false},
+plugins:{
+legend:{display:false},
+tooltip:{callbacks:{label:graphTooltipLabel}}
+},
+scales:{
+x:{
+grid:{display:false},
+ticks:{
+autoSkip:true,
+maxTicksLimit:chartTickLimit(),
+maxRotation:0,
+minRotation:0,
+font:{size:chartFontSize()}
+}
+},
+y:{
+title:{display:true,text:yTitle,font:{size:chartFontSize(),weight:"600"}},
+ticks:{font:{size:chartFontSize()}},
+grid:{color:"rgba(148,163,184,.08)"}
+}
+}
+};
+}
+function makeActualDataset(field, values){
+return{
+label:metricLabelFor(field),
+metricField:field,
+rawValues:values,
+data:values,
+borderColor:metricColor(field),
+backgroundColor:"transparent",
+borderWidth:2,
+pointRadius:values.length>40?0:2,
+tension:.16,
+cubicInterpolationMode:"monotone"
+};
+}
+function makeForecastDataset(field, actualLength, current, points){
+const raw=[...new Array(Math.max(0,actualLength-1)).fill(null),current,...points];
+return{
+label:`${metricLabelFor(field)} Forecast`,
+metricField:field,
+rawValues:raw,
+data:raw,
+borderColor:metricColor(field),
+backgroundColor:"transparent",
+borderDash:[6,5],
+borderWidth:2,
+pointRadius:2,
+tension:.08,
+cubicInterpolationMode:"monotone"
+};
+}
+
 function drawCharts(){
 const base=selectedRecords()
 .filter(r=>parseDate(r.timestamp))
 .sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
 
-if($("selectedMetricLabel")){
-$("selectedMetricLabel").textContent=metricLabel();
-}
+if($("selectedMetricLabel"))$("selectedMetricLabel").textContent=metricLabel();
+
+historyGroupCharts=destroyChartList(historyGroupCharts);
+destroyChartSafe(historyChart);
+historyChart=null;
+
+const area=$("historyChartArea");
+if(!area)return;
 
 if(!base.length){
-["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{
-if($(id))$(id).textContent="--";
-});
+area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
+["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
 if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
-historyChart?.destroy();
-historyChart=null;
-forecastChart?.destroy();
-forecastChart=null;
-if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
+drawForecast(base);
 return;
 }
-
-const labels=base.map(x=>
-parseDate(x.timestamp).toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"2-digit",
-hour:"2-digit",
-minute:"2-digit"
-})
-);
-
-historyChart?.destroy();
 
 if(metric==="all"){
 if($("trendAvg"))$("trendAvg").textContent="—";
@@ -2920,56 +2996,41 @@ if($("trendMin"))$("trendMin").textContent="—";
 if($("trendLast"))$("trendLast").textContent="—";
 if($("trend"))$("trend").textContent="เปรียบเทียบ 6 ตัวแปร";
 
-const datasets=GRAPH_FIELDS.map(field=>{
-const raw=base.map(r=>{
-const v=Number(r[field]);
-return Number.isFinite(v)?v:null;
-});
-return{
-label:metricLabelFor(field),
-metricField:field,
-rawValues:raw,
-data:normalizeSeries(raw),
-borderColor:metricColor(field),
-backgroundColor:"transparent",
-fill:false,
-tension:.18,
-cubicInterpolationMode:"monotone",
-pointRadius:raw.length>60?0:2,
-borderWidth:2
-};
-});
+area.innerHTML=
+groupedChartShell("ฝุ่นละออง","PM1.0 • PM2.5 • PM10","historyDust",miniLegend(["pm1","pm25","pm10"]))+
+`<div class="metric-chart-grid-3">`+
+groupedChartShell("อุณหภูมิ","หน่วย °C","historyTemp",miniLegend(["temperature"]))+
+groupedChartShell("ความชื้น","หน่วย %","historyHumidity",miniLegend(["humidity"]))+
+groupedChartShell("แสง","หน่วย lux","historyLight",miniLegend(["light"]))+
+`</div>`;
 
-historyChart=new Chart($("historyChart"),{
-type:"line",
-data:{labels,datasets},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-interaction:{mode:"index",intersect:false},
-plugins:{
-legend:graphLegendOptions(),
-tooltip:{callbacks:{label:graphTooltipLabel}}
-},
-scales:{
-x:graphXAxisOptions(),
-y:{
-min:0,
-max:100,
-title:{display:true,text:"แนวโน้มสัมพัทธ์ 0–100"},
-grid:{color:"rgba(148,163,184,.08)"},
-ticks:graphYAxisTicks()
-}
-}
-}
+const labels=base.map(x=>thaiTime(x.timestamp));
+
+const create=(canvasId,fields,yTitle)=>{
+const datasets=fields.map(field=>{
+const vals=base.map(r=>{
+const v=Number(r[field]); return Number.isFinite(v)?v:null;
 });
+return makeActualDataset(field,vals);
+});
+const c=new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)});
+historyGroupCharts.push(c);
+};
+
+create("historyDust",["pm1","pm25","pm10"],"µg/m³");
+create("historyTemp",["temperature"],"°C");
+create("historyHumidity",["humidity"],"%");
+create("historyLight",["light"],"lux");
 
 drawForecast(base);
 return;
 }
 
+area.innerHTML='<canvas id="historyChart"></canvas>';
+
 const arr=base.filter(r=>Number.isFinite(Number(r[metric])));
+const values=arr.map(r=>Number(r[metric]));
+const labels=arr.map(r=>thaiTime(r.timestamp));
 const s=stats(arr,metric);
 
 if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
@@ -2977,69 +3038,22 @@ if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
 if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
 if($("trendLast"))$("trendLast").textContent=s.last==null?"--":fmt(s.last);
 
-if(!arr.length){
-if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
-historyChart?.destroy();
-historyChart=null;
-forecastChart?.destroy();
-forecastChart=null;
-return;
-}
-
-const singleLabels=arr.map(x=>
-parseDate(x.timestamp).toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"2-digit",
-hour:"2-digit",
-minute:"2-digit"
-})
-);
-const values=arr.map(x=>Number(x[metric]));
-
 if($("trend")){
-const diff=values.at(-1)-values[0];
+const diff=values.length?values.at(-1)-values[0]:0;
 const pct=values[0]?diff/Math.abs(values[0])*100:0;
-$("trend").textContent=Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
+$("trend").textContent=!values.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
 }
 
+if(values.length){
 historyChart=new Chart($("historyChart"),{
 type:"line",
-data:{
-labels:singleLabels,
-datasets:[{
-label:metricLabel(),
-metricField:metric,
-rawValues:values,
-data:values,
-borderColor:metricColor(metric),
-backgroundColor:"transparent",
-fill:false,
-tension:.18,
-cubicInterpolationMode:"monotone",
-pointRadius:values.length>60?0:3,
-borderWidth:2
-}]
-},
+data:{labels,datasets:[makeActualDataset(metric,values)]},
 options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-interaction:{mode:"index",intersect:false},
-plugins:{
-legend:graphLegendOptions(),
-tooltip:{callbacks:{label:graphTooltipLabel}}
-},
-scales:{
-x:graphXAxisOptions(),
-y:{
-title:{display:true,text:`${metricLabel()} ${metricUnit()}`.trim()},
-grid:{color:"rgba(148,163,184,.08)"},
-ticks:graphYAxisTicks()
-}
-}
+...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
+plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{label:graphTooltipLabel}}}
 }
 });
+}
 
 drawForecast(arr);
 }
@@ -3176,11 +3190,12 @@ function aiDirectionText(direction){
 return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
 }
 function drawForecast(arr){
-forecastChart?.destroy();
+forecastGroupCharts=destroyChartList(forecastGroupCharts);
+destroyChartSafe(forecastChart);
 forecastChart=null;
 
-const canvas=$("forecastChart");
-if(!canvas)return;
+const area=$("forecastChartArea");
+if(!area)return;
 
 const isAI=aiForecastPayload?.ai===true;
 const provider=aiForecastPayload?.provider==="cloudflare"
@@ -3189,216 +3204,111 @@ const provider=aiForecastPayload?.provider==="cloudflare"
 ?"Gemini AI"
 :"AI";
 
-if(metric==="all"){
-const actual=(arr||[])
-.filter(r=>parseDate(r.timestamp))
-.slice(-12);
+const pointFor=field=>{
+const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
+?aiForecastPayload.data.forecast_points.find(x=>x?.field===field):null;
+if(!fp)return null;
+const pts=[Number(fp.p10),Number(fp.p20),Number(fp.p30)];
+return pts.every(Number.isFinite)?pts:null;
+};
 
+if(metric==="all"){
+const actual=(arr||[]).filter(r=>parseDate(r.timestamp)).slice(-12);
 if(!actual.length){
-if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
+area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
 return;
 }
 
-const labels=actual.map(r=>thaiTime(r.timestamp));
-const chartLabels=[...labels,"+10 นาที","+20 นาที","+30 นาที"];
+area.innerHTML=
+groupedChartShell("ฝุ่นละออง","ข้อมูลจริง + AI Forecast","forecastDust",miniLegend(["pm1","pm25","pm10"]))+
+`<div class="metric-chart-grid-3">`+
+groupedChartShell("อุณหภูมิ","ข้อมูลจริง + AI Forecast","forecastTemp",miniLegend(["temperature"]))+
+groupedChartShell("ความชื้น","ข้อมูลจริง + AI Forecast","forecastHumidity",miniLegend(["humidity"]))+
+groupedChartShell("แสง","ข้อมูลจริง + AI Forecast","forecastLight",miniLegend(["light"]))+
+`</div>`;
+
+const actualLabels=actual.map(r=>thaiTime(r.timestamp));
+const labels=[...actualLabels,"+10 นาที","+20 นาที","+30 นาที"];
+
+const create=(canvasId,fields,yTitle)=>{
 const datasets=[];
-
-for(const field of GRAPH_FIELDS){
-const rawActual=actual.map(r=>{
-const v=Number(r[field]);
-return Number.isFinite(v)?v:null;
+for(const field of fields){
+const raw=actual.map(r=>{
+const v=Number(r[field]); return Number.isFinite(v)?v:null;
 });
-
-const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
-?aiForecastPayload.data.forecast_points.find(x=>x?.field===field)
-:null;
-
-const fpRaw=fp&&
-Number.isFinite(Number(fp.p10))&&
-Number.isFinite(Number(fp.p20))&&
-Number.isFinite(Number(fp.p30))
-?[Number(fp.p10),Number(fp.p20),Number(fp.p30)]
-:[];
-
-const normalizedActual=normalizeSeries(rawActual,fpRaw);
-const scalePool=[...rawActual,...fpRaw]
-.map(Number).filter(Number.isFinite);
-const min=scalePool.length?Math.min(...scalePool):0;
-const max=scalePool.length?Math.max(...scalePool):1;
-const norm=v=>{
-const n=Number(v);
-if(!Number.isFinite(n))return null;
-if(Math.abs(max-min)<1e-9)return 50;
-return((n-min)/(max-min))*100;
+datasets.push({
+...makeActualDataset(field,raw),
+data:[...raw,null,null,null],
+rawValues:[...raw,null,null,null]
+});
+const pts=pointFor(field);
+if(isAI&&pts&&forecastVisible){
+const current=[...raw].reverse().find(v=>Number.isFinite(Number(v)));
+datasets.push(makeForecastDataset(field,raw.length,current,pts));
+}
+}
+const c=new Chart($(canvasId),{
+type:"line",
+data:{labels,datasets},
+options:groupedChartOptions(yTitle)
+});
+forecastGroupCharts.push(c);
 };
 
-datasets.push({
-label:metricLabelFor(field),
-metricField:field,
-rawValues:[...rawActual,null,null,null],
-data:[...normalizedActual,null,null,null],
-borderColor:metricColor(field),
-backgroundColor:"transparent",
-borderWidth:2,
-pointRadius:2,
-tension:.12,
-cubicInterpolationMode:"monotone"
-});
-
-if(isAI&&fpRaw.length&&forecastVisible){
-const currentRaw=[...rawActual].reverse().find(v=>Number.isFinite(Number(v)));
-const forecastRaw=[
-...new Array(Math.max(0,rawActual.length-1)).fill(null),
-currentRaw,
-...fpRaw
-];
-datasets.push({
-label:`${metricLabelFor(field)} Forecast`,
-metricField:field,
-rawValues:forecastRaw,
-data:forecastRaw.map(norm),
-borderColor:metricColor(field),
-backgroundColor:"transparent",
-borderDash:[6,5],
-borderWidth:2,
-pointRadius:2,
-tension:.08,
-cubicInterpolationMode:"monotone"
-});
-}
-}
-
-forecastChart=new Chart(canvas,{
-type:"line",
-data:{labels:chartLabels,datasets},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-interaction:{mode:"index",intersect:false},
-plugins:{
-legend:graphLegendOptions(),
-tooltip:{callbacks:{label:graphTooltipLabel}}
-},
-scales:{
-x:graphXAxisOptions(),
-y:{
-min:0,max:100,
-title:{display:true,text:"แนวโน้มสัมพัทธ์ 0–100"},
-grid:{color:"rgba(148,163,184,.08)"},
-ticks:graphYAxisTicks()
-}
-}
-}
-});
+create("forecastDust",["pm1","pm25","pm10"],"µg/m³");
+create("forecastTemp",["temperature"],"°C");
+create("forecastHumidity",["humidity"],"%");
+create("forecastLight",["light"],"lux");
 
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=isAI
-?`<b class="text-cyan-300">AI Trend • ALL</b>
-<div class="mt-2">แสดงข้อมูลจริงและ AI Forecast ของทั้ง 6 ตัวแปร โดยใช้สีประจำตัวแปรเดียวกันและใช้เส้นประสำหรับค่าคาดการณ์</div>
-<div class="text-[11px] text-slate-500 mt-2">AI-assisted Forecast จาก ${esc(provider)} • กราฟ ALL ใช้สเกลแนวโน้มสัมพัทธ์ 0–100 เพื่อให้ตัวแปรคนละหน่วยเปรียบเทียบทิศทางกันได้</div>`
-:'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงข้อมูลจริงของทั้ง 6 ตัวแปร และจะเพิ่มเส้นประเมื่อ AI Forecast พร้อมใช้งาน</div></div>';
+?`<b class="text-cyan-300">AI Trend • ALL</b><div class="mt-2">แยกกราฟตามหน่วยจริงเพื่ออ่านง่ายขึ้น • เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast</div><div class="text-[12px] text-slate-500 mt-2">AI-assisted Forecast จาก ${esc(provider)}</div>`
+:'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริง</div></div>';
 }
-
 updateForecastToggle();
 return;
 }
 
-const valid=(arr||[])
-.filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
-const actual=valid.slice(-12);
+area.innerHTML='<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
 
+const actual=(arr||[]).filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric]))).slice(-12);
 if(!actual.length){
-if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
+area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
 return;
 }
-
-const labels=actual.map(r=>thaiTime(r.timestamp));
 const values=actual.map(r=>Number(r[metric]));
+const labels=actual.map(r=>thaiTime(r.timestamp));
 const current=values.at(-1);
-const chartLabels=[...labels];
-const color=metricColor(metric);
+const datasets=[makeActualDataset(metric,values)];
+const pts=pointFor(metric);
 
-const datasets=[{
-label:metricLabel(),
-metricField:metric,
-rawValues:[...values],
-data:[...values],
-borderColor:color,
-backgroundColor:"transparent",
-borderWidth:2,
-tension:.18,
-cubicInterpolationMode:"monotone",
-pointRadius:2
-}];
+if(isAI&&pts&&forecastVisible){
+labels.push("+10 นาที","+20 นาที","+30 นาที");
+datasets[0].data=[...values,null,null,null];
+datasets[0].rawValues=[...values,null,null,null];
+datasets.push(makeForecastDataset(metric,values.length,current,pts));
+}
 
-const trend=aiTrendFor(metric);
-const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
-?aiForecastPayload.data.forecast_points.find(x=>x?.field===metric)
-:null;
-const validFP=fp&&Number.isFinite(Number(fp.p10))&&Number.isFinite(Number(fp.p20))&&Number.isFinite(Number(fp.p30));
-
-if(isAI&&validFP&&forecastVisible){
-chartLabels.push("+10 นาที","+20 นาที","+30 นาที");
-const nulls=new Array(Math.max(0,values.length-1)).fill(null);
-const forecastRaw=[...nulls,current,Number(fp.p10),Number(fp.p20),Number(fp.p30)];
-datasets.push({
-label:`${metricLabel()} Forecast`,
-metricField:metric,
-rawValues:forecastRaw,
-data:forecastRaw,
-borderColor:color,
-backgroundColor:"transparent",
-borderDash:[6,5],
-borderWidth:2,
-pointRadius:3,
-tension:.12,
-cubicInterpolationMode:"monotone"
+forecastChart=new Chart($("forecastChart"),{
+type:"line",
+data:{labels,datasets},
+options:{
+...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
+plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{label:graphTooltipLabel}}}
+}
 });
 
 if($("forecastMessage")){
-const aiBaseRaw=aiForecastPayload?.context?.current?.[metric];
-const aiBase=Number.isFinite(Number(aiBaseRaw))?Number(aiBaseRaw):null;
-const baseNote=aiBase!==null&&Math.abs(aiBase-current)>0.01
-?` • ฐานปัจจุบันที่ AI ใช้ ${fmt(aiBase)} ${metricUnit()}`
-:"";
-
+if(isAI&&pts){
+const trend=aiTrendFor(metric);
 $("forecastMessage").innerHTML=
-`<b style="color:${color}">AI Trend • ${metricLabel()}</b>
-<div class="mt-2">${esc(aiDirectionText(trend?.direction))} • AI คาดการณ์ +30 นาที <b>${fmt(fp.p30)} ${metricUnit()}</b>${baseNote}</div>
-<div class="text-[11px] text-slate-500 mt-2">สีของกราฟตรงกับตัวแปรที่เลือก • เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast จาก ${esc(provider)}</div>`;
-}
-}else if(!isAI){
-if($("forecastMessage"))$("forecastMessage").innerHTML=
-'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง และจะไม่ใช้ Linear Regression หรือ Rule-based fallback แสดงเป็น AI</div></div>';
-}else if($("forecastMessage")){
-$("forecastMessage").innerHTML=
-'<div class="ai-unavailable"><b>ยังไม่มี AI Forecast Points สำหรับตัวแปรนี้</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริงจนกว่า AI จะสร้างผล +10/+20/+30 นาทีสำเร็จ</div></div>';
-}
-
-forecastChart=new Chart(canvas,{
-type:"line",
-data:{labels:chartLabels,datasets},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-interaction:{mode:"index",intersect:false},
-plugins:{
-legend:graphLegendOptions(),
-tooltip:{callbacks:{label:graphTooltipLabel}}
-},
-scales:{
-x:graphXAxisOptions(),
-y:{
-title:{display:true,text:`${metricLabel()} ${metricUnit()}`.trim()},
-grid:{color:"rgba(148,163,184,.08)"},
-ticks:graphYAxisTicks()
+`<b style="color:${metricColor(metric)}">AI Trend • ${metricLabel()}</b>
+<div class="mt-2">${esc(aiDirectionText(trend?.direction))} • +30 นาที <b>${fmt(pts[2])} ${metricUnit()}</b></div>
+<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast จาก ${esc(provider)}</div>`;
+}else{
+$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง</div></div>';
 }
 }
-}
-});
-
 updateForecastToggle();
 }
 
