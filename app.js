@@ -3238,7 +3238,14 @@ const labels=actual.map(r=>thaiTime(r.timestamp));
 const values=actual.map(r=>Number(r[metric]));
 const current=values.at(-1);
 const chartLabels=[...labels];
-const datasets=[{label:"ข้อมูลจริง",data:[...values],borderWidth:2,tension:.3,pointRadius:2}];
+const datasets=[{
+label:"ข้อมูลจริง",
+data:[...values],
+borderWidth:2,
+tension:.18,
+cubicInterpolationMode:"monotone",
+pointRadius:2
+}];
 
 const isAI=aiForecastPayload?.ai===true;
 const trend=aiTrendFor(metric);
@@ -3253,10 +3260,26 @@ const nulls=new Array(Math.max(0,values.length-1)).fill(null);
 datasets.push({
 label:"AI Forecast",
 data:[...nulls,current,Number(fp.p10),Number(fp.p20),Number(fp.p30)],
-borderDash:[6,5],borderWidth:2,pointRadius:3,tension:.3
+borderDash:[6,5],
+borderWidth:2,
+pointRadius:3,
+tension:.12,
+cubicInterpolationMode:"monotone"
 });
 const provider=aiForecastPayload?.provider==="cloudflare"?"Cloudflare Workers AI":aiForecastPayload?.provider==="gemini"?"Gemini AI":"AI";
-if($("forecastMessage"))$("forecastMessage").innerHTML=`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b><div class="mt-2">${esc(aiDirectionText(trend?.direction))} • AI คาดการณ์ +30 นาที <b>${fmt(fp.p30)} ${metricUnit()}</b></div><div class="text-[10px] text-slate-500 mt-2">จุด +10/+20/+30 นาทีเป็นผลจาก ${esc(provider)} โดยใช้ข้อมูลย้อนหลังและฐานเชิงสถิติประกอบการตัดสินใจ</div>`;
+if($("forecastMessage")){
+const aiBaseRaw=aiForecastPayload?.context?.current?.[metric];
+const aiBase=Number.isFinite(Number(aiBaseRaw))?Number(aiBaseRaw):null;
+const baseNote=
+aiBase!==null&&Math.abs(aiBase-current)>0.01
+?` • ฐานปัจจุบันที่ AI ใช้ ${fmt(aiBase)} ${metricUnit()}`
+:"";
+
+$("forecastMessage").innerHTML=
+`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b>
+<div class="mt-2">${esc(aiDirectionText(trend?.direction))} • AI คาดการณ์ +30 นาที <b>${fmt(fp.p30)} ${metricUnit()}</b>${baseNote}</div>
+<div class="text-[10px] text-slate-500 mt-2">AI-assisted Forecast: จุด +10/+20/+30 นาทีมาจาก ${esc(provider)} โดยวิเคราะห์ข้อมูลย้อนหลังร่วมกับ Statistical Baseline ไม่ใช่การลากเส้น Linear Regression โดยตรง</div>`;
+}
 }else if(!isAI){
 if($("forecastMessage"))$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง และจะไม่ใช้ Linear Regression หรือ Rule-based fallback แสดงเป็น AI</div></div>';
 }else if($("forecastMessage")){
