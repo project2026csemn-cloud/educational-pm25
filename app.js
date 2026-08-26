@@ -325,6 +325,14 @@ return n;
 
 }
 
+function sensorNumber(field,value){
+return cleanSensorNumber(field,value);
+}
+
+function hasSensorValue(field,value){
+return sensorNumber(field,value)!==null;
+}
+
 // =====================================================
 // NORMALIZE API
 // =====================================================
@@ -1012,12 +1020,9 @@ ac.textContent=
 
 function threshold(field,value){
 
-const n=
-Number(value);
+const n=sensorNumber(field,value);
 
-if(
-!Number.isFinite(n)
-){
+if(n===null){
 return"no_data";
 }
 
@@ -1075,12 +1080,9 @@ level
 
 function pm25Guidance(value){
 
-const n=
-Number(value);
+const n=sensorNumber("pm25",value);
 
-if(
-!Number.isFinite(n)
-){
+if(n===null){
 
 return{
 level:"no_data",
@@ -1149,15 +1151,12 @@ tempC,
 rh
 ){
 
-tempC=
-Number(tempC);
-
-rh=
-Number(rh);
+tempC=sensorNumber("temperature",tempC);
+rh=sensorNumber("humidity",rh);
 
 if(
-!Number.isFinite(tempC)||
-!Number.isFinite(rh)
+tempC===null||
+rh===null
 ){
 
 return null;
@@ -1255,12 +1254,13 @@ hi-32
 
 function heatLevel(value){
 
-const n=
-Number(value);
+if(value===null||value===undefined||value===""){
+return{level:"no_data",label:"ไม่มีข้อมูล"};
+}
 
-if(
-!Number.isFinite(n)
-){
+const n=Number(value);
+
+if(!Number.isFinite(n)){
 
 return{
 level:"no_data",
@@ -1355,15 +1355,8 @@ field
 
 const a=
 nodes
-.map(
-n=>
-Number(
-n[field]
-)
-)
-.filter(
-Number.isFinite
-);
+.map(n=>sensorNumber(field,n[field]))
+.filter(v=>v!==null);
 
 return a.length
 
@@ -1450,11 +1443,7 @@ const data=
 selectedRecords()
 .filter(
 r=>
-Number.isFinite(
-Number(
-r.light
-)
-)
+hasSensorValue("light",r.light)
 );
 
 if(
@@ -1483,19 +1472,13 @@ data.length
 )
 );
 
-const first=
-Number(
-recent[0].light
-);
+const first=sensorNumber("light",recent[0].light);
 
-const last=
-Number(
-recent.at(-1).light
-);
+const last=sensorNumber("light",recent.at(-1).light);
 
 if(
-!Number.isFinite(first)||
-!Number.isFinite(last)
+first===null||
+last===null
 ){
 
 return{
@@ -1868,11 +1851,7 @@ n=>
 .includes(
 getNodeStatus(n)
 )&&
-Number.isFinite(
-Number(
-n[currentMetric]
-)
-)
+hasSensorValue(currentMetric,n[currentMetric])
 );
 
 if(
@@ -1892,9 +1871,7 @@ sum,
 n
 )=>
 sum+
-Number(
-n[currentMetric]
-),
+sensorNumber(currentMetric,n[currentMetric]),
 0
 )/
 usable.length;
@@ -1905,12 +1882,8 @@ usable.reduce(
 a,
 b
 )=>
-Number(
-b[currentMetric]
-)>
-Number(
-a[currentMetric]
-)
+sensorNumber(currentMetric,b[currentMetric])>
+sensorNumber(currentMetric,a[currentMetric])
 ?b
 :a
 );
@@ -1923,9 +1896,7 @@ n=>({
 n,
 
 v:
-Number(
-n[currentMetric]
-),
+sensorNumber(currentMetric,n[currentMetric]),
 
 l:
 threshold(
@@ -2657,15 +2628,8 @@ field
 
 const values=
 data
-.map(
-x=>
-Number(
-x[field]
-)
-)
-.filter(
-Number.isFinite
-);
+.map(x=>sensorNumber(field,x[field]))
+.filter(v=>v!==null);
 
 return values.length
 ?{
@@ -2812,10 +2776,16 @@ function metricUnitFor(field){
 return CURRENT_METRIC_CONFIG[field]?.unit||"";
 }
 
-function normalizeSeries(values, extra=[]){
+function normalizeSeries(values,extra=[]){
+const toNum=v=>{
+if(v===null||v===undefined||v==="")return null;
+const n=Number(v);
+return Number.isFinite(n)?n:null;
+};
+
 const nums=[...values,...extra]
-.map(Number)
-.filter(Number.isFinite);
+.map(toNum)
+.filter(v=>v!==null);
 
 if(!nums.length)return values.map(()=>null);
 
@@ -2823,12 +2793,12 @@ const min=Math.min(...nums);
 const max=Math.max(...nums);
 
 if(Math.abs(max-min)<1e-9){
-return values.map(v=>Number.isFinite(Number(v))?50:null);
+return values.map(v=>toNum(v)!==null?50:null);
 }
 
 return values.map(v=>{
-const n=Number(v);
-return Number.isFinite(n)?((n-min)/(max-min))*100:null;
+const n=toNum(v);
+return n!==null?((n-min)/(max-min))*100:null;
 });
 }
 
@@ -2836,7 +2806,7 @@ function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
 const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
 const field=ds.metricField;
-if(field&&Number.isFinite(Number(raw))){
+if(field&&hasSensorValue(field,raw)){
 return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
 }
 return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
@@ -2977,10 +2947,7 @@ timeZone:"Asia/Bangkok",
 hour:"2-digit",minute:"2-digit"
 }));
 const datasets=fields.map(field=>{
-const vals=base.map(r=>{
-const n=Number(r[field]);
-return Number.isFinite(n)?n:null;
-});
+const vals=base.map(r=>sensorNumber(field,r[field]));
 return actualDataset(field,vals);
 });
 return new Chart(canvas,{
@@ -3000,10 +2967,7 @@ const datasets=[];
 const isAI=aiForecastPayload?.ai===true;
 
 for(const field of fields){
-const raw=actual.map(r=>{
-const n=Number(r[field]);
-return Number.isFinite(n)?n:null;
-});
+const raw=actual.map(r=>sensorNumber(field,r[field]));
 datasets.push(actualDataset(field,[...raw,null,null,null]));
 
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
@@ -3016,7 +2980,7 @@ Number.isFinite(Number(fp.p10))&&
 Number.isFinite(Number(fp.p20))&&
 Number.isFinite(Number(fp.p30))
 ){
-const current=[...raw].reverse().find(v=>Number.isFinite(Number(v)));
+const current=[...raw].reverse().find(v=>v!==null);
 const line=[
 ...new Array(Math.max(0,raw.length-1)).fill(null),
 current,
@@ -3097,7 +3061,7 @@ drawForecast(base);
 return;
 }
 
-const arr=base.filter(r=>Number.isFinite(Number(r[metric])));
+const arr=base.filter(r=>hasSensorValue(metric,r[metric]));
 const s=stats(arr,metric);
 
 if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
@@ -3119,7 +3083,7 @@ month:"2-digit",
 hour:"2-digit",
 minute:"2-digit"
 }));
-const values=arr.map(x=>Number(x[metric]));
+const values=arr.map(x=>sensorNumber(metric,x[metric]));
 
 if($("trend")){
 const diff=values.at(-1)-values[0];
@@ -3266,7 +3230,7 @@ const canvas=$("forecastChart");
 if(!canvas)return;
 
 const valid=(arr||[])
-.filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
+.filter(r=>parseDate(r.timestamp)&&hasSensorValue(metric,r[metric]));
 const actual=valid.slice(-12);
 
 if(!actual.length){
@@ -3275,7 +3239,7 @@ return;
 }
 
 const labels=actual.map(r=>thaiTime(r.timestamp));
-const values=actual.map(r=>Number(r[metric]));
+const values=actual.map(r=>sensorNumber(metric,r[metric]));
 const current=values.at(-1);
 const chartLabels=[...labels];
 const datasets=[actualDataset(metric,values)];
@@ -3297,7 +3261,7 @@ datasets.push(forecastDataset(metric,forecastRaw));
 
 if($("forecastMessage")){
 const aiBaseRaw=aiForecastPayload?.context?.current?.[metric];
-const aiBase=Number.isFinite(Number(aiBaseRaw))?Number(aiBaseRaw):null;
+const aiBase=sensorNumber(metric,aiBaseRaw);
 const baseNote=aiBase!==null&&Math.abs(aiBase-current)>0.01
 ?` • ฐานปัจจุบันที่ AI ใช้ ${fmt(aiBase)} ${metricUnit()}`
 :"";
