@@ -4425,3 +4425,245 @@ section.grid { align-items: start; }
     font-size:16px!important;
   }
 }
+
+
+/* =========================================================
+   TEACHER REVISION — RESPONSIVE TYPOGRAPHY + GRAPH LEGIBILITY
+   2026-08-26
+   ========================================================= */
+
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
+body{
+  font-size:16px;
+  line-height:1.55;
+}
+
+/* General readable minimums */
+.text-\[8px\]{font-size:11px!important;}
+.text-\[9px\]{font-size:11px!important;}
+.text-\[10px\]{font-size:12px!important;}
+.text-\[11px\]{font-size:13px!important;}
+.text-xs{font-size:13px!important;line-height:1.45!important;}
+.text-sm{font-size:15px!important;line-height:1.55!important;}
+
+.section-title-with-help h2,
+.chart-zone-title{
+  line-height:1.3!important;
+}
+
+.node{
+  font-size:15px;
+}
+.node > div:first-child b{
+  font-size:18px!important;
+}
+.node .grid{
+  font-size:14px!important;
+}
+.node .grid b{
+  font-size:16px!important;
+}
+.node [id^="lastUpdate"]{
+  font-size:13px!important;
+}
+
+.smart-summary-stat-label,
+.ai-model-strip-label,
+.ai-panel-kicker{
+  font-size:11px!important;
+}
+.smart-summary-stat-value{
+  font-size:18px!important;
+  line-height:1.35!important;
+}
+.smart-summary-stat-sub,
+.ai-trend-explanation,
+.chart-zone-subtitle{
+  font-size:13px!important;
+  line-height:1.5!important;
+}
+
+.current-environment-label,
+.current-environment-detail{
+  font-size:14px!important;
+}
+.current-environment-value{
+  font-size:25px!important;
+}
+
+.ai-details-panel,
+.ai-forecast-details,
+.ai-numeric-base{
+  font-size:14px!important;
+  line-height:1.6!important;
+}
+.ai-panel-head h3{
+  font-size:17px!important;
+}
+.ai-trend-variable{
+  font-size:12px!important;
+}
+.ai-trend-direction{
+  font-size:15px!important;
+}
+.ai-model-strip b{
+  font-size:13px!important;
+}
+
+.history-toolbar select,
+.history-toolbar button,
+.current-metric-select,
+.current-quality-badge,
+input[type="date"],
+input[type="datetime-local"]{
+  font-size:16px!important;
+  min-height:44px;
+}
+
+.help-button,
+.ai-refresh-button,
+.ai-forecast-refresh,
+.history-toolbar-button{
+  min-height:44px;
+}
+
+.credit-label{
+  font-size:11px!important;
+}
+.credit-title{
+  font-size:14px!important;
+  line-height:1.45!important;
+}
+.credit-role,
+.credit-link{
+  font-size:12px!important;
+}
+
+/* Chart canvases remain readable without creating oversized layout */
+#historyChart,
+#forecastChart{
+  min-height:260px;
+}
+
+/* Mobile typography and touch layout */
+@media(max-width:640px){
+  body{
+    font-size:16px!important;
+    line-height:1.6;
+  }
+
+  .max-w-\[1800px\]{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  header .text-xl,
+  header .md\:text-2xl{
+    font-size:18px!important;
+    line-height:1.35!important;
+  }
+
+  .section-title-with-help h2,
+  .chart-zone-title,
+  .ai-intelligence-header h2{
+    font-size:19px!important;
+  }
+
+  .node{
+    padding:14px!important;
+  }
+  .node > div:first-child b{
+    font-size:19px!important;
+  }
+  .node .grid{
+    font-size:15px!important;
+    gap:10px 14px!important;
+  }
+  .node .grid b{
+    font-size:17px!important;
+  }
+
+  .smart-summary-stat{
+    min-height:0!important;
+    padding:14px!important;
+  }
+  .smart-summary-stat-value{
+    font-size:20px!important;
+  }
+  .smart-summary-stat-sub{
+    font-size:14px!important;
+  }
+
+  .current-environment-grid{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .current-environment-value{
+    font-size:27px!important;
+  }
+  .current-environment-detail{
+    font-size:14px!important;
+  }
+
+  .ai-intelligence-panel{
+    padding:14px!important;
+  }
+  .ai-details-panel,
+  .ai-forecast-details,
+  .ai-numeric-base{
+    font-size:15px!important;
+  }
+  .ai-model-strip{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .ai-model-strip b{
+    white-space:normal!important;
+    overflow:visible!important;
+  }
+
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .historical-section b.block.text-2xl{
+    font-size:23px!important;
+  }
+
+  .chart-zone-subtitle{
+    font-size:13px!important;
+  }
+
+  #historyChart,
+  #forecastChart{
+    min-height:300px;
+    max-height:360px!important;
+  }
+
+  .forecast-display-panel{
+    align-items:flex-start!important;
+  }
+  .forecast-display-controls{
+    width:100%;
+    flex-wrap:wrap!important;
+  }
+
+  .credit-title{
+    font-size:15px!important;
+  }
+  .credit-role,
+  .credit-link{
+    font-size:13px!important;
+  }
+}
+
+@media(max-width:380px){
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5,
+  .ai-model-strip{
+    grid-template-columns:1fr!important;
+  }
+}
