@@ -2514,6 +2514,28 @@ end
 
 }
 
+function hasAnySensorData(row){
+
+if(!row){
+return false;
+}
+
+return [
+"pm1",
+"pm25",
+"pm10",
+"temperature",
+"humidity",
+"light"
+].some(
+field=>
+hasFiniteSensorValue(
+row[field]
+)
+);
+
+}
+
 function selectedRecords(){
 
 const w=
@@ -2531,7 +2553,8 @@ r.timestamp
 return(
 d&&
 d>=w.start&&
-d<=w.end
+d<=w.end&&
+hasAnySensorData(r)
 );
 
 }
@@ -2717,8 +2740,8 @@ return CURRENT_METRIC_CONFIG[field]?.unit||"";
 
 function normalizeSeries(values, extra=[]){
 const nums=[...values,...extra]
-.map(Number)
-.filter(Number.isFinite);
+.map(finiteNumberOrNull)
+.filter(v=>v!==null);
 
 if(!nums.length)return values.map(()=>null);
 
@@ -2726,12 +2749,12 @@ const min=Math.min(...nums);
 const max=Math.max(...nums);
 
 if(Math.abs(max-min)<1e-9){
-return values.map(v=>Number.isFinite(Number(v))?50:null);
+return values.map(v=>hasFiniteSensorValue(v)?50:null);
 }
 
 return values.map(v=>{
-const n=Number(v);
-return Number.isFinite(n)?((n-min)/(max-min))*100:null;
+const n=finiteNumberOrNull(v);
+return n!==null?((n-min)/(max-min))*100:null;
 });
 }
 
@@ -2739,7 +2762,7 @@ function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
 const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
 const field=ds.metricField;
-if(field&&Number.isFinite(Number(raw))){
+if(field&&hasFiniteSensorValue(raw)){
 return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
 }
 return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
@@ -2850,6 +2873,7 @@ backgroundColor:"transparent",
 borderWidth:2,
 pointRadius:values.length>40?0:2,
 tension:.16,
+spanGaps:true,
 cubicInterpolationMode:"monotone"
 };
 }
@@ -3101,18 +3125,30 @@ const area=$("forecastChartArea");
 if(!area)return;
 
 const isAI=aiForecastPayload?.ai===true;
-const provider=aiForecastPayload?.provider==="cloudflare"
+const isStatistical=
+!isAI&&
+aiForecastPayload?.reason==="all_ai_unavailable";
+
+const provider=isAI
+?(
+aiForecastPayload?.provider==="cloudflare"
 ?"Cloudflare Workers AI"
 :aiForecastPayload?.provider==="gemini"
 ?"Gemini AI"
-:"AI";
+:"AI"
+)
+:"Statistical Model";
 
 const pointFor=field=>{
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
 ?aiForecastPayload.data.forecast_points.find(x=>x?.field===field):null;
 if(!fp)return null;
-const pts=[Number(fp.p10),Number(fp.p20),Number(fp.p30)];
-return pts.every(Number.isFinite)?pts:null;
+const pts=[
+finiteNumberOrNull(fp.p10),
+finiteNumberOrNull(fp.p20),
+finiteNumberOrNull(fp.p30)
+];
+return pts.every(v=>v!==null)?pts:null;
 };
 
 if(metric==="all"){
@@ -3145,8 +3181,8 @@ data:[...raw,null,null,null],
 rawValues:[...raw,null,null,null]
 });
 const pts=pointFor(field);
-if(isAI&&pts&&forecastVisible){
-const current=[...raw].reverse().find(v=>Number.isFinite(Number(v)));
+if((isAI||isStatistical)&&pts&&forecastVisible){
+const current=[...raw].reverse().find(v=>v!==null);
 datasets.push(makeForecastDataset(field,raw.length,current,pts));
 }
 }
@@ -3164,9 +3200,9 @@ create("forecastHumidity",["humidity"],"%");
 create("forecastLight",["light"],"lux");
 
 if($("forecastMessage")){
-$("forecastMessage").innerHTML=isAI
-?`<b class="text-cyan-300">AI Trend • ALL</b><div class="mt-2">แยกกราฟตามหน่วยจริงเพื่ออ่านง่ายขึ้น • เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast</div><div class="text-[12px] text-slate-500 mt-2">AI-assisted Forecast จาก ${esc(provider)}</div>`
-:'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริง</div></div>';
+$("forecastMessage").innerHTML=(isAI||isStatistical)
+?`<b class="text-cyan-300">${isAI?"AI Trend":"Statistical Trend"} • ALL</b><div class="mt-2">แยกกราฟตามหน่วยจริงเพื่ออ่านง่ายขึ้น • เส้นทึบ = ข้อมูลจริง • เส้นประ = ${isAI?"AI Forecast":"Statistical Forecast"}</div><div class="text-[12px] text-slate-500 mt-2">${isAI?"AI-assisted Forecast":"Fallback เมื่อ AI ไม่พร้อมใช้งาน"} จาก ${esc(provider)}</div>`
+:'<div class="ai-unavailable"><b>Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">ข้อมูลย้อนหลังยังไม่เพียงพอสำหรับสร้างแนวโน้ม</div></div>';
 }
 updateForecastToggle();
 return;
@@ -3185,7 +3221,7 @@ const current=values.at(-1);
 const datasets=[makeActualDataset(metric,values)];
 const pts=pointFor(metric);
 
-if(isAI&&pts&&forecastVisible){
+if((isAI||isStatistical)&&pts&&forecastVisible){
 labels.push("+10 นาที","+20 นาที","+30 นาที");
 datasets[0].data=[...values,null,null,null];
 datasets[0].rawValues=[...values,null,null,null];
@@ -3202,14 +3238,20 @@ plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{label:graphTooltipLabel
 });
 
 if($("forecastMessage")){
-if(isAI&&pts){
+if((isAI||isStatistical)&&pts){
 const trend=aiTrendFor(metric);
+const fallbackDirection=
+pts[2]>current
+?"↗ เพิ่มขึ้น"
+:pts[2]<current
+?"↘ ลดลง"
+:"→ ค่อนข้างคงที่";
 $("forecastMessage").innerHTML=
-`<b style="color:${metricColor(metric)}">AI Trend • ${metricLabel()}</b>
-<div class="mt-2">${esc(aiDirectionText(trend?.direction))} • +30 นาที <b>${fmt(pts[2])} ${metricUnit()}</b></div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast จาก ${esc(provider)}</div>`;
+`<b style="color:${metricColor(metric)}">${isAI?"AI Trend":"Statistical Trend"} • ${metricLabel()}</b>
+<div class="mt-2">${esc(isAI?aiDirectionText(trend?.direction):fallbackDirection)} • +30 นาที <b>${fmt(pts[2])} ${metricUnit()}</b></div>
+<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = ${isAI?"AI Forecast":"Statistical Forecast"} จาก ${esc(provider)}</div>`;
 }else{
-$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง</div></div>';
+$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">ข้อมูลย้อนหลังยังไม่เพียงพอสำหรับสร้างแนวโน้ม</div></div>';
 }
 }
 updateForecastToggle();
