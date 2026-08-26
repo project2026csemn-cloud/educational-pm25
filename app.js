@@ -28,7 +28,7 @@ let historyChart=null;
 let forecastChart=null;
 let forecastVisible=true;
 
-let metric="pm25";
+let metric="all";
 let currentMetric="pm25";
 
 let averageRange="today";
@@ -109,37 +109,13 @@ apiRange:"30d"
 // =====================================================
 
 const CURRENT_METRIC_CONFIG={
-
-pm1:{
-label:"PM1.0",
-unit:"µg/m³"
-},
-
-pm25:{
-label:"PM2.5",
-unit:"µg/m³"
-},
-
-pm10:{
-label:"PM10",
-unit:"µg/m³"
-},
-
-temperature:{
-label:"อุณหภูมิ",
-unit:"°C"
-},
-
-humidity:{
-label:"ความชื้น",
-unit:"%"
-},
-
-light:{
-label:"แสง",
-unit:"lux"
-}
-
+all:{label:"ALL",unit:"",color:"#e2e8f0"},
+pm1:{label:"PM1.0",unit:"µg/m³",color:"#60a5fa"},
+pm25:{label:"PM2.5",unit:"µg/m³",color:"#f87171"},
+pm10:{label:"PM10",unit:"µg/m³",color:"#fbbf24"},
+temperature:{label:"อุณหภูมิ",unit:"°C",color:"#fb923c"},
+humidity:{label:"ความชื้น",unit:"%",color:"#34d399"},
+light:{label:"แสง",unit:"lux",color:"#c084fc"}
 };
 
 // =====================================================
@@ -2819,264 +2795,224 @@ s.avg==null
 
 }
 
+
+const GRAPH_FIELDS=["pm1","pm25","pm10","temperature","humidity","light"];
+
+function metricColor(field){
+return CURRENT_METRIC_CONFIG[field]?.color||"#22d3ee";
+}
+
+function metricLabelFor(field){
+return CURRENT_METRIC_CONFIG[field]?.label||field;
+}
+
+function metricUnitFor(field){
+return CURRENT_METRIC_CONFIG[field]?.unit||"";
+}
+
+function normalizeSeries(values, extra=[]){
+const nums=[...values,...extra]
+.map(Number)
+.filter(Number.isFinite);
+
+if(!nums.length)return values.map(()=>null);
+
+const min=Math.min(...nums);
+const max=Math.max(...nums);
+
+if(Math.abs(max-min)<1e-9){
+return values.map(v=>Number.isFinite(Number(v))?50:null);
+}
+
+return values.map(v=>{
+const n=Number(v);
+return Number.isFinite(n)?((n-min)/(max-min))*100:null;
+});
+}
+
+function graphTooltipLabel(ctx){
+const ds=ctx.dataset||{};
+const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
+const field=ds.metricField;
+if(field&&Number.isFinite(Number(raw))){
+return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
+}
+return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
+}
+
+function graphLegendOptions(){
+return{
+display:true,
+position:"top",
+labels:{
+boxWidth:18,
+boxHeight:3,
+usePointStyle:false,
+padding:16,
+font:{size:13,weight:"600"}
+}
+};
+}
+
 function drawCharts(){
+const base=selectedRecords()
+.filter(r=>parseDate(r.timestamp))
+.sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
 
-const arr=
-selectedRecords()
-.filter(
-r=>
-parseDate(
-r.timestamp
-)&&
-Number.isFinite(
-Number(
-r[metric]
-)
-)
-)
-.sort(
-(
-a,
-b
-)=>
-parseDate(
-a.timestamp
-)-
-parseDate(
-b.timestamp
-)
-);
-
-const s=
-stats(
-arr,
-metric
-);
-
-if(
-$("trendAvg")
-){
-
-$("trendAvg").textContent=
-s.avg==null
-?"--"
-:fmt(s.avg);
-
+if($("selectedMetricLabel")){
+$("selectedMetricLabel").textContent=metricLabel();
 }
 
-if(
-$("trendMax")
-){
-
-$("trendMax").textContent=
-s.max==null
-?"--"
-:fmt(s.max);
-
-}
-
-if(
-$("trendMin")
-){
-
-$("trendMin").textContent=
-s.min==null
-?"--"
-:fmt(s.min);
-
-}
-
-if(
-$("trendLast")
-){
-
-$("trendLast").textContent=
-s.last==null
-?"--"
-:fmt(s.last);
-
-}
-
-if(
-$("selectedMetricLabel")
-){
-
-$("selectedMetricLabel").textContent=
-metricLabel();
-
-}
-
-if(
-!arr.length
-){
-
-if(
-$("trend")
-){
-
-$("trend").textContent=
-"ไม่มีข้อมูลในช่วงเวลาที่เลือก";
-
-}
-
+if(!base.length){
+["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{
+if($(id))$(id).textContent="--";
+});
+if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
 historyChart?.destroy();
-
 historyChart=null;
-
 forecastChart?.destroy();
-
 forecastChart=null;
-
-if(
-$("forecastMessage")
-){
-
-$("forecastMessage").textContent=
-"ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
-
-}
-
+if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลเพียงพอสำหรับการคาดการณ์";
 return;
-
 }
 
-const labels=
-arr.map(
-x=>
-parseDate(
-x.timestamp
-)
-.toLocaleString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok",
-day:
-"2-digit",
-month:
-"2-digit",
-hour:
-"2-digit",
-minute:
-"2-digit"
-}
-)
+const labels=base.map(x=>
+parseDate(x.timestamp).toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
+})
 );
-
-const values=
-arr.map(
-x=>
-Number(
-x[metric]
-)
-);
-
-if(
-$("trend")
-){
-
-const diff=
-values.at(-1)-
-values[0];
-
-const pct=
-values[0]
-?diff/
-Math.abs(
-values[0]
-)*
-100
-:0;
-
-$("trend").textContent=
-Math.abs(pct)<1
-?"→ คงที่"
-:diff>0
-?"↑ เพิ่มขึ้น"
-:"↓ ลดลง";
-
-}
 
 historyChart?.destroy();
 
-historyChart=
-new Chart(
-$("historyChart"),
-{
+if(metric==="all"){
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent="เปรียบเทียบ 6 ตัวแปร";
 
-type:"line",
-
-data:{
-
-labels,
-
-datasets:[
-{
-
-label:
-metricLabel(),
-
-data:
-values,
-
-borderColor:
-"#22d3ee",
-
-backgroundColor:
-"rgba(34,211,238,.08)",
-
-fill:true,
-
-tension:.35,
-
-pointRadius:
-values.length>50
-?0
-:3,
-
+const datasets=GRAPH_FIELDS.map(field=>{
+const raw=base.map(r=>{
+const v=Number(r[field]);
+return Number.isFinite(v)?v:null;
+});
+return{
+label:metricLabelFor(field),
+metricField:field,
+rawValues:raw,
+data:normalizeSeries(raw),
+borderColor:metricColor(field),
+backgroundColor:"transparent",
+fill:false,
+tension:.18,
+cubicInterpolationMode:"monotone",
+pointRadius:raw.length>60?0:2,
 borderWidth:2
+};
+});
 
-}
-]
-
-},
-
+historyChart=new Chart($("historyChart"),{
+type:"line",
+data:{labels,datasets},
 options:{
-
 responsive:true,
-
+animation:false,
+interaction:{mode:"index",intersect:false},
 plugins:{
-legend:{
-display:false
-}
+legend:graphLegendOptions(),
+tooltip:{callbacks:{label:graphTooltipLabel}}
 },
-
 scales:{
-
-x:{
-grid:{
-display:false
-}
-},
-
+x:{grid:{display:false},ticks:{maxRotation:45,minRotation:0}},
 y:{
-grid:{
-color:
-"rgba(148,163,184,.08)"
+min:0,
+max:100,
+title:{display:true,text:"แนวโน้มสัมพัทธ์ 0–100"},
+grid:{color:"rgba(148,163,184,.08)"}
 }
+}
+}
+});
+
+drawForecast(base);
+return;
 }
 
+const arr=base.filter(r=>Number.isFinite(Number(r[metric])));
+const s=stats(arr,metric);
+
+if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
+if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
+if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
+if($("trendLast"))$("trendLast").textContent=s.last==null?"--":fmt(s.last);
+
+if(!arr.length){
+if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
+historyChart?.destroy();
+historyChart=null;
+forecastChart?.destroy();
+forecastChart=null;
+return;
 }
 
-}
-
-}
+const singleLabels=arr.map(x=>
+parseDate(x.timestamp).toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
+})
 );
+const values=arr.map(x=>Number(x[metric]));
 
-drawForecast(
-arr
-);
+if($("trend")){
+const diff=values.at(-1)-values[0];
+const pct=values[0]?diff/Math.abs(values[0])*100:0;
+$("trend").textContent=Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
+}
 
+historyChart=new Chart($("historyChart"),{
+type:"line",
+data:{
+labels:singleLabels,
+datasets:[{
+label:metricLabel(),
+metricField:metric,
+rawValues:values,
+data:values,
+borderColor:metricColor(metric),
+backgroundColor:"transparent",
+fill:false,
+tension:.18,
+cubicInterpolationMode:"monotone",
+pointRadius:values.length>60?0:3,
+borderWidth:2
+}]
+},
+options:{
+responsive:true,
+animation:false,
+interaction:{mode:"index",intersect:false},
+plugins:{
+legend:graphLegendOptions(),
+tooltip:{callbacks:{label:graphTooltipLabel}}
+},
+scales:{
+x:{grid:{display:false}},
+y:{
+title:{display:true,text:`${metricLabel()} ${metricUnit()}`.trim()},
+grid:{color:"rgba(148,163,184,.08)"}
+}
+}
+}
+});
+
+drawForecast(arr);
 }
 
 // =====================================================
@@ -3189,23 +3125,12 @@ forecastChart
 ?.datasets
 ){
 
-for(
-let i=1;
-i<
-forecastChart
-.data
-.datasets
-.length;
-i++
-){
-
-forecastChart
-.setDatasetVisibility(
-i,
-forecastVisible
-);
-
+forecastChart.data.datasets.forEach((ds,i)=>{
+const isForecast=String(ds.label||"").includes("Forecast");
+if(isForecast){
+forecastChart.setDatasetVisibility(i,forecastVisible);
 }
+});
 
 forecastChart.update();
 
@@ -3224,11 +3149,134 @@ return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดล�
 function drawForecast(arr){
 forecastChart?.destroy();
 forecastChart=null;
+
 const canvas=$("forecastChart");
 if(!canvas)return;
 
-const valid=(arr||[]).filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
+const isAI=aiForecastPayload?.ai===true;
+const provider=aiForecastPayload?.provider==="cloudflare"
+?"Cloudflare Workers AI"
+:aiForecastPayload?.provider==="gemini"
+?"Gemini AI"
+:"AI";
+
+if(metric==="all"){
+const actual=(arr||[])
+.filter(r=>parseDate(r.timestamp))
+.slice(-12);
+
+if(!actual.length){
+if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
+return;
+}
+
+const labels=actual.map(r=>thaiTime(r.timestamp));
+const chartLabels=[...labels,"+10 นาที","+20 นาที","+30 นาที"];
+const datasets=[];
+
+for(const field of GRAPH_FIELDS){
+const rawActual=actual.map(r=>{
+const v=Number(r[field]);
+return Number.isFinite(v)?v:null;
+});
+
+const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
+?aiForecastPayload.data.forecast_points.find(x=>x?.field===field)
+:null;
+
+const fpRaw=fp&&
+Number.isFinite(Number(fp.p10))&&
+Number.isFinite(Number(fp.p20))&&
+Number.isFinite(Number(fp.p30))
+?[Number(fp.p10),Number(fp.p20),Number(fp.p30)]
+:[];
+
+const normalizedActual=normalizeSeries(rawActual,fpRaw);
+const scalePool=[...rawActual,...fpRaw]
+.map(Number).filter(Number.isFinite);
+const min=scalePool.length?Math.min(...scalePool):0;
+const max=scalePool.length?Math.max(...scalePool):1;
+const norm=v=>{
+const n=Number(v);
+if(!Number.isFinite(n))return null;
+if(Math.abs(max-min)<1e-9)return 50;
+return((n-min)/(max-min))*100;
+};
+
+datasets.push({
+label:metricLabelFor(field),
+metricField:field,
+rawValues:[...rawActual,null,null,null],
+data:[...normalizedActual,null,null,null],
+borderColor:metricColor(field),
+backgroundColor:"transparent",
+borderWidth:2,
+pointRadius:2,
+tension:.12,
+cubicInterpolationMode:"monotone"
+});
+
+if(isAI&&fpRaw.length&&forecastVisible){
+const currentRaw=[...rawActual].reverse().find(v=>Number.isFinite(Number(v)));
+const forecastRaw=[
+...new Array(Math.max(0,rawActual.length-1)).fill(null),
+currentRaw,
+...fpRaw
+];
+datasets.push({
+label:`${metricLabelFor(field)} Forecast`,
+metricField:field,
+rawValues:forecastRaw,
+data:forecastRaw.map(norm),
+borderColor:metricColor(field),
+backgroundColor:"transparent",
+borderDash:[6,5],
+borderWidth:2,
+pointRadius:2,
+tension:.08,
+cubicInterpolationMode:"monotone"
+});
+}
+}
+
+forecastChart=new Chart(canvas,{
+type:"line",
+data:{labels:chartLabels,datasets},
+options:{
+responsive:true,
+animation:false,
+interaction:{mode:"index",intersect:false},
+plugins:{
+legend:graphLegendOptions(),
+tooltip:{callbacks:{label:graphTooltipLabel}}
+},
+scales:{
+x:{grid:{display:false}},
+y:{
+min:0,max:100,
+title:{display:true,text:"แนวโน้มสัมพัทธ์ 0–100"},
+grid:{color:"rgba(148,163,184,.08)"}
+}
+}
+}
+});
+
+if($("forecastMessage")){
+$("forecastMessage").innerHTML=isAI
+?`<b class="text-cyan-300">AI Trend • ALL</b>
+<div class="mt-2">แสดงข้อมูลจริงและ AI Forecast ของทั้ง 6 ตัวแปร โดยใช้สีประจำตัวแปรเดียวกันและใช้เส้นประสำหรับค่าคาดการณ์</div>
+<div class="text-[11px] text-slate-500 mt-2">AI-assisted Forecast จาก ${esc(provider)} • กราฟ ALL ใช้สเกลแนวโน้มสัมพัทธ์ 0–100 เพื่อให้ตัวแปรคนละหน่วยเปรียบเทียบทิศทางกันได้</div>`
+:'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงข้อมูลจริงของทั้ง 6 ตัวแปร และจะเพิ่มเส้นประเมื่อ AI Forecast พร้อมใช้งาน</div></div>';
+}
+
+updateForecastToggle();
+return;
+}
+
+const valid=(arr||[])
+.filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric])));
 const actual=valid.slice(-12);
+
 if(!actual.length){
 if($("forecastMessage"))$("forecastMessage").textContent="ไม่มีข้อมูลจริงสำหรับสร้างกราฟ";
 return;
@@ -3238,16 +3286,21 @@ const labels=actual.map(r=>thaiTime(r.timestamp));
 const values=actual.map(r=>Number(r[metric]));
 const current=values.at(-1);
 const chartLabels=[...labels];
+const color=metricColor(metric);
+
 const datasets=[{
-label:"ข้อมูลจริง",
+label:metricLabel(),
+metricField:metric,
+rawValues:[...values],
 data:[...values],
+borderColor:color,
+backgroundColor:"transparent",
 borderWidth:2,
 tension:.18,
 cubicInterpolationMode:"monotone",
 pointRadius:2
 }];
 
-const isAI=aiForecastPayload?.ai===true;
 const trend=aiTrendFor(metric);
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
 ?aiForecastPayload.data.forecast_points.find(x=>x?.field===metric)
@@ -3257,36 +3310,62 @@ const validFP=fp&&Number.isFinite(Number(fp.p10))&&Number.isFinite(Number(fp.p20
 if(isAI&&validFP&&forecastVisible){
 chartLabels.push("+10 นาที","+20 นาที","+30 นาที");
 const nulls=new Array(Math.max(0,values.length-1)).fill(null);
+const forecastRaw=[...nulls,current,Number(fp.p10),Number(fp.p20),Number(fp.p30)];
 datasets.push({
-label:"AI Forecast",
-data:[...nulls,current,Number(fp.p10),Number(fp.p20),Number(fp.p30)],
+label:`${metricLabel()} Forecast`,
+metricField:metric,
+rawValues:forecastRaw,
+data:forecastRaw,
+borderColor:color,
+backgroundColor:"transparent",
 borderDash:[6,5],
 borderWidth:2,
 pointRadius:3,
 tension:.12,
 cubicInterpolationMode:"monotone"
 });
-const provider=aiForecastPayload?.provider==="cloudflare"?"Cloudflare Workers AI":aiForecastPayload?.provider==="gemini"?"Gemini AI":"AI";
+
 if($("forecastMessage")){
 const aiBaseRaw=aiForecastPayload?.context?.current?.[metric];
 const aiBase=Number.isFinite(Number(aiBaseRaw))?Number(aiBaseRaw):null;
-const baseNote=
-aiBase!==null&&Math.abs(aiBase-current)>0.01
+const baseNote=aiBase!==null&&Math.abs(aiBase-current)>0.01
 ?` • ฐานปัจจุบันที่ AI ใช้ ${fmt(aiBase)} ${metricUnit()}`
 :"";
 
 $("forecastMessage").innerHTML=
-`<b class="text-cyan-300">AI Trend • ${metricLabel()}</b>
+`<b style="color:${color}">AI Trend • ${metricLabel()}</b>
 <div class="mt-2">${esc(aiDirectionText(trend?.direction))} • AI คาดการณ์ +30 นาที <b>${fmt(fp.p30)} ${metricUnit()}</b>${baseNote}</div>
-<div class="text-[10px] text-slate-500 mt-2">AI-assisted Forecast: จุด +10/+20/+30 นาทีมาจาก ${esc(provider)} โดยวิเคราะห์ข้อมูลย้อนหลังร่วมกับ Statistical Baseline ไม่ใช่การลากเส้น Linear Regression โดยตรง</div>`;
+<div class="text-[11px] text-slate-500 mt-2">สีของกราฟตรงกับตัวแปรที่เลือก • เส้นทึบ = ข้อมูลจริง • เส้นประ = AI Forecast จาก ${esc(provider)}</div>`;
 }
 }else if(!isAI){
-if($("forecastMessage"))$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง และจะไม่ใช้ Linear Regression หรือ Rule-based fallback แสดงเป็น AI</div></div>';
+if($("forecastMessage"))$("forecastMessage").innerHTML=
+'<div class="ai-unavailable"><b>AI Forecast ยังไม่พร้อมใช้งาน</b><div class="mt-1">กราฟแสดงเฉพาะข้อมูลจริง และจะไม่ใช้ Linear Regression หรือ Rule-based fallback แสดงเป็น AI</div></div>';
 }else if($("forecastMessage")){
-$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>ยังไม่มี AI Forecast Points สำหรับตัวแปรนี้</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริงจนกว่า AI จะสร้างผล +10/+20/+30 นาทีสำเร็จ</div></div>';
+$("forecastMessage").innerHTML=
+'<div class="ai-unavailable"><b>ยังไม่มี AI Forecast Points สำหรับตัวแปรนี้</b><div class="mt-1">กราฟจะแสดงเฉพาะข้อมูลจริงจนกว่า AI จะสร้างผล +10/+20/+30 นาทีสำเร็จ</div></div>';
 }
 
-forecastChart=new Chart(canvas,{type:"line",data:{labels:chartLabels,datasets},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:"rgba(148,163,184,.08)"}}}}});
+forecastChart=new Chart(canvas,{
+type:"line",
+data:{labels:chartLabels,datasets},
+options:{
+responsive:true,
+animation:false,
+interaction:{mode:"index",intersect:false},
+plugins:{
+legend:graphLegendOptions(),
+tooltip:{callbacks:{label:graphTooltipLabel}}
+},
+scales:{
+x:{grid:{display:false}},
+y:{
+title:{display:true,text:`${metricLabel()} ${metricUnit()}`.trim()},
+grid:{color:"rgba(148,163,184,.08)"}
+}
+}
+}
+});
+
 updateForecastToggle();
 }
 
@@ -4237,74 +4316,66 @@ $("exportModal")
 
 }
 
-function downloadExcel(){
+let xlsxLoadingPromise=null;
 
-if(
-!exportRows.length||
-typeof XLSX===
-"undefined"
-){
-return;
+function ensureXLSX(){
+if(typeof XLSX!=="undefined")return Promise.resolve();
+
+if(xlsxLoadingPromise)return xlsxLoadingPromise;
+
+xlsxLoadingPromise=new Promise((resolve,reject)=>{
+const script=document.createElement("script");
+script.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+script.async=true;
+script.onload=()=>resolve();
+script.onerror=()=>reject(new Error("โหลดระบบ Excel ไม่สำเร็จ"));
+document.head.appendChild(script);
+});
+
+return xlsxLoadingPromise;
 }
 
-const data=
-exportRows.map(
-r=>({
+async function downloadExcel(){
+if(!exportRows.length)return;
 
-"วันที่ / เวลา":
-parseDate(
-r.timestamp
-)
-?.toLocaleString(
-"th-TH"
-)||"",
+const button=$("exportExcelButton");
+const oldText=button?.textContent;
 
-"อุปกรณ์":
-r.device_id,
+try{
+if(button){
+button.disabled=true;
+button.textContent="กำลังเตรียม Excel...";
+}
 
-"PM1.0 (µg/m³)":
-r.pm1??"",
+await ensureXLSX();
 
-"PM2.5 (µg/m³)":
-r.pm25??"",
+const data=exportRows.map(r=>({
+"วันที่ / เวลา":parseDate(r.timestamp)?.toLocaleString("th-TH")||"",
+"อุปกรณ์":r.device_id,
+"PM1.0 (µg/m³)":r.pm1??"",
+"PM2.5 (µg/m³)":r.pm25??"",
+"PM10 (µg/m³)":r.pm10??"",
+"อุณหภูมิ (°C)":r.temperature??"",
+"ความชื้น (%)":r.humidity??"",
+"แสง (lux)":r.light??""
+}));
 
-"PM10 (µg/m³)":
-r.pm10??"",
-
-"อุณหภูมิ (°C)":
-r.temperature??"",
-
-"ความชื้น (%)":
-r.humidity??"",
-
-"แสง (lux)":
-r.light??""
-
-})
-);
-
-const ws=
-XLSX.utils
-.json_to_sheet(
-data
-);
-
-const wb=
-XLSX.utils
-.book_new();
-
-XLSX.utils
-.book_append_sheet(
-wb,
-ws,
-"PM2.5 Data"
-);
-
-XLSX.writeFile(
-wb,
-"PM25_export.xlsx"
-);
-
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"PM2.5 Data");
+XLSX.writeFile(wb,"PM25_export.xlsx");
+}catch(e){
+console.error("Excel export error:",e);
+if($("exportError")){
+$("exportError").textContent="ไม่สามารถเตรียมไฟล์ Excel ได้ กรุณาลองใหม่";
+$("exportError").classList.remove("hidden");
+}
+}finally{
+if(button){
+button.disabled=false;
+button.textContent=oldText||"📊 ดาวน์โหลด Excel";
+}
+}
 }
 
 // =====================================================
@@ -5495,10 +5566,7 @@ records=
 await loadHistory();
 
 renderAverages();
-
 drawCharts();
-
-updateSmart();
 
 }catch(e){
 
@@ -5646,12 +5714,8 @@ setInterval(
 ()=>{
 
 renderMonitoring();
-
 updateCurrent();
-
 updateSmart();
-
-updateAlertUI();
 
 },
 5000
