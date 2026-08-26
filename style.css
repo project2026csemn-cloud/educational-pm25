@@ -4740,3 +4740,151 @@ input[type="datetime-local"]{
   .historical-section .grid.grid-cols-5>div:last-child{grid-column:1/-1}
   #historyChart,#forecastChart{height:320px!important}
 }
+
+
+/* =========================================================
+   GROUPED GRAPH REDESIGN — DESKTOP + MOBILE
+   ========================================================= */
+.chart-render-area{width:100%;}
+.metric-chart-panel{
+  border:1px solid rgba(56,189,248,.12);
+  background:rgba(2,12,27,.42);
+  border-radius:16px;
+  padding:14px;
+  margin-top:12px;
+}
+.metric-chart-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:8px;
+}
+.metric-chart-title{
+  font-size:16px;
+  font-weight:800;
+  color:#eaf2ff;
+}
+.metric-chart-subtitle{
+  margin-top:2px;
+  font-size:13px;
+  color:#8291a8;
+}
+.metric-chart-legend{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:8px 12px;
+  font-size:12px;
+  color:#aab7ca;
+}
+.metric-chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+.metric-chart-legend i{display:inline-block;width:18px;height:3px;border-radius:999px;}
+.metric-chart-canvas-wrap{
+  position:relative;
+  height:240px;
+  min-width:0;
+}
+.metric-chart-grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.chart-empty{
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#94a3b8;
+  font-size:15px;
+}
+.bottom-chart-wrap{overflow:hidden;}
+.dashboard-chart-card{overflow:hidden;}
+
+@media(max-width:900px){
+  .metric-chart-grid-3{grid-template-columns:1fr;}
+  .metric-chart-canvas-wrap{height:230px;}
+}
+
+@media(max-width:640px){
+  /* Larger, clearer mobile text */
+  body{font-size:17px!important;}
+  .section-title-with-help h2,
+  .chart-zone-title,
+  .ai-intelligence-header h2{font-size:22px!important;line-height:1.28!important;}
+  .chart-zone-subtitle,
+  .metric-chart-subtitle,
+  .forecast-display-subtitle,
+  .smart-summary-stat-sub{font-size:14px!important;line-height:1.55!important;color:#9aa8bc!important;}
+  .node .grid{font-size:16px!important;}
+  .node .grid b{font-size:18px!important;}
+  .node [id^="lastUpdate"]{font-size:14px!important;}
+  .smart-summary-stat-label,
+  .ai-model-strip-label,
+  .ai-panel-kicker{font-size:12px!important;letter-spacing:.08em;}
+  .smart-summary-stat-value{font-size:21px!important;}
+  .current-environment-label{font-size:15px!important;}
+  .current-environment-value{font-size:29px!important;}
+  .ai-details-panel,.ai-forecast-details,.ai-numeric-base{font-size:16px!important;line-height:1.7!important;}
+  .credit-title{font-size:17px!important;}
+  .credit-role,.credit-link{font-size:14px!important;}
+
+  /* Historical statistics: 2 columns instead of one very long stack */
+  .historical-section .grid.grid-cols-6{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+  .historical-section .grid.grid-cols-6 > div{
+    padding:12px!important;
+    border:1px solid rgba(148,163,184,.08);
+    border-radius:12px;
+    background:rgba(2,12,27,.28);
+  }
+
+  /* ALL selected detail should be compact */
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+
+  /* Grouped charts */
+  .dashboard-chart-card{padding:14px!important;}
+  .chart-zone-heading{display:block!important;}
+  .chart-zone-title{margin-bottom:5px;}
+  .metric-chart-panel{padding:12px;border-radius:14px;}
+  .metric-chart-head{display:block;margin-bottom:10px;}
+  .metric-chart-title{font-size:17px;}
+  .metric-chart-subtitle{font-size:13px;}
+  .metric-chart-legend{
+    justify-content:flex-start;
+    margin-top:8px;
+    font-size:13px;
+    gap:8px 12px;
+  }
+  .metric-chart-legend i{width:20px;height:4px;}
+  .metric-chart-canvas-wrap{height:260px;}
+  .metric-chart-grid-3{grid-template-columns:1fr;gap:10px;}
+
+  /* Forecast control: compact on mobile */
+  .forecast-display-panel{padding:12px!important;}
+  .forecast-display-controls{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    width:100%;
+  }
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;}
+
+  /* AI section less vertically wasteful */
+  .ai-model-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .ai-model-strip > div{min-height:0!important;padding:12px!important;}
+}
+
+@media(max-width:390px){
+  .historical-section .grid.grid-cols-6{grid-template-columns:1fr 1fr!important;}
+  .historical-section .grid.grid-cols-5{grid-template-columns:1fr 1fr!important;}
+  .metric-chart-canvas-wrap{height:245px;}
+}
