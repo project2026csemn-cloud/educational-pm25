@@ -4888,3 +4888,34 @@ input[type="datetime-local"]{
   .historical-section .grid.grid-cols-5{grid-template-columns:1fr 1fr!important;}
   .metric-chart-canvas-wrap{height:245px;}
 }
+
+/* =========================================================
+   HUMAN-CENTERED DASHBOARD TWEAKS
+   ========================================================= */
+
+.smart-summary-stat.smart-summary-environment{
+    background:
+        linear-gradient(135deg,rgba(56,189,248,.08),rgba(15,23,42,.18));
+    border-color:rgba(56,189,248,.22);
+}
+
+.smart-summary-stat-value{
+    overflow-wrap:anywhere;
+}
+
+.smart-summary-activity.is-watch{
+    border-color:rgba(251,191,36,.28);
+    background:rgba(120,53,15,.10);
+}
+
+@media (max-width:900px){
+    .smart-summary-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+}
+
+@media (max-width:560px){
+    .smart-summary-grid{
+        grid-template-columns:1fr!important;
+    }
+}
