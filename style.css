@@ -4668,234 +4668,75 @@ input[type="datetime-local"]{
   }
 }
 
-
 /* =========================================================
-   MOBILE GRAPH REDESIGN + TYPOGRAPHY PASS
-   2026-08-26
+   MOBILE UX REDESIGN — 2026-08-26
+   Fixes long cards, cramped graphs and unreadable mobile layout
    ========================================================= */
+@media (max-width:640px){
+  .max-w-\[1800px\]{padding-left:12px!important;padding-right:12px!important}
+  .glass.card{border-radius:22px!important}
+  .historical-section,.dashboard-chart-card{padding:16px!important}
 
-/* Improve secondary-text contrast */
-.text-slate-500,
-.text-slate-400,
-.chart-zone-subtitle,
-.smart-summary-stat-sub,
-.current-environment-detail,
-.ai-trend-explanation,
-.ai-generated-at,
-.ai-model-line{
-  color:#94a3b8!important;
-}
-
-.chart-zone-heading{
-  align-items:flex-start!important;
-}
-.chart-zone-title{
-  font-size:22px!important;
-  line-height:1.25!important;
-}
-.chart-zone-subtitle{
-  font-size:14px!important;
-  line-height:1.55!important;
-  max-width:720px;
-}
-
-.chart-mode-head{
-  font-size:14px;
-  font-weight:800;
-  color:#94a3b8;
-  margin-bottom:10px;
-}
-
-.multi-chart-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
-  margin-top:14px;
-}
-.metric-chart-card{
-  min-width:0;
-  background:rgba(2,13,25,.34);
-  border:1px solid rgba(148,163,184,.12);
-  border-radius:16px;
-  padding:14px;
-}
-.metric-chart-card-wide{
-  grid-column:1/-1;
-}
-.metric-chart-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:10px;
-}
-.metric-chart-head>div{
-  min-width:0;
-}
-.metric-chart-head b{
-  display:block;
-  font-size:16px;
-  line-height:1.25;
-  color:#f8fafc;
-}
-.metric-chart-head span:not(.metric-unit-badge){
-  display:block;
-  margin-top:3px;
-  font-size:12px;
-  color:#94a3b8;
-}
-.metric-unit-badge{
-  flex:none;
-  padding:5px 9px;
-  border-radius:999px;
-  border:1px solid rgba(34,211,238,.18);
-  background:rgba(34,211,238,.06);
-  color:#67e8f9;
-  font-size:12px;
-  font-weight:800;
-}
-.metric-chart-card canvas{
-  width:100%!important;
-  height:230px!important;
-  min-height:230px!important;
-  max-height:230px!important;
-}
-.metric-chart-card-wide canvas{
-  height:255px!important;
-  min-height:255px!important;
-  max-height:255px!important;
-}
-.chart-single-view canvas{
-  width:100%!important;
-  height:320px!important;
-  min-height:320px!important;
-  max-height:320px!important;
-}
-
-.forecast-display-title,
-.forecast-actual-label,
-.forecast-toggle-name{
-  font-size:15px!important;
-}
-.forecast-display-subtitle,
-.forecast-actual-note,
-.forecast-toggle-status{
-  font-size:13px!important;
-  color:#94a3b8!important;
-}
-
-/* Keep Historical ALL compact on phones */
-@media(max-width:640px){
-  body{
-    font-size:17px!important;
-  }
-
-  .text-xs{
-    font-size:14px!important;
-    line-height:1.55!important;
-  }
-  .text-sm{
-    font-size:16px!important;
-    line-height:1.6!important;
-  }
-
-  .section-title-with-help h2,
-  .chart-zone-title,
-  .ai-intelligence-header h2{
-    font-size:21px!important;
-    line-height:1.28!important;
-  }
-
-  .chart-zone-heading{
-    display:block!important;
-  }
-  .chart-zone-subtitle{
-    margin-top:8px!important;
-    font-size:15px!important;
-  }
-
-  .multi-chart-grid{
-    grid-template-columns:1fr;
-    gap:12px;
-  }
-  .metric-chart-card,
-  .metric-chart-card-wide{
-    grid-column:auto;
-    padding:12px;
-  }
-  .metric-chart-head b{
-    font-size:17px;
-  }
-  .metric-chart-head span:not(.metric-unit-badge),
-  .metric-unit-badge{
-    font-size:13px;
-  }
-
-  .metric-chart-card canvas,
-  .metric-chart-card-wide canvas{
-    height:235px!important;
-    min-height:235px!important;
-    max-height:235px!important;
-  }
-  .chart-single-view canvas{
-    height:290px!important;
-    min-height:290px!important;
-    max-height:290px!important;
-  }
-
-  /* 2 columns for six averages even on narrow phones */
+  /* Historical: 6 averages become a compact 2 x 3 grid even on narrow phones */
   .historical-section .grid.grid-cols-6{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:18px 14px!important;
+    gap:0!important;
   }
-  .historical-section .grid.grid-cols-6 > div{
-    min-width:0;
+  .historical-section .grid.grid-cols-6>div{
+    padding:13px 10px!important;
+    border-bottom:1px solid rgba(148,163,184,.09);
   }
+  .historical-section .grid.grid-cols-6>div:nth-last-child(-n+2){border-bottom:0}
+  .historical-section .grid.grid-cols-6 b.block.text-2xl{font-size:24px!important;margin-top:4px!important}
+  .historical-section .grid.grid-cols-6 .truncate{white-space:normal!important;overflow:visible!important}
 
-  .historical-section .grid.grid-cols-6 .text-xs{
-    font-size:15px!important;
-  }
-  .historical-section b.block.text-2xl{
-    font-size:25px!important;
-  }
-
-  .forecast-display-panel{
-    padding:14px!important;
-  }
-  .forecast-display-controls{
+  /* ALL has no meaningful single-variable avg/max/min; keep summary compact */
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:10px!important;
   }
+  .historical-section .grid.grid-cols-5>div{padding:10px!important;background:rgba(2,12,23,.22);border-radius:12px}
+  .historical-section .grid.grid-cols-5>div:last-child{grid-column:1/-1}
 
-  .ai-details-panel,
-  .ai-forecast-details{
-    font-size:16px!important;
-    line-height:1.7!important;
-  }
-  .ai-panel-head h3{
-    font-size:20px!important;
-  }
-  .ai-trend-variable{
-    font-size:14px!important;
-  }
-  .ai-trend-direction{
-    font-size:18px!important;
-  }
-  .ai-trend-explanation{
-    font-size:15px!important;
+  .history-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important;gap:10px!important}
+  .history-toolbar .history-export-button{grid-column:1/-1!important;width:100%!important}
+  .history-toolbar select,.history-toolbar-button{width:100%!important;min-width:0!important}
+
+  /* Chart cards: give the data area room and stop labels from crushing the plot */
+  .chart-zone-heading{display:block!important;margin-bottom:10px!important}
+  .chart-zone-title{font-size:20px!important;line-height:1.25!important}
+  .chart-zone-subtitle{font-size:14px!important;line-height:1.45!important;margin-top:5px!important}
+  .bottom-chart-wrap{padding:10px 8px!important;overflow:hidden!important}
+  .bottom-chart-wrap>div:first-child{font-size:13px!important}
+  #historyChart,#forecastChart{width:100%!important;min-height:0!important;max-height:none!important;height:330px!important}
+
+  .forecast-display-panel{padding:12px!important;gap:10px!important}
+  .forecast-display-copy{width:100%!important}
+  .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important}
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;min-width:0!important;padding:10px 12px!important}
+
+  /* AI section: reduce dead vertical space without shrinking readable text */
+  .ai-intelligence-panel{padding:12px!important}
+  .ai-details-panel,.ai-forecast-details{padding:14px!important;line-height:1.55!important}
+  .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .ai-model-strip>div{min-height:94px!important;padding:13px!important}
+  .ai-model-strip-label{font-size:12px!important}
+  .ai-model-strip b{font-size:15px!important;line-height:1.4!important}
+
+  /* Secondary copy was too dim on a phone */
+  .text-slate-500,.chart-zone-subtitle,.forecast-display-subtitle,.smart-summary-stat-sub,.current-environment-detail{
+    color:#94a3b8!important;
   }
 
-  .credit-title{
-    font-size:16px!important;
-  }
-  .credit-role,
-  .credit-link{
-    font-size:14px!important;
-  }
+  .credit-title{font-size:17px!important}
+  .credit-role,.credit-link{font-size:14px!important}
 }
 
-/* Do NOT collapse historical averages to one column at <=380px. */
-@media(max-width:380px){
-  .historical-section .grid.grid-cols-6{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
+@media (max-width:380px){
+  /* Keep useful two-column summaries; previous rule made the page unnecessarily long */
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5,
+  .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .historical-section .grid.grid-cols-5>div:last-child{grid-column:1/-1}
+  #historyChart,#forecastChart{height:320px!important}
 }
