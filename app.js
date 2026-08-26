@@ -1871,7 +1871,7 @@ high[currentMetric]
 );
 
 $("currentHighestNode").textContent=
-`อุปกรณ์ ${nodeNo(high.device_id)}`;
+`จุดตรวจวัด ${nodeNo(high.device_id)}`;
 
 qualityBadge(
 threshold(
@@ -1882,13 +1882,13 @@ avg
 
 $("currentWatchNode").textContent=
 watch
-?`อุปกรณ์ ${nodeNo(watch.n.device_id)}`
+?`จุดตรวจวัด ${nodeNo(watch.n.device_id)}`
 :"ไม่มี";
 
 $("currentWatchDetail").textContent=
 watch
 ?`${c.label} ${currentValue(watch.v)} • ${levelText(watch.l)}`
-:"ทุกจุดที่ใช้งานยังไม่เข้าเกณฑ์เฝ้าระวัง";
+:"ทุกจุดที่ใช้งานยังอยู่ในเกณฑ์ปกติ";
 
 if(
 $("currentEnvironmentFooter")
@@ -1905,6 +1905,107 @@ $("currentEnvironmentFooter").textContent=
 // SMART SUMMARY
 // =====================================================
 
+function pointAttentionSummary(){
+
+const usable=
+latestNodes
+.filter(
+n=>
+["online","sleep"]
+.includes(
+getNodeStatus(n)
+)
+);
+
+if(!usable.length){
+return{
+label:"รอข้อมูล",
+detail:"ยังไม่มีจุดตรวจวัดที่พร้อมใช้ข้อมูล",
+level:"normal"
+};
+}
+
+const pmNodes=
+usable
+.map(n=>({
+n,
+value:finiteNumberOrNull(n.pm25)
+}))
+.filter(x=>x.value!==null);
+
+const heatNodes=
+usable
+.map(n=>({
+n,
+value:heatIndexC(
+n.temperature,
+n.humidity
+)
+}))
+.filter(x=>x.value!==null);
+
+const pmWorst=
+pmNodes.length
+?[...pmNodes].sort((a,b)=>b.value-a.value)[0]
+:null;
+
+const heatWorst=
+heatNodes.length
+?[...heatNodes].sort((a,b)=>b.value-a.value)[0]
+:null;
+
+const pmState=
+pmWorst
+?pm25Guidance(pmWorst.value)
+:null;
+
+const heatState=
+heatWorst
+?heatLevel(heatWorst.value)
+:null;
+
+// ถ้ามีค่าที่เข้าเกณฑ์เตือน ให้บอก "จุดไหน" ก่อน
+if(
+pmWorst&&
+["warning","critical"]
+.includes(pmState?.level)
+){
+return{
+label:`จุดตรวจวัด ${nodeNo(pmWorst.n.device_id)} ควรติดตาม`,
+detail:`PM2.5 สูงที่สุด ${fmt(pmWorst.value)} µg/m³ • ${pmState.label}`,
+level:pmState.level==="critical"?"critical":"watch"
+};
+}
+
+if(
+heatWorst&&
+["watch","warning","critical"]
+.includes(heatState?.level)
+){
+return{
+label:`จุดตรวจวัด ${nodeNo(heatWorst.n.device_id)} ควรติดตาม`,
+detail:`สภาพความร้อนสูงที่สุด ${fmt(heatWorst.value)} °C • ${heatState.label}`,
+level:heatState.level==="critical"?"critical":"watch"
+};
+}
+
+// ถ้ายังปกติทั้งหมด ให้บอกว่าจุดใดสูงสุดแต่ยังไม่อันตราย
+if(pmWorst){
+return{
+label:"ยังไม่มีจุดที่ต้องเฝ้าระวัง",
+detail:`PM2.5 สูงสุดอยู่ที่จุดตรวจวัด ${nodeNo(pmWorst.n.device_id)} (${fmt(pmWorst.value)} µg/m³) และยังอยู่ในเกณฑ์ ${pmState?.label||"ปกติ"}`,
+level:"normal"
+};
+}
+
+return{
+label:"ทุกจุดอยู่ในเกณฑ์ปกติ",
+detail:`มี ${usable.length} จุดตรวจวัดที่ระบบใช้ข้อมูลได้`,
+level:"normal"
+};
+
+}
+
 function updateSmart(){
 
 const e=
@@ -1917,81 +2018,51 @@ return;
 if(
 !apiConnectionOnline
 ){
-
 e.innerHTML=
-'<div class="smart-summary-headline offline">🔴 ไม่สามารถเชื่อมต่อ API</div><div class="smart-summary-note danger">Dashboard ไม่สามารถยืนยันข้อมูลปัจจุบันจาก Cloudflare Worker ได้</div>';
-
+'<div class="smart-summary-headline offline">🔴 ไม่สามารถเชื่อมต่อระบบข้อมูลได้</div><div class="smart-summary-note danger">ยังไม่สามารถยืนยันสถานการณ์ปัจจุบันได้</div>';
 return;
-
 }
 
 if(
 !motherOnline()
 ){
-
 e.innerHTML=
 `<div class="smart-summary-headline offline">
-🔴 Gateway Offline
+🔴 สถานีหลักขาดการเชื่อมต่อ
 </div>
 
 <div class="smart-summary-grid">
 
 <div class="smart-summary-stat">
-
-<div class="smart-summary-stat-label">
-AIR QUALITY
-</div>
-
-<div class="smart-summary-stat-value">
-ไม่พร้อมประเมิน
-</div>
-
+<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
+<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
+<div class="smart-summary-stat-sub">รอการเชื่อมต่อกลับมา</div>
 </div>
 
 <div class="smart-summary-stat">
-
-<div class="smart-summary-stat-label">
-HEAT STRESS
-</div>
-
-<div class="smart-summary-stat-value">
-ไม่พร้อมประเมิน
-</div>
-
+<div class="smart-summary-stat-label">🌡 สภาพความร้อน</div>
+<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
+<div class="smart-summary-stat-sub">รอการเชื่อมต่อกลับมา</div>
 </div>
 
 <div class="smart-summary-stat">
-
-<div class="smart-summary-stat-label">
-สภาพแวดล้อมในพื้นที่
-</div>
-
-<div class="smart-summary-stat-value">
-ไม่พร้อมประเมิน
-</div>
-
+<div class="smart-summary-stat-label">📍 จุดที่ควรสนใจ</div>
+<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
+<div class="smart-summary-stat-sub">ข้อมูลจากจุดตรวจวัดยังไม่พร้อม</div>
 </div>
 
 <div class="smart-summary-stat">
-
-<div class="smart-summary-stat-label">
-SYSTEM HEALTH
-</div>
-
-<div class="smart-summary-stat-value">
-Gateway OFFLINE
-</div>
-
+<div class="smart-summary-stat-label">📡 สถานีตรวจวัด</div>
+<div class="smart-summary-stat-value">ขาดการเชื่อมต่อ</div>
+<div class="smart-summary-stat-sub">ไม่สามารถยืนยันข้อมูลล่าสุดได้</div>
 </div>
 
 </div>
 
 <div class="smart-summary-note danger">
-ไม่ใช้ค่าที่ค้างในฐานข้อมูลเป็นสถานการณ์ปัจจุบันจนกว่า Gateway จะกลับมา Online
+ระบบจะไม่ใช้ค่าที่ค้างในฐานข้อมูลเป็นสถานการณ์ปัจจุบันจนกว่าการเชื่อมต่อจะกลับมา
 </div>`;
-
 return;
-
 }
 
 const snap=
@@ -2007,8 +2078,8 @@ heatLevel(
 snap.heatIndex
 );
 
-const localEnv=
-localEnvironmentAnalysis();
+const attention=
+pointAttentionSummary();
 
 const on=
 latestNodes
@@ -2019,53 +2090,62 @@ getNodeDisplayStatus(n)==="online"
 .length;
 
 const off=
-TOTAL_NODES-
-on;
+TOTAL_NODES-on;
 
-let severity=
-"normal";
-
-let headline=
-"🟢 ภาพรวมสภาพแวดล้อมปกติ";
+let severity="normal";
+let headline="🟢 ภาพรวมปกติ";
 
 if(
 pm.level==="critical"||
-heat.level==="critical"
+heat.level==="critical"||
+attention.level==="critical"
 ){
-
-severity=
-"critical";
-
-headline=
-"🔴 พบสภาพแวดล้อมที่ควรให้ความสำคัญ";
-
+severity="critical";
+headline="🔴 มีสถานการณ์ที่ควรให้ความสำคัญ";
 }else if(
 pm.level==="warning"||
 heat.level==="warning"||
 heat.level==="watch"||
+attention.level==="watch"||
 off>0
 ){
-
-severity=
-"watch";
-
-headline=
-"🟡 มีข้อมูลที่ควรติดตาม";
-
+severity="watch";
+headline="🟡 มีข้อมูลที่ควรติดตาม";
 }
 
-const pmText=
+const airMain=
 snap.pm25==null
 ?"รอข้อมูล"
-:`${fmt(snap.pm25)} µg/m³ • ${pm.label}`;
+:pm.label;
 
-const heatText=
+const airSub=
+snap.pm25==null
+?"ยังไม่มีค่า PM2.5 ที่ใช้ได้"
+:`PM2.5 ${fmt(snap.pm25)} µg/m³`;
+
+const heatMain=
 snap.heatIndex==null
 ?"รอข้อมูล"
-:`${fmt(snap.heatIndex)} °C • ${heat.label}`;
+:(
+heat.level==="normal"
+?"อากาศสบาย"
+:heat.label
+);
 
-const systemText=
-`ONLINE ${on} • OFFLINE ${off}`;
+const heatSub=
+snap.heatIndex==null
+?"ยังไม่มีข้อมูลอุณหภูมิและความชื้น"
+:`ความรู้สึกร้อน ${fmt(snap.heatIndex)} °C`;
+
+const systemMain=
+off===0
+?`ทำงานปกติ ${on} / ${TOTAL_NODES} จุด`
+:`ใช้งานได้ ${on} / ${TOTAL_NODES} จุด`;
+
+const systemSub=
+off===0
+?"การเชื่อมต่อของจุดตรวจวัดครบ"
+:`มี ${off} จุดที่ขาดการเชื่อมต่อ`;
 
 const activity=
 activityRecommendation(
@@ -2073,51 +2153,9 @@ snap.pm25,
 snap.heatIndex
 );
 
-const notes=[];
-
-notes.push({
-
-type:
-localEnv.level==="watch"
-?"warn"
-:"info",
-
-text:
-`การวิเคราะห์สภาพแวดล้อมในพื้นที่: ${localEnv.detail}`
-
-});
-
-for(const relation of localEnv.relationships){
-notes.push({type:"info",text:relation});
-}
-
-notes.push({type:"info",text:"หมายเหตุ: ความสัมพันธ์ทางสถิติไม่ใช่หลักฐานว่าแสงเป็นสาเหตุของการเปลี่ยนแปลงอุณหภูมิ ความชื้น หรือ PM2.5"});
-
-notes.push({
-
-type:
-"info",
-
-text:
-`กิจกรรมกลางแจ้ง: ${activity}`
-
-});
-
-if(
-off>0
-){
-
-notes.push({
-
-type:
-"danger",
-
-text:
-`มี ${off} อุปกรณ์ Offline และไม่ถูกนำมาคำนวณค่าปัจจุบัน`
-
-});
-
-}
+const activityGood=
+!["critical","warning"].includes(pm.level)&&
+!["critical","warning"].includes(heat.level);
 
 e.innerHTML=
 `<div class="smart-summary-headline ${severity}">
@@ -2127,95 +2165,34 @@ ${headline}
 <div class="smart-summary-grid">
 
 <div class="smart-summary-stat smart-summary-air">
-
-<div class="smart-summary-stat-label">
-🌫 AIR QUALITY
-</div>
-
-<div class="smart-summary-stat-value">
-${pmText}
-</div>
-
-<div class="smart-summary-stat-sub">
-PM2.5 ปัจจุบัน
-</div>
-
+<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
+<div class="smart-summary-stat-value">${esc(airMain)}</div>
+<div class="smart-summary-stat-sub">${esc(airSub)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-heat">
-
-<div class="smart-summary-stat-label">
-🌡 HEAT STRESS
-</div>
-
-<div class="smart-summary-stat-value">
-${heatText}
-</div>
-
-<div class="smart-summary-stat-sub">
-Temperature + Humidity
-</div>
-
+<div class="smart-summary-stat-label">🌡 สภาพความร้อน</div>
+<div class="smart-summary-stat-value">${esc(heatMain)}</div>
+<div class="smart-summary-stat-sub">${esc(heatSub)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-environment">
-
-<div class="smart-summary-stat-label">
-☀ สภาพแวดล้อมในพื้นที่
-</div>
-
-<div class="smart-summary-stat-value">
-${esc(localEnv.label)}
-</div>
-
-<div class="smart-summary-stat-sub">
-ความเข้มแสง + ความสัมพันธ์กับอุณหภูมิ / ความชื้น / PM2.5
-</div>
-
+<div class="smart-summary-stat-label">📍 จุดที่ควรสนใจ</div>
+<div class="smart-summary-stat-value">${esc(attention.label)}</div>
+<div class="smart-summary-stat-sub">${esc(attention.detail)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-system">
-
-<div class="smart-summary-stat-label">
-📡 SYSTEM HEALTH
-</div>
-
-<div class="smart-summary-stat-value">
-${systemText}
-</div>
-
-<div class="smart-summary-stat-sub">
-Gateway ONLINE
+<div class="smart-summary-stat-label">📡 สถานีตรวจวัด</div>
+<div class="smart-summary-stat-value">${esc(systemMain)}</div>
+<div class="smart-summary-stat-sub">${esc(systemSub)}</div>
 </div>
 
 </div>
 
-</div>
-
-<div class="smart-summary-activity">
-
-<div class="smart-summary-activity-label">
-🏃 คำแนะนำกิจกรรมกลางแจ้ง
-</div>
-
-<div>
-${esc(activity)}
-</div>
-
-</div>
-
-<div class="smart-summary-notes">
-
-${notes
-.map(
-n=>
-`<div class="smart-summary-note ${n.type}">
-<span>•</span>
-<span>${esc(n.text)}</span>
-</div>`
-)
-.join("")}
-
+<div class="smart-summary-activity ${activityGood?"":"is-watch"}">
+<div class="smart-summary-activity-label">🏃 กิจกรรมกลางแจ้ง</div>
+<div>${esc(activity)}</div>
 </div>`;
 
 }
@@ -2249,7 +2226,7 @@ if(
 ){
 
 e.innerHTML=
-'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 Gateway OFFLINE</b><div class="text-xs text-slate-400 mt-1">กำหนดทุก Node เป็น OFFLINE</div></div>';
+'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 สถานีหลักขาดการเชื่อมต่อ</b><div class="text-xs text-slate-400 mt-1">ยังไม่สามารถยืนยันสถานะของจุดตรวจวัดได้</div></div>';
 
 return;
 
@@ -2279,10 +2256,10 @@ icon:
 "🔴",
 
 title:
-`อุปกรณ์ ${i} OFFLINE`,
+`จุดตรวจวัด ${i} ขาดการเชื่อมต่อ`,
 
 detail:
-"ไม่สามารถติดต่ออุปกรณ์ได้"
+"ระบบไม่ได้รับข้อมูลจากจุดตรวจวัดภายในเวลาที่กำหนด"
 
 });
 
@@ -2325,7 +2302,7 @@ pmLevel==="critical"
 :"🟡",
 
 title:
-`อุปกรณ์ ${i} • PM2.5`,
+`จุดตรวจวัด ${i} • PM2.5`,
 
 detail:
 `${fmt(n?.pm25)} µg/m³ • ${g.label}`
@@ -2363,7 +2340,7 @@ heatState==="critical"
 :"🟡",
 
 title:
-`อุปกรณ์ ${i} • Heat Index`,
+`จุดตรวจวัด ${i} • สภาพความร้อน`,
 
 detail:
 `${fmt(hi)} °C • ${h.label}`
@@ -2391,7 +2368,7 @@ ${esc(x.detail)}
 )
 .join("")
 
-:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ไม่พบรายการที่ต้องตรวจสอบ</b></div>';
+:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ยังไม่มีสิ่งที่ต้องเฝ้าระวัง</b></div>';
 
 }
 
@@ -3132,9 +3109,9 @@ aiForecastPayload?.reason==="all_ai_unavailable";
 const provider=isAI
 ?(
 aiForecastPayload?.provider==="cloudflare"
-?"Cloudflare Workers AI"
+?"ระบบวิเคราะห์"
 :aiForecastPayload?.provider==="gemini"
-?"Gemini AI"
+?"ระบบวิเคราะห์"
 :"AI"
 )
 :"Statistical Model";
@@ -4356,7 +4333,7 @@ if(
 payload.reason===
 "gemini_unavailable"
 ){
-return"AI UNAVAILABLE";
+return"ใช้ข้อมูลย้อนหลัง";
 }
 
 return"RULE FALLBACK";
@@ -4428,12 +4405,12 @@ if(
 ){
 
 details.innerHTML=
-'<div class="ai-result-headline">ไม่สามารถติดต่อ AI endpoint ได้</div><div class="ai-result-summary">Smart Summary แบบ Rule-based ยังทำงานต่อได้ตามปกติ</div>';
+'<div class="ai-result-headline">ยังไม่สามารถสร้างบทวิเคราะห์เพิ่มเติมได้</div><div class="ai-result-summary">ข้อมูลปัจจุบันและสรุปสถานการณ์ยังทำงานได้ตามปกติ</div>';
 
 if(generated){
 
 generated.textContent=
-"อัปเดต AI: --";
+"อัปเดตการวิเคราะห์: --";
 
 }
 
@@ -4461,14 +4438,14 @@ if(generated){
 
 generated.textContent=
 generatedDate
-?`อัปเดต AI: ${generatedDate.toLocaleString(
+?`อัปเดตการวิเคราะห์: ${generatedDate.toLocaleString(
 "th-TH",
 {
 timeZone:
 "Asia/Bangkok"
 }
 )}`
-:"อัปเดต AI: --";
+:"อัปเดตการวิเคราะห์: --";
 
 }
 
@@ -4486,7 +4463,7 @@ ${observations.length
 <div class="ai-result-section">
 
 <div class="ai-result-label">
-สิ่งที่ AI สังเกต
+สิ่งที่ระบบพบ
 </div>
 
 <div class="ai-observation-list">
@@ -4519,20 +4496,7 @@ ${esc(data.recommendation||"ติดตามข้อมูลจากระ�
 
 </div>
 
-<div class="ai-meta-row">
-
-<span>
-โมเดล:
-${esc(payload.model||"Rule-based fallback")}
-${payload.cached?" • Cache":""}
-</span>
-
-<span class="ai-confidence">
-ความเชื่อมั่น:
-${confidenceText(data.confidence)}
-</span>
-
-</div>`;
+<div class="ai-meta-row"><span>วิเคราะห์จากข้อมูลล่าสุดและข้อมูลย้อนหลังของสถานี</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(data.confidence)}</span></div>`;
 
 }
 
@@ -4625,28 +4589,28 @@ if(providerLabel){
 const provider=payload?.provider;
 providerLabel.textContent=
 provider==="cloudflare"
-?"Cloudflare Workers AI"
+?"ระบบวิเคราะห์"
 :provider==="gemini"
-?"Gemini AI"
+?"ระบบวิเคราะห์"
 :payload?.ai===false
-?"Rule Engine / AI unavailable"
-:"กำลังรอ AI...";
+?"ใช้การคำนวณจากข้อมูลย้อนหลัง"
+:"กำลังรอการวิเคราะห์...";
 }
 if(aiForecastLoading){
 if(providerLabel)providerLabel.textContent="กำลังวิเคราะห์...";
-if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>AI กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
-if(badge)badge.textContent="AI • กำลังวิเคราะห์";
+if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
+if(badge)badge.textContent="กำลังวิเคราะห์";
 return;
 }
 if(!payload){
-if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลจาก AI Trend & Forecast</div>';
-if(badge)badge.textContent="AI • รอข้อมูล";
+if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
+if(badge)badge.textContent="รอข้อมูล";
 return;
 }
 const d=payload.data||{};
 const isAI=payload.ai===true;
-if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดต AI: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดต AI: --";}
-if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;const p=payload?.provider==="cloudflare"?"CLOUDFLARE AI":payload?.provider==="gemini"?"GEMINI AI":"AI";badge.textContent=isAI?`${p} • ${confidenceText(d.confidence||"low")}`:"AI UNAVAILABLE";}
+if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดตการวิเคราะห์: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดตการวิเคราะห์: --";}
+if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;const p=payload?.provider==="cloudflare"?"CLOUDFLARE AI":payload?.provider==="gemini"?"GEMINI AI":"AI";badge.textContent=isAI?`${p} • ${confidenceText(d.confidence||"low")}`:"ใช้ข้อมูลย้อนหลัง";}
 if(!box)return;
 if(!isAI){
 const reasonText=
@@ -4656,23 +4620,23 @@ payload.reason==="gemini_quota_exhausted"
 ?"ยังไม่ได้ตั้งค่า GEMINI_API_KEY"
 :"ไม่สามารถเชื่อม Gemini ได้ในขณะนี้";
 
-box.innerHTML=`<div class="ai-unavailable"><b>AI Trend ยังไม่พร้อมใช้งาน</b><div class="mt-1">${esc(reasonText)}</div></div>`;
+box.innerHTML=`<div class="ai-unavailable"><b>การวิเคราะห์ขั้นสูงยังไม่พร้อม</b><div class="mt-1">${esc(reasonText)}</div></div>`;
 return;
 }
 const trends=Array.isArray(d.trend_analysis)?d.trend_analysis:[];
 const preferred=["pm25","temperature","humidity","light"];
 const trendCards=preferred.map(field=>trends.find(x=>x?.field===field)).filter(Boolean);
 box.innerHTML=`
-<div class="ai-forecast-headline">${esc(d.headline||"AI Environmental Trend & Forecast")}</div>
+<div class="ai-forecast-headline">${esc(d.headline||"แนวโน้มและคาดการณ์")}</div>
 <div class="ai-trend-summary">${trendCards.map(x=>`<div class="ai-trend-item"><div class="ai-trend-variable">${esc(CURRENT_METRIC_CONFIG[x.field]?.label||x.field)}</div><div class="ai-trend-direction">${esc(aiDirectionText(x.direction))}</div><div class="ai-trend-explanation">${esc(x.explanation||"")}</div></div>`).join("")}</div>
-<div class="ai-trend-driver"><b>ตัวแปรหลัก:</b> ${esc(d.primary_driver||"--")}<br><b>รูปแบบผิดปกติ:</b> ${esc(d.anomaly_summary||"--")}</div>
+<div class="ai-trend-driver"><b>ปัจจัยที่เด่น:</b> ${esc(d.primary_driver||"--")}<br><b>สิ่งผิดปกติ:</b> ${esc(d.anomaly_summary||"--")}</div>
 <div class="ai-forecast-grid mt-3">
-<div class="ai-forecast-item"><div class="ai-forecast-label">🌫 AIR</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 HEAT</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">☀ LOCAL ENV</div><div>${esc(d.local_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">🏃 ACTIVITY</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌿 คุณภาพอากาศ</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 สภาพความร้อน</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">📍 พื้นที่</div><div>${esc(d.local_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🏃 กิจกรรม</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
 </div>
-<div class="ai-meta-row"><span>โมเดล: ${esc(payload.model||"Gemini")}</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
+<div class="ai-meta-row"><span>คาดการณ์จากข้อมูลล่าสุดและข้อมูลย้อนหลัง</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
 }
 
 async function loadAIForecast(
@@ -4759,206 +4723,36 @@ drawCharts();
 const HELP_CONTENT={
 
 monitoring:[
-"Monitoring Nodes",
-`แสดงสถานะบน Dashboard เพียง ONLINE / OFFLINE โดยสถานะ Deep Sleep ของอุปกรณ์ยังถูกเก็บไว้ภายในระบบเพื่อแยกการหลับตามรอบออกจากการขาดการเชื่อมต่อ อุปกรณ์ที่ไม่มีข้อมูลใหม่เกิน 6 นาทีจะแสดง OFFLINE`
+"จุดตรวจวัด",
+"แสดงค่าล่าสุดและสถานะของจุดตรวจวัดทั้ง 3 จุด หากจุดใดไม่มีการติดต่อใหม่เกินเวลาที่กำหนด ระบบจะแสดงว่าขาดการเชื่อมต่อ ส่วนรายละเอียดการสื่อสารของอุปกรณ์ถูกเก็บไว้ภายในระบบ"
 ],
 
 smartSummary:[
-"Smart Summary",
-"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index และสภาพแวดล้อมในพื้นที่ โดยส่วนสภาพแวดล้อมในพื้นที่ใช้ค่าความเข้มแสงร่วมกับอุณหภูมิ ความชื้น และ PM2.5 เพื่อดูแนวโน้มและความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง"
+"สรุปสถานการณ์",
+"สรุปสิ่งที่คนทั่วไปต้องการรู้จากข้อมูลล่าสุด ได้แก่ คุณภาพอากาศ สภาพความร้อน จุดที่ควรสนใจ สถานะของจุดตรวจวัด และคำแนะนำสำหรับกิจกรรมกลางแจ้ง"
 ],
 
 currentAir:[
-"คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน",
-"ใช้ข้อมูลล่าสุดจากจุดที่ระบบถือว่า ONLINE และยังไม่เกิน 6 นาที"
+"เปรียบเทียบจุดตรวจวัด",
+"เปรียบเทียบข้อมูลล่าสุดจากจุดตรวจวัดที่ใช้งานอยู่ โดยแสดงค่าเฉลี่ยของพื้นที่ จุดที่มีค่าสูงที่สุด และจุดที่ควรสนใจสำหรับตัวแปรที่เลือก"
 ],
 
 alerts:[
-"Alerts",
-"ระบบแจ้งเตือนสถานะอุปกรณ์, PM2.5 และ Heat Index ตามเงื่อนไขที่กำหนดไว้ ส่วน PM1.0 และ Light ใช้เป็นข้อมูลประกอบการวิเคราะห์และ AI Forecast ไม่ใช้เป็น Health Alert โดยตรง"
+"สิ่งที่ควรระวัง",
+"แสดงเฉพาะเหตุการณ์ที่ควรให้ความสนใจ เช่น PM2.5 สูง สภาพความร้อนเข้าเกณฑ์เฝ้าระวัง หรือจุดตรวจวัดขาดการเชื่อมต่อ หากทุกอย่างปกติระบบจะแจ้งว่าไม่มีสิ่งที่ต้องเฝ้าระวัง"
 ],
 
 historical:[
-"Historical Data & Trend",
-"ดูข้อมูลย้อนหลัง ค่าเฉลี่ย สูงสุด ต่ำสุด แนวโน้ม และส่งออก Excel โดยค่าเริ่มต้นเป็นข้อมูลของวันนี้ตั้งแต่ 00:00 น. ตามเวลาไทย"
-],
-
-forecast:[
-"Forecast",
-"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ AI วิเคราะห์คุณภาพอากาศ ความร้อน สภาพแวดล้อมในพื้นที่ และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
+"สถิติย้อนหลัง",
+"เลือกตัวแปรและช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม พร้อมกราฟย้อนหลัง ข้อมูลที่อ่านไม่สำเร็จจะไม่ถูกนำมาแทนด้วยค่า 0"
 ],
 
 ai:[
-"AI Environmental Intelligence",
-"รวม AI Situation Analysis และ AI Trend & Forecast โดยวิเคราะห์ข้อมูลจริงทั้ง 6 ตัวแปรร่วมกับ Heat Index สถานะระบบ สภาพแวดล้อมในพื้นที่ และข้อมูลย้อนหลัง"
+"วิเคราะห์และคาดการณ์",
+"สรุปสถานการณ์ด้วยภาษาที่อ่านง่ายและประเมินแนวโน้มในช่วง 30 นาทีถัดไปจากข้อมูลล่าสุดและข้อมูลย้อนหลัง หากระบบ AI ภายนอกไม่พร้อม ระบบยังสามารถใช้การคำนวณทางสถิติเป็นระบบสำรองได้"
 ]
 
 };
-
-function closeHelp(){
-
-const p=
-$("helpPopover");
-
-p?.classList
-.remove(
-"active"
-);
-
-activeHelpButton=
-null;
-
-}
-
-function bindHelp(){
-
-document
-.querySelectorAll(
-".help-button"
-)
-.forEach(
-b=>
-b.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-const x=
-HELP_CONTENT[
-b.dataset.help
-];
-
-if(!x){
-return;
-}
-
-activeHelpButton=
-b;
-
-if(
-$("helpPopoverTitle")
-){
-
-$("helpPopoverTitle").textContent=
-x[0];
-
-}
-
-if(
-$("helpPopoverBody")
-){
-
-$("helpPopoverBody").innerHTML=
-`<p>${esc(x[1])}</p>`;
-
-}
-
-const p=
-$("helpPopover");
-
-if(p){
-
-p.classList.add(
-"active"
-);
-
-const r=
-b.getBoundingClientRect();
-
-p.style.left=
-Math.max(
-12,
-Math.min(
-r.left,
-window.innerWidth-
-400
-)
-)+"px";
-
-p.style.top=
-r.bottom+
-10+
-"px";
-
-}
-
-}
-)
-);
-
-$("helpPopoverClose")
-?.addEventListener(
-"click",
-closeHelp
-);
-
-document
-.addEventListener(
-"click",
-closeHelp
-);
-
-}
-
-// =====================================================
-// CREDIT IMAGE
-// =====================================================
-
-function openCreditImage(
-src,
-alt
-){
-
-const modal=
-$("creditImageModal");
-
-const img=
-$("creditFullImage");
-
-if(
-!modal||
-!img
-){
-return;
-}
-
-img.src=
-src;
-
-img.alt=
-alt||"";
-
-if(
-$("creditImageCaption")
-){
-
-$("creditImageCaption").textContent=
-alt||"";
-
-}
-
-modal.classList.add(
-"active"
-);
-
-document.body.style.overflow=
-"hidden";
-
-}
-
-function closeCreditImage(){
-
-$("creditImageModal")
-?.classList
-.remove(
-"active"
-);
-
-document.body.style.overflow=
-"";
-
-}
 
 // =====================================================
 // EVENTS
