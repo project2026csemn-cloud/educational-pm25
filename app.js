@@ -4754,6 +4754,101 @@ ai:[
 
 };
 
+function closeHelp(){
+
+const p=
+$("helpPopover");
+
+p?.classList
+.remove(
+"active"
+);
+
+activeHelpButton=
+null;
+
+}
+
+function bindHelp(){
+
+document
+.querySelectorAll(
+".help-button"
+)
+.forEach(
+b=>
+b.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const x=
+HELP_CONTENT[
+b.dataset.help
+];
+
+if(!x){
+return;
+}
+
+activeHelpButton=
+b;
+
+if(
+$("helpPopoverTitle")
+){
+
+$("helpPopoverTitle").textContent=
+x[0];
+
+}
+
+if(
+$("helpPopoverText")
+){
+
+$("helpPopoverText").textContent=
+x[1];
+
+}
+
+const p=
+$("helpPopover");
+
+if(!p){
+return;
+}
+
+p.classList.add(
+"active"
+);
+
+}
+)
+);
+
+$("helpPopoverClose")
+?.addEventListener(
+"click",
+closeHelp
+);
+
+$("helpPopover")
+?.addEventListener(
+"click",
+e=>{
+if(
+e.target===
+$("helpPopover")
+){
+closeHelp();
+}
+}
+);
+
+}
+
 // =====================================================
 // EVENTS
 // =====================================================
