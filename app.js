@@ -1,4 +1,4 @@
-﻿const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
+const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
 
 const API={
 latest:`${BASE}/api/get_latest.php`,
@@ -135,6 +135,36 @@ Number(v)
 )
 ?"--"
 :Number(v).toFixed(1);
+
+}
+
+// =====================================================
+// SAFE NUMBER
+// ป้องกัน Number(null) === 0
+// =====================================================
+
+function finiteNumberOrNull(value){
+
+if(
+value===null||
+value===undefined||
+value===""
+){
+return null;
+}
+
+const n=
+Number(value);
+
+return Number.isFinite(n)
+?n
+:null;
+
+}
+
+function hasFiniteSensorValue(value){
+
+return finiteNumberOrNull(value)!==null;
 
 }
 
@@ -1013,10 +1043,10 @@ ac.textContent=
 function threshold(field,value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
 if(
-!Number.isFinite(n)
+n===null
 ){
 return"no_data";
 }
@@ -1076,10 +1106,10 @@ level
 function pm25Guidance(value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
 if(
-!Number.isFinite(n)
+n===null
 ){
 
 return{
@@ -1150,14 +1180,14 @@ rh
 ){
 
 tempC=
-Number(tempC);
+finiteNumberOrNull(tempC);
 
 rh=
-Number(rh);
+finiteNumberOrNull(rh);
 
 if(
-!Number.isFinite(tempC)||
-!Number.isFinite(rh)
+tempC===null||
+rh===null
 ){
 
 return null;
@@ -1256,10 +1286,10 @@ hi-32
 function heatLevel(value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
 if(
-!Number.isFinite(n)
+n===null
 ){
 
 return{
@@ -1357,12 +1387,12 @@ const a=
 nodes
 .map(
 n=>
-Number(
+finiteNumberOrNull(
 n[field]
 )
 )
 .filter(
-Number.isFinite
+v=>v!==null
 );
 
 return a.length
@@ -1441,184 +1471,181 @@ humidity
 }
 
 // =====================================================
-// SKY CONDITION
+// THERMAL ENVIRONMENT
+//
+// อธิบายสภาวะความร้อนในพื้นที่:
+// - Temperature + Humidity + Heat Index เป็นข้อมูลหลัก
+// - Light ใช้เป็นข้อมูลประกอบด้านความเข้มแสงเท่านั้น
+// - ไม่ใช้ Light เพื่อสรุปสภาวะความร้อนในพื้นที่ ฝน หรือเมฆ
 // =====================================================
 
-function skyCondition(){
+function thermalEnvironment(){
 
-const data=
-selectedRecords()
-.filter(
-r=>
-Number.isFinite(
-Number(
-r.light
-)
-)
-);
-
-if(
-data.length<4
-){
-
-return{
-
-level:"no_data",
-
-label:
-"ข้อมูลยังไม่พอ",
-
-detail:
-"ต้องมีข้อมูลแสงต่อเนื่องก่อนวิเคราะห์แนวโน้ม"
-
-};
-
-}
-
-const recent=
-data.slice(
--Math.min(
-12,
-data.length
-)
-);
-
-const first=
-Number(
-recent[0].light
-);
-
-const last=
-Number(
-recent.at(-1).light
-);
-
-if(
-!Number.isFinite(first)||
-!Number.isFinite(last)
-){
-
-return{
-
-level:"no_data",
-
-label:
-"ข้อมูลยังไม่พอ",
-
-detail:
-"ไม่สามารถวิเคราะห์ความเข้มแสงได้"
-
-};
-
-}
-
-const pct=
-first===0
-
-?0
-
-:(
-last-first
-)/
-Math.max(
-Math.abs(first),
-1
-)*
-100;
-
-const hum=
-stats(
-recent,
-"humidity"
-);
+const snap=
+currentEnvironmentSnapshot();
 
 const temp=
-stats(
-recent,
-"temperature"
+finiteNumberOrNull(
+snap.temperature
 );
 
-const humRise=
+const hum=
+finiteNumberOrNull(
+snap.humidity
+);
 
-hum.last!=null&&
-hum.avg!=null&&
-hum.last>
-hum.avg+
-2;
+const hi=
+finiteNumberOrNull(
+snap.heatIndex
+);
 
-const tempFall=
-
-temp.last!=null&&
-temp.avg!=null&&
-temp.last<
-temp.avg-
-.5;
+const light=
+finiteNumberOrNull(
+snap.light
+);
 
 if(
-pct<-30&&
-humRise&&
-tempFall
+temp===null||
+hum===null
 ){
 
 return{
 
-level:"watch",
+level:"no_data",
 
 label:
-"แสงลดลงมาก",
+"ข้อมูลยังไม่พอ",
 
 detail:
-"แสงลดลงร่วมกับความชื้นเพิ่มและอุณหภูมิลด สภาพแวดล้อมอาจเปลี่ยนแปลงและอาจสัมพันธ์กับเมฆปกคลุมเพิ่มขึ้น"
+"ต้องมีข้อมูลอุณหภูมิและความชื้นก่อนอธิบายสภาวะความร้อนในพื้นที่"
 
 };
 
 }
 
+let level=
+"normal";
+
+let label=
+"สภาวะความร้อนปกติ";
+
 if(
-pct<-20
+hi!==null&&
+hi>=42
 ){
 
-return{
+level=
+"critical";
 
-level:"watch",
+label=
+"ร้อนอันตราย";
 
-label:
-"แสงลดลง",
+}else if(
+hi!==null&&
+hi>=33
+){
 
-detail:
-"ความเข้มแสงลดลงชัดเจน อาจสัมพันธ์กับการเปลี่ยนแปลงของสภาพท้องฟ้า"
+level=
+"watch";
 
-};
+label=
+"ร้อนและควรเฝ้าระวัง";
+
+}else if(
+temp>=32&&
+hum>=60
+){
+
+level=
+"watch";
+
+label=
+"ร้อนชื้น";
+
+}else if(
+temp>=32
+){
+
+level=
+"watch";
+
+label=
+"อุณหภูมิสูง";
+
+}else if(
+hum>=70
+){
+
+level=
+"watch";
+
+label=
+"ความชื้นสูง";
+
+}
+
+const reasons=[];
+
+if(
+temp>=32
+){
+
+reasons.push(
+`อุณหภูมิสูง ${fmt(temp)} °C`
+);
+
+}else{
+
+reasons.push(
+`อุณหภูมิ ${fmt(temp)} °C`
+);
 
 }
 
 if(
-pct>20
+hum>=70
 ){
 
-return{
+reasons.push(
+`ความชื้นสูง ${fmt(hum)}% ทำให้เหงื่อระเหยได้ยากและร่างกายระบายความร้อนได้ลดลง`
+);
 
-level:"normal",
+}else{
 
-label:
-"แสงเพิ่มขึ้น",
+reasons.push(
+`ความชื้น ${fmt(hum)}%`
+);
 
-detail:
-"ความเข้มแสงมีแนวโน้มเพิ่มขึ้น"
+}
 
-};
+if(
+hi!==null
+){
+
+reasons.push(
+`Heat Index ${fmt(hi)} °C สะท้อนความร้อนที่ร่างกายรับรู้จากอุณหภูมิร่วมกับความชื้น`
+);
+
+}
+
+if(
+light!==null
+){
+
+reasons.push(
+`ความเข้มแสง ${fmt(light)} lux เป็นข้อมูลประกอบของสภาพแวดล้อม ณ จุดตรวจวัด และไม่ใช้ระบุสภาวะความร้อนในพื้นที่โดยตรง`
+);
 
 }
 
 return{
 
-level:"normal",
+level,
 
-label:
-"ค่อนข้างคงที่",
+label,
 
 detail:
-"ความเข้มแสงยังไม่เปลี่ยนแปลงมากในช่วงล่าสุด"
+reasons.join(" • ")
 
 };
 
@@ -1868,10 +1895,8 @@ n=>
 .includes(
 getNodeStatus(n)
 )&&
-Number.isFinite(
-Number(
+hasFiniteSensorValue(
 n[currentMetric]
-)
 )
 );
 
@@ -1892,7 +1917,7 @@ sum,
 n
 )=>
 sum+
-Number(
+finiteNumberOrNull(
 n[currentMetric]
 ),
 0
@@ -1905,10 +1930,10 @@ usable.reduce(
 a,
 b
 )=>
-Number(
+finiteNumberOrNull(
 b[currentMetric]
 )>
-Number(
+finiteNumberOrNull(
 a[currentMetric]
 )
 ?b
@@ -1923,7 +1948,7 @@ n=>({
 n,
 
 v:
-Number(
+finiteNumberOrNull(
 n[currentMetric]
 ),
 
@@ -2061,7 +2086,7 @@ HEAT STRESS
 <div class="smart-summary-stat">
 
 <div class="smart-summary-stat-label">
-SKY CONDITION
+THERMAL ENVIRONMENT
 </div>
 
 <div class="smart-summary-stat-value">
@@ -2105,8 +2130,8 @@ heatLevel(
 snap.heatIndex
 );
 
-const sky=
-skyCondition();
+const thermal=
+thermalEnvironment();
 
 const on=
 latestNodes
@@ -2176,12 +2201,12 @@ const notes=[];
 notes.push({
 
 type:
-sky.level==="watch"
+thermal.level==="watch"
 ?"warn"
 :"info",
 
 text:
-`สภาพท้องฟ้า: ${sky.detail}`
+`สภาวะความร้อน: ${thermal.detail}`
 
 });
 
@@ -2250,18 +2275,18 @@ Temperature + Humidity
 
 </div>
 
-<div class="smart-summary-stat smart-summary-sky">
+<div class="smart-summary-stat smart-summary-thermal">
 
 <div class="smart-summary-stat-label">
-☁ SKY CONDITION
+☁ THERMAL ENVIRONMENT
 </div>
 
 <div class="smart-summary-stat-value">
-${esc(sky.label)}
+${esc(thermal.label)}
 </div>
 
 <div class="smart-summary-stat-sub">
-Light + Temp + Humidity
+Temp + Humidity + Heat Index
 </div>
 
 </div>
@@ -2659,12 +2684,12 @@ const values=
 data
 .map(
 x=>
-Number(
+finiteNumberOrNull(
 x[field]
 )
 )
 .filter(
-Number.isFinite
+v=>v!==null
 );
 
 return values.length
@@ -2814,8 +2839,8 @@ return CURRENT_METRIC_CONFIG[field]?.unit||"";
 
 function normalizeSeries(values, extra=[]){
 const nums=[...values,...extra]
-.map(Number)
-.filter(Number.isFinite);
+.map(finiteNumberOrNull)
+.filter(v=>v!==null);
 
 if(!nums.length)return values.map(()=>null);
 
@@ -2823,12 +2848,12 @@ const min=Math.min(...nums);
 const max=Math.max(...nums);
 
 if(Math.abs(max-min)<1e-9){
-return values.map(v=>Number.isFinite(Number(v))?50:null);
+return values.map(v=>hasFiniteSensorValue(v)?50:null);
 }
 
 return values.map(v=>{
-const n=Number(v);
-return Number.isFinite(n)?((n-min)/(max-min))*100:null;
+const n=finiteNumberOrNull(v);
+return n!==null?((n-min)/(max-min))*100:null;
 });
 }
 
@@ -2836,7 +2861,7 @@ function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
 const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
 const field=ds.metricField;
-if(field&&Number.isFinite(Number(raw))){
+if(field&&hasFiniteSensorValue(raw)){
 return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
 }
 return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
@@ -3009,7 +3034,8 @@ const labels=base.map(x=>thaiTime(x.timestamp));
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
 const vals=base.map(r=>{
-const v=Number(r[field]); return Number.isFinite(v)?v:null;
+const v=finiteNumberOrNull(r[field]);
+return v!==null?v:null;
 });
 return makeActualDataset(field,vals);
 });
@@ -3028,8 +3054,8 @@ return;
 
 area.innerHTML='<canvas id="historyChart"></canvas>';
 
-const arr=base.filter(r=>Number.isFinite(Number(r[metric])));
-const values=arr.map(r=>Number(r[metric]));
+const arr=base.filter(r=>hasFiniteSensorValue(r[metric]));
+const values=arr.map(r=>finiteNumberOrNull(r[metric]));
 const labels=arr.map(r=>thaiTime(r.timestamp));
 const s=stats(arr,metric);
 
@@ -3208,8 +3234,12 @@ const pointFor=field=>{
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
 ?aiForecastPayload.data.forecast_points.find(x=>x?.field===field):null;
 if(!fp)return null;
-const pts=[Number(fp.p10),Number(fp.p20),Number(fp.p30)];
-return pts.every(Number.isFinite)?pts:null;
+const pts=[
+finiteNumberOrNull(fp.p10),
+finiteNumberOrNull(fp.p20),
+finiteNumberOrNull(fp.p30)
+];
+return pts.every(v=>v!==null)?pts:null;
 };
 
 if(metric==="all"){
@@ -3234,7 +3264,8 @@ const create=(canvasId,fields,yTitle)=>{
 const datasets=[];
 for(const field of fields){
 const raw=actual.map(r=>{
-const v=Number(r[field]); return Number.isFinite(v)?v:null;
+const v=finiteNumberOrNull(r[field]);
+return v!==null?v:null;
 });
 datasets.push({
 ...makeActualDataset(field,raw),
@@ -3243,7 +3274,7 @@ rawValues:[...raw,null,null,null]
 });
 const pts=pointFor(field);
 if(isAI&&pts&&forecastVisible){
-const current=[...raw].reverse().find(v=>Number.isFinite(Number(v)));
+const current=[...raw].reverse().find(v=>v!==null);
 datasets.push(makeForecastDataset(field,raw.length,current,pts));
 }
 }
@@ -3271,12 +3302,18 @@ return;
 
 area.innerHTML='<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
 
-const actual=(arr||[]).filter(r=>parseDate(r.timestamp)&&Number.isFinite(Number(r[metric]))).slice(-12);
+const actual=(arr||[])
+.filter(
+r=>
+parseDate(r.timestamp)&&
+hasFiniteSensorValue(r[metric])
+)
+.slice(-12);
 if(!actual.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
 return;
 }
-const values=actual.map(r=>Number(r[metric]));
+const values=actual.map(r=>finiteNumberOrNull(r[metric]));
 const labels=actual.map(r=>thaiTime(r.timestamp));
 const current=values.at(-1);
 const datasets=[makeActualDataset(metric,values)];
@@ -4724,7 +4761,7 @@ box.innerHTML=`
 <div class="ai-forecast-grid mt-3">
 <div class="ai-forecast-item"><div class="ai-forecast-label">🌫 AIR</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
 <div class="ai-forecast-item"><div class="ai-forecast-label">🌡 HEAT</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">☁ SKY</div><div>${esc(d.sky_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 THERMAL</div><div>${esc(d.thermal_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
 <div class="ai-forecast-item"><div class="ai-forecast-label">🏃 ACTIVITY</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
 </div>
 <div class="ai-meta-row"><span>โมเดล: ${esc(payload.model||"Gemini")}</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
@@ -4820,7 +4857,7 @@ monitoring:[
 
 smartSummary:[
 "Smart Summary",
-"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Sky Condition และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
+"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Thermal Environment และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
 ],
 
 currentAir:[
@@ -4840,7 +4877,7 @@ historical:[
 
 forecast:[
 "Forecast",
-"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Sky และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
+"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Thermal Environment และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
 ],
 
 ai:[
