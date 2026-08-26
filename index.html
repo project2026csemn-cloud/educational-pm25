@@ -104,9 +104,9 @@ MONITORING NODES + AI
 <div>
 <div class="section-title-with-help">
 <h2 class="text-xl font-black">
-                        📡 Monitoring Nodes
+                        📍 จุดตรวจวัด
                     </h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย Monitoring Nodes" class="help-button" data-help="monitoring" type="button">
+<button aria-expanded="false" aria-label="ดูคำอธิบายจุดตรวจวัด" class="help-button" data-help="monitoring" type="button">
                         ?
                     </button>
 </div>
@@ -280,12 +280,12 @@ CURRENT ENVIRONMENT + ALERT
 <div class="smart-summary-icon">✦</div>
 <div>
 <div class="section-title-with-help">
-<h2 class="font-black text-lg">Smart Summary</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย Smart Summary" class="help-button" data-help="smartSummary" type="button">?</button>
+<h2 class="font-black text-lg">สรุปสถานการณ์</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบาย สรุปสถานการณ์" class="help-button" data-help="smartSummary" type="button">?</button>
 </div>
 </div>
 </div>
-<span class="smart-summary-mode">RULE ENGINE</span>
+<span class="smart-summary-mode">สรุปอัตโนมัติ</span>
 </div>
 <div class="smart-summary-body" id="aiSummary">
 <div class="smart-summary-loading">กำลังรอข้อมูล...</div>
@@ -298,7 +298,7 @@ FORECAST + AI
 <div class="current-environment-header">
 <div>
 <div class="section-title-with-help">
-<h2 class="text-xl font-black">คุณภาพอากาศและสภาพแวดล้อมปัจจุบัน</h2>
+<h2 class="text-xl font-black">📍 เปรียบเทียบจุดตรวจวัด</h2>
 <button aria-expanded="false" aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" class="help-button" data-help="currentAir" type="button">?</button>
 </div>
 </div>
@@ -318,15 +318,15 @@ FORECAST + AI
 <div class="current-environment-grid">
 <div class="current-environment-item">
 <div class="current-environment-item-top">
-<span class="current-environment-label" id="currentOverallLabel">PM2.5 ภาพรวม</span>
+<span class="current-environment-label" id="currentOverallLabel">PM2.5 เฉลี่ยทั้งพื้นที่</span>
 <span class="current-environment-icon">◎</span>
 </div>
 <b class="current-environment-value" id="currentOverallValue">--</b>
-<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดที่ ONLINE</div>
+<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดตรวจวัดที่ใช้งาน</div>
 </div>
 <div class="current-environment-item">
 <div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่มีค่าสูงสุด</span>
+<span class="current-environment-label">จุดที่ค่าสูงที่สุด</span>
 <span class="current-environment-icon">↑</span>
 </div>
 <b class="current-environment-value" id="currentHighestValue">--</b>
@@ -334,7 +334,7 @@ FORECAST + AI
 </div>
 <div class="current-environment-item">
 <div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่ต้องเฝ้าระวัง</span>
+<span class="current-environment-label">จุดที่ควรสนใจ</span>
 <span class="current-environment-icon">!</span>
 </div>
 <b class="current-environment-value current-watch-value" id="currentWatchNode">--</b>
@@ -342,8 +342,8 @@ FORECAST + AI
 </div>
 </div>
 <div class="current-alerts-strip"><div class="section-title-with-help">
-<h2 class="text-xl font-black">🚨 Alerts</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย Alerts" class="help-button" data-help="alerts" type="button">?</button>
+<h2 class="text-xl font-black">⚠ สิ่งที่ควรระวัง</h2>
+<button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button>
 </div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
 <span class="current-environment-footer-dot"></span>
 <span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
@@ -352,30 +352,24 @@ FORECAST + AI
 <div class="ai-intelligence-header">
 <div>
 <div class="section-title-with-help">
-<h2 class="text-2xl font-black">🤖 AI Environmental Intelligence</h2>
+<h2 class="text-2xl font-black">🤖 วิเคราะห์และคาดการณ์</h2>
 <button aria-expanded="false" aria-label="ดูคำอธิบาย AI Environmental Intelligence" class="help-button" data-help="ai" type="button">?</button>
 </div>
-<div class="ai-intelligence-statusline">Situation Analysis • AI Trend Analysis • 30-Min Forecast</div>
+<div class="ai-intelligence-statusline">สรุปสถานการณ์ปัจจุบัน • แนวโน้ม • คาดการณ์ 30 นาที</div>
 </div>
-<div class="ai-intelligence-badges"><span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span><span class="ai-forecast-status" id="aiForecastStatusBadge">AI Forecast • รอข้อมูล</span></div>
+<div class="ai-intelligence-badges"><span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span><span class="ai-forecast-status" id="aiForecastStatusBadge">คาดการณ์ • รอข้อมูล</span></div>
 </div>
 <div class="ai-intelligence-grid">
 <div class="ai-intelligence-panel ai-situation-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">CURRENT SITUATION</div><h3>วิเคราะห์สถานการณ์ปัจจุบัน</h3></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">สถานการณ์ปัจจุบัน</div><h3>ตอนนี้เป็นอย่างไร</h3></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
 <div class="ai-details-panel" id="aiDetails"><div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังเชื่อมต่อ AI...</div></div>
 <div class="ai-analysis-footer"><span id="aiGeneratedAt">อัปเดต AI: --</span></div>
 </div>
 <div class="ai-intelligence-panel ai-forecast-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">AI TREND &amp; FORECAST</div><h3>แนวโน้มและคาดการณ์ 30 นาที</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
-<div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
-<div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดต AI Forecast: --</div>
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">แนวโน้ม 30 นาที</div><h3>อีก 30 นาทีเป็นอย่างไร</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
+<div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
 </div>
-</div>
-<div class="ai-model-strip">
-<div><span class="ai-model-strip-label">FORECAST HORIZON</span><b id="forecastBadge">30 นาที</b></div>
-<div><span class="ai-model-strip-label">NUMERIC BASE</span><b>Statistical Model</b></div>
-<div><span class="ai-model-strip-label">TREND DECISION</span><b id="aiTrendDecisionProvider">กำลังรอ AI...</b></div>
-<div><span class="ai-model-strip-label">DATA SOURCE</span><b>6 Sensors + History</b></div>
 </div>
 <div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังรอ AI Trend Analysis...</div>
 </section>
@@ -386,7 +380,7 @@ HISTORICAL DATA & TREND
 <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
 <div>
 <div class="section-title-with-help">
-<h2 class="text-2xl font-black">📊 Historical Statistics</h2>
+<h2 class="text-2xl font-black">📊 สถิติย้อนหลัง</h2>
 <button aria-expanded="false" aria-label="ดูคำอธิบาย Historical Data &amp; Trend" class="help-button" data-help="historical" type="button">
                         ?
                     </button>
@@ -523,119 +517,14 @@ HISTORICAL DATA & TREND
 </button>
 </div>
 </div>
-<!-- OVERALL AVERAGE -->
-<div class="soft rounded-2xl p-4 mt-5">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
-<div>
-<div class="text-sm font-bold">
-                    📊 ค่าเฉลี่ยรวม
-                </div>
-<div class="text-xs text-slate-500 mt-1">
-                    ค่าเฉลี่ยของทุกตัวแปรในช่วงเวลาที่เลือก
-                </div>
-</div>
-<div class="text-xs text-slate-400">
-                ช่วงที่เลือก:
-                <b class="text-cyan-300" id="selectedRangeLabel">
-                    วันนี้
-                </b>
-</div>
-</div>
-<div class="grid grid-cols-6 gap-6">
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    PM 1.0
-                </div>
-<b class="block text-2xl mt-2" id="averagePM1">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM1Status">
-                    ● รอข้อมูล
-                </div>
-</div>
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    PM 2.5
-                </div>
-<b class="block text-2xl mt-2" id="averagePM25">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM25Status">
-                    ● รอข้อมูล
-                </div>
-</div>
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    PM 10
-                </div>
-<b class="block text-2xl mt-2" id="averagePM10">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    µg/m³
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averagePM10Status">
-                    ● รอข้อมูล
-                </div>
-</div>
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    อุณหภูมิ
-                </div>
-<b class="block text-2xl mt-2" id="averageTemp">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    °C
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averageTempStatus">
-                    ● รอข้อมูล
-                </div>
-</div>
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    ความชื้น
-                </div>
-<b class="block text-2xl mt-2" id="averageHum">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    %
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averageHumStatus">
-                    ● รอข้อมูล
-                </div>
-</div>
-<div class="min-w-0">
-<div class="text-xs text-slate-400">
-                    แสง
-                </div>
-<b class="block text-2xl mt-2" id="averageLight">
-                    --
-                </b>
-<div class="text-xs text-slate-500 mt-1">
-                    lux
-                </div>
-<div class="text-xs text-cyan-300 mt-2 truncate" id="averageLightStatus">
-                    ● รอข้อมูล
-                </div>
-</div>
-</div>
-</div>
 <!-- SELECTED VARIABLE -->
 <div class="soft rounded-2xl p-4 mt-4">
 <div class="mb-5">
 <div class="text-sm font-bold">
-                📈 ข้อมูลตามตัวแปรที่เลือก
+                📊 สรุปตัวแปรที่เลือก
             </div>
 <div class="text-xs text-slate-500 mt-1">
-                ตัวแปร:
+                กำลังดู:
                 <b class="text-cyan-300" id="selectedMetricLabel">ALL</b>
 </div>
 </div>
@@ -683,18 +572,18 @@ HISTORICAL DATA & TREND
 </div>
 </div>
 <!-- HISTORY CHART -->
-</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 Historical Trend Graph</div><div class="chart-zone-subtitle">ค่าเริ่มต้น ALL แสดงแนวโน้มทั้ง 6 ตัวแปร พร้อมสีประจำตัวแปร</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 แนวโน้มข้อมูลย้อนหลัง</div><div class="chart-zone-subtitle">ดูการเปลี่ยนแปลงของค่าที่ตรวจวัดตามช่วงเวลาที่เลือก</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div class="text-xs text-slate-400 mb-3">
-            Historical Trend
+            ข้อมูลย้อนหลัง
         </div>
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">📈 Trend &amp; Forecast Graph</div><div class="chart-zone-subtitle">ข้อมูลจริงแสดงเป็นเส้นทึบ และ Forecast แสดงเป็นเส้นประ โดยใช้ AI เมื่อพร้อม หรือ Statistical Model เป็นระบบสำรอง</div></div></div><div class="forecast-display-panel" id="forecastGuide">
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 แนวโน้มและคาดการณ์ 30 นาที</div><div class="chart-zone-subtitle">เส้นทึบคือข้อมูลที่วัดได้จริง และเส้นประคือค่าคาดการณ์จากข้อมูลย้อนหลังของสถานี</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
                     การแสดงผลกราฟ
                 </div>
 <div class="forecast-display-subtitle">
-                    เปิดหรือซ่อน Forecast Overlay บนกราฟ
+                    เปิดหรือซ่อนเส้นคาดการณ์บนกราฟ
                 </div>
 </div>
 <div class="forecast-display-controls">
@@ -713,10 +602,10 @@ HISTORICAL DATA & TREND
 <div class="forecast-toggle-copy">
 <div class="forecast-toggle-name">
 <span class="forecast-dash-line"></span>
-                            AI Forecast
+                            คาดการณ์
                         </div>
 <div class="forecast-toggle-status" id="forecastToggleLabel">
-                            เปิดการคาดการณ์
+                            แสดงการคาดการณ์
                         </div>
 </div>
 <button aria-checked="true" aria-pressed="true" class="forecast-switch is-on" id="forecastToggle" role="switch" title="กดเพื่อซ่อน Forecast" type="button">
