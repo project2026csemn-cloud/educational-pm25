@@ -17,7 +17,7 @@
 <meta content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:title"/>
 <meta content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260826-mobile2" rel="stylesheet"/>
+<link href="style.css?v=20260826-1215" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png"/>
 <script defer="" src="chart.js"></script>
 
@@ -691,7 +691,7 @@ HISTORICAL DATA & TREND
 <div class="text-xs text-slate-400 mb-3">
             Historical Trend
         </div>
-<canvas id="historyChart"></canvas>
+<div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
 </div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🤖 AI Trend &amp; Forecast Graph</div><div class="chart-zone-subtitle">สีเดียวกันทั้งข้อมูลจริงและ AI Forecast โดยเส้น Forecast แสดงเป็นเส้นประ</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
@@ -733,7 +733,7 @@ HISTORICAL DATA & TREND
 </button>
 </div>
 </div>
-</div><canvas class="mt-3 bottom-forecast-canvas" id="forecastChart"></canvas></div></section>
+</div><div id="forecastChartArea" class="chart-render-area mt-3"><canvas class="bottom-forecast-canvas" id="forecastChart"></canvas></div></div></section>
 <!-- =========================================================
 HELP / INFO POPOVER
 ========================================================= -->
@@ -1046,6 +1046,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer="" src="app.js?v=20260826-mobile2"></script>
+<script defer="" src="app.js?v=20260826-1215"></script>
 </div></body>
 </html>
