@@ -17,10 +17,10 @@
 <meta content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:title"/>
 <meta content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260825-1615" rel="stylesheet"/>
+<link href="style.css?v=20260826-1030" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png"/>
-<script src="chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script defer="" src="chart.js"></script>
+
 <script type="application/ld+json">
     {
   "@context": "https://schema.org",
@@ -75,8 +75,8 @@ HEADER
 <header class="glass card px-5 py-4 mb-5 flex flex-col lg:flex-row justify-between gap-5">
 <div class="flex items-center gap-4">
 <div>
-<img alt="Logo" class="w-20 h-20 rounded-xl" src="img/โลโก.png"/>
-<img alt="Logo" class="w-20 h-20 rounded-full" src="img/ICT.jpg"/>
+<img alt="Logo" class="w-20 h-20 rounded-xl" decoding="async" fetchpriority="high" src="img/โลโก.png"/>
+<img alt="Logo" class="w-20 h-20 rounded-full" decoding="async" fetchpriority="high" src="img/ICT.jpg"/>
 </div>
 <div>
 <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
@@ -370,7 +370,7 @@ FORECAST + AI
 <div class="ai-analysis-footer"><span id="aiGeneratedAt">อัปเดต AI: --</span></div>
 </div>
 <div class="ai-intelligence-panel ai-forecast-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">AI TREND & FORECAST</div><h3>แนวโน้มและคาดการณ์ 30 นาที</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">AI TREND &amp; FORECAST</div><h3>แนวโน้มและคาดการณ์ 30 นาที</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
 <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับ AI Forecast...</div>
 <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดต AI Forecast: --</div>
 </div>
@@ -397,7 +397,7 @@ HISTORICAL DATA & TREND
 </div>
 </div>
 <div class="history-toolbar">
-<select aria-label="เลือกตัวแปร" class="history-metric-select" id="metric">
+<select aria-label="เลือกตัวแปร" class="history-metric-select" id="metric"><option selected="" value="all">ALL</option>
 <option value="pm25">PM2.5</option>
 <option value="pm1">PM1.0</option>
 <option value="pm10">PM10</option>
@@ -640,9 +640,7 @@ HISTORICAL DATA & TREND
             </div>
 <div class="text-xs text-slate-500 mt-1">
                 ตัวแปร:
-                <b class="text-cyan-300" id="selectedMetricLabel">
-                    PM2.5
-                </b>
+                <b class="text-cyan-300" id="selectedMetricLabel">ALL</b>
 </div>
 </div>
 <div class="grid grid-cols-5 gap-6">
@@ -689,13 +687,12 @@ HISTORICAL DATA & TREND
 </div>
 </div>
 <!-- HISTORY CHART -->
-
-</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 Historical Trend Graph</div><div class="chart-zone-subtitle">กราฟข้อมูลจริงตามตัวแปรและช่วงเวลาที่เลือก</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 Historical Trend Graph</div><div class="chart-zone-subtitle">ค่าเริ่มต้น ALL แสดงแนวโน้มทั้ง 6 ตัวแปร พร้อมสีประจำตัวแปร</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div class="text-xs text-slate-400 mb-3">
             Historical Trend
         </div>
 <canvas id="historyChart"></canvas>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🤖 AI Trend & Forecast Graph</div><div class="chart-zone-subtitle">ข้อมูลจริงเทียบกับแนวโน้มที่ AI วิเคราะห์และค่าคาดการณ์เชิงตัวเลข</div></div></div><div class="forecast-display-panel" id="forecastGuide">
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🤖 AI Trend &amp; Forecast Graph</div><div class="chart-zone-subtitle">สีเดียวกันทั้งข้อมูลจริงและ AI Forecast โดยเส้น Forecast แสดงเป็นเส้นประ</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
                     การแสดงผลกราฟ
@@ -887,12 +884,21 @@ CREDIT
 <div class="credit-glow credit-glow-2"></div>
 <div class="credit-inner">
 <!-- COLLEGE -->
+
+<!-- DEPARTMENT -->
+
+<!-- ADVISOR -->
+
+<!-- DEVELOPER 1 -->
+
+<!-- DEVELOPER 2 -->
+
 <div class="credit-box credit-college">
 <div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ตราวิทลัยใหม่.png',
                     'โลโก้วิทยาลัย'
                 )">
-<img alt="โลโก้วิทยาลัย" src="img/ตราวิทลัยใหม่.png"/>
+<img alt="โลโก้วิทยาลัย" decoding="async" loading="lazy" src="img/ตราวิทลัยใหม่.png"/>
 </div>
 <div class="credit-content">
 <div class="credit-label">
@@ -920,14 +926,12 @@ CREDIT
 </a>
 </div>
 </div>
-</div>
-<!-- DEPARTMENT -->
-<div class="credit-box credit-department">
+</div><div class="credit-box credit-department">
 <div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ICT.jpg',
                     'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
                 )">
-<img alt="โลโก้แผนก" src="img/ICT.jpg"/>
+<img alt="โลโก้แผนก" decoding="async" loading="lazy" src="img/ICT.jpg"/>
 </div>
 <div class="credit-content">
 <div class="credit-label">
@@ -947,34 +951,12 @@ CREDIT
 </a>
 </div>
 </div>
-</div>
-<!-- ADVISOR -->
-<div class="credit-box credit-advisor">
-<div class="credit-icon credit-image-button" onclick="openCreditImage(
-                    'img/ฐาปกรณ์01.jpg',
-                    'นาย ฐาปกรณ์ ตรีชัยศรี'
-                )">
-<img alt="ครูที่ปรึกษา" src="img/ฐาปกรณ์01.jpg"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    ADVISOR
-                </div>
-<div class="credit-title">
-                    นาย ฐาปกรณ์ ตรีชัยศรี
-                </div>
-<div class="credit-role">
-                    PROJECT ADVISOR
-                </div>
-</div>
-</div>
-<!-- DEVELOPER 1 -->
-<div class="credit-box credit-developer">
+</div><div class="credit-box credit-developer">
 <div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
                     'img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
                     'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
                 )">
-<img alt="สามเณร ธรรมปพน" src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"/>
+<img alt="สามเณร ธรรมปพน" decoding="async" loading="lazy" src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg"/>
 </div>
 <div class="credit-content">
 <div class="credit-label">
@@ -987,14 +969,12 @@ CREDIT
                     SYSTEM DEVELOPER
                 </div>
 </div>
-</div>
-<!-- DEVELOPER 2 -->
-<div class="credit-box credit-developer">
+</div><div class="credit-box credit-developer">
 <div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
                     'img/สามเณรรัฐภูมิสร้อยคำ.jpg',
                     'สามเณร รัฐภูมิ สร้อยคำ'
                 )">
-<img alt="สามเณร รัฐภูมิ" src="img/สามเณรรัฐภูมิสร้อยคำ.jpg"/>
+<img alt="สามเณร รัฐภูมิ" decoding="async" loading="lazy" src="img/สามเณรรัฐภูมิสร้อยคำ.jpg"/>
 </div>
 <div class="credit-content">
 <div class="credit-label">
@@ -1007,8 +987,25 @@ CREDIT
                     SYSTEM DEVELOPER
                 </div>
 </div>
+</div><div class="credit-box credit-advisor">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
+                    'img/ฐาปกรณ์01.jpg',
+                    'นาย ฐาปกรณ์ ตรีชัยศรี'
+                )">
+<img alt="ครูที่ปรึกษา" decoding="async" loading="lazy" src="img/ฐาปกรณ์01.jpg"/>
 </div>
+<div class="credit-content">
+<div class="credit-label">
+                    ADVISOR
+                </div>
+<div class="credit-title">
+                    นาย ฐาปกรณ์ ตรีชัยศรี
+                </div>
+<div class="credit-role">
+                    PROJECT ADVISOR
+                </div>
 </div>
+</div></div>
 <div class="credit-bottom">
 <span class="credit-status-dot"></span>
 <span>
@@ -1049,6 +1046,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script src="app.js?v=20260825-1745"></script>
-</body>
+<script defer="" src="app.js?v=20260826-1030"></script>
+</div></body>
 </html>
