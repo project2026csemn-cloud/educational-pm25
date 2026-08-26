@@ -1450,7 +1450,7 @@ humidity
 }
 
 // =====================================================
-// LOCAL ENVIRONMENT ANALYSIS
+// สภาพแวดล้อมในพื้นที่ ANALYSIS
 // ใช้ Light เป็นตัวแปรสภาพแวดล้อมเฉพาะจุด
 // วิเคราะห์ความสัมพันธ์กับ Temperature / Humidity / PM2.5
 // ความสัมพันธ์ (correlation) ไม่ใช่หลักฐานของเหตุ–ผล
@@ -1963,7 +1963,7 @@ HEAT STRESS
 <div class="smart-summary-stat">
 
 <div class="smart-summary-stat-label">
-LOCAL ENVIRONMENT
+สภาพแวดล้อมในพื้นที่
 </div>
 
 <div class="smart-summary-stat-value">
@@ -2083,7 +2083,7 @@ localEnv.level==="watch"
 :"info",
 
 text:
-`สภาพแวดล้อมเฉพาะจุด: ${localEnv.detail}`
+`การวิเคราะห์สภาพแวดล้อมในพื้นที่: ${localEnv.detail}`
 
 });
 
@@ -2161,7 +2161,7 @@ Temperature + Humidity
 <div class="smart-summary-stat smart-summary-environment">
 
 <div class="smart-summary-stat-label">
-☀ LOCAL ENVIRONMENT
+☀ สภาพแวดล้อมในพื้นที่
 </div>
 
 <div class="smart-summary-stat-value">
@@ -2169,7 +2169,7 @@ ${esc(localEnv.label)}
 </div>
 
 <div class="smart-summary-stat-sub">
-Light ↔ Temp / Humidity / PM2.5
+ความเข้มแสง + ความสัมพันธ์กับอุณหภูมิ / ความชื้น / PM2.5
 </div>
 
 </div>
@@ -4723,7 +4723,7 @@ monitoring:[
 
 smartSummary:[
 "Smart Summary",
-"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Local Environment และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
+"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index และสภาพแวดล้อมในพื้นที่ โดยส่วนสภาพแวดล้อมในพื้นที่ใช้ค่าความเข้มแสงร่วมกับอุณหภูมิ ความชื้น และ PM2.5 เพื่อดูแนวโน้มและความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง"
 ],
 
 currentAir:[
@@ -4743,12 +4743,12 @@ historical:[
 
 forecast:[
 "Forecast",
-"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Local Environment และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
+"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ AI วิเคราะห์คุณภาพอากาศ ความร้อน สภาพแวดล้อมในพื้นที่ และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
 ],
 
 ai:[
 "AI Environmental Intelligence",
-"รวม AI Situation Analysis และ AI Trend & Forecast โดย Gemini วิเคราะห์ข้อมูลจริงทั้ง 6 ตัวแปรร่วมกับ Heat Index สถานะระบบ และข้อมูลย้อนหลัง"
+"รวม AI Situation Analysis และ AI Trend & Forecast โดยวิเคราะห์ข้อมูลจริงทั้ง 6 ตัวแปรร่วมกับ Heat Index สถานะระบบ สภาพแวดล้อมในพื้นที่ และข้อมูลย้อนหลัง"
 ]
 
 };
