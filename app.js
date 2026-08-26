@@ -139,33 +139,17 @@ Number(v)
 }
 
 // =====================================================
-// SAFE NUMBER
-// ป้องกัน Number(null) === 0
+// SAFE SENSOR NUMBER
+// Number(null) === 0 ใน JavaScript จึงต้องกัน null ก่อน
 // =====================================================
-
 function finiteNumberOrNull(value){
-
-if(
-value===null||
-value===undefined||
-value===""
-){
-return null;
-}
-
-const n=
-Number(value);
-
-return Number.isFinite(n)
-?n
-:null;
-
+if(value===null||value===undefined||value==="") return null;
+const n=Number(value);
+return Number.isFinite(n)?n:null;
 }
 
 function hasFiniteSensorValue(value){
-
 return finiteNumberOrNull(value)!==null;
-
 }
 
 function esc(v){
@@ -1043,10 +1027,10 @@ ac.textContent=
 function threshold(field,value){
 
 const n=
-finiteNumberOrNull(value);
+Number(value);
 
 if(
-n===null
+!Number.isFinite(n)
 ){
 return"no_data";
 }
@@ -1106,10 +1090,10 @@ level
 function pm25Guidance(value){
 
 const n=
-finiteNumberOrNull(value);
+Number(value);
 
 if(
-n===null
+!Number.isFinite(n)
 ){
 
 return{
@@ -1180,14 +1164,14 @@ rh
 ){
 
 tempC=
-finiteNumberOrNull(tempC);
+Number(tempC);
 
 rh=
-finiteNumberOrNull(rh);
+Number(rh);
 
 if(
-tempC===null||
-rh===null
+!Number.isFinite(tempC)||
+!Number.isFinite(rh)
 ){
 
 return null;
@@ -1286,10 +1270,10 @@ hi-32
 function heatLevel(value){
 
 const n=
-finiteNumberOrNull(value);
+Number(value);
 
 if(
-n===null
+!Number.isFinite(n)
 ){
 
 return{
@@ -1386,14 +1370,9 @@ field
 const a=
 nodes
 .map(
-n=>
-finiteNumberOrNull(
-n[field]
+n=>finiteNumberOrNull(n[field])
 )
-)
-.filter(
-v=>v!==null
-);
+.filter(v=>v!==null);
 
 return a.length
 
@@ -1471,184 +1450,82 @@ humidity
 }
 
 // =====================================================
-// THERMAL ENVIRONMENT
-//
-// อธิบายสภาวะความร้อนในพื้นที่:
-// - Temperature + Humidity + Heat Index เป็นข้อมูลหลัก
-// - Light ใช้เป็นข้อมูลประกอบด้านความเข้มแสงเท่านั้น
-// - ไม่ใช้ Light เพื่อสรุปสภาวะความร้อนในพื้นที่ ฝน หรือเมฆ
+// LOCAL ENVIRONMENT ANALYSIS
+// ใช้ Light เป็นตัวแปรสภาพแวดล้อมเฉพาะจุด
+// วิเคราะห์ความสัมพันธ์กับ Temperature / Humidity / PM2.5
+// ความสัมพันธ์ (correlation) ไม่ใช่หลักฐานของเหตุ–ผล
 // =====================================================
 
-function thermalEnvironment(){
+function pearsonCorrelation(rows, xField, yField){
+const pairs=rows
+.map(r=>[finiteNumberOrNull(r[xField]),finiteNumberOrNull(r[yField])])
+.filter(([x,y])=>x!==null&&y!==null);
 
-const snap=
-currentEnvironmentSnapshot();
+if(pairs.length<6) return {r:null,n:pairs.length};
 
-const temp=
-finiteNumberOrNull(
-snap.temperature
-);
-
-const hum=
-finiteNumberOrNull(
-snap.humidity
-);
-
-const hi=
-finiteNumberOrNull(
-snap.heatIndex
-);
-
-const light=
-finiteNumberOrNull(
-snap.light
-);
-
-if(
-temp===null||
-hum===null
-){
-
-return{
-
-level:"no_data",
-
-label:
-"ข้อมูลยังไม่พอ",
-
-detail:
-"ต้องมีข้อมูลอุณหภูมิและความชื้นก่อนอธิบายสภาวะความร้อนในพื้นที่"
-
-};
-
+const xs=pairs.map(p=>p[0]);
+const ys=pairs.map(p=>p[1]);
+const mx=xs.reduce((a,b)=>a+b,0)/xs.length;
+const my=ys.reduce((a,b)=>a+b,0)/ys.length;
+let num=0,dx=0,dy=0;
+for(let i=0;i<pairs.length;i++){
+const a=xs[i]-mx;
+const b=ys[i]-my;
+num+=a*b;
+dx+=a*a;
+dy+=b*b;
+}
+const den=Math.sqrt(dx*dy);
+return {r:den>0?num/den:null,n:pairs.length};
 }
 
-let level=
-"normal";
-
-let label=
-"สภาวะความร้อนปกติ";
-
-if(
-hi!==null&&
-hi>=42
-){
-
-level=
-"critical";
-
-label=
-"ร้อนอันตราย";
-
-}else if(
-hi!==null&&
-hi>=33
-){
-
-level=
-"watch";
-
-label=
-"ร้อนและควรเฝ้าระวัง";
-
-}else if(
-temp>=32&&
-hum>=60
-){
-
-level=
-"watch";
-
-label=
-"ร้อนชื้น";
-
-}else if(
-temp>=32
-){
-
-level=
-"watch";
-
-label=
-"อุณหภูมิสูง";
-
-}else if(
-hum>=70
-){
-
-level=
-"watch";
-
-label=
-"ความชื้นสูง";
-
+function correlationText(result,label){
+if(result.r===null) return `${label}: ข้อมูลคู่ยังไม่เพียงพอ (${result.n} จุด)`;
+const a=Math.abs(result.r);
+const strength=a>=.7?"ค่อนข้างสูง":a>=.4?"ปานกลาง":a>=.2?"เล็กน้อย":"ยังไม่ชัดเจน";
+const direction=result.r>0?"ทิศทางเดียวกัน":result.r<0?"ทิศทางตรงข้าม":"ไม่พบแนวโน้ม";
+return `${label}: ${strength} • ${direction} (r=${result.r.toFixed(2)}, n=${result.n})`;
 }
 
-const reasons=[];
+function localEnvironmentAnalysis(){
+const data=selectedRecords();
+const lightRows=data.filter(r=>hasFiniteSensorValue(r.light));
+const currentLight=lightRows.length?finiteNumberOrNull(lightRows.at(-1).light):null;
 
-if(
-temp>=32
-){
-
-reasons.push(
-`อุณหภูมิสูง ${fmt(temp)} °C`
-);
-
-}else{
-
-reasons.push(
-`อุณหภูมิ ${fmt(temp)} °C`
-);
-
+let trend="ข้อมูลยังไม่พอ";
+let level="no_data";
+if(lightRows.length>=4){
+const recent=lightRows.slice(-Math.min(12,lightRows.length));
+const first=finiteNumberOrNull(recent[0].light);
+const last=finiteNumberOrNull(recent.at(-1).light);
+if(first!==null&&last!==null){
+const pct=first===0?0:((last-first)/Math.max(Math.abs(first),1))*100;
+trend=pct>20?"ความเข้มแสงเพิ่มขึ้น":pct<-20?"ความเข้มแสงลดลง":"ความเข้มแสงค่อนข้างคงที่";
+level="normal";
+}
 }
 
-if(
-hum>=70
-){
+const lightTemp=pearsonCorrelation(data,"light","temperature");
+const lightHumidity=pearsonCorrelation(data,"light","humidity");
+const lightPM25=pearsonCorrelation(data,"light","pm25");
 
-reasons.push(
-`ความชื้นสูง ${fmt(hum)}% ทำให้เหงื่อระเหยได้ยากและร่างกายระบายความร้อนได้ลดลง`
-);
+const relationships=[
+correlationText(lightTemp,"แสง ↔ อุณหภูมิ"),
+correlationText(lightHumidity,"แสง ↔ ความชื้น"),
+correlationText(lightPM25,"แสง ↔ PM2.5")
+];
 
-}else{
-
-reasons.push(
-`ความชื้น ${fmt(hum)}%`
-);
-
-}
-
-if(
-hi!==null
-){
-
-reasons.push(
-`Heat Index ${fmt(hi)} °C สะท้อนความร้อนที่ร่างกายรับรู้จากอุณหภูมิร่วมกับความชื้น`
-);
-
-}
-
-if(
-light!==null
-){
-
-reasons.push(
-`ความเข้มแสง ${fmt(light)} lux เป็นข้อมูลประกอบของสภาพแวดล้อม ณ จุดตรวจวัด และไม่ใช้ระบุสภาวะความร้อนในพื้นที่โดยตรง`
-);
-
-}
-
-return{
-
+return {
 level,
-
-label,
-
-detail:
-reasons.join(" • ")
-
+currentLight,
+trend,
+lightTemp,
+lightHumidity,
+lightPM25,
+relationships,
+label: currentLight==null?"รอข้อมูลแสง":`${fmt(currentLight)} lux`,
+detail:`${trend} • วิเคราะห์ความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง`
 };
-
 }
 
 // =====================================================
@@ -1917,7 +1794,7 @@ sum,
 n
 )=>
 sum+
-finiteNumberOrNull(
+Number(
 n[currentMetric]
 ),
 0
@@ -1930,10 +1807,10 @@ usable.reduce(
 a,
 b
 )=>
-finiteNumberOrNull(
+Number(
 b[currentMetric]
 )>
-finiteNumberOrNull(
+Number(
 a[currentMetric]
 )
 ?b
@@ -1948,7 +1825,7 @@ n=>({
 n,
 
 v:
-finiteNumberOrNull(
+Number(
 n[currentMetric]
 ),
 
@@ -2086,7 +1963,7 @@ HEAT STRESS
 <div class="smart-summary-stat">
 
 <div class="smart-summary-stat-label">
-THERMAL ENVIRONMENT
+LOCAL ENVIRONMENT
 </div>
 
 <div class="smart-summary-stat-value">
@@ -2130,8 +2007,8 @@ heatLevel(
 snap.heatIndex
 );
 
-const thermal=
-thermalEnvironment();
+const localEnv=
+localEnvironmentAnalysis();
 
 const on=
 latestNodes
@@ -2201,14 +2078,20 @@ const notes=[];
 notes.push({
 
 type:
-thermal.level==="watch"
+localEnv.level==="watch"
 ?"warn"
 :"info",
 
 text:
-`สภาวะความร้อน: ${thermal.detail}`
+`สภาพแวดล้อมเฉพาะจุด: ${localEnv.detail}`
 
 });
+
+for(const relation of localEnv.relationships){
+notes.push({type:"info",text:relation});
+}
+
+notes.push({type:"info",text:"หมายเหตุ: ความสัมพันธ์ทางสถิติไม่ใช่หลักฐานว่าแสงเป็นสาเหตุของการเปลี่ยนแปลงอุณหภูมิ ความชื้น หรือ PM2.5"});
 
 notes.push({
 
@@ -2275,18 +2158,18 @@ Temperature + Humidity
 
 </div>
 
-<div class="smart-summary-stat smart-summary-thermal">
+<div class="smart-summary-stat smart-summary-environment">
 
 <div class="smart-summary-stat-label">
-☁ THERMAL ENVIRONMENT
+☀ LOCAL ENVIRONMENT
 </div>
 
 <div class="smart-summary-stat-value">
-${esc(thermal.label)}
+${esc(localEnv.label)}
 </div>
 
 <div class="smart-summary-stat-sub">
-Temp + Humidity + Heat Index
+Light ↔ Temp / Humidity / PM2.5
 </div>
 
 </div>
@@ -2683,14 +2566,9 @@ field
 const values=
 data
 .map(
-x=>
-finiteNumberOrNull(
-x[field]
+x=>finiteNumberOrNull(x[field])
 )
-)
-.filter(
-v=>v!==null
-);
+.filter(v=>v!==null);
 
 return values.length
 ?{
@@ -2839,8 +2717,8 @@ return CURRENT_METRIC_CONFIG[field]?.unit||"";
 
 function normalizeSeries(values, extra=[]){
 const nums=[...values,...extra]
-.map(finiteNumberOrNull)
-.filter(v=>v!==null);
+.map(Number)
+.filter(Number.isFinite);
 
 if(!nums.length)return values.map(()=>null);
 
@@ -2848,12 +2726,12 @@ const min=Math.min(...nums);
 const max=Math.max(...nums);
 
 if(Math.abs(max-min)<1e-9){
-return values.map(v=>hasFiniteSensorValue(v)?50:null);
+return values.map(v=>Number.isFinite(Number(v))?50:null);
 }
 
 return values.map(v=>{
-const n=finiteNumberOrNull(v);
-return n!==null?((n-min)/(max-min))*100:null;
+const n=Number(v);
+return Number.isFinite(n)?((n-min)/(max-min))*100:null;
 });
 }
 
@@ -2861,7 +2739,7 @@ function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
 const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
 const field=ds.metricField;
-if(field&&hasFiniteSensorValue(raw)){
+if(field&&Number.isFinite(Number(raw))){
 return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
 }
 return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
@@ -3034,8 +2912,7 @@ const labels=base.map(x=>thaiTime(x.timestamp));
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
 const vals=base.map(r=>{
-const v=finiteNumberOrNull(r[field]);
-return v!==null?v:null;
+const v=finiteNumberOrNull(r[field]); return v;
 });
 return makeActualDataset(field,vals);
 });
@@ -3234,12 +3111,8 @@ const pointFor=field=>{
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
 ?aiForecastPayload.data.forecast_points.find(x=>x?.field===field):null;
 if(!fp)return null;
-const pts=[
-finiteNumberOrNull(fp.p10),
-finiteNumberOrNull(fp.p20),
-finiteNumberOrNull(fp.p30)
-];
-return pts.every(v=>v!==null)?pts:null;
+const pts=[Number(fp.p10),Number(fp.p20),Number(fp.p30)];
+return pts.every(Number.isFinite)?pts:null;
 };
 
 if(metric==="all"){
@@ -3264,8 +3137,7 @@ const create=(canvasId,fields,yTitle)=>{
 const datasets=[];
 for(const field of fields){
 const raw=actual.map(r=>{
-const v=finiteNumberOrNull(r[field]);
-return v!==null?v:null;
+const v=finiteNumberOrNull(r[field]); return v;
 });
 datasets.push({
 ...makeActualDataset(field,raw),
@@ -3274,7 +3146,7 @@ rawValues:[...raw,null,null,null]
 });
 const pts=pointFor(field);
 if(isAI&&pts&&forecastVisible){
-const current=[...raw].reverse().find(v=>v!==null);
+const current=[...raw].reverse().find(v=>Number.isFinite(Number(v)));
 datasets.push(makeForecastDataset(field,raw.length,current,pts));
 }
 }
@@ -3302,13 +3174,7 @@ return;
 
 area.innerHTML='<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
 
-const actual=(arr||[])
-.filter(
-r=>
-parseDate(r.timestamp)&&
-hasFiniteSensorValue(r[metric])
-)
-.slice(-12);
+const actual=(arr||[]).filter(r=>parseDate(r.timestamp)&&hasFiniteSensorValue(r[metric])).slice(-12);
 if(!actual.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
 return;
@@ -4761,7 +4627,7 @@ box.innerHTML=`
 <div class="ai-forecast-grid mt-3">
 <div class="ai-forecast-item"><div class="ai-forecast-label">🌫 AIR</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
 <div class="ai-forecast-item"><div class="ai-forecast-label">🌡 HEAT</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 THERMAL</div><div>${esc(d.thermal_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
+<div class="ai-forecast-item"><div class="ai-forecast-label">☀ LOCAL ENV</div><div>${esc(d.local_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
 <div class="ai-forecast-item"><div class="ai-forecast-label">🏃 ACTIVITY</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
 </div>
 <div class="ai-meta-row"><span>โมเดล: ${esc(payload.model||"Gemini")}</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
@@ -4857,7 +4723,7 @@ monitoring:[
 
 smartSummary:[
 "Smart Summary",
-"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Thermal Environment และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
+"ศูนย์สรุปแบบ Rule-based ที่รวมสถานะ Gateway/Node, PM2.5 ภาพรวม, Heat Index, Local Environment และข้อมูลที่ควรตรวจสอบ โดยทำงานได้แม้ AI ใช้งานไม่ได้"
 ],
 
 currentAir:[
@@ -4877,7 +4743,7 @@ historical:[
 
 forecast:[
 "Forecast",
-"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Thermal Environment และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
+"คาดการณ์ 30 นาทีแบบ Hybrid: ใช้แนวโน้มเชิงสถิติเป็นฐาน แล้วให้ Gemini วิเคราะห์ Air, Heat, Local Environment และความเหมาะสมของกิจกรรม โดยไม่ให้ AI แต่งค่าตัวเลขเอง"
 ],
 
 ai:[
