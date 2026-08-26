@@ -4,18 +4,18 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร</title>
-<meta content="ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และการวิเคราะห์คุณภาพอากาศด้วย AI" name="description"/>
-<meta content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, วัดนิเวศธรรมประวัติราชวรวิหาร, แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร, ระบบตรวจสอบฝุ่น PM2.5, PM2.5 ในสถานศึกษา, ระบบตรวจสอบคุณภาพอากาศ, PM2.5 Monitoring, ESP32, IoT, AI วิเคราะห์คุณภาพอากาศ, PM1.0, PM10" name="keywords"/>
+<title>Local Air Quality and PM2.5 Monitoring Station | สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่</title>
+<meta content="สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ แสดงข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น ความเข้มแสง แนวโน้มย้อนหลัง การพยากรณ์ และการวิเคราะห์สภาวะความร้อนในพื้นที่" name="description"/>
+<meta content="Local Air Quality, PM2.5 Monitoring Station, สถานีตรวจวัดคุณภาพอากาศ, ฝุ่นละออง PM2.5, PM1.0, PM10, Temperature, Humidity, Heat Index, Ambient Light, ESP32, IoT" name="keywords"/>
 <meta content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" name="author"/>
 <meta content="index, follow" name="robots"/>
 <meta content="index, follow" name="googlebot"/>
 <link href="https://project2026csemn-cloud.github.io/educational-pm25/" rel="canonical"/>
 <meta content="th_TH" property="og:locale"/>
 <meta content="website" property="og:type"/>
-<meta content="Educational PM2.5 Monitoring System" property="og:site_name"/>
-<meta content="ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:title"/>
-<meta content="ระบบตรวจสอบ PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น แสง แนวโน้มย้อนหลัง การพยากรณ์ และ AI วิเคราะห์คุณภาพอากาศ ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร" property="og:description"/>
+<meta content="Local Air Quality and PM2.5 Monitoring Station" property="og:site_name"/>
+<meta content="Local Air Quality and PM2.5 Monitoring Station | สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่" property="og:title"/>
+<meta content="สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ พร้อมข้อมูล PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น ความเข้มแสง Heat Index แนวโน้มย้อนหลัง และ AI วิเคราะห์ข้อมูลระดับพื้นที่" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link href="style.css?v=20260826-1215" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png"/>
@@ -25,10 +25,10 @@
     {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "ระบบตรวจสอบฝุ่น PM2.5 ในสถานศึกษา",
-  "alternateName": "Educational Institution PM2.5 Dust Monitoring System",
+  "name": "สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่",
+  "alternateName": "Local Air Quality and PM2.5 Monitoring Station",
   "url": "https://project2026csemn-cloud.github.io/educational-pm25/",
-  "description": "ระบบตรวจสอบฝุ่นละออง PM2.5 และสภาพแวดล้อมในสถานศึกษา ของวิทยาลัยเสริมทักษะพระภิกษุ สามเณร วัดนิเวศธรรมประวัติราชวรวิหาร แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร",
+  "description": "สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ สำหรับติดตาม PM1.0 PM2.5 PM10 อุณหภูมิ ความชื้น ความเข้มแสง และสภาวะความร้อนในพื้นที่",
   "inLanguage": "th-TH",
   "about": [
     {
@@ -80,14 +80,14 @@ HEADER
 </div>
 <div>
 <div class="text-xl md:text-2xl font-black tracking-tight leading-tight">
-                Educational Institution
+                Local Air Quality and
                 <span class="text-cyan-400">
                     PM2.5
                 </span>
-                Dust Monitoring System
+                Monitoring Station
             </div>
 <div class="text-sm text-slate-400 mt-1">
-                ระบบตรวจสอบฝุ่นละออง PM2.5 ในสถานศึกษา
+                สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่
             </div>
 </div>
 </div>
