@@ -5071,3 +5071,296 @@ input[type="datetime-local"]{
         grid-template-columns:1fr;
     }
 }
+
+
+/* =========================================================
+   CREDIT BAR — PREMIUM CARD REDESIGN
+   ========================================================= */
+
+.credit-bar{
+    margin-top:42px!important;
+    padding:18px 18px 0!important;
+    overflow:hidden!important;
+    border:1px solid rgba(56,189,248,.18)!important;
+    border-radius:24px 24px 0 0!important;
+    background:
+        radial-gradient(circle at 12% 0%,rgba(34,211,238,.10),transparent 32%),
+        radial-gradient(circle at 88% 10%,rgba(59,130,246,.08),transparent 30%),
+        linear-gradient(180deg,rgba(7,24,40,.98),rgba(5,17,30,.99))!important;
+    box-shadow:
+        0 -12px 45px rgba(8,145,178,.08),
+        inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+.credit-bar::before{
+    opacity:.07!important;
+    background-size:42px 42px!important;
+}
+
+.credit-bar::after{
+    left:12%!important;
+    width:76%!important;
+}
+
+.credit-inner{
+    display:grid!important;
+    grid-template-columns:1.25fr 1.25fr 1fr 1fr 1fr!important;
+    gap:12px!important;
+    align-items:stretch!important;
+    width:100%!important;
+}
+
+.credit-box{
+    min-height:150px!important;
+    padding:18px!important;
+    gap:14px!important;
+    border:1px solid rgba(148,163,184,.12)!important;
+    border-radius:18px!important;
+    background:
+        linear-gradient(145deg,rgba(15,31,49,.90),rgba(7,24,40,.66))!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.028),
+        0 10px 28px rgba(0,0,0,.16)!important;
+    overflow:hidden!important;
+    isolation:isolate;
+    transition:
+        transform .24s ease,
+        border-color .24s ease,
+        box-shadow .24s ease,
+        background .24s ease!important;
+}
+
+.credit-box::before{
+    content:"";
+    position:absolute;
+    inset:0 auto auto 0;
+    width:100%;
+    height:2px;
+    opacity:.75;
+    background:linear-gradient(90deg,rgba(34,211,238,.72),rgba(59,130,246,.28),transparent);
+    pointer-events:none;
+}
+
+.credit-box:hover{
+    transform:translateY(-4px)!important;
+    border-color:rgba(34,211,238,.30)!important;
+    background:
+        linear-gradient(145deg,rgba(13,38,57,.96),rgba(7,27,45,.78))!important;
+    box-shadow:
+        0 15px 36px rgba(0,0,0,.24),
+        0 0 28px rgba(34,211,238,.055)!important;
+}
+
+/* Order: College → Department → Developer 1 → Developer 2 → Advisor */
+.credit-college{order:1;}
+.credit-department{order:2;}
+.credit-developer{order:3;}
+.credit-advisor{order:4;}
+
+.credit-icon{
+    flex:0 0 62px!important;
+    width:62px!important;
+    height:62px!important;
+    min-width:62px!important;
+    min-height:62px!important;
+    max-width:62px!important;
+    max-height:62px!important;
+    border-radius:17px!important;
+    border-color:rgba(56,189,248,.24)!important;
+    background:
+        linear-gradient(145deg,rgba(34,211,238,.11),rgba(59,130,246,.045))!important;
+    box-shadow:
+        inset 0 0 18px rgba(34,211,238,.035),
+        0 7px 18px rgba(0,0,0,.18)!important;
+}
+
+.credit-icon img{
+    border-radius:15px!important;
+}
+
+.credit-developer .credit-icon,
+.credit-advisor .credit-icon{
+    width:62px!important;
+    height:62px!important;
+    min-width:62px!important;
+    min-height:62px!important;
+    max-width:62px!important;
+    max-height:62px!important;
+}
+
+.credit-advisor .credit-icon img,
+.credit-developer .credit-icon img{
+    padding:0!important;
+    object-fit:cover!important;
+}
+
+.credit-advisor .credit-icon img{
+    object-position:center 15%!important;
+}
+
+.credit-content{
+    display:flex;
+    min-width:0;
+    flex:1;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.credit-label{
+    margin-bottom:7px!important;
+    font-size:10px!important;
+    letter-spacing:2px!important;
+    color:#67e8f9!important;
+    opacity:.95;
+}
+
+.credit-title{
+    font-size:14px!important;
+    font-weight:800!important;
+    line-height:1.5!important;
+    color:#f1f5f9!important;
+    text-wrap:balance;
+}
+
+.credit-role{
+    width:max-content;
+    max-width:100%;
+    margin-top:10px!important;
+    padding:5px 10px!important;
+    border-radius:999px!important;
+    border-color:rgba(34,211,238,.18)!important;
+    background:rgba(8,145,178,.07)!important;
+    color:#94a3b8!important;
+    font-size:9px!important;
+    letter-spacing:1.15px!important;
+}
+
+.credit-links{
+    gap:7px!important;
+    margin-top:11px!important;
+}
+
+.credit-link{
+    padding:6px 10px!important;
+    border-radius:9px!important;
+    background:rgba(8,145,178,.075)!important;
+    border-color:rgba(34,211,238,.22)!important;
+    font-size:10px!important;
+}
+
+.credit-link:hover{
+    background:rgba(8,145,178,.16)!important;
+    border-color:rgba(103,232,249,.42)!important;
+}
+
+.credit-bottom{
+    min-height:44px!important;
+    margin-top:16px!important;
+    margin-left:-18px!important;
+    margin-right:-18px!important;
+    padding:0 20px!important;
+    border-top:1px solid rgba(148,163,184,.10)!important;
+    background:rgba(2,6,23,.30)!important;
+    color:#64748b!important;
+    font-size:9px!important;
+    letter-spacing:1.25px!important;
+}
+
+@media(max-width:1350px){
+    .credit-inner{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .credit-box{
+        min-height:136px!important;
+    }
+
+}
+
+@media(max-width:720px){
+    .credit-bar{
+        padding:12px 12px 0!important;
+        border-radius:18px 18px 0 0!important;
+    }
+
+    .credit-inner{
+        grid-template-columns:1fr!important;
+        gap:9px!important;
+    }
+
+    .credit-box{
+        min-height:0!important;
+        padding:14px!important;
+    }
+
+    .credit-bottom{
+        margin-left:-12px!important;
+        margin-right:-12px!important;
+        padding:10px 14px!important;
+        min-height:48px!important;
+        flex-wrap:wrap;
+        text-align:center;
+    }
+}
+
+/* =========================================================
+   HELP — SENSOR CRITERIA CARDS
+   ========================================================= */
+
+.help-sensor-card{
+    margin:10px 0;
+    padding:13px 14px;
+    border:1px solid rgba(148,163,184,.13);
+    border-radius:12px;
+    background:rgba(15,23,42,.34);
+}
+
+.help-sensor-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:7px;
+}
+
+.help-sensor-head > b{
+    color:#f1f5f9;
+    font-size:14px;
+}
+
+.help-chip{
+    display:inline-flex;
+    align-items:center;
+    flex:0 0 auto;
+    padding:3px 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.help-chip.has-standard{
+    color:#a7f3d0;
+    border:1px solid rgba(52,211,153,.23);
+    background:rgba(6,78,59,.18);
+}
+
+.help-chip.no-standard{
+    color:#cbd5e1;
+    border:1px solid rgba(148,163,184,.20);
+    background:rgba(51,65,85,.18);
+}
+
+.help-chip.context-standard{
+    color:#fde68a;
+    border:1px solid rgba(251,191,36,.22);
+    background:rgba(120,53,15,.16);
+}
+
+@media(max-width:560px){
+    .help-sensor-head{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:6px;
+    }
+}
