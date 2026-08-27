@@ -6566,3 +6566,336 @@ input[type="datetime-local"]{
     }
 }
 
+
+
+/* =========================================================
+   MOBILE / TABLET FINAL POLISH
+   ========================================================= */
+
+@media(max-width:760px){
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3{
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        gap:12px!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > div:first-child{
+        width:100%!important;
+    }
+
+    .monitoring-card .section-title-with-help{
+        display:flex!important;
+        align-items:center!important;
+        gap:9px!important;
+        flex-wrap:nowrap!important;
+    }
+
+    .monitoring-card .section-title-with-help h2{
+        white-space:nowrap!important;
+        word-break:keep-all!important;
+        overflow-wrap:normal!important;
+        font-size:23px!important;
+        line-height:1.25!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center{
+        width:100%!important;
+        justify-content:stretch!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center > .badge{
+        width:100%!important;
+        min-width:0!important;
+        padding:11px 13px!important;
+        display:grid!important;
+        grid-template-columns:auto auto minmax(0,1fr)!important;
+        align-items:center!important;
+        gap:8px 12px!important;
+        border-radius:14px!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center > .badge > div{
+        margin:0!important;
+    }
+
+    .monitoring-card #nodesActiveTop{
+        text-align:right!important;
+        white-space:nowrap!important;
+        font-size:11px!important;
+    }
+
+    #gatewayStatusTop{
+        white-space:nowrap!important;
+        font-size:14px!important;
+    }
+
+    .monitoring-card .node > .flex.justify-between{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) auto!important;
+        align-items:start!important;
+        gap:10px!important;
+    }
+
+    .monitoring-card .node > .flex.justify-between > b{
+        min-width:0!important;
+        font-size:20px!important;
+        line-height:1.3!important;
+    }
+
+    #n1status,
+    #n2status,
+    #n3status{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:flex-end!important;
+        flex-wrap:nowrap!important;
+        gap:5px!important;
+        white-space:nowrap!important;
+        min-width:max-content!important;
+        font-size:12px!important;
+        line-height:1.2!important;
+    }
+
+    #n1status .badge,
+    #n2status .badge,
+    #n3status .badge{
+        white-space:nowrap!important;
+        padding:5px 8px!important;
+        font-size:11px!important;
+    }
+
+    .monitoring-card .node .grid{
+        column-gap:16px!important;
+        row-gap:10px!important;
+    }
+
+    .monitoring-card .node .grid > span{
+        white-space:nowrap!important;
+        min-width:0!important;
+    }
+
+    #historyChartArea canvas,
+    #forecastChartArea canvas{
+        cursor:zoom-in!important;
+        touch-action:manipulation;
+    }
+
+    .metric-chart-canvas-wrap::after,
+    .bottom-chart-wrap::after{
+        content:"🔍 แตะกราฟเพื่อขยาย";
+        position:absolute;
+        right:8px;
+        top:8px;
+        z-index:4;
+        pointer-events:none;
+        padding:5px 8px;
+        border-radius:999px;
+        background:rgba(2,6,23,.74);
+        border:1px solid rgba(103,232,249,.18);
+        color:#a5f3fc;
+        font-size:10px;
+        font-weight:800;
+        line-height:1;
+        backdrop-filter:blur(6px);
+    }
+
+    .bottom-chart-wrap{
+        position:relative!important;
+    }
+}
+
+@media(min-width:761px) and (max-width:1100px){
+
+    #historyChartArea canvas,
+    #forecastChartArea canvas{
+        cursor:zoom-in!important;
+    }
+
+    .metric-chart-canvas-wrap::after,
+    .bottom-chart-wrap::after{
+        content:"🔍 แตะเพื่อขยาย";
+        position:absolute;
+        right:10px;
+        top:10px;
+        z-index:4;
+        pointer-events:none;
+        padding:5px 8px;
+        border-radius:999px;
+        background:rgba(2,6,23,.70);
+        border:1px solid rgba(103,232,249,.16);
+        color:#a5f3fc;
+        font-size:10px;
+        font-weight:800;
+    }
+
+    .bottom-chart-wrap{
+        position:relative!important;
+    }
+}
+
+/* =========================================================
+   FULLSCREEN CHART ZOOM VIEWER
+   ========================================================= */
+
+.chart-zoom-viewer{
+    position:fixed;
+    inset:0;
+    z-index:12000;
+    display:none;
+}
+
+.chart-zoom-viewer.active{
+    display:block;
+}
+
+.chart-zoom-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(2,6,23,.92);
+    backdrop-filter:blur(8px);
+}
+
+.chart-zoom-dialog{
+    position:absolute;
+    inset:12px;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    border:1px solid rgba(103,232,249,.22);
+    border-radius:18px;
+    background:#071625;
+    box-shadow:0 30px 90px rgba(0,0,0,.58);
+}
+
+.chart-zoom-toolbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 13px;
+    border-bottom:1px solid rgba(148,163,184,.12);
+    background:rgba(8,25,41,.96);
+}
+
+.chart-zoom-title{
+    color:#f8fafc;
+    font-size:15px;
+    font-weight:900;
+    line-height:1.25;
+}
+
+.chart-zoom-help{
+    margin-top:3px;
+    color:#94a3b8;
+    font-size:10px;
+    line-height:1.35;
+}
+
+.chart-zoom-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+}
+
+.chart-zoom-actions button{
+    min-width:38px;
+    height:38px;
+    padding:0 10px;
+    border:1px solid rgba(103,232,249,.18);
+    border-radius:10px;
+    background:rgba(15,35,56,.9);
+    color:#e2e8f0;
+    font-size:14px;
+    font-weight:900;
+}
+
+.chart-zoom-actions #chartZoomReset{
+    min-width:54px;
+    font-size:11px;
+}
+
+.chart-zoom-actions .chart-zoom-close{
+    color:#fecaca;
+    border-color:rgba(248,113,113,.22);
+}
+
+.chart-zoom-stage{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:none;
+    user-select:none;
+    background:
+        radial-gradient(circle at 50% 50%,rgba(14,165,233,.05),transparent 50%),
+        #061320;
+}
+
+.chart-zoom-image{
+    display:block;
+    max-width:94%;
+    max-height:92%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    transform-origin:center center;
+    will-change:transform;
+    -webkit-user-drag:none;
+    user-select:none;
+}
+
+body.chart-zoom-open{
+    overflow:hidden!important;
+}
+
+@media(max-width:560px){
+
+    .chart-zoom-dialog{
+        inset:6px;
+        border-radius:15px;
+    }
+
+    .chart-zoom-toolbar{
+        padding:10px;
+        align-items:flex-start;
+    }
+
+    .chart-zoom-title{
+        font-size:14px;
+    }
+
+    .chart-zoom-help{
+        font-size:9px;
+        max-width:160px;
+    }
+
+    .chart-zoom-actions{
+        gap:4px;
+    }
+
+    .chart-zoom-actions button{
+        min-width:34px;
+        height:34px;
+        padding:0 7px;
+        border-radius:9px;
+    }
+
+    .chart-zoom-actions #chartZoomReset{
+        min-width:48px;
+        font-size:10px;
+    }
+
+    .chart-zoom-image{
+        max-width:98%;
+        max-height:94%;
+    }
+}
