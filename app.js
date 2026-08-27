@@ -1027,10 +1027,10 @@ ac.textContent=
 function threshold(field,value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
 if(
-!Number.isFinite(n)
+n===null
 ){
 return"no_data";
 }
@@ -1090,10 +1090,10 @@ level
 function pm25Guidance(value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
 if(
-!Number.isFinite(n)
+n===null
 ){
 
 return{
@@ -1164,14 +1164,14 @@ rh
 ){
 
 tempC=
-Number(tempC);
+finiteNumberOrNull(tempC);
 
 rh=
-Number(rh);
+finiteNumberOrNull(rh);
 
 if(
-!Number.isFinite(tempC)||
-!Number.isFinite(rh)
+tempC===null||
+rh===null
 ){
 
 return null;
@@ -1270,67 +1270,29 @@ hi-32
 function heatLevel(value){
 
 const n=
-Number(value);
+finiteNumberOrNull(value);
 
-if(
-!Number.isFinite(n)
-){
-
-return{
-level:"no_data",
-label:"ไม่มีข้อมูล"
-};
-
+if(n===null){
+return{level:"no_data",label:"ไม่มีข้อมูล"};
 }
 
-if(
-n<27
-){
-
-return{
-level:"normal",
-label:"สภาพทั่วไป"
-};
-
+if(n<27){
+return{level:"normal",label:"ต่ำกว่าเกณฑ์เฝ้าระวัง"};
 }
 
-if(
-n<33
-){
-
-return{
-level:"watch",
-label:"เฝ้าระวัง"
-};
-
+if(n<32){
+return{level:"watch",label:"เฝ้าระวัง"};
 }
 
-if(
-n<42
-){
-
-return{
-level:"warning",
-label:"เตือนภัย"
-};
-
+if(n<41){
+return{level:"warning",label:"เตือนภัย"};
 }
 
-if(
-n<52
-){
-
-return{
-level:"critical",
-label:"อันตราย"
-};
-
+if(n<=54){
+return{level:"critical",label:"อันตราย"};
 }
 
-return{
-level:"critical",
-label:"อันตรายมาก"
-};
+return{level:"critical",label:"อันตรายมาก"};
 
 }
 
@@ -1596,10 +1558,7 @@ const c=
 currentCfg();
 
 return(
-v==null||
-!Number.isFinite(
-Number(v)
-)
+!hasFiniteSensorValue(v)
 )
 ?"--"
 :`${fmt(v)} ${c.unit}`;
@@ -4722,130 +4681,352 @@ drawCharts();
 
 const HELP_CONTENT={
 
-monitoring:[
-"จุดตรวจวัด",
-"แสดงค่าล่าสุดและสถานะของจุดตรวจวัดทั้ง 3 จุด หากจุดใดไม่มีการติดต่อใหม่เกินเวลาที่กำหนด ระบบจะแสดงว่าขาดการเชื่อมต่อ ส่วนรายละเอียดการสื่อสารของอุปกรณ์ถูกเก็บไว้ภายในระบบ"
-],
+monitoring:{
+title:"📍 จุดตรวจวัด",
+html:`
+<section class="help-section">
+<h4>โซนนี้บอกอะไร?</h4>
+<p>แสดงสถานะและค่าล่าสุดของจุดตรวจวัดทั้ง 3 จุด ได้แก่ PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และความเข้มแสง</p>
+</section>
 
-smartSummary:[
-"สรุปสถานการณ์",
-"สรุปสิ่งที่คนทั่วไปต้องการรู้จากข้อมูลล่าสุด ได้แก่ คุณภาพอากาศ สภาพความร้อน จุดที่ควรสนใจ สถานะของจุดตรวจวัด และคำแนะนำสำหรับกิจกรรมกลางแจ้ง"
-],
+<section class="help-section">
+<h4>ข้อมูลมาจากไหน?</h4>
+<ul>
+<li><b>PMS3003</b> → PM1.0, PM2.5, PM10 หน่วย µg/m³</li>
+<li><b>AM2315</b> → อุณหภูมิ (°C) และความชื้นสัมพัทธ์ (%)</li>
+<li><b>BH1750</b> → ความเข้มแสง หน่วย lux ซึ่งเป็นค่าความส่องสว่าง ไม่ใช่ค่าความร้อนและไม่ใช้บอกว่าเมฆมากหรือฝนตก</li>
+</ul>
+</section>
 
-currentAir:[
-"เปรียบเทียบจุดตรวจวัด",
-"เปรียบเทียบข้อมูลล่าสุดจากจุดตรวจวัดที่ใช้งานอยู่ โดยแสดงค่าเฉลี่ยของพื้นที่ จุดที่มีค่าสูงที่สุด และจุดที่ควรสนใจสำหรับตัวแปรที่เลือก"
-],
+<section class="help-section">
+<h4>ทำไมหนึ่งรอบไม่ใช้ค่าที่อ่านครั้งเดียว?</h4>
+<p>ตัวลูกเก็บค่าหลายครั้งประมาณ 1 นาที ใช้เฉพาะครั้งที่อ่านสำเร็จ แล้วส่งค่าเฉลี่ยให้ตัวแม่หนึ่งครั้ง</p>
+<div class="help-formula">x̄ = (x₁ + x₂ + ... + xₙ) / n<sub>valid</sub></div>
+<p class="help-muted">n<sub>valid</sub> คือจำนวนครั้งที่อ่านสำเร็จ ค่าที่อ่านไม่สำเร็จจะไม่ถูกแทนด้วย 0 และไม่ถูกนำมาหารเฉลี่ย</p>
+</section>
 
-alerts:[
-"สิ่งที่ควรระวัง",
-"แสดงเฉพาะเหตุการณ์ที่ควรให้ความสนใจ เช่น PM2.5 สูง สภาพความร้อนเข้าเกณฑ์เฝ้าระวัง หรือจุดตรวจวัดขาดการเชื่อมต่อ หากทุกอย่างปกติระบบจะแจ้งว่าไม่มีสิ่งที่ต้องเฝ้าระวัง"
-],
+<section class="help-section">
+<h4>ONLINE / OFFLINE หมายถึงอะไร?</h4>
+<ul>
+<li><b>ONLINE</b> = จุดตรวจวัดยังติดต่อกับระบบได้ โดยหน้า Dashboard จะนับช่วง Sleep ตามรอบประหยัดพลังงานเป็น ONLINE ด้วย</li>
+<li><b>OFFLINE</b> = ไม่ได้รับการติดต่อใหม่เกิน 6 นาที หรือ Gateway ขาดการเชื่อมต่อ</li>
+</ul>
+<p class="help-muted">เกณฑ์ 6 นาทีเป็น <b>กฎที่โครงการกำหนดเอง</b> ให้สัมพันธ์กับรอบทำงานของอุปกรณ์ ไม่ใช่มาตรฐานภายนอก</p>
+</section>
 
-historical:[
-"สถิติย้อนหลัง",
-"เลือกตัวแปรและช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม พร้อมกราฟย้อนหลัง ข้อมูลที่อ่านไม่สำเร็จจะไม่ถูกนำมาแทนด้วยค่า 0"
-],
+<section class="help-section">
+<h4>ทำไม ONLINE แล้วบางครั้งยังเป็นค่ารอบก่อน?</h4>
+<p>สถานะกับค่าที่วัดแยกจากกัน เมื่ออุปกรณ์ตื่นจะส่ง ONLINE ก่อน แล้วใช้เวลาวัดรอบใหม่ประมาณ 1 นาที ระหว่างนั้น Dashboard จะคงค่าล่าสุดไว้จนกว่าค่าใหม่จะมาถึง</p>
+</section>
 
-ai:[
-"วิเคราะห์และคาดการณ์",
-"สรุปสถานการณ์ด้วยภาษาที่อ่านง่ายและประเมินแนวโน้มในช่วง 30 นาทีถัดไปจากข้อมูลล่าสุดและข้อมูลย้อนหลัง หากระบบ AI ภายนอกไม่พร้อม ระบบยังสามารถใช้การคำนวณทางสถิติเป็นระบบสำรองได้"
-]
+<div class="help-sources">
+<b>ข้อมูลอ้างอิงเซนเซอร์แสง:</b>
+<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM Ambient Light Sensors</a>
+</div>`
+},
+
+smartSummary:{
+title:"✦ สรุปสถานการณ์",
+html:`
+<section class="help-section">
+<h4>โซนนี้ทำหน้าที่อะไร?</h4>
+<p>เปลี่ยนตัวเลขให้เป็นภาษาที่อ่านง่าย โดยสรุป <b>คุณภาพอากาศ</b>, <b>สภาพความร้อน</b>, <b>จุดที่ควรสนใจ</b>, <b>สถานะจุดตรวจวัด</b> และคำแนะนำกิจกรรมกลางแจ้ง</p>
+</section>
+
+<section class="help-section">
+<h4>🌿 คุณภาพอากาศ</h4>
+<p>ใช้ค่า PM2.5 ล่าสุดจากจุดตรวจวัดที่ยังใช้งานได้ แล้วหาค่าเฉลี่ยของพื้นที่</p>
+<div class="help-formula">PM2.5<sub>พื้นที่</sub> = Σ(PM2.5 ของจุดที่ใช้ได้) / จำนวนจุดที่ใช้ได้</div>
+<div class="help-threshold-grid">
+<span>0–15.0 µg/m³</span><b>ดีมาก</b>
+<span>15.1–25.0 µg/m³</span><b>ดี</b>
+<span>25.1–37.5 µg/m³</span><b>ปานกลาง</b>
+<span>37.6–75.0 µg/m³</span><b>เริ่มมีผลกระทบต่อสุขภาพ</b>
+<span>75.1 ขึ้นไป</span><b>มีผลกระทบต่อสุขภาพ</b>
+</div>
+<div class="help-warning"><b>ข้อสำคัญ:</b> เกณฑ์กรมควบคุมมลพิษเป็น PM2.5 เฉลี่ย 24 ชั่วโมง แต่การ์ดนี้ใช้ค่ารอบล่าสุด/ระยะสั้น จึงเป็นการสื่อสารระดับเบื้องต้น ไม่ใช่ AQI 24 ชั่วโมงอย่างเป็นทางการ</div>
+</section>
+
+<section class="help-section">
+<h4>🌡 สภาพความร้อน</h4>
+<p>ระบบคำนวณ <b>Heat Index</b> หรืออุณหภูมิที่ร่างกายรู้สึกได้จากอุณหภูมิและความชื้นสัมพัทธ์</p>
+<div class="help-formula help-formula-small">HI = -42.379 + 2.04901523T + 10.14333127R − 0.22475541TR − 0.00683783T² − 0.05481717R² + 0.00122874T²R + 0.00085282TR² − 0.00000199T²R²</div>
+<p class="help-muted">T = อุณหภูมิ °F, R = ความชื้นสัมพัทธ์ (%) แล้วระบบแปลงผลกลับเป็น °C</p>
+<div class="help-threshold-grid">
+<span>&lt;27 °C</span><b>ต่ำกว่าเกณฑ์เฝ้าระวัง</b>
+<span>27–31.9 °C</span><b>เฝ้าระวัง</b>
+<span>32–40.9 °C</span><b>เตือนภัย</b>
+<span>41–54 °C</span><b>อันตราย</b>
+<span>&gt;54 °C</span><b>อันตรายมาก</b>
+</div>
+</section>
+
+<section class="help-section">
+<h4>📍 จุดที่ควรสนใจ</h4>
+<p>ระบบเทียบทั้ง 3 จุด หากมีจุดที่ PM2.5 เข้าเกณฑ์เตือนจะชี้จุดนั้นก่อน หาก PM2.5 ยังปกติจะตรวจ Heat Index ของแต่ละจุด แล้วเลือกจุดที่มีความเสี่ยงเด่นที่สุด หากทุกจุดปกติจะแจ้งว่ายังไม่มีจุดที่ต้องเฝ้าระวัง</p>
+<p class="help-muted">ตรรกะการเลือก “จุดที่ควรสนใจ” เป็นกฎของโครงการ เพื่อช่วยให้เข้าใจสถานี 3 จุดง่ายขึ้น</p>
+</section>
+
+<section class="help-section">
+<h4>🏃 กิจกรรมกลางแจ้ง</h4>
+<p>ใช้ระดับ PM2.5 และ Heat Index ร่วมกัน ถ้าตัวใดตัวหนึ่งสูง ระบบจะเพิ่มระดับความระมัดระวัง ค่าแสงไม่ได้ใช้เป็น Health Alert โดยตรง</p>
+</section>
+
+<div class="help-sources">
+<b>อ้างอิง:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI ประเทศไทย พ.ศ. 2566</a>
+<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.weather.gov/tbw/heatindex" target="_blank" rel="noopener noreferrer">U.S. NWS — Heat Index Equation</a>
+</div>`
+},
+
+currentAir:{
+title:"📍 เปรียบเทียบจุดตรวจวัด",
+html:`
+<section class="help-section">
+<h4>โซนนี้ใช้ทำอะไร?</h4>
+<p>เปรียบเทียบจุดตรวจวัดทั้ง 3 จุดในตัวแปรที่เลือก เช่น PM2.5 อุณหภูมิ ความชื้น หรือแสง เพื่อให้เห็นภาพรวมและจุดที่ค่าสูงที่สุด</p>
+</section>
+
+<section class="help-section">
+<h4>ค่าเฉลี่ยทั้งพื้นที่</h4>
+<p>ใช้เฉพาะจุดที่ยังใช้งานได้และมีค่าจริงของตัวแปรนั้น</p>
+<div class="help-formula">ค่าเฉลี่ยพื้นที่ = Σ(ค่าของจุดที่มีข้อมูล) / จำนวนจุดที่มีข้อมูล</div>
+<p>ถ้าจุดใดไม่มีข้อมูล จุดนั้นจะไม่ถูกนำไปหารและไม่ถูกแทนด้วย 0</p>
+</section>
+
+<section class="help-section">
+<h4>จุดที่ค่าสูงที่สุด</h4>
+<p>เลือกค่ามากที่สุดจากจุดที่มีข้อมูลจริง เป็นการเปรียบเทียบ ไม่ได้แปลว่าจุดนั้นอันตรายเสมอไป</p>
+</section>
+
+<section class="help-section">
+<h4>จุดที่ควรสนใจ</h4>
+<p><b>PM2.5:</b> ใช้ระดับอ้างอิงกรมควบคุมมลพิษ โดยค่ามากกว่า 37.5 µg/m³ เริ่มอยู่เหนือค่ามาตรฐานเฉลี่ย 24 ชั่วโมง</p>
+<p><b>อุณหภูมิ:</b> การประเมินความเสี่ยงความร้อนจริงใช้ร่วมกับความชื้นเพื่อคำนวณ Heat Index ในโซนสรุป/แจ้งเตือน</p>
+<p><b>PM1.0, PM10, ความชื้น และแสง:</b> โซนนี้ใช้เพื่อเปรียบเทียบค่า ยังไม่ได้กำหนด Health Alert แยกสำหรับตัวแปรเหล่านี้</p>
+</section>
+
+<div class="help-sources">
+<b>อ้างอิง PM2.5:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ</a>
+</div>`
+},
+
+alerts:{
+title:"⚠ สิ่งที่ควรระวัง",
+html:`
+<section class="help-section">
+<h4>โซนนี้แจ้งอะไร?</h4>
+<p>แสดงเฉพาะเรื่องที่ควรให้ความสนใจ เพื่อไม่ให้ผู้ใช้ต้องไล่อ่านตัวเลขทุกช่อง</p>
+</section>
+
+<section class="help-section">
+<h4>1) การเชื่อมต่อ</h4>
+<p>ถ้าจุดใดไม่มีการติดต่อใหม่เกิน 6 นาที ระบบจะแจ้งว่าขาดการเชื่อมต่อ หาก Gateway ขาดการเชื่อมต่อ ระบบจะไม่ยืนยันสถานะลูกทั้ง 3 จุด</p>
+<p class="help-muted">6 นาทีเป็นกฎภายในโครงการตามรอบ Sleep/วัดข้อมูล</p>
+</section>
+
+<section class="help-section">
+<h4>2) PM2.5</h4>
+<p>37.6–75.0 µg/m³ = เริ่มมีผลกระทบต่อสุขภาพ และ 75.1 µg/m³ ขึ้นไป = มีผลกระทบต่อสุขภาพ ตามระดับอ้างอิงของกรมควบคุมมลพิษ</p>
+<div class="help-warning">37.5 µg/m³ เป็นมาตรฐาน PM2.5 <b>เฉลี่ย 24 ชั่วโมง</b> การเตือนจากค่ารอบล่าสุดของโครงการเป็นการเฝ้าระวังเบื้องต้น</div>
+</section>
+
+<section class="help-section">
+<h4>3) สภาพความร้อน</h4>
+<p>คำนวณ Heat Index จากอุณหภูมิ + ความชื้น และใช้ระดับ: เฝ้าระวังตั้งแต่ 27°C, เตือนภัยตั้งแต่ 32°C, อันตรายตั้งแต่ 41°C และอันตรายมากเมื่อมากกว่า 54°C</p>
+</section>
+
+<div class="help-sources">
+<b>อ้างอิง:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM2.5</a>
+<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+</div>`
+},
+
+historical:{
+title:"📊 สถิติย้อนหลังและกราฟ",
+html:`
+<section class="help-section">
+<h4>โซนนี้ทำอะไร?</h4>
+<p>ใช้ดูการเปลี่ยนแปลงของข้อมูลในช่วงเวลาที่เลือก เช่น วันนี้, 30 นาที, 1 ชั่วโมง, 24 ชั่วโมง, 7 วัน หรือ 30 วัน</p>
+</section>
+
+<section class="help-section">
+<h4>สถิติที่แสดง</h4>
+<ul>
+<li><b>ค่าเฉลี่ย</b> = ผลรวมค่าที่ใช้ได้ ÷ จำนวนข้อมูลที่ใช้ได้</li>
+<li><b>ค่าสูงสุด</b> = ค่ามากที่สุดในช่วงเวลา</li>
+<li><b>ค่าต่ำสุด</b> = ค่าน้อยที่สุดในช่วงเวลา</li>
+<li><b>ค่าล่าสุด</b> = ค่าจริงชุดล่าสุดในช่วงเวลา</li>
+</ul>
+<div class="help-formula">x̄ = Σx / n<sub>valid</sub></div>
+<p>ค่า null/อ่านไม่สำเร็จจะถูกข้าม ไม่แปลงเป็น 0</p>
+</section>
+
+<section class="help-section">
+<h4>แนวโน้ม ↑ ↓ →</h4>
+<p>เมื่อเลือกตัวแปรเดียว ระบบเทียบค่าตัวแรกกับค่าล่าสุด</p>
+<div class="help-formula">%Δ = ((ค่าล่าสุด − ค่าแรก) / |ค่าแรก|) × 100</div>
+<p>ถ้าขนาดการเปลี่ยนแปลงต่ำกว่า 1% แสดง <b>คงที่</b>; ถ้าเพิ่มแสดง ↑ และถ้าลดแสดง ↓</p>
+<p class="help-muted">เกณฑ์ 1% เป็นกฎแสดงผลของโครงการ ไม่ใช่มาตรฐานภายนอก</p>
+</section>
+
+<section class="help-section">
+<h4>กราฟแสงบอกอะไร?</h4>
+<p>lux คือความส่องสว่างที่ BH1750 วัดได้ ใช้ดูสภาพแสง ณ จุดติดตั้ง ไม่ใช้สรุปสภาพท้องฟ้าโดยตรง และไม่มี Health Threshold ในโครงการ</p>
+</section>
+
+<section class="help-section">
+<h4>ส่งออกข้อมูล</h4>
+<p>ใช้ดาวน์โหลดข้อมูลตามช่วงวันที่ เพื่อนำไปตรวจสอบ ทำรายงาน หรือวิเคราะห์เพิ่มเติมภายนอก Dashboard</p>
+</section>
+
+<div class="help-sources">
+<b>ข้อมูลอ้างอิงเซนเซอร์แสง:</b>
+<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM Ambient Light Sensor</a>
+</div>`
+},
+
+ai:{
+title:"🤖 วิเคราะห์และคาดการณ์",
+html:`
+<section class="help-section">
+<h4>โซนนี้แบ่งเป็น 2 ส่วน</h4>
+<p><b>ตอนนี้เป็นอย่างไร</b> → สรุปสถานการณ์จากค่าล่าสุดและข้อมูลย้อนหลัง</p>
+<p><b>อีก 30 นาทีเป็นอย่างไร</b> → คาดการณ์ +10, +20 และ +30 นาที</p>
+</section>
+
+<section class="help-section">
+<h4>ฐานตัวเลข Forecast</h4>
+<p>Worker ใช้ข้อมูล Sensor ที่มีค่าจริงย้อนหลังสูงสุด 6 ชั่วโมง และต้องมีข้อมูลของตัวแปรนั้นอย่างน้อย 4 จุด จึงคำนวณแนวโน้มเชิงเส้นได้</p>
+</section>
+
+<section class="help-section">
+<h4>สูตร Statistical Forecast</h4>
+<p>ใช้ Linear Regression</p>
+<div class="help-formula">ŷ = a + bx</div>
+<div class="help-formula help-formula-small">b = (nΣxy − ΣxΣy) / (nΣx² − (Σx)²), &nbsp; a = (Σy − bΣx) / n</div>
+<p>จากนั้นแทนค่าเวลาอนาคตเพื่อประมาณ +10, +20 และ +30 นาที ค่าฝุ่น/แสงจะไม่ต่ำกว่า 0 และความชื้นถูกจำกัดให้อยู่ 0–100%</p>
+</section>
+
+<section class="help-section">
+<h4>AI ทำหน้าที่อะไร?</h4>
+<p>AI ช่วยแปลผลเป็นภาษา เช่น เพิ่มขึ้น/ลดลง ปัจจัยเด่น และคำอธิบาย แต่ตัวเลข Forecast มีฐานจากข้อมูล Sensor และแบบจำลองเชิงสถิติ หาก AI ภายนอกใช้ไม่ได้ ระบบยังใช้ Statistical Forecast สำรองได้</p>
+</section>
+
+<section class="help-section">
+<h4>ข้อจำกัด</h4>
+<ul>
+<li>เป็น Forecast แนวโน้มของสถานี ไม่ใช่พยากรณ์อากาศจากกรมอุตุนิยมวิทยา</li>
+<li>ไม่มีข้อมูลลม ความกดอากาศ ปริมาณฝน หรือ cloud cover</li>
+<li>BH1750 วัด lux ไม่ได้วัดเมฆหรือฝน</li>
+<li>Heat Index ไม่ใช่ WBGT</li>
+</ul>
+</section>
+
+<div class="help-sources">
+<b>อ้างอิง Heat Index:</b>
+<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา</a>
+<a href="https://www.weather.gov/tbw/heatindex" target="_blank" rel="noopener noreferrer">U.S. National Weather Service</a>
+</div>`
+}
 
 };
 
 function closeHelp(){
 
-const p=
-$("helpPopover");
+const p=$("helpPopover");
 
-p?.classList
-.remove(
-"active"
-);
+if(p){
+p.classList.remove("active");
+p.setAttribute("aria-hidden","true");
+}
 
-activeHelpButton=
-null;
+if(activeHelpButton){
+activeHelpButton.classList.remove("is-active");
+activeHelpButton.setAttribute("aria-expanded","false");
+}
+
+activeHelpButton=null;
 
 }
 
 function bindHelp(){
 
 document
-.querySelectorAll(
-".help-button"
-)
-.forEach(
-b=>
-b.addEventListener(
-"click",
-e=>{
+.querySelectorAll(".help-button")
+.forEach(b=>{
 
+b.addEventListener("click",e=>{
+
+e.preventDefault();
 e.stopPropagation();
 
-const x=
-HELP_CONTENT[
-b.dataset.help
-];
+const x=HELP_CONTENT[b.dataset.help];
 
 if(!x){
 return;
 }
 
-activeHelpButton=
-b;
-
-if(
-$("helpPopoverTitle")
-){
-
-$("helpPopoverTitle").textContent=
-x[0];
-
+if(activeHelpButton&&activeHelpButton!==b){
+activeHelpButton.classList.remove("is-active");
+activeHelpButton.setAttribute("aria-expanded","false");
 }
 
-if(
-$("helpPopoverText")
-){
+activeHelpButton=b;
+b.classList.add("is-active");
+b.setAttribute("aria-expanded","true");
 
-$("helpPopoverText").textContent=
-x[1];
+const title=$("helpPopoverTitle");
+const body=$("helpPopoverBody");
+const p=$("helpPopover");
 
+if(title){
+title.textContent=x.title;
 }
 
-const p=
-$("helpPopover");
+if(body){
+body.innerHTML=x.html;
+}
 
 if(!p){
 return;
 }
 
-p.classList.add(
-"active"
-);
+p.classList.add("active");
+p.setAttribute("aria-hidden","false");
+p.setAttribute("tabindex","-1");
 
-}
-)
-);
+requestAnimationFrame(()=>{
+try{p.focus({preventScroll:true});}catch{}
+});
+
+});
+
+});
 
 $("helpPopoverClose")
-?.addEventListener(
-"click",
-closeHelp
-);
+?.addEventListener("click",e=>{
+e.preventDefault();
+e.stopPropagation();
+closeHelp();
+});
 
-$("helpPopover")
-?.addEventListener(
-"click",
-e=>{
+document.addEventListener("click",e=>{
+
+const p=$("helpPopover");
+
 if(
-e.target===
-$("helpPopover")
+p?.classList.contains("active")&&
+!p.contains(e.target)&&
+!e.target.closest?.(".help-button")
 ){
 closeHelp();
 }
-}
-);
+
+});
 
 }
 
