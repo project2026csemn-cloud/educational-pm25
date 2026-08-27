@@ -4659,14 +4659,189 @@ aiPayload
 // AI FORECAST
 // =====================================================
 
+function dustTrendSummary(trends){
+
+const fields=[
+"pm1",
+"pm25",
+"pm10"
+];
+
+const items=
+fields.map(
+field=>
+trends.find(
+x=>x?.field===field
+)
+);
+
+const valid=
+items.filter(Boolean);
+
+if(!valid.length){
+return{
+items,
+summary:"ยังไม่มีข้อมูลแนวโน้มฝุ่นเพียงพอ"
+};
+}
+
+const codes=
+valid.map(
+x=>
+String(
+x.direction||
+"stable"
+)
+.toLowerCase()
+);
+
+const up=
+codes.filter(
+x=>
+["up","increase","increasing"].includes(x)
+).length;
+
+const down=
+codes.filter(
+x=>
+["down","decrease","decreasing"].includes(x)
+).length;
+
+const stable=
+valid.length-
+up-
+down;
+
+let summary;
+
+if(
+down===valid.length
+){
+summary="ฝุ่นทุกขนาดมีแนวโน้มลดลง";
+}else if(
+up===valid.length
+){
+summary="ฝุ่นทุกขนาดมีแนวโน้มเพิ่มขึ้น";
+}else if(
+stable===valid.length
+){
+summary="ฝุ่นทุกขนาดค่อนข้างคงที่";
+}else if(
+down>up&&
+down>=stable
+){
+summary="ฝุ่นโดยรวมมีแนวโน้มลดลง แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
+}else if(
+up>down&&
+up>=stable
+){
+summary="ฝุ่นโดยรวมมีแนวโน้มเพิ่มขึ้น แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
+}else{
+summary="แนวโน้มฝุ่นแต่ละขนาดแตกต่างกัน ควรติดตามต่อเนื่อง";
+}
+
+return{
+items,
+summary
+};
+
+}
+
+function renderDustTrendCard(trends){
+
+const dust=
+dustTrendSummary(
+trends
+);
+
+const fields=[
+["pm1","PM1.0"],
+["pm25","PM2.5"],
+["pm10","PM10"]
+];
+
+const rows=
+fields.map(
+([field,label])=>{
+
+const item=
+trends.find(
+x=>x?.field===field
+);
+
+if(!item){
+return`
+<div style="
+display:grid;
+grid-template-columns:58px 1fr;
+gap:8px;
+align-items:center;
+padding:4px 0;
+">
+<span style="color:#cbd5e1;font-weight:800">${label}</span>
+<span style="color:#64748b">ยังไม่มีข้อมูล</span>
+</div>`;
+}
+
+return`
+<div style="
+display:grid;
+grid-template-columns:58px 94px minmax(0,1fr);
+gap:8px;
+align-items:center;
+padding:4px 0;
+border-bottom:1px solid rgba(148,163,184,.08);
+">
+<span style="color:#e2e8f0;font-weight:800">${label}</span>
+<span style="font-weight:800">${esc(aiDirectionText(item.direction))}</span>
+<span style="color:#94a3b8;font-size:11px">${esc(item.explanation||"")}</span>
+</div>`;
+
+})
+.join("");
+
+return`
+<div class="ai-trend-item ai-trend-dust">
+<div class="ai-trend-variable">🌫 ฝุ่นละออง</div>
+
+<div style="margin-top:6px">
+${rows}
+</div>
+
+<div style="
+margin-top:8px;
+padding-top:7px;
+color:#bae6fd;
+font-size:11px;
+font-weight:700;
+line-height:1.5;
+">
+${esc(dust.summary)}
+</div>
+</div>`;
+
+}
+
 function renderAIForecast(payload){
-const box=$("aiForecastDetails")||$("forecastMessage");
-const badge=$("aiForecastStatusBadge");
-const generated=$("aiForecastGeneratedAt");
-const providerLabel=$("aiTrendDecisionProvider");
+
+const box=
+$("aiForecastDetails")||
+$("forecastMessage");
+
+const badge=
+$("aiForecastStatusBadge");
+
+const generated=
+$("aiForecastGeneratedAt");
+
+const providerLabel=
+$("aiTrendDecisionProvider");
 
 if(providerLabel){
-const provider=payload?.provider;
+
+const provider=
+payload?.provider;
+
 providerLabel.textContent=
 provider==="cloudflare"
 ?"ระบบวิเคราะห์"
@@ -4675,24 +4850,98 @@ provider==="cloudflare"
 :payload?.ai===false
 ?"ใช้การคำนวณจากข้อมูลย้อนหลัง"
 :"กำลังรอการวิเคราะห์...";
+
 }
+
 if(aiForecastLoading){
-if(providerLabel)providerLabel.textContent="กำลังวิเคราะห์...";
-if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
-if(badge)badge.textContent="กำลังวิเคราะห์";
+
+if(providerLabel){
+providerLabel.textContent=
+"กำลังวิเคราะห์...";
+}
+
+if(box){
+box.innerHTML=
+'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
+}
+
+if(badge){
+badge.textContent=
+"กำลังวิเคราะห์";
+}
+
 return;
 }
+
 if(!payload){
-if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
-if(badge)badge.textContent="รอข้อมูล";
+
+if(box){
+box.innerHTML=
+'<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
+}
+
+if(badge){
+badge.textContent=
+"รอข้อมูล";
+}
+
 return;
 }
-const d=payload.data||{};
-const isAI=payload.ai===true;
-if(generated){const dt=parseDate(payload.generated_at);generated.textContent=dt?`อัปเดตการวิเคราะห์: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดตการวิเคราะห์: --";}
-if(badge){badge.className=`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;const p=payload?.provider==="cloudflare"?"CLOUDFLARE AI":payload?.provider==="gemini"?"GEMINI AI":"AI";badge.textContent=isAI?`${p} • ${confidenceText(d.confidence||"low")}`:"ใช้ข้อมูลย้อนหลัง";}
-if(!box)return;
+
+const d=
+payload.data||
+{};
+
+const isAI=
+payload.ai===true;
+
+if(generated){
+
+const dt=
+parseDate(
+payload.generated_at
+);
+
+generated.textContent=
+dt
+?`อัปเดตการวิเคราะห์: ${dt.toLocaleString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok"
+}
+)}`
+:"อัปเดตการวิเคราะห์: --";
+
+}
+
+if(badge){
+
+badge.className=
+`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;
+
+const p=
+payload?.provider==="cloudflare"
+?"CLOUDFLARE AI"
+:payload?.provider==="gemini"
+?"GEMINI AI"
+:"AI";
+
+badge.textContent=
+isAI
+?`${p} • ${confidenceText(
+d.confidence||
+"low"
+)}`
+:"ใช้ข้อมูลย้อนหลัง";
+
+}
+
+if(!box){
+return;
+}
+
 if(!isAI){
+
 const reasonText=
 payload.reason==="gemini_quota_exhausted"
 ?"โควตา Gemini ฟรีถึงขีดจำกัดแล้ว ระบบข้อมูลจริงยังทำงานตามปกติ"
@@ -4700,23 +4949,174 @@ payload.reason==="gemini_quota_exhausted"
 ?"ยังไม่ได้ตั้งค่า GEMINI_API_KEY"
 :"ไม่สามารถเชื่อม Gemini ได้ในขณะนี้";
 
-box.innerHTML=`<div class="ai-unavailable"><b>การวิเคราะห์ขั้นสูงยังไม่พร้อม</b><div class="mt-1">${esc(reasonText)}</div></div>`;
+box.innerHTML=
+`<div class="ai-unavailable">
+<b>การวิเคราะห์ขั้นสูงยังไม่พร้อม</b>
+<div class="mt-1">${esc(reasonText)}</div>
+</div>`;
+
 return;
 }
-const trends=Array.isArray(d.trend_analysis)?d.trend_analysis:[];
-const preferred=["pm25","temperature","humidity","light"];
-const trendCards=preferred.map(field=>trends.find(x=>x?.field===field)).filter(Boolean);
-box.innerHTML=`
-<div class="ai-forecast-headline">${esc(d.headline||"แนวโน้มและคาดการณ์")}</div>
-<div class="ai-trend-summary">${trendCards.map(x=>`<div class="ai-trend-item"><div class="ai-trend-variable">${esc(CURRENT_METRIC_CONFIG[x.field]?.label||x.field)}</div><div class="ai-trend-direction">${esc(aiDirectionText(x.direction))}</div><div class="ai-trend-explanation">${esc(x.explanation||"")}</div></div>`).join("")}</div>
-<div class="ai-trend-driver"><b>ปัจจัยที่เด่น:</b> ${esc(d.primary_driver||"--")}<br><b>สิ่งผิดปกติ:</b> ${esc(d.anomaly_summary||"--")}</div>
-<div class="ai-forecast-grid mt-3">
-<div class="ai-forecast-item"><div class="ai-forecast-label">🌿 คุณภาพอากาศ</div><div>${esc(d.air_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">🌡 สภาพความร้อน</div><div>${esc(d.heat_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">📍 พื้นที่</div><div>${esc(d.local_environment_forecast||"ยังไม่มีข้อมูล")}</div></div>
-<div class="ai-forecast-item"><div class="ai-forecast-label">🏃 กิจกรรม</div><div>${esc(d.activity_forecast||"ยังไม่มีข้อมูล")}</div></div>
+
+const trends=
+Array.isArray(
+d.trend_analysis
+)
+?d.trend_analysis
+:[];
+
+/*
+  ฝุ่น 3 ขนาดอยู่ในการ์ดเดียว
+  ส่วน Temperature / Humidity / Light
+  ยังคงเป็นการ์ดแยกเหมือนเดิม
+*/
+
+const environmentFields=[
+"temperature",
+"humidity",
+"light"
+];
+
+const environmentCards=
+environmentFields
+.map(
+field=>
+trends.find(
+x=>x?.field===field
+)
+)
+.filter(Boolean);
+
+const dustCard=
+renderDustTrendCard(
+trends
+);
+
+const otherCards=
+environmentCards
+.map(
+x=>
+`<div class="ai-trend-item">
+<div class="ai-trend-variable">
+${esc(
+CURRENT_METRIC_CONFIG[
+x.field
+]?.label||
+x.field
+)}
 </div>
-<div class="ai-meta-row"><span>คาดการณ์จากข้อมูลล่าสุดและข้อมูลย้อนหลัง</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}</span></div>`;
+
+<div class="ai-trend-direction">
+${esc(
+aiDirectionText(
+x.direction
+)
+)}
+</div>
+
+<div class="ai-trend-explanation">
+${esc(
+x.explanation||
+""
+)}
+</div>
+</div>`
+)
+.join("");
+
+box.innerHTML=
+`
+<div class="ai-forecast-headline">
+${esc(
+d.headline||
+"แนวโน้มและคาดการณ์"
+)}
+</div>
+
+<div class="ai-trend-summary">
+${dustCard}
+${otherCards}
+</div>
+
+<div class="ai-trend-driver">
+<b>ปัจจัยที่เด่น:</b>
+${esc(
+d.primary_driver||
+"--"
+)}
+<br>
+<b>สิ่งผิดปกติ:</b>
+${esc(
+d.anomaly_summary||
+"--"
+)}
+</div>
+
+<div class="ai-forecast-grid mt-3">
+
+<div class="ai-forecast-item">
+<div class="ai-forecast-label">
+🌿 คุณภาพอากาศ
+</div>
+<div>
+${esc(
+d.air_forecast||
+"ยังไม่มีข้อมูล"
+)}
+</div>
+</div>
+
+<div class="ai-forecast-item">
+<div class="ai-forecast-label">
+🌡 สภาพความร้อน
+</div>
+<div>
+${esc(
+d.heat_forecast||
+"ยังไม่มีข้อมูล"
+)}
+</div>
+</div>
+
+<div class="ai-forecast-item">
+<div class="ai-forecast-label">
+📍 พื้นที่
+</div>
+<div>
+${esc(
+d.local_environment_forecast||
+"ยังไม่มีข้อมูล"
+)}
+</div>
+</div>
+
+<div class="ai-forecast-item">
+<div class="ai-forecast-label">
+🏃 กิจกรรม
+</div>
+<div>
+${esc(
+d.activity_forecast||
+"ยังไม่มีข้อมูล"
+)}
+</div>
+</div>
+
+</div>
+
+<div class="ai-meta-row">
+<span>
+คาดการณ์จากข้อมูลล่าสุดและข้อมูลย้อนหลัง
+</span>
+<span class="ai-confidence">
+ความเชื่อมั่น:
+${confidenceText(
+d.confidence||
+"low"
+)}
+</span>
+</div>`;
+
 }
 
 async function loadAIForecast(
