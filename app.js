@@ -4260,11 +4260,21 @@ Date.now()
 
 }
 
-$("exportModal")
-?.classList
-.add(
+const modal=
+$("exportModal");
+
+if(modal){
+
+modal.classList.add(
 "active"
 );
+
+modal.setAttribute(
+"aria-hidden",
+"false"
+);
+
+}
 
 refreshExport();
 
@@ -4272,11 +4282,21 @@ refreshExport();
 
 function closeExport(){
 
-$("exportModal")
-?.classList
-.remove(
+const modal=
+$("exportModal");
+
+if(modal){
+
+modal.classList.remove(
 "active"
 );
+
+modal.setAttribute(
+"aria-hidden",
+"true"
+);
+
+}
 
 }
 
@@ -6032,6 +6052,36 @@ $("exportCancelButton")
 ?.addEventListener(
 "click",
 closeExport
+);
+
+/*
+  ปิดหน้าต่างส่งออกได้เหมือนตัวเลือกช่วงเวลา:
+  - คลิกพื้นที่ว่าง / ฉากหลัง
+  - ปุ่ม X
+  - ปุ่มยกเลิก
+  - ปุ่ม Esc (มี listener ด้านล่าง)
+*/
+$("exportModal")
+?.addEventListener(
+"click",
+e=>{
+
+const modal=
+$("exportModal");
+
+if(
+e.target===modal||
+e.target?.dataset?.exportClose==="true"||
+e.target?.classList?.contains(
+"export-modal-backdrop"
+)
+){
+
+closeExport();
+
+}
+
+}
 );
 
 $("exportStartDate")
