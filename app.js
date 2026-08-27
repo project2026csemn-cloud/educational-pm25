@@ -4686,32 +4686,76 @@ title:"📍 จุดตรวจวัด",
 html:`
 <section class="help-section">
 <h4>โซนนี้บอกอะไร?</h4>
-<p>แสดงสถานะและค่าล่าสุดของจุดตรวจวัดทั้ง 3 จุด ได้แก่ PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และความเข้มแสง</p>
+<p>แสดงสถานะและค่าล่าสุดของจุดตรวจวัดทั้ง 3 จุด ได้แก่ PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และความเข้มแสง โดยค่าที่เห็นเป็นค่าล่าสุดที่ระบบรับรองว่าอ่านได้ ไม่ใช่การแทนค่าที่หายด้วย 0</p>
 </section>
 
 <section class="help-section">
-<h4>ข้อมูลมาจากไหน?</h4>
+<h4>ข้อมูลมาจากเซนเซอร์อะไร?</h4>
 <ul>
 <li><b>PMS3003</b> → PM1.0, PM2.5, PM10 หน่วย µg/m³</li>
 <li><b>AM2315</b> → อุณหภูมิ (°C) และความชื้นสัมพัทธ์ (%)</li>
-<li><b>BH1750</b> → ความเข้มแสง หน่วย lux ซึ่งเป็นค่าความส่องสว่าง ไม่ใช่ค่าความร้อนและไม่ใช้บอกว่าเมฆมากหรือฝนตก</li>
+<li><b>BH1750</b> → ความเข้มแสง หน่วย lux</li>
 </ul>
 </section>
 
 <section class="help-section">
 <h4>ทำไมหนึ่งรอบไม่ใช้ค่าที่อ่านครั้งเดียว?</h4>
-<p>ตัวลูกเก็บค่าหลายครั้งประมาณ 1 นาที ใช้เฉพาะครั้งที่อ่านสำเร็จ แล้วส่งค่าเฉลี่ยให้ตัวแม่หนึ่งครั้ง</p>
+<p>ตัวลูกเก็บค่าหลายครั้งประมาณ 1 นาที ใช้เฉพาะครั้งที่อ่านสำเร็จ แล้วจึงส่งค่าเฉลี่ยให้ตัวแม่หนึ่งครั้ง</p>
 <div class="help-formula">x̄ = (x₁ + x₂ + ... + xₙ) / n<sub>valid</sub></div>
 <p class="help-muted">n<sub>valid</sub> คือจำนวนครั้งที่อ่านสำเร็จ ค่าที่อ่านไม่สำเร็จจะไม่ถูกแทนด้วย 0 และไม่ถูกนำมาหารเฉลี่ย</p>
 </section>
 
 <section class="help-section">
+<h4>เกณฑ์และการตีความของข้อมูลทั้ง 6 ค่า</h4>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>PM1.0</b><span class="help-chip no-standard">ไม่มีเกณฑ์สุขภาพที่โครงการใช้</span></div>
+<p>ใช้เป็นข้อมูลประกอบเพื่อดูอนุภาคที่มีขนาดเล็กมากขึ้น แต่ <b>กรมควบคุมมลพิษของไทยไม่ได้ใช้ PM1.0 เป็นตัวแปร AQI</b> และ WHO AQG 2021 กำหนดระดับเชิงปริมาณสำหรับ PM2.5 และ PM10 ไม่ได้กำหนด PM1.0 ดังนั้น Dashboard จะแสดง PM1.0 เป็นข้อมูลประกอบ ไม่ตัดสินว่า “ดี/อันตราย” จาก PM1.0 เพียงค่าเดียว</p>
+</div>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>PM2.5</b><span class="help-chip has-standard">มีเกณฑ์อ้างอิง</span></div>
+<p>เป็นตัวหลักที่ระบบใช้สื่อสารคุณภาพอากาศและแจ้งเตือน</p>
+<div class="help-threshold-grid">
+<span>0–15.0 µg/m³</span><b>ดีมาก</b>
+<span>15.1–25.0 µg/m³</span><b>ดี</b>
+<span>25.1–37.5 µg/m³</span><b>ปานกลาง</b>
+<span>37.6–75.0 µg/m³</span><b>เริ่มมีผลกระทบต่อสุขภาพ</b>
+<span>75.1 µg/m³ ขึ้นไป</span><b>มีผลกระทบต่อสุขภาพ</b>
+</div>
+<div class="help-warning">มาตรฐาน PM2.5 ของไทยที่ 37.5 µg/m³ เป็น <b>ค่าเฉลี่ย 24 ชั่วโมง</b> ส่วนค่าบนการ์ดเป็นค่ารอบล่าสุด/ระยะสั้น จึงใช้เพื่อเฝ้าระวังและสื่อสารเบื้องต้น ไม่ใช่ผล AQI 24 ชั่วโมงอย่างเป็นทางการ</div>
+</div>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>PM10</b><span class="help-chip has-standard">มีมาตรฐานอากาศ</span></div>
+<p>ประเทศไทยกำหนดมาตรฐาน PM10 ในบรรยากาศทั่วไป <b>ค่าเฉลี่ย 24 ชั่วโมงไม่เกิน 120 µg/m³</b> และค่าเฉลี่ยรายปีไม่เกิน 50 µg/m³ ขณะที่ WHO AQG 2021 แนะนำ 24 ชั่วโมง 45 µg/m³ และรายปี 15 µg/m³</p>
+<p class="help-muted">ในโครงการนี้ PM10 ใช้เพื่อแสดงผล เปรียบเทียบ และดูย้อนหลัง แต่ <b>ยังไม่ได้ใช้เป็นตัวตัดสินคำแนะนำกิจกรรมหรือ Alert อัตโนมัติ</b></p>
+</div>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>อุณหภูมิ</b><span class="help-chip context-standard">ไม่ตัดสินเดี่ยว</span></div>
+<p>ระบบไม่กำหนดว่าอุณหภูมิ “ดี/อันตราย” จาก °C เพียงค่าเดียว เพราะผลต่อร่างกายขึ้นกับความชื้นด้วย จึงนำอุณหภูมิไปคำนวณ <b>Heat Index</b> ร่วมกับความชื้นแทน</p>
+</div>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>ความชื้นสัมพัทธ์</b><span class="help-chip context-standard">ไม่ตัดสินเดี่ยว</span></div>
+<p>โครงการไม่ได้ตั้ง Health Threshold ของความชื้นเพียงค่าเดียว แต่ใช้ความชื้นร่วมกับอุณหภูมิในการคำนวณ Heat Index เพราะความชื้นสูงทำให้การระเหยของเหงื่อลดลงและทำให้ร่างกายรู้สึกร้อนขึ้นได้</p>
+</div>
+
+<div class="help-sensor-card">
+<div class="help-sensor-head"><b>แสง (lux)</b><span class="help-chip no-standard">ไม่มี Health Threshold</span></div>
+<p>lux คือ <b>ความส่องสว่าง (illuminance)</b> ที่ตกกระทบจุดตรวจวัด ใช้ดูบริบทของสภาพแสงและการเปลี่ยนแปลงย้อนหลัง ไม่ใช่หน่วยความร้อน และไม่ใช้ตัดสินเมฆ/ฝนหรือคุณภาพอากาศ</p>
+<p class="help-muted">ค่าที่เหมาะสมของ lux ขึ้นกับงานและสถานที่ เช่น ห้องเรียน ทางเดิน หรือกลางแจ้ง จึงไม่มีเกณฑ์สุขภาพกลางแจ้งค่าเดียวที่โครงการนำมาใช้ตัดสิน “ดี/ไม่ดี”</p>
+</div>
+</section>
+
+<section class="help-section">
 <h4>ONLINE / OFFLINE หมายถึงอะไร?</h4>
 <ul>
-<li><b>ONLINE</b> = จุดตรวจวัดยังติดต่อกับระบบได้ โดยหน้า Dashboard จะนับช่วง Sleep ตามรอบประหยัดพลังงานเป็น ONLINE ด้วย</li>
+<li><b>ONLINE</b> = จุดตรวจวัดยังติดต่อกับระบบได้ โดยหน้า Dashboard นับช่วง Sleep ตามรอบประหยัดพลังงานเป็น ONLINE ด้วย</li>
 <li><b>OFFLINE</b> = ไม่ได้รับการติดต่อใหม่เกิน 6 นาที หรือ Gateway ขาดการเชื่อมต่อ</li>
 </ul>
-<p class="help-muted">เกณฑ์ 6 นาทีเป็น <b>กฎที่โครงการกำหนดเอง</b> ให้สัมพันธ์กับรอบทำงานของอุปกรณ์ ไม่ใช่มาตรฐานภายนอก</p>
+<p class="help-muted">เกณฑ์ 6 นาทีเป็น <b>กฎของโครงการ</b> เพื่อให้สัมพันธ์กับรอบ Sleep/วัดข้อมูล ไม่ใช่มาตรฐานจากหน่วยงานภายนอก</p>
 </section>
 
 <section class="help-section">
@@ -4720,8 +4764,12 @@ html:`
 </section>
 
 <div class="help-sources">
-<b>ข้อมูลอ้างอิงเซนเซอร์แสง:</b>
-<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM Ambient Light Sensors</a>
+<b>อ้างอิงของตัวแปร:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5 ประเทศไทย</a>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — มาตรฐาน PM2.5 และ PM10</a>
+<a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO Global Air Quality Guidelines 2021 — PM2.5 / PM10</a>
+<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — Ambient Light / lux</a>
 </div>`
 },
 
@@ -4785,31 +4833,40 @@ title:"📍 เปรียบเทียบจุดตรวจวัด",
 html:`
 <section class="help-section">
 <h4>โซนนี้ใช้ทำอะไร?</h4>
-<p>เปรียบเทียบจุดตรวจวัดทั้ง 3 จุดในตัวแปรที่เลือก เช่น PM2.5 อุณหภูมิ ความชื้น หรือแสง เพื่อให้เห็นภาพรวมและจุดที่ค่าสูงที่สุด</p>
+<p>เปรียบเทียบจุดตรวจวัดทั้ง 3 จุดในตัวแปรที่เลือก เพื่อให้เห็น <b>ค่าเฉลี่ยของพื้นที่</b>, <b>จุดที่ค่าสูงที่สุด</b> และ <b>จุดที่ควรสนใจ</b></p>
 </section>
 
 <section class="help-section">
-<h4>ค่าเฉลี่ยทั้งพื้นที่</h4>
+<h4>ค่าเฉลี่ยทั้งพื้นที่คำนวณอย่างไร?</h4>
 <p>ใช้เฉพาะจุดที่ยังใช้งานได้และมีค่าจริงของตัวแปรนั้น</p>
 <div class="help-formula">ค่าเฉลี่ยพื้นที่ = Σ(ค่าของจุดที่มีข้อมูล) / จำนวนจุดที่มีข้อมูล</div>
 <p>ถ้าจุดใดไม่มีข้อมูล จุดนั้นจะไม่ถูกนำไปหารและไม่ถูกแทนด้วย 0</p>
 </section>
 
 <section class="help-section">
-<h4>จุดที่ค่าสูงที่สุด</h4>
-<p>เลือกค่ามากที่สุดจากจุดที่มีข้อมูลจริง เป็นการเปรียบเทียบ ไม่ได้แปลว่าจุดนั้นอันตรายเสมอไป</p>
+<h4>ถ้าเลือกแต่ละตัวแปร ระบบตีความอย่างไร?</h4>
+<ul>
+<li><b>PM2.5</b> → มีเกณฑ์คุณภาพอากาศของไทย และระบบใช้เป็นตัวหลักในการเฝ้าระวัง</li>
+<li><b>PM10</b> → มีมาตรฐานอากาศไทย 24 ชั่วโมง 120 µg/m³ แต่ในโซนนี้ใช้เพื่อเปรียบเทียบ ยังไม่ใช้สร้าง Alert อัตโนมัติ</li>
+<li><b>PM1.0</b> → ไม่มี AQI/Health Threshold ที่โครงการใช้ จึงแสดงเพื่อเปรียบเทียบเท่านั้น</li>
+<li><b>อุณหภูมิ</b> → ไม่ตัดสินความเสี่ยงจากอุณหภูมิเดี่ยว ต้องดูร่วมกับความชื้นผ่าน Heat Index</li>
+<li><b>ความชื้น</b> → ไม่มี Health Threshold เดี่ยวในโครงการ ใช้ประกอบ Heat Index</li>
+<li><b>แสง</b> → ไม่มี Health Threshold; ใช้เปรียบเทียบความส่องสว่าง ณ จุดตรวจวัด</li>
+</ul>
 </section>
 
 <section class="help-section">
-<h4>จุดที่ควรสนใจ</h4>
-<p><b>PM2.5:</b> ใช้ระดับอ้างอิงกรมควบคุมมลพิษ โดยค่ามากกว่า 37.5 µg/m³ เริ่มอยู่เหนือค่ามาตรฐานเฉลี่ย 24 ชั่วโมง</p>
-<p><b>อุณหภูมิ:</b> การประเมินความเสี่ยงความร้อนจริงใช้ร่วมกับความชื้นเพื่อคำนวณ Heat Index ในโซนสรุป/แจ้งเตือน</p>
-<p><b>PM1.0, PM10, ความชื้น และแสง:</b> โซนนี้ใช้เพื่อเปรียบเทียบค่า ยังไม่ได้กำหนด Health Alert แยกสำหรับตัวแปรเหล่านี้</p>
+<h4>จุดที่ค่าสูงที่สุด ≠ จุดอันตรายเสมอ</h4>
+<p>ช่อง “จุดที่ค่าสูงที่สุด” เป็นการเปรียบเทียบตัวเลขเท่านั้น ส่วนการตัดสินว่าควรเฝ้าระวังจะใช้เฉพาะเกณฑ์ที่ระบบกำหนดไว้ เช่น PM2.5 และ Heat Index ในโซนสรุป/แจ้งเตือน</p>
 </section>
 
 <div class="help-sources">
-<b>อ้างอิง PM2.5:</b>
-<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ</a>
+<b>อ้างอิง:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5</a>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM10</a>
+<a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO AQG 2021</a>
+<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — lux</a>
 </div>`
 },
 
@@ -4874,8 +4931,14 @@ html:`
 </section>
 
 <section class="help-section">
-<h4>กราฟแสงบอกอะไร?</h4>
-<p>lux คือความส่องสว่างที่ BH1750 วัดได้ ใช้ดูสภาพแสง ณ จุดติดตั้ง ไม่ใช้สรุปสภาพท้องฟ้าโดยตรง และไม่มี Health Threshold ในโครงการ</p>
+<h4>เกณฑ์ของค่าที่เห็นในกราฟ</h4>
+<ul>
+<li><b>PM2.5</b> → มีเกณฑ์ AQI/มาตรฐานไทย แต่กราฟคือค่าที่วัดตามเวลา ไม่ใช่ค่าเฉลี่ย 24 ชั่วโมงโดยอัตโนมัติ</li>
+<li><b>PM10</b> → มีมาตรฐานไทย 24 ชั่วโมง 120 µg/m³ และรายปี 50 µg/m³; กราฟใช้เพื่อดูแนวโน้ม ไม่ได้แปลว่าเส้นที่เกินครั้งเดียวคือการเกินมาตรฐาน 24 ชั่วโมง</li>
+<li><b>PM1.0</b> → ไม่มีเกณฑ์ AQI ที่โครงการใช้ แสดงเพื่อศึกษารูปแบบข้อมูล</li>
+<li><b>อุณหภูมิ + ความชื้น</b> → ใช้ร่วมกันใน Heat Index; ไม่ตัดสินความเสี่ยงจากกราฟใดกราฟหนึ่งเพียงตัวเดียว</li>
+<li><b>แสง</b> → ไม่มี Health Threshold ในโครงการ; lux ใช้ดูการเปลี่ยนแปลงของความส่องสว่าง</li>
+</ul>
 </section>
 
 <section class="help-section">
@@ -4884,8 +4947,12 @@ html:`
 </section>
 
 <div class="help-sources">
-<b>ข้อมูลอ้างอิงเซนเซอร์แสง:</b>
-<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM Ambient Light Sensor</a>
+<b>อ้างอิงของข้อมูลที่แสดง:</b>
+<a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM2.5/AQI</a>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM10</a>
+<a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO AQG 2021 — PM2.5/PM10</a>
+<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — Ambient Light Sensor</a>
 </div>`
 },
 
