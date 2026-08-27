@@ -4900,12 +4900,12 @@ const provider=
 payload?.provider;
 
 providerLabel.textContent=
-provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:provider==="gemini"
-?"ระบบวิเคราะห์"
+provider==="gemini"
+?"Gemini AI"
+:provider==="cloudflare"
+?"Cloudflare Workers AI"
 :payload?.ai===false
-?"ใช้การคำนวณจากข้อมูลย้อนหลัง"
+?"Rule / Statistical Engine"
 :"กำลังรอการวิเคราะห์...";
 
 }
@@ -4977,19 +4977,18 @@ badge.className=
 `ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;
 
 const p=
-payload?.provider==="cloudflare"
-?"CLOUDFLARE AI"
-:payload?.provider==="gemini"
+payload?.provider==="gemini"
 ?"GEMINI AI"
+:payload?.provider==="cloudflare"
+?"CLOUDFLARE AI"
+:payload?.provider==="rule"
+?"RULE ENGINE"
 :"AI";
 
 badge.textContent=
 isAI
-?`${p} • ${confidenceText(
-d.confidence||
-"low"
-)}`
-:"ใช้ข้อมูลย้อนหลัง";
+?p
+:"RULE ENGINE";
 
 }
 
