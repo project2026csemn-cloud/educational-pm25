@@ -5824,3 +5824,38 @@ input[type="datetime-local"]{
         margin-top:12px!important;
     }
 }
+
+
+/* =========================================================
+   LIGHTHOUSE / RENDERING PERFORMANCE
+   ========================================================= */
+
+/* Heavy below-the-fold areas are skipped until near viewport. */
+.ai-intelligence-section,
+.historical-section,
+.dashboard-charts-zone,
+.credit-bar{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 720px;
+}
+
+.credit-bar{
+    contain-intrinsic-size:auto 230px;
+}
+
+/* New dust-profile card gets a neutral atmospheric accent. */
+.smart-summary-stat.smart-summary-environment{
+    background:
+        linear-gradient(135deg,rgba(100,116,139,.09),rgba(15,23,42,.18))!important;
+    border-color:rgba(148,163,184,.20)!important;
+}
+
+/* Avoid expensive paint work when motion is reduced. */
+@media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+}
