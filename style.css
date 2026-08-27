@@ -6138,3 +6138,127 @@ input[type="datetime-local"]{
     }
 }
 
+/* =========================================================
+   AI TREND — COMPACT LAYOUT
+   Dust = full width
+   Temp / Humidity / Light = 3 equal cards below
+   ========================================================= */
+
+.ai-trend-summary{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:9px!important;
+    align-items:start!important;
+}
+
+/* ฝุ่นกินเต็มแถว ไม่บังคับการ์ดอื่นสูงตาม */
+.ai-trend-dust{
+    grid-column:1 / -1!important;
+    min-height:0!important;
+    padding:11px 12px!important;
+}
+
+/* PM1 / PM2.5 / PM10 อยู่ในแถวเดียว */
+.ai-dust-trend-grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;
+    margin-top:8px!important;
+}
+
+.ai-dust-mini{
+    min-width:0!important;
+    padding:9px 10px!important;
+    border:1px solid rgba(148,163,184,.10)!important;
+    border-radius:10px!important;
+    background:rgba(8,25,41,.58)!important;
+}
+
+.ai-dust-mini-label{
+    font-size:10px!important;
+    font-weight:900!important;
+    color:#e2e8f0!important;
+}
+
+.ai-dust-mini-direction{
+    margin-top:4px!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    color:#f8fafc!important;
+}
+
+.ai-dust-mini-note{
+    margin-top:3px!important;
+    font-size:9px!important;
+    line-height:1.45!important;
+    color:#64748b!important;
+}
+
+.ai-dust-mini.is-missing .ai-dust-mini-direction{
+    color:#64748b!important;
+}
+
+.ai-dust-summary{
+    margin-top:8px!important;
+    padding:8px 10px!important;
+    border-radius:9px!important;
+    background:rgba(34,211,238,.055)!important;
+    color:#bae6fd!important;
+    font-size:10px!important;
+    font-weight:800!important;
+    line-height:1.5!important;
+}
+
+/* Temp / Humidity / Light ไม่ยืดสูงเกินเนื้อหา */
+.ai-trend-summary > .ai-trend-item:not(.ai-trend-dust){
+    min-height:0!important;
+    height:auto!important;
+    align-self:start!important;
+}
+
+/* การ์ด Forecast ด้านล่างให้เตี้ยลงนิดหน่อย */
+.ai-forecast-grid{
+    align-items:start!important;
+}
+
+.ai-forecast-item{
+    min-height:0!important;
+    padding:10px 11px!important;
+}
+
+/* Tablet */
+@media(max-width:1000px){
+
+    .ai-trend-summary{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .ai-trend-dust{
+        grid-column:1 / -1!important;
+    }
+
+    .ai-dust-trend-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    }
+}
+
+/* Mobile */
+@media(max-width:640px){
+
+    .ai-trend-summary{
+        grid-template-columns:1fr!important;
+    }
+
+    .ai-trend-dust{
+        grid-column:auto!important;
+    }
+
+    .ai-dust-trend-grid{
+        grid-template-columns:1fr!important;
+    }
+
+    .ai-dust-mini{
+        padding:8px 9px!important;
+    }
+}
+
