@@ -4771,30 +4771,17 @@ x=>x?.field===field
 
 if(!item){
 return`
-<div style="
-display:grid;
-grid-template-columns:58px 1fr;
-gap:8px;
-align-items:center;
-padding:4px 0;
-">
-<span style="color:#cbd5e1;font-weight:800">${label}</span>
-<span style="color:#64748b">ยังไม่มีข้อมูล</span>
+<div class="ai-dust-mini is-missing">
+<div class="ai-dust-mini-label">${label}</div>
+<div class="ai-dust-mini-direction">ยังไม่มีข้อมูล</div>
 </div>`;
 }
 
 return`
-<div style="
-display:grid;
-grid-template-columns:58px 94px minmax(0,1fr);
-gap:8px;
-align-items:center;
-padding:4px 0;
-border-bottom:1px solid rgba(148,163,184,.08);
-">
-<span style="color:#e2e8f0;font-weight:800">${label}</span>
-<span style="font-weight:800">${esc(aiDirectionText(item.direction))}</span>
-<span style="color:#94a3b8;font-size:11px">${esc(item.explanation||"")}</span>
+<div class="ai-dust-mini">
+<div class="ai-dust-mini-label">${label}</div>
+<div class="ai-dust-mini-direction">${esc(aiDirectionText(item.direction))}</div>
+<div class="ai-dust-mini-note">${esc(item.explanation||"")}</div>
 </div>`;
 
 })
@@ -4804,18 +4791,11 @@ return`
 <div class="ai-trend-item ai-trend-dust">
 <div class="ai-trend-variable">🌫 ฝุ่นละออง</div>
 
-<div style="margin-top:6px">
+<div class="ai-dust-trend-grid">
 ${rows}
 </div>
 
-<div style="
-margin-top:8px;
-padding-top:7px;
-color:#bae6fd;
-font-size:11px;
-font-weight:700;
-line-height:1.5;
-">
+<div class="ai-dust-summary">
 ${esc(dust.summary)}
 </div>
 </div>`;
