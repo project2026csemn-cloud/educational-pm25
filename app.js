@@ -6126,6 +6126,262 @@ closeHistoryRangePicker();
 
 }
 
+
+// =====================================================
+// MOBILE / TABLET CHART ZOOM VIEWER
+// =====================================================
+
+let chartZoomViewerReady=false;
+
+function setupChartZoomViewer(){
+
+if(chartZoomViewerReady){
+return;
+}
+
+chartZoomViewerReady=true;
+
+const viewer=document.createElement("div");
+
+viewer.id="chartZoomViewer";
+viewer.className="chart-zoom-viewer";
+viewer.setAttribute("aria-hidden","true");
+
+viewer.innerHTML=`
+<div class="chart-zoom-backdrop" data-chart-zoom-close="true"></div>
+<div class="chart-zoom-dialog" role="dialog" aria-modal="true" aria-label="ขยายกราฟ">
+  <div class="chart-zoom-toolbar">
+    <div>
+      <div class="chart-zoom-title" id="chartZoomTitle">ขยายกราฟ</div>
+      <div class="chart-zoom-help">ใช้สองนิ้วเพื่อซูม • ลากเมื่อซูมแล้ว</div>
+    </div>
+    <div class="chart-zoom-actions">
+      <button type="button" id="chartZoomOut" aria-label="ย่อกราฟ">−</button>
+      <button type="button" id="chartZoomReset" aria-label="รีเซ็ตกราฟ">100%</button>
+      <button type="button" id="chartZoomIn" aria-label="ขยายกราฟ">+</button>
+      <button type="button" id="chartZoomClose" class="chart-zoom-close" aria-label="ปิด">×</button>
+    </div>
+  </div>
+  <div class="chart-zoom-stage" id="chartZoomStage">
+    <img id="chartZoomImage" class="chart-zoom-image" alt="กราฟแบบขยาย">
+  </div>
+</div>`;
+
+document.body.appendChild(viewer);
+
+const image=$("chartZoomImage");
+const stage=$("chartZoomStage");
+
+let scale=1;
+let tx=0;
+let ty=0;
+let pinchStartDistance=0;
+let pinchStartScale=1;
+let panStartX=0;
+let panStartY=0;
+let panOriginX=0;
+let panOriginY=0;
+let panning=false;
+
+function clampScale(v){
+return Math.min(5,Math.max(1,v));
+}
+
+function applyTransform(){
+
+if(!image){
+return;
+}
+
+image.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${scale})`;
+
+const reset=$("chartZoomReset");
+if(reset){
+reset.textContent=`${Math.round(scale*100)}%`;
+}
+
+}
+
+function resetZoom(){
+scale=1;
+tx=0;
+ty=0;
+applyTransform();
+}
+
+function closeViewer(){
+
+viewer.classList.remove("active");
+viewer.setAttribute("aria-hidden","true");
+document.body.classList.remove("chart-zoom-open");
+resetZoom();
+
+}
+
+function openCanvas(canvas){
+
+if(!canvas||typeof canvas.toDataURL!=="function"){
+return;
+}
+
+try{
+image.src=canvas.toDataURL("image/png",1);
+}catch{
+return;
+}
+
+const panel=canvas.closest(".metric-chart-panel, .bottom-chart-wrap, .dashboard-chart-card");
+
+const title=
+panel?.querySelector(".metric-chart-title, .chart-zone-title")
+?.textContent?.trim()||
+"กราฟข้อมูล";
+
+$("chartZoomTitle").textContent=title;
+
+resetZoom();
+viewer.classList.add("active");
+viewer.setAttribute("aria-hidden","false");
+document.body.classList.add("chart-zoom-open");
+
+}
+
+document.addEventListener("click",e=>{
+
+const canvas=e.target?.closest?.("#historyChartArea canvas, #forecastChartArea canvas");
+
+if(!canvas){
+return;
+}
+
+if(
+window.matchMedia("(max-width: 1100px)").matches||
+navigator.maxTouchPoints>0
+){
+openCanvas(canvas);
+}
+
+});
+
+viewer.addEventListener("click",e=>{
+
+if(e.target?.dataset?.chartZoomClose==="true"){
+closeViewer();
+}
+
+});
+
+$("chartZoomClose")?.addEventListener("click",closeViewer);
+
+$("chartZoomIn")?.addEventListener("click",()=>{
+scale=clampScale(scale+.5);
+applyTransform();
+});
+
+$("chartZoomOut")?.addEventListener("click",()=>{
+scale=clampScale(scale-.5);
+if(scale===1){
+tx=0;
+ty=0;
+}
+applyTransform();
+});
+
+$("chartZoomReset")?.addEventListener("click",resetZoom);
+
+function distance(t1,t2){
+
+const dx=t2.clientX-t1.clientX;
+const dy=t2.clientY-t1.clientY;
+
+return Math.hypot(dx,dy);
+
+}
+
+stage.addEventListener("touchstart",e=>{
+
+if(e.touches.length===2){
+
+pinchStartDistance=distance(e.touches[0],e.touches[1]);
+pinchStartScale=scale;
+panning=false;
+return;
+
+}
+
+if(e.touches.length===1&&scale>1){
+
+panning=true;
+panStartX=e.touches[0].clientX;
+panStartY=e.touches[0].clientY;
+panOriginX=tx;
+panOriginY=ty;
+
+}
+
+},{passive:true});
+
+stage.addEventListener("touchmove",e=>{
+
+if(e.touches.length===2){
+
+e.preventDefault();
+
+const d=distance(e.touches[0],e.touches[1]);
+
+if(pinchStartDistance>0){
+
+scale=clampScale(pinchStartScale*(d/pinchStartDistance));
+
+if(scale===1){
+tx=0;
+ty=0;
+}
+
+applyTransform();
+
+}
+
+return;
+}
+
+if(e.touches.length===1&&panning&&scale>1){
+
+e.preventDefault();
+
+tx=panOriginX+(e.touches[0].clientX-panStartX);
+ty=panOriginY+(e.touches[0].clientY-panStartY);
+
+applyTransform();
+
+}
+
+},{passive:false});
+
+stage.addEventListener("touchend",e=>{
+
+if(e.touches.length<2){
+pinchStartDistance=0;
+}
+
+if(e.touches.length===0){
+panning=false;
+}
+
+});
+
+image.addEventListener("dblclick",resetZoom);
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="Escape"&&viewer.classList.contains("active")){
+closeViewer();
+}
+
+});
+
+}
+
 // =====================================================
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 // =====================================================
@@ -6572,6 +6828,7 @@ null
 bindEvents();
 
 bindHelp();
+setupChartZoomViewer();
 
 setupDeferredSections();
 
