@@ -6261,3 +6261,308 @@ input[type="datetime-local"]{
         padding:8px 9px!important;
     }
 }
+
+
+/* =========================================================
+   AI SECTION — FONT SIZE / READABILITY FINAL
+   เพิ่มขนาดตัวอักษรทั้ง Desktop และ Mobile
+   โดยไม่เปลี่ยนโครงสร้างหรือ logic ของ AI
+   ========================================================= */
+
+/* หัวข้อหลักของโซน */
+.ai-intelligence-section .section-title-with-help h2{
+    font-size:clamp(24px,1.65vw,30px)!important;
+    line-height:1.25!important;
+}
+
+/* ข้อความรองใต้หัวข้อ */
+.ai-intelligence-statusline{
+    font-size:13px!important;
+    line-height:1.55!important;
+}
+
+/* Badge AI ด้านขวาบน */
+.ai-status-badge,
+.ai-forecast-status{
+    font-size:11px!important;
+    line-height:1!important;
+    padding:7px 10px!important;
+}
+
+/* Kicker เช่น "สถานการณ์ปัจจุบัน" / "แนวโน้ม 30 นาที" */
+.ai-panel-kicker{
+    font-size:12px!important;
+    line-height:1.4!important;
+    letter-spacing:.08em!important;
+}
+
+/* หัวข้อ "ตอนนี้เป็นอย่างไร" / "อีก 30 นาทีเป็นอย่างไร" */
+.ai-panel-head h3{
+    font-size:18px!important;
+    line-height:1.35!important;
+}
+
+/* ปุ่มวิเคราะห์ใหม่ */
+.ai-refresh-button,
+.ai-forecast-refresh{
+    font-size:12px!important;
+    line-height:1.2!important;
+    padding:10px 13px!important;
+}
+
+/* เนื้อหาฝั่ง Current Situation */
+.ai-details-panel{
+    font-size:14px!important;
+    line-height:1.72!important;
+}
+
+.ai-details-panel b,
+.ai-details-panel strong{
+    font-size:inherit!important;
+}
+
+/* headline/summary ของ AI */
+.ai-headline,
+.ai-summary,
+.ai-section-title,
+.ai-recommendation{
+    line-height:1.65!important;
+}
+
+.ai-headline{
+    font-size:17px!important;
+}
+
+.ai-summary{
+    font-size:14px!important;
+}
+
+/* รายการสิ่งที่ระบบพบ */
+.ai-findings,
+.ai-findings li,
+.ai-details-panel li{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+/* คำแนะนำ */
+.ai-recommendation{
+    font-size:13px!important;
+}
+
+/* meta / เวลาวิเคราะห์ */
+.ai-analysis-footer,
+.ai-forecast-generated,
+.ai-meta-row{
+    font-size:11px!important;
+    line-height:1.45!important;
+}
+
+/* =========================================================
+   FORECAST CARDS
+   ========================================================= */
+
+.ai-forecast-details{
+    font-size:14px!important;
+    line-height:1.65!important;
+}
+
+/* หัวข้อใน Forecast */
+.ai-forecast-headline{
+    font-size:17px!important;
+    line-height:1.45!important;
+}
+
+.ai-trend-variable{
+    font-size:13px!important;
+    line-height:1.4!important;
+}
+
+.ai-trend-direction{
+    font-size:14px!important;
+    line-height:1.4!important;
+}
+
+.ai-trend-explanation{
+    font-size:12px!important;
+    line-height:1.55!important;
+}
+
+/* PM1 / PM2.5 / PM10 */
+.ai-dust-mini-label{
+    font-size:12px!important;
+}
+
+.ai-dust-mini-direction{
+    font-size:14px!important;
+    line-height:1.35!important;
+}
+
+.ai-dust-mini-note{
+    font-size:11px!important;
+    line-height:1.55!important;
+}
+
+.ai-dust-summary{
+    font-size:12px!important;
+    line-height:1.55!important;
+}
+
+/* ปัจจัยเด่น / สิ่งผิดปกติ */
+.ai-trend-driver{
+    font-size:12px!important;
+    line-height:1.6!important;
+}
+
+/* การ์ดสรุปด้านล่าง: คุณภาพอากาศ/ความร้อน/พื้นที่/กิจกรรม */
+.ai-forecast-item{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+.ai-forecast-label{
+    font-size:12px!important;
+    line-height:1.4!important;
+    margin-bottom:4px!important;
+}
+
+/* ข้อความ AI Trend ด้านล่าง */
+.ai-numeric-base{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:720px){
+
+    .ai-intelligence-section{
+        padding:16px!important;
+    }
+
+    .ai-intelligence-section .section-title-with-help h2{
+        font-size:24px!important;
+    }
+
+    .ai-intelligence-statusline{
+        font-size:12px!important;
+        margin-top:5px!important;
+    }
+
+    .ai-intelligence-badges{
+        gap:7px!important;
+        flex-wrap:wrap!important;
+    }
+
+    .ai-status-badge,
+    .ai-forecast-status{
+        font-size:10px!important;
+        padding:7px 9px!important;
+    }
+
+    .ai-panel-kicker{
+        font-size:11px!important;
+    }
+
+    .ai-panel-head h3{
+        font-size:18px!important;
+    }
+
+    .ai-panel-head{
+        gap:10px!important;
+        align-items:flex-start!important;
+    }
+
+    .ai-refresh-button,
+    .ai-forecast-refresh{
+        font-size:12px!important;
+        padding:10px 12px!important;
+        min-height:40px!important;
+    }
+
+    .ai-details-panel,
+    .ai-forecast-details{
+        font-size:14px!important;
+        line-height:1.75!important;
+    }
+
+    .ai-headline,
+    .ai-forecast-headline{
+        font-size:17px!important;
+        line-height:1.5!important;
+    }
+
+    .ai-summary{
+        font-size:14px!important;
+    }
+
+    .ai-findings,
+    .ai-findings li,
+    .ai-details-panel li{
+        font-size:13px!important;
+        line-height:1.65!important;
+    }
+
+    .ai-recommendation{
+        font-size:13px!important;
+        line-height:1.6!important;
+    }
+
+    .ai-trend-variable{
+        font-size:13px!important;
+    }
+
+    .ai-trend-direction{
+        font-size:14px!important;
+    }
+
+    .ai-trend-explanation{
+        font-size:12px!important;
+        line-height:1.6!important;
+    }
+
+    .ai-dust-mini-label{
+        font-size:12px!important;
+    }
+
+    .ai-dust-mini-direction{
+        font-size:14px!important;
+    }
+
+    .ai-dust-mini-note{
+        font-size:11px!important;
+    }
+
+    .ai-dust-summary{
+        font-size:12px!important;
+    }
+
+    .ai-trend-driver{
+        font-size:12px!important;
+        line-height:1.65!important;
+    }
+
+    .ai-forecast-item{
+        font-size:13px!important;
+        line-height:1.65!important;
+        padding:12px!important;
+    }
+
+    .ai-forecast-label{
+        font-size:12px!important;
+    }
+
+    .ai-analysis-footer,
+    .ai-forecast-generated,
+    .ai-meta-row{
+        font-size:11px!important;
+    }
+
+    .ai-numeric-base{
+        font-size:13px!important;
+        line-height:1.65!important;
+    }
+}
+
