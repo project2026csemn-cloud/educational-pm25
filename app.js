@@ -4802,6 +4802,44 @@ ${esc(dust.summary)}
 
 }
 
+
+function normalizeProjectWording(value){
+
+if(value===null||value===undefined){
+return value;
+}
+
+let s=String(value);
+
+/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ ไม่จำกัดเฉพาะสถานศึกษา */
+s=s
+.replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
+.replaceAll("การตรวจวัดสิ่งแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
+.replaceAll("การตรวจวัดสภาพแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
+.replaceAll("สภาพแวดล้อมของสถานศึกษา","สภาพแวดล้อมในพื้นที่")
+.replaceAll("ในสถานศึกษา","ในพื้นที่")
+.replaceAll("ของสถานศึกษา","ในพื้นที่");
+
+/* หลีกเลี่ยงคำแนะนำที่สมมติว่าพื้นที่มีระบบระบายอากาศ */
+if(/ระบบระบายอากาศ/.test(s)){
+s="ควรติดตามสภาพอากาศและคุณภาพอากาศในพื้นที่อย่างต่อเนื่อง เพื่อสังเกตการเปลี่ยนแปลง";
+}
+
+/* ปรับประโยคความสัมพันธ์ให้ไม่ฟันธงเกินข้อมูล */
+s=s
+.replace(
+/สภาพแวดล้อมในพื้นที่(?:ไม่|ไม่มี)\s*สัมพันธ์กับข้อมูลอื่น/g,
+"ยังไม่พบความสัมพันธ์ที่ชัดเจนของข้อมูลสภาพแวดล้อมในพื้นที่"
+)
+.replace(
+/ไม่มีความสัมพันธ์กับข้อมูลอื่น/g,
+"ยังไม่พบความสัมพันธ์ที่ชัดเจนกับข้อมูลอื่น"
+);
+
+return s;
+
+}
+
 function renderAIForecast(payload){
 
 const box=
@@ -5008,7 +5046,7 @@ box.innerHTML=
 `
 <div class="ai-forecast-headline">
 ${esc(
-d.headline||
+normalizeProjectWording(d.headline)||
 "แนวโน้มและคาดการณ์"
 )}
 </div>
@@ -5021,13 +5059,13 @@ ${otherCards}
 <div class="ai-trend-driver">
 <b>ปัจจัยที่เด่น:</b>
 ${esc(
-d.primary_driver||
+normalizeProjectWording(d.primary_driver)||
 "--"
 )}
 <br>
 <b>สิ่งผิดปกติ:</b>
 ${esc(
-d.anomaly_summary||
+normalizeProjectWording(d.anomaly_summary)||
 "--"
 )}
 </div>
@@ -5040,7 +5078,7 @@ d.anomaly_summary||
 </div>
 <div>
 ${esc(
-d.air_forecast||
+normalizeProjectWording(d.air_forecast)||
 "ยังไม่มีข้อมูล"
 )}
 </div>
@@ -5052,7 +5090,7 @@ d.air_forecast||
 </div>
 <div>
 ${esc(
-d.heat_forecast||
+normalizeProjectWording(d.heat_forecast)||
 "ยังไม่มีข้อมูล"
 )}
 </div>
@@ -5064,7 +5102,7 @@ d.heat_forecast||
 </div>
 <div>
 ${esc(
-d.local_environment_forecast||
+normalizeProjectWording(d.local_environment_forecast)||
 "ยังไม่มีข้อมูล"
 )}
 </div>
@@ -5076,7 +5114,7 @@ d.local_environment_forecast||
 </div>
 <div>
 ${esc(
-d.activity_forecast||
+normalizeProjectWording(d.activity_forecast)||
 "ยังไม่มีข้อมูล"
 )}
 </div>
