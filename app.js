@@ -12,6 +12,7 @@ forecast:`${BASE}/api/ai_forecast`
 };
 
 const TOTAL_NODES=3;
+const MOTHER_OFFLINE_MS=60*1000;
 const NODE_OFFLINE_MS=6*60*1000;
 
 const $=
@@ -510,13 +511,32 @@ null;
 
 function motherOnline(){
 
-return!!(
-apiConnectionOnline&&
-motherStatus&&
+if(
+!apiConnectionOnline||
+!motherStatus||
 String(
 motherStatus.status
 )
-.toLowerCase()==="online"
+.toLowerCase()!=="online"
+){
+return false;
+}
+
+const d=
+parseDate(
+motherStatus.last_seen||
+motherStatus.updated_at
+);
+
+if(!d){
+return false;
+}
+
+return(
+Date.now()-
+d.getTime()
+<=
+MOTHER_OFFLINE_MS
 );
 
 }
@@ -5096,6 +5116,115 @@ closeHelp();
 });
 
 }
+
+
+// =====================================================
+// CREDIT IMAGE VIEWER
+// =====================================================
+
+function openCreditImage(src,caption=""){
+
+const modal=
+$("creditImageModal");
+
+const img=
+$("creditFullImage");
+
+const text=
+$("creditImageCaption");
+
+if(
+!modal||
+!img
+){
+return;
+}
+
+img.src=
+src||"";
+
+img.alt=
+caption||"รูปภาพเครดิต";
+
+if(text){
+text.textContent=
+caption||"";
+}
+
+modal.classList.add(
+"active"
+);
+
+modal.setAttribute(
+"aria-hidden",
+"false"
+);
+
+document.body.classList.add(
+"credit-modal-open"
+);
+
+}
+
+function closeCreditImage(){
+
+const modal=
+$("creditImageModal");
+
+const img=
+$("creditFullImage");
+
+if(!modal){
+return;
+}
+
+modal.classList.remove(
+"active"
+);
+
+modal.setAttribute(
+"aria-hidden",
+"true"
+);
+
+document.body.classList.remove(
+"credit-modal-open"
+);
+
+if(img){
+setTimeout(()=>{
+if(
+!modal.classList.contains(
+"active"
+)
+){
+img.src="";
+}
+},180);
+}
+
+}
+
+window.openCreditImage=
+openCreditImage;
+
+window.closeCreditImage=
+closeCreditImage;
+
+document.addEventListener(
+"keydown",
+e=>{
+if(
+e.key==="Escape"&&
+$("creditImageModal")
+?.classList.contains(
+"active"
+)
+){
+closeCreditImage();
+}
+}
+);
 
 // =====================================================
 // EVENTS
