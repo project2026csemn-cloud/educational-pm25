@@ -5859,3 +5859,282 @@ input[type="datetime-local"]{
         transition-duration:.01ms!important;
     }
 }
+
+/* =========================================================
+   HISTORY RANGE PICKER — CLEAN MODAL POPOVER
+   แก้ปัญหาปฏิทินกางทับสถิติ/ดูเหมือน UI แตก
+   ========================================================= */
+
+/* ตัว parent ไม่ต้องเป็นกรอบอ้างอิงของ panel อีกต่อไป */
+#historyRangePicker{
+    position:relative!important;
+}
+
+/* เปิดเป็นกล่องลอยกลางหน้าจอ */
+#historyRangePanel.history-range-panel{
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:50%!important;
+
+    width:min(680px,calc(100vw - 32px))!important;
+    max-width:680px!important;
+    max-height:min(78vh,650px)!important;
+
+    margin:0!important;
+    transform:translate(-50%,-50%)!important;
+
+    z-index:9999!important;
+
+    overflow:auto!important;
+    overscroll-behavior:contain;
+
+    border:1px solid rgba(103,232,249,.22)!important;
+    border-radius:20px!important;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(9,24,39,.995),
+            rgba(6,19,33,.995)
+        )!important;
+
+    box-shadow:
+        0 30px 90px rgba(0,0,0,.62),
+        0 0 0 100vmax rgba(2,6,23,.68)!important;
+}
+
+/* ปิดจริงเมื่อมี hidden */
+#historyRangePanel.history-range-panel.hidden{
+    display:none!important;
+}
+
+/* Calendar + Quick range */
+#historyRangePanel .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 172px!important;
+    min-height:0!important;
+}
+
+/* ฝั่งปฏิทิน */
+#historyRangePanel .history-range-calendar{
+    min-width:0!important;
+    padding:20px!important;
+    border-right:1px solid rgba(71,85,105,.45)!important;
+}
+
+/* ฝั่งตัวเลือกด่วน */
+#historyRangePanel .history-range-quick{
+    min-width:0!important;
+    padding:16px 12px!important;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15,23,42,.30),
+            rgba(2,6,23,.20)
+        );
+}
+
+#historyRangePanel #quickRangeList.quick-range-list{
+    display:flex!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    gap:5px!important;
+    width:100%!important;
+    margin-top:7px!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option{
+    width:100%!important;
+    min-height:35px!important;
+
+    padding:0 11px!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+
+    background:transparent!important;
+    color:#cbd5e1!important;
+
+    font-size:12px!important;
+    font-weight:750!important;
+    line-height:1!important;
+
+    text-align:left!important;
+    white-space:nowrap!important;
+
+    transition:
+        background .16s ease,
+        border-color .16s ease,
+        color .16s ease!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option:hover{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.08)!important;
+    border-color:rgba(34,211,238,.16)!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option.active,
+#historyRangePanel #quickRangeList .quick-range-option[aria-current="true"]{
+    color:#67e8f9!important;
+    background:rgba(34,211,238,.13)!important;
+    border-color:rgba(34,211,238,.32)!important;
+}
+
+/* Calendar header */
+#rangeCalendarTitle{
+    color:#e2e8f0!important;
+    font-size:14px!important;
+    font-weight:850!important;
+}
+
+#calendarPrev,
+#calendarNext{
+    width:34px!important;
+    height:34px!important;
+    border-radius:9px!important;
+}
+
+/* Day names */
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid){
+    color:#64748b!important;
+}
+
+/* Calendar dates */
+#rangeCalendarGrid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:5px!important;
+}
+
+#rangeCalendarGrid .range-calendar-day{
+    width:100%!important;
+    height:36px!important;
+    min-width:0!important;
+
+    padding:0!important;
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+
+    background:transparent!important;
+    color:#dbe7f3!important;
+
+    font-size:12px!important;
+    font-weight:650!important;
+}
+
+#rangeCalendarGrid .range-calendar-day:hover{
+    color:#fff!important;
+    background:rgba(34,211,238,.09)!important;
+    border-color:rgba(34,211,238,.20)!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-muted{
+    color:#475569!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-in-range{
+    background:rgba(34,211,238,.07)!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-start,
+#rangeCalendarGrid .range-calendar-day.is-end{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.24)!important;
+    border-color:rgba(103,232,249,.48)!important;
+    font-weight:850!important;
+}
+
+/* Start / End fields */
+#historyRangePanel input[type="datetime-local"]{
+    color:#e2e8f0!important;
+    color-scheme:dark!important;
+}
+
+/* Footer ปุ่ม */
+#historyRangePanel #historyRangeCancel,
+#historyRangePanel #historyRangeApply{
+    min-height:38px!important;
+}
+
+/* ให้ panel ไม่ได้รับผลจาก content-visibility ของ section */
+.historical-section:has(#historyRangePanel:not(.hidden)){
+    content-visibility:visible!important;
+}
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+@media(max-width:700px){
+
+    #historyRangePanel.history-range-panel{
+        left:12px!important;
+        right:12px!important;
+        top:12px!important;
+        bottom:12px!important;
+
+        width:auto!important;
+        max-width:none!important;
+        max-height:none!important;
+
+        transform:none!important;
+
+        border-radius:18px!important;
+    }
+
+    #historyRangePanel .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:16px!important;
+        border-right:0!important;
+        border-bottom:1px solid rgba(71,85,105,.45)!important;
+    }
+
+    #historyRangePanel .history-range-quick{
+        padding:12px 16px 16px!important;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:7px!important;
+    }
+
+    #historyRangePanel #quickRangeList .quick-range-option{
+        justify-content:center!important;
+        text-align:center!important;
+    }
+
+    #rangeCalendarGrid .range-calendar-day{
+        height:34px!important;
+    }
+}
+
+@media(max-width:420px){
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr 1fr!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:14px 12px!important;
+    }
+
+    #rangeCalendarGrid{
+        gap:3px!important;
+    }
+
+    #rangeCalendarGrid .range-calendar-day{
+        height:32px!important;
+        font-size:11px!important;
+    }
+}
+
