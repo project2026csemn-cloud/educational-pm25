@@ -6128,257 +6128,73 @@ closeHistoryRangePicker();
 
 
 // =====================================================
-// INTERACTIVE CHART VIEWER — DESKTOP / MOBILE / TABLET
+// INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
 //
+// Uses Chart.js only.
 // Desktop:
-// - Wheel zoom
-// - Mouse drag to pan
+// - Mouse wheel zoom
+// - Drag horizontally to pan
 // - Hover tooltip
 //
 // Mobile / Tablet:
 // - Pinch zoom
-// - One-finger pan after zoom
+// - Drag horizontally to pan
 // - Tap tooltip
-//
-// Uses the SAME datasets already rendered on Dashboard.
-// No sensor refetch and no forecast recalculation.
 // =====================================================
 
 let chartInteractiveViewerReady=false;
 let chartInteractiveInstance=null;
-let chartZoomLibraryPromise=null;
-
-function loadExternalScriptOnce(src,globalCheck){
-
-return new Promise((resolve,reject)=>{
-
-if(
-typeof globalCheck==="function"&&
-globalCheck()
-){
-resolve();
-return;
-}
-
-const existing=
-Array.from(
-document.scripts
-)
-.find(
-s=>s.src===src
-);
-
-if(existing){
-
-if(
-typeof globalCheck!=="function"||
-globalCheck()
-){
-resolve();
-return;
-}
-
-existing.addEventListener(
-"load",
-()=>resolve(),
-{
-once:true
-}
-);
-
-existing.addEventListener(
-"error",
-()=>reject(
-new Error(
-`Script load failed: ${src}`
-)
-),
-{
-once:true
-}
-);
-
-return;
-}
-
-const script=
-document.createElement(
-"script"
-);
-
-script.src=src;
-script.async=true;
-
-script.onload=()=>resolve();
-
-script.onerror=()=>reject(
-new Error(
-`Script load failed: ${src}`
-)
-);
-
-document.head.appendChild(
-script
-);
-
-});
-
-}
-
-async function ensureChartZoomLibrary(){
-
-if(
-typeof Chart==="undefined"
-){
-await ensureChartLibrary();
-}
-
-if(
-typeof Chart!=="undefined"&&
-typeof Chart.prototype?.resetZoom==="function"
-){
-return;
-}
-
-if(chartZoomLibraryPromise){
-return chartZoomLibraryPromise;
-}
-
-chartZoomLibraryPromise=
-(
-async()=>{
-
-/*
-  chartjs-plugin-zoom uses Hammer.js for pinch/pan gestures.
-*/
-await loadExternalScriptOnce(
-"https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js",
-()=>typeof Hammer!=="undefined"
-);
-
-await loadExternalScriptOnce(
-"https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js",
-()=>(
-typeof Chart!=="undefined"&&
-typeof Chart.prototype?.resetZoom==="function"
-)
-);
-
-if(
-typeof Chart==="undefined"||
-typeof Chart.prototype?.resetZoom!=="function"
-){
-throw new Error(
-"Chart zoom plugin is unavailable"
-);
-}
-
-}
-)()
-.catch(
-e=>{
-
-chartZoomLibraryPromise=null;
-throw e;
-
-}
-);
-
-return chartZoomLibraryPromise;
-
-}
 
 function cloneChartDatasetForViewer(ds){
 
 const copy={
-label:
-ds.label||
-"ข้อมูล",
+label:ds.label||"ข้อมูล",
 
-data:
-Array.isArray(
-ds.data
-)
+data:Array.isArray(ds.data)
 ?ds.data.map(
 v=>(
-v&&
-typeof v==="object"
+v&&typeof v==="object"
 ?{...v}
 :v
 )
 )
 :[],
 
-borderColor:
-ds.borderColor,
+borderColor:ds.borderColor,
+backgroundColor:ds.backgroundColor,
 
-backgroundColor:
-ds.backgroundColor,
-
-borderWidth:
-Math.max(
-Number(
-ds.borderWidth||
-2
-),
+borderWidth:Math.max(
+Number(ds.borderWidth||2),
 2
 ),
 
-pointRadius:
-Math.max(
-Number(
-ds.pointRadius||
-0
-),
+pointRadius:Math.max(
+Number(ds.pointRadius||0),
 3
 ),
 
-pointHoverRadius:
-Math.max(
-Number(
-ds.pointHoverRadius||
-4
-),
+pointHoverRadius:Math.max(
+Number(ds.pointHoverRadius||4),
 6
 ),
 
-pointHitRadius:12,
-
-tension:
-ds.tension??0.25,
-
-fill:
-ds.fill??false,
-
-spanGaps:
-ds.spanGaps??true,
-
-hidden:
-ds.hidden===true
+pointHitRadius:14,
+tension:ds.tension??0.25,
+fill:ds.fill??false,
+spanGaps:ds.spanGaps??true,
+hidden:ds.hidden===true
 };
 
-if(
-Array.isArray(
-ds.borderDash
-)
-){
-copy.borderDash=[
-...ds.borderDash
-];
+if(Array.isArray(ds.borderDash)){
+copy.borderDash=[...ds.borderDash];
 }
 
-if(
-ds.pointBackgroundColor
-){
-copy.pointBackgroundColor=
-ds.pointBackgroundColor;
+if(ds.pointBackgroundColor){
+copy.pointBackgroundColor=ds.pointBackgroundColor;
 }
 
-if(
-ds.pointBorderColor
-){
-copy.pointBorderColor=
-ds.pointBorderColor;
+if(ds.pointBorderColor){
+copy.pointBorderColor=ds.pointBorderColor;
 }
 
 return copy;
@@ -6388,30 +6204,24 @@ return copy;
 function chartViewerTitleForCanvas(canvas){
 
 const metricPanel=
-canvas.closest(
-".metric-chart-panel"
-);
+canvas.closest(".metric-chart-panel");
 
 if(metricPanel){
 
 return(
-metricPanel.querySelector(
-".metric-chart-title"
-)?.textContent?.trim()||
+metricPanel.querySelector(".metric-chart-title")
+?.textContent?.trim()||
 "กราฟข้อมูล"
 );
 
 }
 
 const card=
-canvas.closest(
-".dashboard-chart-card"
-);
+canvas.closest(".dashboard-chart-card");
 
 return(
-card?.querySelector(
-".chart-zone-title"
-)?.textContent?.trim()||
+card?.querySelector(".chart-zone-title")
+?.textContent?.trim()||
 "กราฟข้อมูล"
 );
 
@@ -6419,11 +6229,8 @@ card?.querySelector(
 
 function chartViewerUnitFromOriginal(original){
 
-const scale=
-original?.options?.scales?.y;
-
 const text=
-scale?.title?.text;
+original?.options?.scales?.y?.title?.text;
 
 return typeof text==="string"
 ?text
@@ -6439,21 +6246,11 @@ return;
 
 chartInteractiveViewerReady=true;
 
-const viewer=
-document.createElement(
-"div"
-);
+const viewer=document.createElement("div");
 
-viewer.id=
-"chartZoomViewer";
-
-viewer.className=
-"chart-zoom-viewer";
-
-viewer.setAttribute(
-"aria-hidden",
-"true"
-);
+viewer.id="chartZoomViewer";
+viewer.className="chart-zoom-viewer";
+viewer.setAttribute("aria-hidden","true");
 
 viewer.innerHTML=`
 <div class="chart-zoom-backdrop" data-chart-zoom-close="true"></div>
@@ -6465,7 +6262,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-มือถือ: ใช้สองนิ้วซูมและลากดูช่วงเวลา • คอม: หมุนล้อเมาส์และคลิกลาก
+มือถือ: ใช้สองนิ้วซูม • ลากซ้าย–ขวา • แตะจุดดูค่า
 </div>
 </div>
 
@@ -6479,37 +6276,37 @@ viewer.innerHTML=`
 </div>
 
 <div class="chart-zoom-statusbar">
-<span>🔎 ซูมแกนเวลา</span>
+<span>🔎 ซูมช่วงเวลา</span>
 <span>↔ ลากเพื่อเลื่อน</span>
 <span>● แตะ/ชี้จุดเพื่อดูค่า</span>
 <span>▰ แตะ Legend เพื่อซ่อน/แสดงเส้น</span>
 </div>
 
 <div class="chart-zoom-stage" id="chartZoomStage">
-<div class="chart-zoom-loading hidden" id="chartZoomLoading">
-กำลังเตรียมกราฟแบบโต้ตอบ...
-</div>
 <canvas id="chartZoomCanvas"></canvas>
 </div>
 
 </div>
 `;
 
-document.body.appendChild(
-viewer
-);
+document.body.appendChild(viewer);
 
-const loading=
-$("chartZoomLoading");
+const stage=$("chartZoomStage");
 
-function setLoading(show){
+let labels=[];
+let fullMin=0;
+let fullMax=0;
+let viewMin=0;
+let viewMax=0;
 
-loading?.classList.toggle(
-"hidden",
-!show
-);
+let dragging=false;
+let dragStartX=0;
+let dragStartMin=0;
+let dragStartMax=0;
 
-}
+let pinchStartDistance=0;
+let pinchStartSpan=0;
+let pinchCenterRatio=.5;
 
 function destroyInteractiveChart(){
 
@@ -6525,83 +6322,227 @@ chartInteractiveInstance=null;
 
 }
 
+function clampWindow(){
+
+const total=
+fullMax-fullMin;
+
+let span=
+viewMax-viewMin;
+
+const minSpan=
+Math.max(
+2,
+Math.min(
+6,
+total
+)
+);
+
+if(span<minSpan){
+span=minSpan;
+}
+
+if(span>total){
+span=total;
+}
+
+if(viewMin<fullMin){
+viewMin=fullMin;
+viewMax=viewMin+span;
+}
+
+if(viewMax>fullMax){
+viewMax=fullMax;
+viewMin=viewMax-span;
+}
+
+}
+
+function applyWindow(){
+
+if(!chartInteractiveInstance){
+return;
+}
+
+clampWindow();
+
+chartInteractiveInstance.options.scales.x.min=
+Math.floor(viewMin);
+
+chartInteractiveInstance.options.scales.x.max=
+Math.ceil(viewMax);
+
+chartInteractiveInstance.update("none");
+
+const total=
+Math.max(
+1,
+fullMax-fullMin
+);
+
+const shown=
+Math.max(
+1,
+viewMax-viewMin
+);
+
+const percent=
+Math.round(
+(total/shown)*100
+);
+
+const reset=$("chartZoomReset");
+
+if(reset){
+reset.textContent=
+percent<=105
+?"Reset"
+:`${percent}%`;
+}
+
+}
+
+function zoomAt(factor,ratio=.5){
+
+if(!chartInteractiveInstance){
+return;
+}
+
+ratio=
+Math.min(
+1,
+Math.max(
+0,
+ratio
+)
+);
+
+const span=
+viewMax-viewMin;
+
+const newSpan=
+span/factor;
+
+const anchor=
+viewMin+
+span*ratio;
+
+viewMin=
+anchor-
+newSpan*ratio;
+
+viewMax=
+anchor+
+newSpan*(1-ratio);
+
+applyWindow();
+
+}
+
+function panBy(deltaIndex){
+
+viewMin+=deltaIndex;
+viewMax+=deltaIndex;
+
+applyWindow();
+
+}
+
+function resetZoom(){
+
+viewMin=fullMin;
+viewMax=fullMax;
+
+applyWindow();
+
+}
+
 function closeViewer(){
 
 destroyInteractiveChart();
 
-viewer.classList.remove(
-"active"
-);
+viewer.classList.remove("active");
+viewer.setAttribute("aria-hidden","true");
+document.body.classList.remove("chart-zoom-open");
 
-viewer.setAttribute(
-"aria-hidden",
-"true"
-);
+}
 
-document.body.classList.remove(
-"chart-zoom-open"
-);
+function getOriginalChart(canvas){
+
+if(typeof Chart==="undefined"){
+return null;
+}
+
+if(typeof Chart.getChart==="function"){
+
+const c=
+Chart.getChart(canvas);
+
+if(c){
+return c;
+}
+
+}
+
+const all=[
+historyChart,
+forecastChart,
+...historyGroupCharts,
+...forecastGroupCharts
+].filter(Boolean);
+
+return all.find(
+c=>c.canvas===canvas
+)||null;
 
 }
 
 async function openInteractiveChart(canvas){
 
+if(typeof Chart==="undefined"){
+
+try{
+await ensureChartLibrary();
+}catch{
+return;
+}
+
+}
+
 const original=
-typeof Chart!=="undefined"
-?Chart.getChart(
-canvas
-)
-:null;
+getOriginalChart(canvas);
 
 if(!original){
 return;
 }
 
+labels=
+Array.isArray(original.data.labels)
+?[...original.data.labels]
+:[];
+
+if(labels.length<2){
+return;
+}
+
+fullMin=0;
+fullMax=
+labels.length-1;
+
+viewMin=fullMin;
+viewMax=fullMax;
+
 $("chartZoomTitle").textContent=
-chartViewerTitleForCanvas(
-canvas
-);
+chartViewerTitleForCanvas(canvas);
 
-viewer.classList.add(
-"active"
-);
-
-viewer.setAttribute(
-"aria-hidden",
-"false"
-);
-
-document.body.classList.add(
-"chart-zoom-open"
-);
-
-setLoading(
-true
-);
+viewer.classList.add("active");
+viewer.setAttribute("aria-hidden","false");
+document.body.classList.add("chart-zoom-open");
 
 destroyInteractiveChart();
 
-try{
-
-await ensureChartZoomLibrary();
-
-const viewerCanvas=
-$("chartZoomCanvas");
-
-if(!viewerCanvas){
-throw new Error(
-"Interactive canvas not found"
-);
-}
-
-const labels=
-Array.isArray(
-original.data.labels
-)
-?[
-...original.data.labels
-]
-:[];
+const viewerCanvas=$("chartZoomCanvas");
 
 const datasets=
 original.data.datasets.map(
@@ -6609,15 +6550,10 @@ cloneChartDatasetForViewer
 );
 
 const unit=
-chartViewerUnitFromOriginal(
-original
-);
+chartViewerUnitFromOriginal(original);
 
 const isTouch=
-(
-navigator.maxTouchPoints||
-0
-)>0;
+(navigator.maxTouchPoints||0)>0;
 
 chartInteractiveInstance=
 new Chart(
@@ -6637,6 +6573,7 @@ responsive:true,
 maintainAspectRatio:false,
 animation:false,
 normalized:true,
+
 interaction:{
 mode:"nearest",
 intersect:false,
@@ -6662,12 +6599,8 @@ color:"#cbd5e1",
 boxWidth:22,
 boxHeight:3,
 padding:16,
-usePointStyle:false,
 font:{
-size:
-isTouch
-?13
-:12,
+size:isTouch?13:12,
 weight:"700"
 }
 }
@@ -6691,37 +6624,6 @@ weight:"800"
 bodyFont:{
 size:12
 }
-},
-
-zoom:{
-
-limits:{
-x:{
-min:"original",
-max:"original",
-minRange:2
-}
-},
-
-pan:{
-enabled:true,
-mode:"x",
-modifierKey:null,
-threshold:4
-},
-
-zoom:{
-wheel:{
-enabled:
-!isTouch,
-speed:.08
-},
-pinch:{
-enabled:true
-},
-mode:"x"
-}
-
 }
 
 },
@@ -6729,43 +6631,44 @@ mode:"x"
 scales:{
 
 x:{
+type:"category",
+min:fullMin,
+max:fullMax,
+
 grid:{
 color:"rgba(148,163,184,.09)"
 },
+
 ticks:{
 color:"#94a3b8",
 maxRotation:0,
 autoSkip:true,
-maxTicksLimit:
-isTouch
-?7
-:12,
+maxTicksLimit:isTouch?7:12,
 font:{
-size:
-isTouch
-?11
-:12
+size:isTouch?11:12
 }
 },
+
 border:{
 color:"rgba(148,163,184,.16)"
 }
+
 },
 
 y:{
 beginAtZero:false,
+
 grid:{
 color:"rgba(148,163,184,.10)"
 },
+
 ticks:{
 color:"#94a3b8",
 font:{
-size:
-isTouch
-?11
-:12
+size:isTouch?11:12
 }
 },
+
 title:{
 display:Boolean(unit),
 text:unit,
@@ -6775,9 +6678,11 @@ size:12,
 weight:"700"
 }
 },
+
 border:{
 color:"rgba(148,163,184,.16)"
 }
+
 }
 
 }
@@ -6787,40 +6692,9 @@ color:"rgba(148,163,184,.16)"
 }
 );
 
-setLoading(
-false
-);
-
-}catch(e){
-
-console.error(
-"Interactive chart viewer error:",
-e
-);
-
-setLoading(
-false
-);
-
-const stage=
-$("chartZoomStage");
-
-if(stage){
-
-stage.insertAdjacentHTML(
-"beforeend",
-'<div class="chart-zoom-error">ไม่สามารถเปิดโหมดซูมแบบโต้ตอบได้ กรุณาลองใหม่อีกครั้ง</div>'
-);
-
 }
 
-}
-
-}
-
-document.addEventListener(
-"click",
-e=>{
+document.addEventListener("click",e=>{
 
 const canvas=
 e.target?.closest?.(
@@ -6831,94 +6705,297 @@ if(!canvas){
 return;
 }
 
-openInteractiveChart(
-canvas
-);
+openInteractiveChart(canvas);
 
-}
-);
+});
 
-viewer.addEventListener(
-"click",
-e=>{
+viewer.addEventListener("click",e=>{
 
-if(
-e.target?.dataset?.chartZoomClose==="true"
-){
+if(e.target?.dataset?.chartZoomClose==="true"){
 closeViewer();
 }
 
-}
-);
+});
 
 $("chartZoomClose")
-?.addEventListener(
-"click",
-closeViewer
-);
+?.addEventListener("click",closeViewer);
 
 $("chartZoomReset")
-?.addEventListener(
-"click",
-()=>{
-
-chartInteractiveInstance
-?.resetZoom();
-
-}
-);
+?.addEventListener("click",resetZoom);
 
 $("chartZoomIn")
-?.addEventListener(
-"click",
-()=>{
-
-chartInteractiveInstance
-?.zoom(
-{
-x:1.35,
-y:1
-}
-);
-
-}
-);
+?.addEventListener("click",()=>{
+zoomAt(1.5,.5);
+});
 
 $("chartZoomOut")
-?.addEventListener(
-"click",
-()=>{
+?.addEventListener("click",()=>{
+zoomAt(1/1.5,.5);
+});
 
-chartInteractiveInstance
-?.zoom(
-{
-x:.75,
-y:1
+stage.addEventListener("wheel",e=>{
+
+if(!chartInteractiveInstance){
+return;
 }
+
+e.preventDefault();
+
+const rect=
+stage.getBoundingClientRect();
+
+const ratio=
+(e.clientX-rect.left)/
+Math.max(
+1,
+rect.width
+);
+
+zoomAt(
+e.deltaY<0
+?1.25
+:0.8,
+ratio
+);
+
+},{
+passive:false
+});
+
+stage.addEventListener("mousedown",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+dragging=true;
+dragStartX=e.clientX;
+dragStartMin=viewMin;
+dragStartMax=viewMax;
+
+stage.classList.add("is-panning");
+
+});
+
+window.addEventListener("mousemove",e=>{
+
+if(!dragging||!chartInteractiveInstance){
+return;
+}
+
+const rect=
+stage.getBoundingClientRect();
+
+const dx=
+e.clientX-dragStartX;
+
+const span=
+dragStartMax-dragStartMin;
+
+const shift=
+-(dx/Math.max(1,rect.width))*span;
+
+viewMin=
+dragStartMin+
+shift;
+
+viewMax=
+dragStartMax+
+shift;
+
+applyWindow();
+
+});
+
+window.addEventListener("mouseup",()=>{
+
+dragging=false;
+stage.classList.remove("is-panning");
+
+});
+
+function touchDistance(a,b){
+
+return Math.hypot(
+b.clientX-a.clientX,
+b.clientY-a.clientY
 );
 
 }
+
+stage.addEventListener("touchstart",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+if(e.touches.length===2){
+
+pinchStartDistance=
+touchDistance(
+e.touches[0],
+e.touches[1]
 );
 
-document.addEventListener(
-"keydown",
-e=>{
+pinchStartSpan=
+viewMax-viewMin;
+
+const rect=
+stage.getBoundingClientRect();
+
+const centerX=
+(
+e.touches[0].clientX+
+e.touches[1].clientX
+)/2;
+
+pinchCenterRatio=
+Math.min(
+1,
+Math.max(
+0,
+(centerX-rect.left)/
+Math.max(1,rect.width)
+)
+);
+
+dragging=false;
+return;
+
+}
+
+if(e.touches.length===1){
+
+dragging=true;
+dragStartX=
+e.touches[0].clientX;
+
+dragStartMin=
+viewMin;
+
+dragStartMax=
+viewMax;
+
+}
+
+},{
+passive:true
+});
+
+stage.addEventListener("touchmove",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+if(e.touches.length===2){
+
+e.preventDefault();
+
+const d=
+touchDistance(
+e.touches[0],
+e.touches[1]
+);
+
+if(
+pinchStartDistance>0&&
+d>0
+){
+
+const factor=
+d/
+pinchStartDistance;
+
+const newSpan=
+pinchStartSpan/
+factor;
+
+const anchor=
+viewMin+
+(viewMax-viewMin)*
+pinchCenterRatio;
+
+viewMin=
+anchor-
+newSpan*
+pinchCenterRatio;
+
+viewMax=
+anchor+
+newSpan*
+(1-pinchCenterRatio);
+
+applyWindow();
+
+}
+
+return;
+
+}
+
+if(
+e.touches.length===1&&
+dragging
+){
+
+e.preventDefault();
+
+const rect=
+stage.getBoundingClientRect();
+
+const dx=
+e.touches[0].clientX-
+dragStartX;
+
+const span=
+dragStartMax-
+dragStartMin;
+
+const shift=
+-(dx/Math.max(1,rect.width))*span;
+
+viewMin=
+dragStartMin+
+shift;
+
+viewMax=
+dragStartMax+
+shift;
+
+applyWindow();
+
+}
+
+},{
+passive:false
+});
+
+stage.addEventListener("touchend",e=>{
+
+if(e.touches.length<2){
+pinchStartDistance=0;
+}
+
+if(e.touches.length===0){
+dragging=false;
+}
+
+});
+
+document.addEventListener("keydown",e=>{
 
 if(
 e.key==="Escape"&&
-viewer.classList.contains(
-"active"
-)
+viewer.classList.contains("active")
 ){
-
 closeViewer();
+}
+
+});
 
 }
 
-}
-);
-
-}
 
 // =====================================================
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
