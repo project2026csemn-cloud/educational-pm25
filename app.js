@@ -6279,7 +6279,17 @@ viewer.innerHTML=`
 <span>🔎 ซูมช่วงเวลา</span>
 <span>↔ ลากเพื่อเลื่อน</span>
 <span>● แตะ/ชี้จุดเพื่อดูค่า</span>
-<span>▰ แตะ Legend เพื่อซ่อน/แสดงเส้น</span>
+</div>
+
+<div class="chart-series-controls" id="chartSeriesControls">
+<div class="chart-series-controls-head">
+<div>
+<div class="chart-series-controls-title">ข้อมูลที่แสดง</div>
+<div class="chart-series-controls-help">แตะชื่อข้อมูลเพื่อซ่อนหรือแสดงเส้นกราฟ</div>
+</div>
+<button type="button" class="chart-series-show-all" id="chartSeriesShowAll">แสดงทั้งหมด</button>
+</div>
+<div class="chart-series-buttons" id="chartSeriesButtons"></div>
 </div>
 
 <div class="chart-zoom-stage" id="chartZoomStage">
@@ -6462,6 +6472,13 @@ function closeViewer(){
 
 destroyInteractiveChart();
 
+const seriesButtons=
+$("chartSeriesButtons");
+
+if(seriesButtons){
+seriesButtons.innerHTML="";
+}
+
 viewer.classList.remove("active");
 viewer.setAttribute("aria-hidden","true");
 document.body.classList.remove("chart-zoom-open");
@@ -6495,6 +6512,236 @@ forecastChart,
 return all.find(
 c=>c.canvas===canvas
 )||null;
+
+}
+
+
+function updateSeriesControlUI(){
+
+const wrap=
+$("chartSeriesControls");
+
+const buttons=
+$("chartSeriesButtons");
+
+const showAll=
+$("chartSeriesShowAll");
+
+if(
+!wrap||
+!buttons||
+!showAll||
+!chartInteractiveInstance
+){
+return;
+}
+
+const datasets=
+chartInteractiveInstance.data.datasets||[];
+
+if(datasets.length<=1){
+
+wrap.classList.add(
+"is-single"
+);
+
+buttons.innerHTML="";
+
+showAll.classList.add(
+"hidden"
+);
+
+const one=
+datasets[0];
+
+if(one){
+
+const label=
+document.createElement(
+"div"
+);
+
+label.className=
+"chart-series-single-label";
+
+label.textContent=
+one.label||
+"ข้อมูล";
+
+buttons.appendChild(
+label
+);
+
+}
+
+return;
+}
+
+wrap.classList.remove(
+"is-single"
+);
+
+showAll.classList.remove(
+"hidden"
+);
+
+buttons.innerHTML="";
+
+datasets.forEach(
+(ds,index)=>{
+
+const button=
+document.createElement(
+"button"
+);
+
+button.type="button";
+button.className=
+"chart-series-button";
+
+const visible=
+chartInteractiveInstance.isDatasetVisible(
+index
+);
+
+button.classList.toggle(
+"is-active",
+visible
+);
+
+button.classList.toggle(
+"is-hidden",
+!visible
+);
+
+button.setAttribute(
+"aria-pressed",
+visible
+?"true"
+:"false"
+);
+
+button.dataset.index=
+String(
+index
+);
+
+const mark=
+visible
+?"✓"
+:"";
+
+button.innerHTML=
+`<span class="chart-series-check">${mark}</span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
+
+buttons.appendChild(
+button
+);
+
+}
+);
+
+const allVisible=
+datasets.every(
+(_,index)=>
+chartInteractiveInstance.isDatasetVisible(
+index
+)
+);
+
+showAll.disabled=
+allVisible;
+
+showAll.classList.toggle(
+"is-complete",
+allVisible
+);
+
+}
+
+function bindSeriesControlEvents(){
+
+const buttons=
+$("chartSeriesButtons");
+
+const showAll=
+$("chartSeriesShowAll");
+
+buttons?.addEventListener(
+"click",
+e=>{
+
+const button=
+e.target.closest(
+".chart-series-button"
+);
+
+if(
+!button||
+!chartInteractiveInstance
+){
+return;
+}
+
+const index=
+Number(
+button.dataset.index
+);
+
+if(
+!Number.isInteger(
+index
+)
+){
+return;
+}
+
+const visible=
+chartInteractiveInstance.isDatasetVisible(
+index
+);
+
+chartInteractiveInstance.setDatasetVisibility(
+index,
+!visible
+);
+
+chartInteractiveInstance.update(
+"none"
+);
+
+updateSeriesControlUI();
+
+}
+);
+
+showAll?.addEventListener(
+"click",
+()=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+chartInteractiveInstance.data.datasets.forEach(
+(_,index)=>{
+
+chartInteractiveInstance.setDatasetVisibility(
+index,
+true
+);
+
+}
+);
+
+chartInteractiveInstance.update(
+"none"
+);
+
+updateSeriesControlUI();
+
+}
+);
 
 }
 
@@ -6592,18 +6839,7 @@ left:8
 plugins:{
 
 legend:{
-display:true,
-position:"top",
-labels:{
-color:"#cbd5e1",
-boxWidth:22,
-boxHeight:3,
-padding:16,
-font:{
-size:isTouch?13:12,
-weight:"700"
-}
-}
+display:false
 },
 
 tooltip:{
@@ -6692,6 +6928,8 @@ color:"rgba(148,163,184,.16)"
 }
 );
 
+updateSeriesControlUI();
+
 }
 
 document.addEventListener("click",e=>{
@@ -6732,6 +6970,8 @@ $("chartZoomOut")
 ?.addEventListener("click",()=>{
 zoomAt(1/1.5,.5);
 });
+
+bindSeriesControlEvents();
 
 stage.addEventListener("wheel",e=>{
 
