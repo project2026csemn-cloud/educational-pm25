@@ -31,6 +31,12 @@ let historyGroupCharts=[];
 let forecastGroupCharts=[];
 let forecastVisible=true;
 
+let historyActivated=false;
+let historyLoading=false;
+let chartLibraryPromise=null;
+let chartLibraryReady=false;
+let aiSectionActivated=false;
+
 let metric="all";
 let currentMetric="pm25";
 
@@ -1511,17 +1517,208 @@ detail:`${trend} • วิเคราะห์ความสัมพัน�
 }
 
 // =====================================================
+// COMBINED AIR QUALITY + DUST PROFILE
+// =====================================================
+
+function pm10Guidance(value){
+
+const n=
+finiteNumberOrNull(value);
+
+if(n===null){
+return{
+level:"no_data",
+label:"ไม่มีข้อมูล"
+};
+}
+
+// 120 µg/m³ เป็นค่ามาตรฐาน PM10 เฉลี่ย 24 ชั่วโมงของไทย
+// การใช้กับค่ารอบล่าสุดเป็นเพียงการเฝ้าระวังเบื้องต้น
+if(n>120){
+return{
+level:"warning",
+label:"สูงกว่าค่าอ้างอิง 24 ชั่วโมง"
+};
+}
+
+return{
+level:"normal",
+label:"ยังไม่สูงกว่าค่าอ้างอิง"
+};
+
+}
+
+function combinedAirQualitySummary(snap){
+
+const pm1=
+finiteNumberOrNull(snap?.pm1);
+
+const pm25=
+finiteNumberOrNull(snap?.pm25);
+
+const pm10=
+finiteNumberOrNull(snap?.pm10);
+
+const p25=
+pm25Guidance(pm25);
+
+const p10=
+pm10Guidance(pm10);
+
+if(
+pm1===null&&
+pm25===null&&
+pm10===null
+){
+return{
+level:"no_data",
+label:"รอข้อมูล",
+detail:"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
+};
+}
+
+let level="normal";
+let label="อากาศโดยรวมดี";
+
+if(
+["warning","critical"].includes(p25.level)&&
+p10.level==="warning"
+){
+level=
+p25.level==="critical"
+?"critical"
+:"warning";
+label="ควรเฝ้าระวังฝุ่นหลายขนาด";
+}else if(
+["warning","critical"].includes(p25.level)
+){
+level=p25.level;
+label="ควรเฝ้าระวังฝุ่นขนาดเล็ก";
+}else if(
+p10.level==="warning"
+){
+level="warning";
+label="ควรเฝ้าระวังฝุ่นขนาดใหญ่";
+}else if(
+pm25!==null&&
+p25.label==="ปานกลาง"
+){
+label="อากาศโดยรวมปานกลาง";
+}
+
+const values=[];
+
+if(pm1!==null){
+values.push(`PM1 ${fmt(pm1)}`);
+}
+
+if(pm25!==null){
+values.push(`PM2.5 ${fmt(pm25)}`);
+}
+
+if(pm10!==null){
+values.push(`PM10 ${fmt(pm10)}`);
+}
+
+return{
+level,
+label,
+detail:
+values.length
+?`${values.join(" • ")} µg/m³`
+:"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
+};
+
+}
+
+function dustProfileSummary(snap){
+
+const pm1=
+finiteNumberOrNull(snap?.pm1);
+
+const pm25=
+finiteNumberOrNull(snap?.pm25);
+
+const pm10=
+finiteNumberOrNull(snap?.pm10);
+
+if(
+pm25===null||
+pm10===null||
+pm10<=0
+){
+return{
+label:"รอข้อมูล",
+detail:"ต้องมี PM2.5 และ PM10 เพื่อดูลักษณะฝุ่น"
+};
+}
+
+const fineShare=
+Math.max(
+0,
+Math.min(
+1,
+pm25/pm10
+)
+);
+
+let label;
+
+if(fineShare>=0.70){
+label="ฝุ่นขนาดเล็กเป็นสัดส่วนหลัก";
+}else if(fineShare>=0.40){
+label="พบฝุ่นหลายขนาดผสมกัน";
+}else{
+label="ฝุ่นขนาดใหญ่มีสัดส่วนมากขึ้น";
+}
+
+const details=[
+`PM2.5 คิดเป็น ${Math.round(fineShare*100)}% ของ PM10`
+];
+
+if(
+pm1!==null&&
+pm25>0
+){
+const pm1Share=
+Math.max(
+0,
+Math.min(
+1,
+pm1/pm25
+)
+);
+
+details.push(
+`PM1 คิดเป็น ${Math.round(pm1Share*100)}% ของ PM2.5`
+);
+}
+
+return{
+label,
+detail:details.join(" • ")
+};
+
+}
+
+// =====================================================
 // ACTIVITY RECOMMENDATION
 // =====================================================
 
 function activityRecommendation(
 pm25,
+pm10,
 heatIndex
 ){
 
 const p=
 pm25Guidance(
 pm25
+);
+
+const p10=
+pm10Guidance(
+pm10
 );
 
 const h=
@@ -1532,30 +1729,25 @@ heatIndex
 if(
 p.level==="critical"
 ){
-
-return"ควรลดหรือหลีกเลี่ยงกิจกรรมกลางแจ้งที่ใช้แรงมาก และติดตาม PM2.5 อย่างใกล้ชิด";
-
+return"ควรลดหรือหลีกเลี่ยงกิจกรรมกลางแจ้งที่ใช้แรงมาก และติดตามค่าฝุ่นอย่างใกล้ชิด";
 }
 
 if(
 h.level==="critical"
 ){
-
 return"ควรลดกิจกรรมกลางแจ้งที่ใช้แรงมาก หลีกเลี่ยงช่วงร้อนจัด และพักในบริเวณที่เหมาะสม";
-
 }
 
 if(
 p.level==="warning"||
+p10.level==="warning"||
 h.level==="warning"||
 h.level==="watch"
 ){
-
-return"ทำกิจกรรมได้โดยเพิ่มความระมัดระวัง ลดกิจกรรมที่ใช้แรงมาก และติดตามค่าจากระบบ";
-
+return"ทำกิจกรรมได้โดยเพิ่มความระมัดระวัง ลดกิจกรรมที่ใช้แรงมาก และติดตามค่าฝุ่นกับสภาพความร้อนต่อเนื่อง";
 }
 
-return"ยังไม่พบข้อจำกัดเด่นจาก PM2.5 และ Heat Index สำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
+return"ยังไม่พบข้อจำกัดเด่นจากฝุ่นและสภาพความร้อนสำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
 
 }
 
@@ -1884,107 +2076,6 @@ $("currentEnvironmentFooter").textContent=
 // SMART SUMMARY
 // =====================================================
 
-function pointAttentionSummary(){
-
-const usable=
-latestNodes
-.filter(
-n=>
-["online","sleep"]
-.includes(
-getNodeStatus(n)
-)
-);
-
-if(!usable.length){
-return{
-label:"รอข้อมูล",
-detail:"ยังไม่มีจุดตรวจวัดที่พร้อมใช้ข้อมูล",
-level:"normal"
-};
-}
-
-const pmNodes=
-usable
-.map(n=>({
-n,
-value:finiteNumberOrNull(n.pm25)
-}))
-.filter(x=>x.value!==null);
-
-const heatNodes=
-usable
-.map(n=>({
-n,
-value:heatIndexC(
-n.temperature,
-n.humidity
-)
-}))
-.filter(x=>x.value!==null);
-
-const pmWorst=
-pmNodes.length
-?[...pmNodes].sort((a,b)=>b.value-a.value)[0]
-:null;
-
-const heatWorst=
-heatNodes.length
-?[...heatNodes].sort((a,b)=>b.value-a.value)[0]
-:null;
-
-const pmState=
-pmWorst
-?pm25Guidance(pmWorst.value)
-:null;
-
-const heatState=
-heatWorst
-?heatLevel(heatWorst.value)
-:null;
-
-// ถ้ามีค่าที่เข้าเกณฑ์เตือน ให้บอก "จุดไหน" ก่อน
-if(
-pmWorst&&
-["warning","critical"]
-.includes(pmState?.level)
-){
-return{
-label:`จุดตรวจวัด ${nodeNo(pmWorst.n.device_id)} ควรติดตาม`,
-detail:`PM2.5 สูงที่สุด ${fmt(pmWorst.value)} µg/m³ • ${pmState.label}`,
-level:pmState.level==="critical"?"critical":"watch"
-};
-}
-
-if(
-heatWorst&&
-["watch","warning","critical"]
-.includes(heatState?.level)
-){
-return{
-label:`จุดตรวจวัด ${nodeNo(heatWorst.n.device_id)} ควรติดตาม`,
-detail:`สภาพความร้อนสูงที่สุด ${fmt(heatWorst.value)} °C • ${heatState.label}`,
-level:heatState.level==="critical"?"critical":"watch"
-};
-}
-
-// ถ้ายังปกติทั้งหมด ให้บอกว่าจุดใดสูงสุดแต่ยังไม่อันตราย
-if(pmWorst){
-return{
-label:"ยังไม่มีจุดที่ต้องเฝ้าระวัง",
-detail:`PM2.5 สูงสุดอยู่ที่จุดตรวจวัด ${nodeNo(pmWorst.n.device_id)} (${fmt(pmWorst.value)} µg/m³) และยังอยู่ในเกณฑ์ ${pmState?.label||"ปกติ"}`,
-level:"normal"
-};
-}
-
-return{
-label:"ทุกจุดอยู่ในเกณฑ์ปกติ",
-detail:`มี ${usable.length} จุดตรวจวัดที่ระบบใช้ข้อมูลได้`,
-level:"normal"
-};
-
-}
-
 function updateSmart(){
 
 const e=
@@ -2025,9 +2116,9 @@ e.innerHTML=
 </div>
 
 <div class="smart-summary-stat">
-<div class="smart-summary-stat-label">📍 จุดที่ควรสนใจ</div>
+<div class="smart-summary-stat-label">🌫 ลักษณะฝุ่นในพื้นที่</div>
 <div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">ข้อมูลจากจุดตรวจวัดยังไม่พร้อม</div>
+<div class="smart-summary-stat-sub">รอข้อมูลฝุ่นจากจุดตรวจวัด</div>
 </div>
 
 <div class="smart-summary-stat">
@@ -2047,9 +2138,9 @@ return;
 const snap=
 currentEnvironmentSnapshot();
 
-const pm=
-pm25Guidance(
-snap.pm25
+const air=
+combinedAirQualitySummary(
+snap
 );
 
 const heat=
@@ -2057,8 +2148,10 @@ heatLevel(
 snap.heatIndex
 );
 
-const attention=
-pointAttentionSummary();
+const dust=
+dustProfileSummary(
+snap
+);
 
 const on=
 latestNodes
@@ -2075,32 +2168,20 @@ let severity="normal";
 let headline="🟢 ภาพรวมปกติ";
 
 if(
-pm.level==="critical"||
-heat.level==="critical"||
-attention.level==="critical"
+air.level==="critical"||
+heat.level==="critical"
 ){
 severity="critical";
 headline="🔴 มีสถานการณ์ที่ควรให้ความสำคัญ";
 }else if(
-pm.level==="warning"||
+air.level==="warning"||
 heat.level==="warning"||
 heat.level==="watch"||
-attention.level==="watch"||
 off>0
 ){
 severity="watch";
 headline="🟡 มีข้อมูลที่ควรติดตาม";
 }
-
-const airMain=
-snap.pm25==null
-?"รอข้อมูล"
-:pm.label;
-
-const airSub=
-snap.pm25==null
-?"ยังไม่มีค่า PM2.5 ที่ใช้ได้"
-:`PM2.5 ${fmt(snap.pm25)} µg/m³`;
 
 const heatMain=
 snap.heatIndex==null
@@ -2129,11 +2210,12 @@ off===0
 const activity=
 activityRecommendation(
 snap.pm25,
+snap.pm10,
 snap.heatIndex
 );
 
 const activityGood=
-!["critical","warning"].includes(pm.level)&&
+!["critical","warning"].includes(air.level)&&
 !["critical","warning"].includes(heat.level);
 
 e.innerHTML=
@@ -2145,8 +2227,8 @@ ${headline}
 
 <div class="smart-summary-stat smart-summary-air">
 <div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
-<div class="smart-summary-stat-value">${esc(airMain)}</div>
-<div class="smart-summary-stat-sub">${esc(airSub)}</div>
+<div class="smart-summary-stat-value">${esc(air.label)}</div>
+<div class="smart-summary-stat-sub">${esc(air.detail)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-heat">
@@ -2156,9 +2238,9 @@ ${headline}
 </div>
 
 <div class="smart-summary-stat smart-summary-environment">
-<div class="smart-summary-stat-label">📍 จุดที่ควรสนใจ</div>
-<div class="smart-summary-stat-value">${esc(attention.label)}</div>
-<div class="smart-summary-stat-sub">${esc(attention.detail)}</div>
+<div class="smart-summary-stat-label">🌫 ลักษณะฝุ่นในพื้นที่</div>
+<div class="smart-summary-stat-value">${esc(dust.label)}</div>
+<div class="smart-summary-stat-sub">${esc(dust.detail)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-system">
@@ -2851,6 +2933,25 @@ cubicInterpolationMode:"monotone"
 }
 
 function drawCharts(){
+
+if(typeof Chart==="undefined"){
+
+const area=$("historyChartArea");
+
+if(area){
+area.innerHTML=
+'<div class="chart-empty">กำลังเตรียมกราฟ...</div>';
+}
+
+if(historyActivated){
+ensureChartLibrary()
+.then(()=>drawCharts())
+.catch(e=>console.error("Chart load error:",e));
+}
+
+return;
+}
+
 const base=selectedRecords()
 .filter(r=>parseDate(r.timestamp))
 .sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
@@ -4797,54 +4898,51 @@ smartSummary:{
 title:"✦ สรุปสถานการณ์",
 html:`
 <section class="help-section">
-<h4>โซนนี้ทำหน้าที่อะไร?</h4>
-<p>เปลี่ยนตัวเลขให้เป็นภาษาที่อ่านง่าย โดยสรุป <b>คุณภาพอากาศ</b>, <b>สภาพความร้อน</b>, <b>จุดที่ควรสนใจ</b>, <b>สถานะจุดตรวจวัด</b> และคำแนะนำกิจกรรมกลางแจ้ง</p>
+<h4>โซนนี้ตอบอะไร?</h4>
+<p>สรุปสิ่งที่คนทั่วไปต้องการรู้ทันที 4 เรื่อง คือ <b>คุณภาพอากาศ</b>, <b>สภาพความร้อน</b>, <b>ลักษณะฝุ่นในพื้นที่</b> และ <b>สถานะจุดตรวจวัด</b> พร้อมคำแนะนำกิจกรรมกลางแจ้ง</p>
 </section>
 
 <section class="help-section">
-<h4>🌿 คุณภาพอากาศ</h4>
-<p>ใช้ค่า PM2.5 ล่าสุดจากจุดตรวจวัดที่ยังใช้งานได้ แล้วหาค่าเฉลี่ยของพื้นที่</p>
-<div class="help-formula">PM2.5<sub>พื้นที่</sub> = Σ(PM2.5 ของจุดที่ใช้ได้) / จำนวนจุดที่ใช้ได้</div>
-<div class="help-threshold-grid">
-<span>0–15.0 µg/m³</span><b>ดีมาก</b>
-<span>15.1–25.0 µg/m³</span><b>ดี</b>
-<span>25.1–37.5 µg/m³</span><b>ปานกลาง</b>
-<span>37.6–75.0 µg/m³</span><b>เริ่มมีผลกระทบต่อสุขภาพ</b>
-<span>75.1 ขึ้นไป</span><b>มีผลกระทบต่อสุขภาพ</b>
-</div>
-<div class="help-warning"><b>ข้อสำคัญ:</b> เกณฑ์กรมควบคุมมลพิษเป็น PM2.5 เฉลี่ย 24 ชั่วโมง แต่การ์ดนี้ใช้ค่ารอบล่าสุด/ระยะสั้น จึงเป็นการสื่อสารระดับเบื้องต้น ไม่ใช่ AQI 24 ชั่วโมงอย่างเป็นทางการ</div>
+<h4>🌿 คุณภาพอากาศ — ใช้ฝุ่นมากกว่าหนึ่งขนาด</h4>
+<p>ระบบไม่ได้เอา PM1.0 + PM2.5 + PM10 มาบวกหรือเฉลี่ยรวมเป็นคะแนนเดียว เพราะแต่ละขนาดมีความหมายและเกณฑ์ต่างกัน แต่จะอ่านทั้งสามค่าแล้วสรุปเป็นภาษาง่าย ๆ</p>
+<ul>
+<li><b>PM2.5</b> → เป็นตัวหลักด้านผลกระทบต่อสุขภาพ ใช้ช่วงระดับของกรมควบคุมมลพิษ</li>
+<li><b>PM10</b> → ใช้ตรวจว่าฝุ่นขนาดใหญ่สูงกว่าค่าอ้างอิง 24 ชั่วโมง 120 µg/m³ หรือไม่</li>
+<li><b>PM1.0</b> → ไม่มีเกณฑ์ AQI ที่โครงการใช้ จึงเป็นข้อมูลประกอบ ไม่ใช้ตัดสินสุขภาพเพียงตัวเดียว</li>
+</ul>
+<p>ตัวอย่างข้อความที่ระบบอาจแสดง: <b>อากาศโดยรวมดี</b>, <b>ควรเฝ้าระวังฝุ่นขนาดเล็ก</b>, <b>ควรเฝ้าระวังฝุ่นขนาดใหญ่</b> หรือ <b>ควรเฝ้าระวังฝุ่นหลายขนาด</b></p>
+<div class="help-warning">PM2.5 37.5 µg/m³ และ PM10 120 µg/m³ เป็นค่าอ้างอิงแบบ <b>เฉลี่ย 24 ชั่วโมง</b> การนำมาเทียบกับค่ารอบล่าสุดของ Dashboard ใช้เพื่อการเฝ้าระวังเบื้องต้น ไม่ใช่การรับรองว่าผ่าน/ไม่ผ่านมาตรฐาน 24 ชั่วโมง</div>
 </section>
 
 <section class="help-section">
 <h4>🌡 สภาพความร้อน</h4>
-<p>ระบบคำนวณ <b>Heat Index</b> หรืออุณหภูมิที่ร่างกายรู้สึกได้จากอุณหภูมิและความชื้นสัมพัทธ์</p>
-<div class="help-formula help-formula-small">HI = -42.379 + 2.04901523T + 10.14333127R − 0.22475541TR − 0.00683783T² − 0.05481717R² + 0.00122874T²R + 0.00085282TR² − 0.00000199T²R²</div>
-<p class="help-muted">T = อุณหภูมิ °F, R = ความชื้นสัมพัทธ์ (%) แล้วระบบแปลงผลกลับเป็น °C</p>
-<div class="help-threshold-grid">
-<span>&lt;27 °C</span><b>ต่ำกว่าเกณฑ์เฝ้าระวัง</b>
-<span>27–31.9 °C</span><b>เฝ้าระวัง</b>
-<span>32–40.9 °C</span><b>เตือนภัย</b>
-<span>41–54 °C</span><b>อันตราย</b>
-<span>&gt;54 °C</span><b>อันตรายมาก</b>
-</div>
+<p>ใช้อุณหภูมิและความชื้นร่วมกันคำนวณ Heat Index เพื่อบอกความร้อนที่ร่างกายรู้สึกได้ ไม่ตัดสินจากอุณหภูมิเพียงค่าเดียว</p>
 </section>
 
 <section class="help-section">
-<h4>📍 จุดที่ควรสนใจ</h4>
-<p>ระบบเทียบทั้ง 3 จุด หากมีจุดที่ PM2.5 เข้าเกณฑ์เตือนจะชี้จุดนั้นก่อน หาก PM2.5 ยังปกติจะตรวจ Heat Index ของแต่ละจุด แล้วเลือกจุดที่มีความเสี่ยงเด่นที่สุด หากทุกจุดปกติจะแจ้งว่ายังไม่มีจุดที่ต้องเฝ้าระวัง</p>
-<p class="help-muted">ตรรกะการเลือก “จุดที่ควรสนใจ” เป็นกฎของโครงการ เพื่อช่วยให้เข้าใจสถานี 3 จุดง่ายขึ้น</p>
+<h4>🌫 ลักษณะฝุ่นในพื้นที่</h4>
+<p>ช่องนี้ไม่บอกว่า “ฝุ่นอันตรายไหม” เพราะหน้าที่นั้นอยู่ที่คุณภาพอากาศ แต่บอกว่า <b>ฝุ่นที่ตรวจพบมีสัดส่วนขนาดแบบไหน</b></p>
+<div class="help-formula">สัดส่วนฝุ่นขนาดเล็ก = (PM2.5 / PM10) × 100%</div>
+<p>ถ้า PM2.5 มีสัดส่วนสูงเมื่อเทียบกับ PM10 ระบบจะสรุปว่า <b>ฝุ่นขนาดเล็กเป็นสัดส่วนหลัก</b>; ถ้าสัดส่วนอยู่กึ่งกลางจะบอกว่า <b>พบฝุ่นหลายขนาดผสมกัน</b>; และถ้าสัดส่วนต่ำจะบอกว่า <b>ฝุ่นขนาดใหญ่มีสัดส่วนมากขึ้น</b></p>
+<p>ถ้ามี PM1.0 ระบบจะแสดงเพิ่มว่า PM1 คิดเป็นกี่เปอร์เซ็นต์ของ PM2.5 เพื่อช่วยอธิบายอนุภาคขนาดเล็กกว่า 1 µm</p>
+<div class="help-warning"><b>ข้อจำกัด:</b> สัดส่วนนี้ใช้เพื่ออธิบาย “ขนาดของฝุ่นที่ตรวจพบ” เท่านั้น ไม่สามารถใช้ฟันธงแหล่งกำเนิดว่าเกิดจากรถ การเผา โรงงาน หรือแหล่งใดโดยตรง</div>
+</section>
+
+<section class="help-section">
+<h4>📡 สถานีตรวจวัด</h4>
+<p>บอกว่าตอนนี้ระบบใช้ข้อมูลได้กี่จุดจากทั้งหมด 3 จุด เพื่อให้ผู้ใช้รู้ว่าภาพรวมที่เห็นมาจากข้อมูลครบหรือไม่</p>
 </section>
 
 <section class="help-section">
 <h4>🏃 กิจกรรมกลางแจ้ง</h4>
-<p>ใช้ระดับ PM2.5 และ Heat Index ร่วมกัน ถ้าตัวใดตัวหนึ่งสูง ระบบจะเพิ่มระดับความระมัดระวัง ค่าแสงไม่ได้ใช้เป็น Health Alert โดยตรง</p>
+<p>ใช้ PM2.5, PM10 และ Heat Index ร่วมกัน ถ้ามีค่าที่ควรเฝ้าระวัง ระบบจะเพิ่มระดับความระมัดระวัง ส่วน PM1.0 และแสงไม่ได้ใช้เป็น Health Alert โดยตรง</p>
 </section>
 
 <div class="help-sources">
 <b>อ้างอิง:</b>
-<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI ประเทศไทย พ.ศ. 2566</a>
-<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
-<a href="https://www.weather.gov/tbw/heatindex" target="_blank" rel="noopener noreferrer">U.S. NWS — Heat Index Equation</a>
+<a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5</a>
+<a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — มาตรฐาน PM10</a>
+<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 </div>`
 },
 
@@ -5542,6 +5640,185 @@ closeHistoryRangePicker();
 }
 
 // =====================================================
+// PERFORMANCE — DEFER BELOW-THE-FOLD WORK
+// =====================================================
+
+function ensureChartLibrary(){
+
+if(
+chartLibraryReady&&
+typeof Chart!=="undefined"
+){
+return Promise.resolve();
+}
+
+if(chartLibraryPromise){
+return chartLibraryPromise;
+}
+
+chartLibraryPromise=
+new Promise((resolve,reject)=>{
+
+if(typeof Chart!=="undefined"){
+chartLibraryReady=true;
+resolve();
+return;
+}
+
+const s=
+document.createElement("script");
+
+s.src=
+"https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js";
+
+s.async=true;
+
+s.onload=()=>{
+chartLibraryReady=true;
+resolve();
+};
+
+s.onerror=()=>{
+chartLibraryPromise=null;
+reject(
+new Error("Chart.js load failed")
+);
+};
+
+document.head.appendChild(s);
+
+});
+
+return chartLibraryPromise;
+
+}
+
+async function activateHistorySection(){
+
+if(historyLoading){
+return;
+}
+
+historyActivated=true;
+historyLoading=true;
+
+try{
+
+records=
+await loadHistory();
+
+renderAverages();
+
+await ensureChartLibrary();
+
+drawCharts();
+
+}catch(e){
+
+console.error(
+"Deferred history/chart load error:",
+e
+);
+
+}finally{
+
+historyLoading=false;
+
+}
+
+}
+
+function activateAISection(){
+
+if(aiSectionActivated){
+return;
+}
+
+aiSectionActivated=true;
+
+loadAI(false);
+loadAIForecast(false);
+
+}
+
+function setupDeferredSections(){
+
+const historyTargets=[
+document.querySelector(".historical-section"),
+document.querySelector(".dashboard-charts-zone")
+]
+.filter(Boolean);
+
+const aiTarget=
+document.querySelector(".ai-intelligence-section");
+
+if(
+"IntersectionObserver" in window
+){
+
+if(historyTargets.length){
+
+const historyObserver=
+new IntersectionObserver(
+entries=>{
+
+if(
+entries.some(x=>x.isIntersecting)
+){
+historyObserver.disconnect();
+activateHistorySection();
+}
+
+},
+{
+rootMargin:"700px 0px"
+}
+);
+
+historyTargets.forEach(
+x=>historyObserver.observe(x)
+);
+
+}
+
+if(aiTarget){
+
+const aiObserver=
+new IntersectionObserver(
+entries=>{
+
+if(
+entries.some(x=>x.isIntersecting)
+){
+aiObserver.disconnect();
+activateAISection();
+}
+
+},
+{
+rootMargin:"500px 0px"
+}
+);
+
+aiObserver.observe(aiTarget);
+
+}
+
+}else{
+
+setTimeout(
+()=>{
+activateHistorySection();
+activateAISection();
+},
+1200
+);
+
+}
+
+}
+
+// =====================================================
 // INITIAL LOAD
 // =====================================================
 
@@ -5551,7 +5828,6 @@ try{
 
 const[
 latest,
-history,
 mother,
 alerts,
 standards
@@ -5559,8 +5835,6 @@ standards
 await Promise.all([
 
 loadLatest(),
-
-loadHistory(),
 
 loadMother(),
 
@@ -5582,9 +5856,6 @@ true;
 latestNodes=
 latest;
 
-records=
-history;
-
 motherStatus=
 mother;
 
@@ -5605,18 +5876,6 @@ updateCurrent();
 updateSmart();
 
 updateAlertUI();
-
-renderAverages();
-
-drawCharts();
-
-loadAI(
-false
-);
-
-loadAIForecast(
-false
-);
 
 }catch(e){
 
@@ -5714,13 +5973,20 @@ updateAlertUI();
 
 async function loadHistorical(){
 
+if(!historyActivated){
+return;
+}
+
 try{
 
 records=
 await loadHistory();
 
 renderAverages();
+
+if(typeof Chart!=="undefined"){
 drawCharts();
+}
 
 }catch(e){
 
@@ -5819,6 +6085,8 @@ null
 bindEvents();
 
 bindHelp();
+
+setupDeferredSections();
 
 updateClock();
 
