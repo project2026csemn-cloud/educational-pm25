@@ -1062,10 +1062,8 @@ return"no_data";
 }
 
 if(
-field!=="pm25"
+field==="pm25"
 ){
-return"normal";
-}
 
 if(
 n>75
@@ -1080,6 +1078,24 @@ return"warning";
 }
 
 return"normal";
+
+}
+
+if(
+field==="pm10"
+){
+
+// 120 µg/m³ เป็นค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของไทย
+// การเทียบกับค่ารอบล่าสุดใช้เพื่อเฝ้าระวังเบื้องต้นเท่านั้น
+return n>120
+?"warning"
+:"info";
+
+}
+
+// PM1.0 / Temperature / Humidity / Light
+// ไม่มี Health Threshold เดี่ยวที่ Dashboard ใช้ตัดสิน
+return"info";
 
 }
 
@@ -1807,7 +1823,7 @@ critical:[
 ],
 
 info:[
-"ควรตรวจสอบ",
+"ข้อมูลประกอบ",
 "current-quality-info"
 ],
 
@@ -2012,8 +2028,7 @@ n[currentMetric]
 x=>
 [
 "warning",
-"critical",
-"info"
+"critical"
 ]
 .includes(
 x.l
@@ -2059,7 +2074,11 @@ watch
 $("currentWatchDetail").textContent=
 watch
 ?`${c.label} ${currentValue(watch.v)} • ${levelText(watch.l)}`
-:"ทุกจุดที่ใช้งานยังอยู่ในเกณฑ์ปกติ";
+:currentMetric==="pm25"
+?"ยังไม่พบจุดที่ PM2.5 เข้าเกณฑ์เฝ้าระวัง"
+:currentMetric==="pm10"
+?"ยังไม่พบค่ารอบล่าสุดของ PM10 สูงกว่า 120 µg/m³ • การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง"
+:`${c.label} ใช้เป็นข้อมูลประกอบและการเปรียบเทียบ ไม่ใช้เกณฑ์แจ้งเตือนเดี่ยวในโครงการ`;
 
 if(
 $("currentEnvironmentFooter")
@@ -4531,11 +4550,11 @@ timeZone:
 
 details.innerHTML=
 `<div class="ai-result-headline">
-${esc(data.headline||"รอผลการวิเคราะห์")}
+${esc(normalizeProjectWording(data.headline)||"รอผลการวิเคราะห์")}
 </div>
 
 <div class="ai-result-summary">
-${esc(data.summary||"ยังไม่มีรายละเอียดจาก AI")}
+${esc(normalizeProjectWording(data.summary)||"ยังไม่มีรายละเอียดจาก AI")}
 </div>
 
 ${observations.length
@@ -4552,7 +4571,7 @@ ${observations
 .map(
 x=>
 `<div class="ai-observation">
-• ${esc(x)}
+• ${esc(normalizeProjectWording(x))}
 </div>`
 )
 .join("")}
@@ -4571,7 +4590,7 @@ x=>
 </div>
 
 <div class="ai-recommendation">
-${esc(data.recommendation||"ติดตามข้อมูลจากระบบต่อเนื่อง")}
+${esc(normalizeProjectWording(data.recommendation)||"ติดตามข้อมูลจากระบบต่อเนื่อง")}
 </div>
 
 </div>
@@ -4811,7 +4830,7 @@ return value;
 
 let s=String(value);
 
-/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ ไม่จำกัดเฉพาะสถานศึกษา */
+/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก AI/cache เวอร์ชันเก่า */
 s=s
 .replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
 .replaceAll("การตรวจวัดสิ่งแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
@@ -5268,7 +5287,7 @@ html:`
 <div class="help-sensor-card">
 <div class="help-sensor-head"><b>PM10</b><span class="help-chip has-standard">มีมาตรฐานอากาศ</span></div>
 <p>ประเทศไทยกำหนดมาตรฐาน PM10 ในบรรยากาศทั่วไป <b>ค่าเฉลี่ย 24 ชั่วโมงไม่เกิน 120 µg/m³</b> และค่าเฉลี่ยรายปีไม่เกิน 50 µg/m³ ขณะที่ WHO AQG 2021 แนะนำ 24 ชั่วโมง 45 µg/m³ และรายปี 15 µg/m³</p>
-<p class="help-muted">ในโครงการนี้ PM10 ใช้เพื่อแสดงผล เปรียบเทียบ และดูย้อนหลัง แต่ <b>ยังไม่ได้ใช้เป็นตัวตัดสินคำแนะนำกิจกรรมหรือ Alert อัตโนมัติ</b></p>
+<p class="help-muted">ในโครงการนี้ PM10 ใช้เพื่อแสดงผล เปรียบเทียบ ดูย้อนหลัง และใช้ประกอบคำแนะนำกิจกรรม/การเฝ้าระวังเบื้องต้น แต่ <b>ยังไม่ใช้สร้าง Alert รายจุดแบบ PM2.5</b> และการตัดสินมาตรฐานจริงต้องอาศัยค่าเฉลี่ย 24 ชั่วโมง</p>
 </div>
 
 <div class="help-sensor-card">
@@ -5307,7 +5326,7 @@ html:`
 <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5 ประเทศไทย</a>
 <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — มาตรฐาน PM2.5 และ PM10</a>
 <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO Global Air Quality Guidelines 2021 — PM2.5 / PM10</a>
-<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 <a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — Ambient Light / lux</a>
 </div>`
 },
@@ -5360,7 +5379,7 @@ html:`
 <b>อ้างอิง:</b>
 <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5</a>
 <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — มาตรฐาน PM10</a>
-<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 </div>`
 },
 
@@ -5383,7 +5402,7 @@ html:`
 <h4>ถ้าเลือกแต่ละตัวแปร ระบบตีความอย่างไร?</h4>
 <ul>
 <li><b>PM2.5</b> → มีเกณฑ์คุณภาพอากาศของไทย และระบบใช้เป็นตัวหลักในการเฝ้าระวัง</li>
-<li><b>PM10</b> → มีมาตรฐานอากาศไทย 24 ชั่วโมง 120 µg/m³ แต่ในโซนนี้ใช้เพื่อเปรียบเทียบ ยังไม่ใช้สร้าง Alert อัตโนมัติ</li>
+<li><b>PM10</b> → มีมาตรฐานอากาศไทยเฉลี่ย 24 ชั่วโมง 120 µg/m³ ในโซนนี้ใช้เพื่อเปรียบเทียบและเฝ้าระวังเบื้องต้น หากค่ารอบล่าสุดสูงกว่า 120 µg/m³ จะแสดง “เฝ้าระวัง” แต่ไม่ถือว่าเป็นผลเกินมาตรฐาน 24 ชั่วโมงโดยตรง</li>
 <li><b>PM1.0</b> → ไม่มี AQI/Health Threshold ที่โครงการใช้ จึงแสดงเพื่อเปรียบเทียบเท่านั้น</li>
 <li><b>อุณหภูมิ</b> → ไม่ตัดสินความเสี่ยงจากอุณหภูมิเดี่ยว ต้องดูร่วมกับความชื้นผ่าน Heat Index</li>
 <li><b>ความชื้น</b> → ไม่มี Health Threshold เดี่ยวในโครงการ ใช้ประกอบ Heat Index</li>
@@ -5401,7 +5420,7 @@ html:`
 <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — AQI/PM2.5</a>
 <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM10</a>
 <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO AQG 2021</a>
-<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 <a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — lux</a>
 </div>`
 },
@@ -5434,7 +5453,7 @@ html:`
 <div class="help-sources">
 <b>อ้างอิง:</b>
 <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM2.5</a>
-<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 </div>`
 },
 
@@ -5487,7 +5506,7 @@ html:`
 <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM2.5/AQI</a>
 <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer">กรมควบคุมมลพิษ — PM10</a>
 <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer">WHO AQG 2021 — PM2.5/PM10</a>
-<a href="https://www.tmd.go.th/media/secretary/%E0%B8%9E%E0%B8%A3/%E0%B9%81%E0%B8%99%E0%B8%A7%E0%B8%97%E0%B8%B2%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%9A%E0%B9%80%E0%B8%84%E0%B8%A5%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%82%E0%B8%B2%E0%B8%A2%E0%B8%AD%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%AA%E0%B8%A1%E0%B8%84%E0%B8%A3%E0%B8%AD%E0%B8%95%E0%B8%99%E0%B8%A2%E0%B8%A1%E0%B8%A7%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B9%81%E0%B8%A5%E0%B8%B0%E0%B9%81%E0%B8%9C%E0%B8%99%E0%B8%94%E0%B8%99%E0%B9%84%E0%B8%AB%E0%B8%A7_final.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 <a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer">ROHM — Ambient Light Sensor</a>
 </div>`
 },
@@ -5531,7 +5550,7 @@ html:`
 
 <div class="help-sources">
 <b>อ้างอิง Heat Index:</b>
-<a href="https://www.rnd.tmd.go.th/doc/public/%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B9%80%E0%B8%9C%E0%B8%A2%E0%B9%81%E0%B8%9E%E0%B8%A3%E0%B9%88%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B9%E0%B9%89_%E0%B8%84%E0%B9%88%E0%B8%B2%E0%B8%94%E0%B8%B1%E0%B8%8A%E0%B8%99%E0%B8%B5%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B9%89%E0%B8%AD%E0%B8%99%2824AUG%29.pdf" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา</a>
 <a href="https://www.weather.gov/tbw/heatindex" target="_blank" rel="noopener noreferrer">U.S. National Weather Service</a>
 </div>`
 }
