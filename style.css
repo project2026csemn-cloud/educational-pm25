@@ -7077,3 +7077,20 @@ body.chart-zoom-open{
     }
 }
 
+
+
+/* =========================================================
+   INTERACTIVE VIEWER — NO PLUGIN CURSOR POLISH
+   ========================================================= */
+
+.chart-zoom-stage{
+    cursor:grab;
+}
+
+.chart-zoom-stage.is-panning{
+    cursor:grabbing;
+}
+
+.chart-zoom-stage canvas{
+    touch-action:none!important;
+}
