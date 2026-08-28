@@ -263,6 +263,171 @@ false
 }
 
 // =====================================================
+// CHART DATE / TIME LABELS
+// แก้ปัญหากราฟช่วงยาวที่เห็นเฉพาะเวลาแต่ไม่รู้ว่าเป็นวันไหน
+// =====================================================
+
+function thaiChartDateTime(value, compact=false){
+const d=parseDate(value);
+if(!d){
+return String(value??"");
+}
+
+const opts=compact
+?{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+:{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit",
+hour12:false
+};
+
+return d.toLocaleString("th-TH",opts);
+}
+
+function chartTickText(value){
+const d=parseDate(value);
+
+if(!d){
+return String(value??"");
+}
+
+const longRange=[
+"24h",
+"7d",
+"30d",
+"custom"
+].includes(averageRange);
+
+if(longRange){
+return d.toLocaleString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+}
+
+return d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+}
+
+function graphTooltipTitle(items){
+const raw=items?.[0]?.label;
+if(raw==null){
+return"";
+}
+
+const d=parseDate(raw);
+
+return d
+?thaiChartDateTime(d,false)
+:String(raw);
+}
+
+function historyRangeCaption(baseRows=[]){
+const el=$("historyRangeCaption");
+if(!el){
+return;
+}
+
+const w=rangeWindow();
+
+if(!w){
+el.innerHTML="";
+return;
+}
+
+const sorted=(baseRows||[])
+.filter(r=>parseDate(r?.timestamp))
+.sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
+
+const firstData=sorted.length
+?parseDate(sorted[0].timestamp)
+:null;
+
+const lastData=sorted.length
+?parseDate(sorted.at(-1).timestamp)
+:null;
+
+// ถ้าระบบมีข้อมูลน้อยกว่าช่วงที่เลือก ให้เริ่มข้อความจากข้อมูลจริงชุดแรก
+const displayStart=
+firstData&&firstData>w.start
+?firstData
+:w.start;
+
+const displayEnd=w.end;
+
+el.innerHTML=
+`<div class="history-range-edge history-range-edge-start">
+<span>เริ่ม</span>
+<b>${esc(thaiChartDateTime(displayStart,false))}</b>
+</div>
+<div class="history-range-center">
+<span>${esc(rangeLabel())}</span>
+${lastData
+?`<small>ข้อมูลล่าสุด ${esc(thaiChartDateTime(lastData,false))}</small>`
+:`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
+</div>
+<div class="history-range-edge history-range-edge-end">
+<span>${averageRange==="custom"?"สิ้นสุด":"ถึงปัจจุบัน"}</span>
+<b>${esc(thaiChartDateTime(displayEnd,false))}</b>
+</div>`;
+}
+
+
+function historyLabelsToRangeEnd(rows=[]){
+const labels=(rows||[]).map(r=>r?.timestamp).filter(Boolean);
+const w=rangeWindow();
+
+if(!w){
+return labels;
+}
+
+const last=labels.length
+?parseDate(labels.at(-1))
+:null;
+
+// ให้แกน X แสดงปลายช่วงที่เลือกจริง แม้ข้อมูลล่าสุดจะหยุดก่อนเวลาปัจจุบัน
+if(!last||w.end.getTime()-last.getTime()>1000){
+labels.push(w.end.toISOString());
+}
+
+return labels;
+}
+
+function padChartValuesToLabels(values=[],labels=[]){
+const out=[...values];
+while(out.length<labels.length){
+out.push(null);
+}
+return out;
+}
+
+// =====================================================
 // SENSOR SANITIZER
 // =====================================================
 
@@ -2854,7 +3019,10 @@ autoSkip:true,
 maxTicksLimit:mobile?5:10,
 maxRotation:mobile?0:45,
 minRotation:0,
-font:{size:mobile?10:12}
+font:{size:mobile?10:12},
+callback:function(value){
+return chartTickText(this.getLabelForValue(value));
+}
 }
 };
 }
@@ -2898,7 +3066,7 @@ animation:false,
 interaction:{mode:"index",intersect:false},
 plugins:{
 legend:{display:false},
-tooltip:{callbacks:{label:graphTooltipLabel}}
+tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}
 },
 scales:{
 x:{
@@ -2908,7 +3076,10 @@ autoSkip:true,
 maxTicksLimit:chartTickLimit(),
 maxRotation:0,
 minRotation:0,
-font:{size:chartFontSize()}
+font:{size:chartFontSize()},
+callback:function(value){
+return chartTickText(this.getLabelForValue(value));
+}
 }
 },
 y:{
@@ -2984,6 +3155,8 @@ historyChart=null;
 const area=$("historyChartArea");
 if(!area)return;
 
+historyRangeCaption(base);
+
 if(!base.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
 ["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
@@ -3007,14 +3180,15 @@ groupedChartShell("ความชื้น","หน่วย %","historyHumidit
 groupedChartShell("แสง","หน่วย lux","historyLight",miniLegend(["light"]))+
 `</div>`;
 
-const labels=base.map(x=>thaiTime(x.timestamp));
+const labels=historyLabelsToRangeEnd(base);
 
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
 const vals=base.map(r=>{
 const v=finiteNumberOrNull(r[field]); return v;
 });
-return makeActualDataset(field,vals);
+const displayVals=padChartValuesToLabels(vals,labels);
+return makeActualDataset(field,displayVals);
 });
 const c=new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)});
 historyGroupCharts.push(c);
@@ -3033,7 +3207,7 @@ area.innerHTML='<canvas id="historyChart"></canvas>';
 
 const arr=base.filter(r=>hasFiniteSensorValue(r[metric]));
 const values=arr.map(r=>finiteNumberOrNull(r[metric]));
-const labels=arr.map(r=>thaiTime(r.timestamp));
+const labels=historyLabelsToRangeEnd(arr);
 const s=stats(arr,metric);
 
 if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
@@ -3050,10 +3224,10 @@ $("trend").textContent=!values.length?"ไม่มีข้อมูล":Math.a
 if(values.length){
 historyChart=new Chart($("historyChart"),{
 type:"line",
-data:{labels,datasets:[makeActualDataset(metric,values)]},
+data:{labels,datasets:[makeActualDataset(metric,padChartValuesToLabels(values,labels))]},
 options:{
 ...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
-plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{label:graphTooltipLabel}}}
+plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}
 }
 });
 }
@@ -3242,7 +3416,7 @@ groupedChartShell("ความชื้น","ข้อมูลจริง + A
 groupedChartShell("แสง","ข้อมูลจริง + AI Forecast","forecastLight",miniLegend(["light"]))+
 `</div>`;
 
-const actualLabels=actual.map(r=>thaiTime(r.timestamp));
+const actualLabels=actual.map(r=>r.timestamp);
 const labels=[...actualLabels,"+10 นาที","+20 นาที","+30 นาที"];
 
 const create=(canvasId,fields,yTitle)=>{
@@ -3292,7 +3466,7 @@ area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจร
 return;
 }
 const values=actual.map(r=>finiteNumberOrNull(r[metric]));
-const labels=actual.map(r=>thaiTime(r.timestamp));
+const labels=actual.map(r=>r.timestamp);
 const current=values.at(-1);
 const datasets=[makeActualDataset(metric,values)];
 const pts=pointFor(metric);
@@ -3309,7 +3483,7 @@ type:"line",
 data:{labels,datasets},
 options:{
 ...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
-plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{label:graphTooltipLabel}}}
+plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}
 }
 });
 
@@ -6845,6 +7019,10 @@ tooltip:{
 enabled:true,
 mode:"index",
 intersect:false,
+callbacks:{
+title:graphTooltipTitle,
+label:graphTooltipLabel
+},
 backgroundColor:"rgba(2,6,23,.94)",
 titleColor:"#f8fafc",
 bodyColor:"#e2e8f0",
@@ -6881,6 +7059,9 @@ autoSkip:true,
 maxTicksLimit:isTouch?7:12,
 font:{
 size:isTouch?11:12
+},
+callback:function(value){
+return chartTickText(this.getLabelForValue(value));
 }
 },
 
