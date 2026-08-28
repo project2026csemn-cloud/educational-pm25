@@ -870,7 +870,7 @@ MOTHER_OFFLINE_MS
 // =====================================================
 // NODE STATUS RULE
 //
-// Gateway Offline
+// สถานีรับข้อมูลหลัก OFFLINE
 // -> Node ทุกตัว Offline
 //
 // ONLINE / SLEEP
