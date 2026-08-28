@@ -8792,3 +8792,290 @@ html,body{max-width:100%;overflow-x:clip}
   header img.w-20{width:44px!important;height:44px!important}
   header .flex.items-center.gap-4{align-items:flex-start!important}
 }
+
+
+/* =========================================================
+   V12 — CROSS-DEVICE UI / UX AUDIT
+   Desktop + Laptop + Tablet + Mobile + Landscape
+   Visual/readability layer only. No API/calculation changes.
+   ========================================================= */
+
+:root{
+  --ui-readable-xs:12px;
+  --ui-readable-sm:13px;
+  --ui-readable-md:14px;
+  --ui-readable-lg:16px;
+}
+
+/* Prevent accidental horizontal page overflow at every viewport. */
+html,body{max-width:100%;overflow-x:hidden}
+img,svg,canvas{max-width:100%}
+
+/* ---------- Global readable microcopy ---------- */
+.smart-summary-mode,
+.smart-summary-stat-label,
+.smart-summary-stat-sub,
+.smart-summary-note,
+.smart-summary-activity,
+.smart-summary-activity-label,
+.ai-refresh-button,
+.ai-status-badge,
+.ai-result-label,
+.ai-observation,
+.ai-recommendation,
+.ai-meta-row,
+.ai-analysis-footer,
+.ai-forecast-kicker,
+.ai-forecast-subtitle,
+.ai-forecast-status,
+.ai-forecast-refresh,
+.ai-forecast-details,
+.ai-forecast-label,
+.ai-forecast-generated,
+.forecast-base-label,
+.ai-generated-at,
+.ai-panel-kicker,
+.ai-model-strip-label,
+.ai-model-strip b,
+.ai-trend-variable,
+.ai-trend-explanation,
+.ai-trend-driver,
+.ai-intelligence-statusline,
+.chart-zone-subtitle{
+  font-size:var(--ui-readable-xs)!important;
+  line-height:1.55!important;
+}
+
+/* Tiny uppercase labels are decorative; keep them subtle but readable. */
+.ai-panel-kicker,
+.ai-model-strip-label,
+.ai-trend-variable,
+.ai-forecast-kicker,
+.forecast-base-label,
+.ai-result-label,
+.smart-summary-stat-label{
+  letter-spacing:.06em!important;
+}
+
+/* Core analysis copy should never be micro-text on desktop either. */
+.ai-result-summary,
+.ai-forecast-details,
+.ai-observation,
+.ai-recommendation,
+.smart-summary-activity,
+.smart-summary-note{
+  font-size:13px!important;
+  line-height:1.65!important;
+}
+.ai-result-headline,.ai-forecast-headline{font-size:16px!important;line-height:1.45!important}
+.smart-summary-headline{font-size:16px!important}
+.smart-summary-stat-value{font-size:14px!important}
+
+/* Buttons / clickable targets */
+.help-trigger,
+.dashboard-alert-button,
+.ai-refresh-button,
+.ai-forecast-refresh,
+.history-toolbar-button,
+.history-metric-select,
+.chart-series-button,
+.chart-series-show-all{
+  min-height:38px;
+}
+.help-trigger{min-width:34px;min-height:34px}
+
+/* ---------- Desktop >= 1280 ---------- */
+@media (min-width:1280px){
+  body{font-size:15px;line-height:1.55}
+  .dashboard-page-heading h1{font-size:30px;line-height:1.25}
+  .dashboard-page-heading p{font-size:14px;line-height:1.65;max-width:920px}
+  .dashboard-nav-link{font-size:14px;min-height:42px}
+  .dashboard-system-pill{font-size:13px;min-height:40px}
+  .overview-title{font-size:29px;line-height:1.25}
+  .overview-subtitle{font-size:14px;line-height:1.65}
+  .overview-guidance{font-size:15px;line-height:1.7}
+  .overview-freshness{font-size:13px}
+  .overview-metric-card>span{font-size:13px}
+  .overview-metric-card small{font-size:12.5px}
+  .overview-node-card small{font-size:12.5px}
+  .monitoring-status-label,.monitoring-status-hint{font-size:12.5px}
+  .history-toolbar{gap:10px;align-items:center}
+  .history-metric-select,.history-toolbar-button{font-size:14px;min-height:42px}
+  .chart-zone-title{font-size:19px}
+  .chart-zone-subtitle{font-size:12.5px!important}
+  .chart-render-area{min-height:330px}
+  .metric-chart-title{font-size:16px}
+  .metric-chart-subtitle,.metric-chart-legend{font-size:12.5px}
+  .help-popover{width:min(680px,calc(100vw - 48px));max-height:min(82vh,820px)}
+  .help-popover-body{font-size:14px;line-height:1.75}
+  .help-popover-body .help-section p,
+  .help-intro-card span,
+  .help-simple-grid span,
+  .help-choice-list span{font-size:13.5px;line-height:1.7}
+}
+
+/* ---------- Laptop / small desktop 1024–1279 ---------- */
+@media (min-width:1024px) and (max-width:1279px){
+  body{font-size:14.5px}
+  .dashboard-page-heading h1{font-size:27px}
+  .dashboard-nav-inner{gap:8px}
+  .dashboard-nav-link{font-size:13.5px;padding-left:11px;padding-right:11px}
+  .dashboard-system-pill{font-size:12.5px}
+  .overview-title{font-size:26px}
+  .overview-main-value strong{font-size:48px}
+  .overview-metric-card>b{font-size:22px}
+  .history-toolbar{flex-wrap:wrap;gap:9px}
+  .history-toolbar>*{flex:1 1 170px}
+  .dashboard-charts-zone{gap:14px}
+  .chart-render-area{min-height:315px}
+  .help-popover{width:min(660px,calc(100vw - 36px));max-height:82vh}
+}
+
+/* ---------- Tablet 761–1023 ---------- */
+@media (min-width:761px) and (max-width:1023px){
+  body{font-size:14.5px}
+  .dashboard-page-heading h1{font-size:26px}
+  .dashboard-page-heading p{font-size:14px;line-height:1.65}
+  .dashboard-nav-inner{gap:8px}
+  .dashboard-nav-links{flex-wrap:wrap}
+  .dashboard-nav-link{font-size:13.5px;min-height:42px}
+  .dashboard-system-pill{font-size:12.5px;white-space:normal;text-align:center}
+  .overview-title{font-size:25px}
+  .overview-subtitle,.overview-guidance{font-size:14px}
+  .overview-metric-card>span{font-size:13px}
+  .overview-node-card small{font-size:12.5px}
+  .dashboard-charts-zone{grid-template-columns:1fr!important}
+  .history-toolbar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .history-toolbar>*{width:100%!important;min-width:0!important}
+  .history-metric-select,.history-toolbar-button{min-height:44px;font-size:14px}
+  .chart-render-area{min-height:320px}
+  .help-popover{width:min(680px,calc(100vw - 28px))!important;max-height:84vh!important}
+  .export-modal-dialog{width:min(94vw,900px)}
+}
+
+/* ---------- Mobile <= 760 ---------- */
+@media (max-width:760px){
+  body{font-size:15px!important;line-height:1.58!important}
+  body>.max-w-\[1800px\]{padding-left:10px!important;padding-right:10px!important}
+
+  /* Header / nav */
+  .dashboard-nav-inner{grid-template-columns:auto minmax(0,1fr)!important}
+  .dashboard-system-pill{
+    font-size:13px!important;
+    line-height:1.35!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  .dashboard-nav-link{font-size:15px!important}
+
+  /* Main hierarchy */
+  .dashboard-page-heading h1{font-size:24px!important}
+  .dashboard-page-heading p{font-size:14px!important}
+  .overview-title{font-size:23px!important}
+  .overview-subtitle{font-size:14px!important}
+  .overview-guidance{font-size:15px!important}
+  .overview-freshness{font-size:13px!important}
+  .overview-main-label{font-size:13px!important}
+  .overview-main-unit{font-size:14px!important}
+  .overview-metric-card>span{font-size:14px!important}
+  .overview-metric-card small{font-size:13px!important}
+
+  /* Do not hide meaningful chart context on mobile; keep one short readable line. */
+  .chart-zone-subtitle{
+    display:block!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+    margin-top:4px!important;
+  }
+
+  /* Analysis */
+  .smart-summary-stat-label,
+  .smart-summary-stat-sub,
+  .ai-result-label,
+  .ai-forecast-label,
+  .ai-forecast-generated,
+  .ai-generated-at,
+  .ai-meta-row,
+  .ai-analysis-footer,
+  .ai-confidence small{
+    font-size:12px!important;
+    line-height:1.5!important;
+  }
+  .smart-summary-stat-value{font-size:14px!important}
+  .smart-summary-note,.smart-summary-activity,
+  .ai-result-summary,.ai-observation,.ai-recommendation,.ai-forecast-details{
+    font-size:14px!important;
+    line-height:1.7!important;
+  }
+
+  /* Controls */
+  .history-metric-select,.history-toolbar-button{font-size:15px!important;min-height:46px!important}
+  .help-trigger{min-width:40px!important;min-height:40px!important;font-size:17px!important}
+  .chart-series-button,.chart-series-show-all,.chart-series-single-label{font-size:13.5px!important;min-height:42px!important}
+
+  /* Charts */
+  .chart-render-area{min-height:310px!important}
+  .metric-chart-title{font-size:16px!important}
+  .metric-chart-subtitle,.metric-chart-legend{font-size:13px!important}
+  .history-range-caption{font-size:13px!important}
+
+  /* Forecast controls: explanatory paragraphs stay in ? */
+  .forecast-display-copy,.forecast-accuracy-note{display:none!important}
+  .forecast-actual-label,.forecast-toggle-name{font-size:14px!important}
+  .forecast-actual-note,.forecast-toggle-status{font-size:13px!important}
+
+  /* Help */
+  .help-popover-body{font-size:15px!important}
+  .help-popover-body .help-section p{font-size:14px!important}
+  .help-simple-grid span,.help-choice-list span,.help-steps small,.help-muted{font-size:13.5px!important}
+
+  /* Export remains horizontally scrollable because six sensor columns cannot
+     be compressed legibly into a phone width. */
+  .export-table{font-size:13px!important}
+}
+
+/* ---------- Very small phones <= 390 ---------- */
+@media (max-width:390px){
+  body>.max-w-\[1800px\]{padding-left:8px!important;padding-right:8px!important}
+  .dashboard-nav-inner{grid-template-columns:1fr!important}
+  .dashboard-mobile-toggle,.dashboard-system-pill{grid-column:1!important;width:100%!important}
+  .dashboard-system-pill{font-size:13px!important}
+  .dashboard-page-heading h1{font-size:22px!important}
+  .overview-title{font-size:21px!important}
+  .overview-main-value strong{font-size:38px!important}
+  .chart-render-area{min-height:290px!important}
+  .help-popover-header h3{font-size:18px!important}
+}
+
+/* ---------- Wide screens: avoid cards becoming excessively stretched ---------- */
+@media (min-width:1600px){
+  .dashboard-page-heading p{max-width:1000px}
+  .dashboard-chart-card{padding:20px}
+  .chart-render-area{min-height:350px}
+  .help-popover{width:700px}
+}
+
+/* ---------- Short landscape screens ---------- */
+@media (orientation:landscape) and (max-height:650px) and (max-width:1100px){
+  .help-popover{
+    position:fixed!important;
+    inset:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    max-height:none!important;
+  }
+  .help-popover-body{overflow-y:auto!important;padding-bottom:18px!important}
+  body>#historyRangePanel.history-range-panel{inset:6px!important;max-height:none!important}
+  .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
+}
+
+/* ---------- Accessibility / interaction ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
+
