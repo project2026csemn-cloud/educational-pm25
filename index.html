@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260829-admin-v1" rel="stylesheet"/>
+<link href="style.css?v=20260829-admin-v2" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -1141,7 +1141,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260829-admin-v1"></script>
+<script defer src="app.js?v=20260829-admin-v2"></script>
 </div>
 <!-- =========================================================
 ADMIN MODE
@@ -1153,7 +1153,7 @@ ADMIN MODE
       <div>
         <div class="admin-kicker">ADMIN MODE</div>
         <h2 id="adminDialogTitle">ผู้ดูแลระบบ</h2>
-        <p>แก้ไขข้อมูลแสดงผลของ Dashboard โดยไม่เปลี่ยนข้อมูลเซนเซอร์หรือการคำนวณ</p>
+        <p id="adminDialogSubtitle">จัดการข้อมูลที่แสดงบน Dashboard</p>
       </div>
       <button class="admin-close-button" id="adminCloseButton" type="button" aria-label="ปิด">×</button>
     </header>
@@ -1186,22 +1186,46 @@ ADMIN MODE
           <div class="admin-section-head"><h3>จัดการจุดตรวจวัด</h3><p>Number 1–3 เป็นรหัสภายในและจะไม่ถูกเปลี่ยน</p></div>
           <div class="admin-device-grid">
             <article class="admin-device-card">
-              <div class="admin-device-id">Number 1</div>
-              <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName1" maxlength="60"></label>
-              <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation1" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-              <label class="admin-field"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription1" maxlength="300" rows="3"></textarea></label>
+              <div class="admin-device-card-head">
+                <div>
+                  <span class="admin-device-index">จุดตรวจวัด 1</span>
+                  <strong id="adminDevicePreviewName1">จุดตรวจวัด 1</strong>
+                </div>
+                <span class="admin-device-id">Number 1</span>
+              </div>
+              <div class="admin-device-fields">
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName1" maxlength="60" placeholder="เช่น จุดตรวจวัด 1"></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation1" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription1" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+              </div>
             </article>
             <article class="admin-device-card">
-              <div class="admin-device-id">Number 2</div>
-              <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName2" maxlength="60"></label>
-              <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation2" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-              <label class="admin-field"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription2" maxlength="300" rows="3"></textarea></label>
+              <div class="admin-device-card-head">
+                <div>
+                  <span class="admin-device-index">จุดตรวจวัด 2</span>
+                  <strong id="adminDevicePreviewName2">จุดตรวจวัด 2</strong>
+                </div>
+                <span class="admin-device-id">Number 2</span>
+              </div>
+              <div class="admin-device-fields">
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName2" maxlength="60" placeholder="เช่น จุดตรวจวัด 2"></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation2" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription2" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+              </div>
             </article>
             <article class="admin-device-card">
-              <div class="admin-device-id">Number 3</div>
-              <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName3" maxlength="60"></label>
-              <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation3" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-              <label class="admin-field"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription3" maxlength="300" rows="3"></textarea></label>
+              <div class="admin-device-card-head">
+                <div>
+                  <span class="admin-device-index">จุดตรวจวัด 3</span>
+                  <strong id="adminDevicePreviewName3">จุดตรวจวัด 3</strong>
+                </div>
+                <span class="admin-device-id">Number 3</span>
+              </div>
+              <div class="admin-device-fields">
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName3" maxlength="60" placeholder="เช่น จุดตรวจวัด 3"></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation3" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription3" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+              </div>
             </article>
           </div>
         </section>
