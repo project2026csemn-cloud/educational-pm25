@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร | แผนกเทคโนโลยีสารสนเทศและการสื่อสาร" property="og:title"/>
 <meta content="โครงการสถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ จัดทำโดยวิทยาลัยเสริมทักษะพระภิกษุ สามเณร และแผนกเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น, แสง แนวโน้มย้อนหลัง การคาดการณ์ และการวิเคราะห์คุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260828-v6-dailyticks" rel="stylesheet"/>
+<link href="style.css?v=20260828-v7" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png"/>
 
 <script type="application/ld+json">
@@ -188,7 +188,7 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด</h1><p>ดูสถานะ Gateway และข้อมูลล่าสุดจากอุปกรณ์ทั้ง 3 จุด พร้อมเปรียบเทียบค่าปัจจุบัน</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด</h1><p>ดูสถานะสถานีรับข้อมูลหลักและข้อมูลล่าสุดจากอุปกรณ์ทั้ง 3 จุด พร้อมเปรียบเทียบค่าปัจจุบัน</p></div>
   <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
 <div class="flex justify-between items-center mb-3">
 <div>
@@ -201,22 +201,19 @@ DASHBOARD NAVIGATION
                     </button>
 </div>
 </div>
-<div class="flex justify-center">
-<div class="badge rounded-2xl px-4 py-3 min-w-[150px]">
-<div class="text-[11px] text-slate-400 uppercase tracking-wider">
-                        Gateway
-                    </div>
-<div class="font-bold mt-1">
-<span class="text-slate-500" id="gatewayDotTop">
-                            ●
-                        </span>
-<span id="gatewayStatusTop">
-                            CHECKING
-                        </span>
+<div class="monitoring-status-cluster">
+<div class="monitoring-status-card monitoring-primary-status">
+<div class="monitoring-status-label">สถานีรับข้อมูลหลัก</div>
+<div class="monitoring-status-value">
+<span class="text-slate-500" id="gatewayDotTop">●</span>
+<span id="gatewayStatusTop">CHECKING</span>
 </div>
-<div class="text-[10px] text-slate-500 mt-1" id="nodesActiveTop">
-                        0 / 3 Nodes active
-                    </div>
+<div class="monitoring-status-hint">รับข้อมูลจากจุดตรวจวัดและส่งขึ้นระบบ</div>
+</div>
+<div class="monitoring-status-card monitoring-node-count">
+<div class="monitoring-status-label">จุดตรวจวัดที่เชื่อมต่อ</div>
+<div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
+<div class="monitoring-status-hint">จำนวนจุดที่ระบบยืนยันว่าใช้งานได้</div>
 </div>
 </div>
 </div>
@@ -708,8 +705,8 @@ DASHBOARD NAVIGATION
     </article>
 
     <article class="glass card about-card about-card-wide">
-      <div class="about-card-icon">⇢</div><div><h2>สถาปัตยกรรมและหลักการทำงานของระบบ</h2><p>จุดตรวจวัดทั้ง 3 จุดอ่านค่าจากเซนเซอร์ แล้วส่งข้อมูลแบบไร้สายผ่าน ESP-NOW มายัง Gateway จากนั้น Gateway เชื่อมต่ออินเทอร์เน็ตและส่งข้อมูลไปยัง Cloudflare Worker เพื่อประมวลผล/ให้บริการ API และบันทึกข้อมูลใน D1 Database ก่อนที่ Dashboard จะเรียกข้อมูลมาแสดงผล</p>
-      <div class="system-flow"><span>จุดตรวจวัด 1–3</span><i>→</i><span>ESP-NOW</span><i>→</i><span>Gateway</span><i>→</i><span>Cloudflare Worker</span><i>→</i><span>D1 Database</span><i>→</i><span>Dashboard</span></div></div>
+      <div class="about-card-icon">⇢</div><div><h2>สถาปัตยกรรมและหลักการทำงานของระบบ</h2><p>จุดตรวจวัดทั้ง 3 จุดอ่านค่าจากเซนเซอร์ แล้วส่งข้อมูลแบบไร้สายผ่าน ESP-NOW มายังสถานีรับข้อมูลหลัก (Gateway) จากนั้นสถานีรับข้อมูลหลักเชื่อมต่ออินเทอร์เน็ตและส่งข้อมูลไปยัง Cloudflare Worker เพื่อประมวลผล/ให้บริการ API และบันทึกข้อมูลใน D1 Database ก่อนที่ Dashboard จะเรียกข้อมูลมาแสดงผล</p>
+      <div class="system-flow"><span>จุดตรวจวัด 1–3</span><i>→</i><span>ESP-NOW</span><i>→</i><span>สถานีรับข้อมูลหลัก</span><i>→</i><span>Cloudflare Worker</span><i>→</i><span>D1 Database</span><i>→</i><span>Dashboard</span></div></div>
     </article>
 
     <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ตัวแปรที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง (lux)</span></div><p class="about-card-subtext">ตัวแปรแต่ละชนิดมีหน้าที่ต่างกัน จึงไม่ถูกนำมาบวกหรือเฉลี่ยรวมเป็นคะแนนสุขภาพเดียว</p></div></article>
@@ -731,7 +728,7 @@ DASHBOARD NAVIGATION
     <div class="about-status-rules">
       <div><span class="about-rule-dot is-online"></span><b>ONLINE</b><p>Dashboard แสดงว่าอุปกรณ์ยังติดต่อระบบได้ โดยช่วง Sleep ตามรอบประหยัดพลังงานยังถูกนับเป็น ONLINE บนหน้าเว็บ</p></div>
       <div><span class="about-rule-dot is-offline"></span><b>OFFLINE</b><p>ถ้าไม่มีการติดต่อใหม่เกิน 6 นาที ระบบจะแสดง Offline ซึ่งเป็นกฎภายในโครงการเพื่อให้สอดคล้องกับรอบวัดและ Sleep</p></div>
-      <div><span class="about-rule-dot is-gateway"></span><b>Gateway</b><p>ถ้า Gateway ขาดการเชื่อมต่อ Dashboard จะไม่ยืนยันว่าจุดตรวจวัดลูกยัง Online แม้ข้อมูลเดิมจะยังอยู่ในฐานข้อมูล</p></div>
+      <div><span class="about-rule-dot is-gateway"></span><b>สถานีรับข้อมูลหลัก (Gateway)</b><p>ถ้าสถานีรับข้อมูลหลักขาดการเชื่อมต่อ Dashboard จะไม่ยืนยันว่าจุดตรวจวัดลูกยัง Online แม้ข้อมูลเดิมจะยังอยู่ในฐานข้อมูล</p></div>
     </div>
   </section>
 
@@ -787,19 +784,25 @@ DASHBOARD NAVIGATION
         <p class="about-standard-note">Heat Index ใช้ประเมินความร้อนที่ร่างกายรู้สึกได้ และไม่ใช่ WBGT</p>
       </article>
 
-      <article class="about-standard-card">
-        <div class="about-standard-head"><span>PM1.0</span><b>ข้อมูลประกอบ</b></div>
-        <p>โครงการไม่ใช้ PM1.0 ตัดสิน AQI หรือสุขภาพเพียงค่าเดียว เพราะเกณฑ์ AQI ที่โครงการอ้างอิงไม่ได้กำหนด PM1.0 เป็นตัวชี้วัดหลัก</p>
-      </article>
-
-      <article class="about-standard-card">
-        <div class="about-standard-head"><span>อุณหภูมิ / ความชื้น</span><b>ไม่ตัดสินแยกเดี่ยว</b></div>
-        <p>นำสองค่านี้มาใช้ร่วมกันในการคำนวณ Heat Index แทนการตั้งเกณฑ์สุขภาพจากอุณหภูมิหรือความชื้นเพียงค่าเดียว</p>
-      </article>
-
-      <article class="about-standard-card">
-        <div class="about-standard-head"><span>แสง (lux)</span><b>ข้อมูลสภาพแวดล้อม</b></div>
-        <p>ใช้แสดงความส่องสว่างและดูการเปลี่ยนแปลงย้อนหลัง ไม่ใช้ตัดสินคุณภาพอากาศ ความร้อน เมฆ หรือฝน</p>
+      <article class="about-standard-card about-standard-supporting">
+        <div class="about-standard-head"><span>ข้อมูลประกอบของระบบ</span><b>ใช้ร่วมกับตัวชี้วัดหลัก</b></div>
+        <div class="about-supporting-grid">
+          <div class="about-supporting-item">
+            <strong>PM1.0</strong>
+            <span>ใช้ดูอนุภาคฝุ่นที่มีขนาดเล็กมากและเปรียบเทียบสัดส่วนกับ PM2.5/PM10</span>
+            <small>ไม่ใช้ตัดสิน AQI หรือระดับสุขภาพเพียงค่าเดียว</small>
+          </div>
+          <div class="about-supporting-item">
+            <strong>อุณหภูมิ + ความชื้น</strong>
+            <span>ใช้ร่วมกันเพื่อคำนวณ Heat Index และอธิบายความร้อนที่ร่างกายรู้สึกได้</span>
+            <small>ไม่กำหนดความเสี่ยงจากอุณหภูมิหรือความชื้นค่าใดค่าหนึ่งแยกเดี่ยว</small>
+          </div>
+          <div class="about-supporting-item">
+            <strong>แสง (lux)</strong>
+            <span>ใช้ดูสภาพความส่องสว่างและการเปลี่ยนแปลงของสภาพแวดล้อมตามเวลา</span>
+            <small>ไม่ใช้ตัดสินคุณภาพอากาศ ความร้อน เมฆ หรือฝน</small>
+          </div>
+        </div>
       </article>
     </div>
 
@@ -815,7 +818,8 @@ DASHBOARD NAVIGATION
     </div>
   </section>
 
-  <div class="about-credit-note glass card"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>เครดิตของวิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำถูกรวมไว้ในหน้า “เกี่ยวกับโครงการ” เท่านั้น เพื่อไม่ให้รบกวนหน้าติดตามข้อมูลและกราฟ</p></div></div>
+  <section class="about-credit-section">
+  <div class="about-credit-note"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>วิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำโครงการ รวมอยู่ในส่วนเดียวเพื่อให้ดูข้อมูลผู้เกี่ยวข้องได้ครบในจุดเดียว</p></div></div>
 
   <!-- =========================================================
 CREDIT
@@ -958,6 +962,7 @@ CREDIT
         </span>
 </div>
 </footer>
+  </section>
 </section>
 
 </main>
@@ -1133,6 +1138,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260828-v6-dailyticks"></script>
+<script defer src="app.js?v=20260828-v7"></script>
 </div></body>
 </html>
