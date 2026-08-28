@@ -9425,3 +9425,64 @@ img,svg,canvas{max-width:100%}
   .help-popover-header h3{font-size:18px!important}
 }
 
+
+/* =========================================================
+   V15 — HELP MODAL VISIBILITY FIX
+   V14 accidentally forced .help-popover to display:flex on
+   every phone, so the empty default dialog covered the page.
+   The dialog is now truly hidden until a ? button activates it.
+   ========================================================= */
+
+@media (max-width:1023px){
+  .help-popover:not(.active){
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  .help-popover.active{
+    display:flex!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+
+    position:fixed!important;
+    top:max(8px,env(safe-area-inset-top))!important;
+    right:8px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    left:8px!important;
+
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:auto!important;
+    max-height:none!important;
+
+    margin:0!important;
+    transform:none!important;
+    overflow:hidden!important;
+    flex-direction:column!important;
+  }
+
+  .help-popover.active .help-popover-header{
+    flex:0 0 auto!important;
+  }
+
+  .help-popover.active .help-popover-body{
+    display:block!important;
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+}
+
+@media (max-width:390px){
+  .help-popover.active{
+    top:max(6px,env(safe-area-inset-top))!important;
+    right:6px!important;
+    bottom:max(6px,env(safe-area-inset-bottom))!important;
+    left:6px!important;
+  }
+}
+
