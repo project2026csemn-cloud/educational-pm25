@@ -39,6 +39,7 @@ let chartLibraryReady=false;
 let aiSectionActivated=false;
 
 let metric="all";
+let historyNode="compare";
 let currentMetric="pm25";
 
 let averageRange="today";
@@ -324,65 +325,59 @@ if(!start||!end)return null;
 return Math.abs(end.getTime()-start.getTime());
 }
 
-function chartTickText(value,spanMs=null){
+function chartAxisStepMs(spanMs){
+const MINUTE=60*1000;
+const HOUR=60*MINUTE;
+const DAY=24*HOUR;
+if(!Number.isFinite(spanMs))return HOUR;
+if(spanMs>=3*DAY)return DAY;
+if(spanMs>=6*HOUR)return HOUR;
+if(spanMs>=HOUR)return 30*MINUTE;
+if(spanMs>=30*MINUTE)return 15*MINUTE;
+if(spanMs>=10*MINUTE)return 5*MINUTE;
+return MINUTE;
+}
+
+function formatAxisInterval(value,spanMs=null){
 const d=parseDate(value);
 if(!d)return String(value??"");
-
-const span=Number.isFinite(spanMs)?spanMs:null;
 const DAY=24*60*60*1000;
-const HOUR=60*60*1000;
-
-// 3 วันขึ้นไป: แสดงเป็นวัน เพื่ออ่านกราฟแบบรายวัน
-if(span!==null&&span>=3*DAY){
-return d.toLocaleDateString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short"
-});
+if(Number.isFinite(spanMs)&&spanMs>=3*DAY){
+return d.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
 }
 
-// 12 ชั่วโมง - น้อยกว่า 3 วัน: แสดงวัน + เวลา
-if(span!==null&&span>=12*HOUR){
-return d.toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
+const step=chartAxisStepMs(spanMs);
+const BKK_OFFSET=7*60*60*1000;
+const localMs=d.getTime()+BKK_OFFSET;
+const startLocal=Math.floor(localMs/step)*step;
+const endLocal=startLocal+step;
+const fmtHM=(ms)=>{
+const x=new Date(ms);
+return `${String(x.getUTCHours()).padStart(2,"0")}:${String(x.getUTCMinutes()).padStart(2,"0")}`;
+};
+const timeRange=`${fmtHM(startLocal)}–${fmtHM(endLocal)}`;
+
+if(Number.isFinite(spanMs)&&spanMs>=24*60*60*1000){
+const startUtc=new Date(startLocal-BKK_OFFSET);
+const day=startUtc.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
+return `${day} ${timeRange}`;
+}
+return timeRange;
 }
 
-// ซูมลงมาระดับนาที: ใช้เวลาเป็นหลัก
-if(span!==null&&span<60*60*1000){
-return d.toLocaleTimeString("th-TH",{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit",
-hour12:false
-});
-}
-
-return d.toLocaleTimeString("th-TH",{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
+function chartTickText(value,spanMs=null){
+return formatAxisInterval(value,spanMs);
 }
 
 // =====================================================
-// ADAPTIVE CALENDAR TICKS
-// ช่วงยาว: สร้าง tick ตามวันจริง (1 tick ต่อ 1 วัน)
-// เมื่อซูมเข้า: เพิ่มความละเอียดเป็น 6 ชม. / 2 ชม. / 30 นาที / 5 นาที
-// ทำให้แกน X เป็นเหมือน timeline ที่เจาะรายละเอียดได้เรื่อย ๆ
+// ADAPTIVE INTERVAL TICKS
+// แกน X แสดงเป็น "ช่วงเวลา" ที่ลงตัว เช่น 01:00–02:00
+// ซูมเข้าแล้วลดช่วงเป็น 30 นาที / 15 นาที / 5 นาที / 1 นาที
 // =====================================================
 function chartBucketKey(date,stepMs){
 const d=parseDate(date);
 if(!d)return"";
-const t=d.getTime();
-return String(Math.floor(t/stepMs));
+return String(Math.floor(d.getTime()/stepMs));
 }
 
 function chartDayBucketKey(date){
@@ -405,36 +400,12 @@ const end=parseDate(labels[maxIndex]);
 if(!start||!end)return;
 
 const span=Math.max(0,end.getTime()-start.getTime());
-const MINUTE=60*1000;
-const HOUR=60*MINUTE;
-const DAY=24*HOUR;
-
-let mode="minute";
-let stepMs=5*MINUTE;
-
-// 3 วันขึ้นไป = 1 tick ต่อวัน (วันที่เท่านั้น)
-if(span>=3*DAY){
-mode="day";
-}else if(span>=DAY){
-mode="bucket";
-stepMs=6*HOUR;
-}else if(span>=6*HOUR){
-mode="bucket";
-stepMs=2*HOUR;
-}else if(span>=HOUR){
-mode="bucket";
-stepMs=30*MINUTE;
-}else if(span>=20*MINUTE){
-mode="bucket";
-stepMs=5*MINUTE;
-}else{
-mode="bucket";
-stepMs=MINUTE;
-}
+const DAY=24*60*60*1000;
+const stepMs=chartAxisStepMs(span);
+const mode=span>=3*DAY?"day":"bucket";
 
 const chosen=[];
 let lastKey=null;
-
 for(let i=minIndex;i<=maxIndex;i++){
 const d=parseDate(labels[i]);
 if(!d)continue;
@@ -444,15 +415,8 @@ chosen.push({value:i});
 lastKey=key;
 }
 
-// รักษาปลายช่วงไว้เสมอเมื่อมีพื้นที่พอ เพื่อให้ผู้ใช้เห็นขอบเขตที่กำลังดู
-if(chosen.length&&chosen.at(-1).value!==maxIndex&&span<3*DAY){
-chosen.push({value:maxIndex});
-}
-
-// จำกัด tick ตาม "ความกว้างจริงของกราฟ" ไม่ใช่แค่ความกว้างหน้าจอ
-// สำคัญกับกราฟย่อย 3 ช่อง เพราะแม้ Desktop จะกว้าง แต่ canvas แต่ละช่องยังแคบ
 const scaleWidth=Math.max(1,Number(scale?.width||scale?.chart?.width||0));
-const minGapPx=mode==="day"?82:72;
+const minGapPx=mode==="day"?82:(span>=24*60*60*1000?112:92);
 const maxTicksByWidth=Math.max(2,Math.floor(scaleWidth/minGapPx));
 const hardMax=window.innerWidth<=640?5:mode==="day"?10:12;
 const maxTicks=Math.max(2,Math.min(hardMax,maxTicksByWidth));
@@ -461,12 +425,8 @@ let reduced=chosen;
 if(chosen.length>maxTicks){
 const stride=Math.ceil(chosen.length/maxTicks);
 reduced=chosen.filter((_,i)=>i%stride===0);
-if(reduced.at(-1)?.value!==chosen.at(-1)?.value)reduced.push(chosen.at(-1));
 }
 
-// category scale วางตำแหน่งตาม index ของข้อมูล ไม่ใช่ระยะเวลาจริง
-// ถ้าสองวันที่อยู่คนละวันแต่ index อยู่ใกล้กันมาก label จะชนกันได้
-// จึงกรองซ้ำด้วยระยะพิกเซลโดยประมาณบนแกน X
 const pixelSafe=[];
 let lastPx=-Infinity;
 const axisSpan=Math.max(1,maxIndex-minIndex);
@@ -477,18 +437,6 @@ pixelSafe.push(tick);
 lastPx=px;
 }
 }
-
-// เก็บปลายช่วงไว้ถ้ามีระยะพอ; ถ้าใกล้ label ก่อนหน้ามากให้แทนตัวก่อนหน้าแทนการซ้อน
-const lastTick=reduced.at(-1);
-if(lastTick&&pixelSafe.at(-1)?.value!==lastTick.value){
-const lastPxWanted=((Number(lastTick.value)-minIndex)/axisSpan)*scaleWidth;
-if(lastPxWanted-lastPx>=minGapPx){
-pixelSafe.push(lastTick);
-}else if(pixelSafe.length>1){
-pixelSafe[pixelSafe.length-1]=lastTick;
-}
-}
-
 scale.ticks=pixelSafe;
 }
 
@@ -3343,6 +3291,133 @@ return forecastTickText(this,value,index,ticks);
 return base;
 }
 
+const HISTORY_NODES=["Number 1","Number 2","Number 3"];
+const HISTORY_NODE_COLORS={
+"Number 1":"#22d3ee",
+"Number 2":"#a78bfa",
+"Number 3":"#f59e0b"
+};
+
+function historyNodeLabel(id){
+const m=String(id??"").match(/(\d+)/);
+return m?`จุดตรวจวัด ${m[1]}`:String(id??"");
+}
+
+function historyRowsForNode(rows,nodeId){
+return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
+}
+
+function historyDisplayRows(rows){
+// compare และ average ต้องเห็นข้อมูลดิบของทั้ง 3 จุดก่อน
+// แล้วค่อยแยกเส้นหรือคำนวณค่าเฉลี่ยพื้นที่ในขั้นสร้างกราฟ
+if(historyNode==="compare"||historyNode==="average")return rows||[];
+return historyRowsForNode(rows,historyNode);
+}
+
+function makeNodeDataset(nodeId,field,values){
+return{
+label:historyNodeLabel(nodeId),
+metricField:field,
+rawValues:values,
+data:values,
+borderColor:HISTORY_NODE_COLORS[nodeId]||metricColor(field),
+backgroundColor:"transparent",
+borderWidth:2,
+pointRadius:values.length>50?0:2,
+tension:.14,
+spanGaps:true,
+cubicInterpolationMode:"monotone"
+};
+}
+
+function buildNodeComparisonData(rows,field){
+const byNode={};
+const labelSet=new Set();
+for(const nodeId of HISTORY_NODES){
+const map=new Map();
+for(const r of historyRowsForNode(rows,nodeId)){
+const d=parseDate(r?.timestamp);
+const v=finiteNumberOrNull(r?.[field]);
+if(!d||v===null)continue;
+const key=d.toISOString();
+map.set(key,v);
+labelSet.add(key);
+}
+byNode[nodeId]=map;
+}
+const labels=[...labelSet].sort((a,b)=>parseDate(a)-parseDate(b));
+const w=rangeWindow();
+if(w&&labels.length){
+const last=parseDate(labels.at(-1));
+if(!last||w.end-last>1000)labels.push(w.end.toISOString());
+}
+const datasets=HISTORY_NODES.map(nodeId=>{
+const map=byNode[nodeId];
+const vals=labels.map(label=>map.has(label)?map.get(label):null);
+return makeNodeDataset(nodeId,field,vals);
+});
+return{labels,datasets};
+}
+
+function spatialAverageRows(rows,fields=GRAPH_FIELDS,bucketMs=5*60*1000){
+// IMPORTANT:
+// อุปกรณ์ทั้ง 3 จุดส่งข้อมูลของใครของมันมายังระบบ
+// จึงห้ามเอา "ทุกแถว" ใน bucket มาหารรวมโดยตรง เพราะจุดที่ส่งถี่กว่า
+// จะมีน้ำหนักมากกว่าจุดอื่นโดยไม่ตั้งใจ
+//
+// วิธีที่ใช้:
+// 1) แบ่งข้อมูลตามช่วงเวลา (time bucket)
+// 2) ในแต่ละ bucket หาเฉลี่ยของ "แต่ละจุด" ก่อน
+// 3) เอาค่าเฉลี่ยของจุดที่มีข้อมูลจริงมาเฉลี่ยอีกครั้งแบบให้น้ำหนักเท่ากัน
+// ไม่มีข้อมูล = ไม่นับเป็น 0
+const buckets=new Map();
+const validNodes=new Set(HISTORY_NODES);
+
+for(const r of rows||[]){
+const d=parseDate(r?.timestamp);
+const nodeId=String(r?.device_id??"").trim();
+if(!d||!validNodes.has(nodeId))continue;
+
+const key=Math.floor(d.getTime()/bucketMs)*bucketMs;
+if(!buckets.has(key)){
+buckets.set(key,{timestamp:new Date(key).toISOString(),nodes:{}});
+}
+const bucket=buckets.get(key);
+if(!bucket.nodes[nodeId])bucket.nodes[nodeId]={};
+
+for(const field of fields){
+const v=finiteNumberOrNull(r?.[field]);
+if(v===null)continue;
+if(!bucket.nodes[nodeId][field])bucket.nodes[nodeId][field]=[];
+bucket.nodes[nodeId][field].push(v);
+}
+}
+
+return [...buckets.entries()]
+.sort((a,b)=>a[0]-b[0])
+.map(([,bucket])=>{
+const out={timestamp:bucket.timestamp,device_id:"AREA_AVG",status:"online",active_nodes:0};
+const nodesWithAny=new Set();
+
+for(const field of fields){
+const nodeMeans=[];
+for(const nodeId of HISTORY_NODES){
+const vals=bucket.nodes?.[nodeId]?.[field]||[];
+if(!vals.length)continue;
+const nodeMean=vals.reduce((sum,v)=>sum+v,0)/vals.length;
+nodeMeans.push(nodeMean);
+nodesWithAny.add(nodeId);
+}
+out[field]=nodeMeans.length
+?nodeMeans.reduce((sum,v)=>sum+v,0)/nodeMeans.length
+:null;
+}
+
+out.active_nodes=nodesWithAny.size;
+return out;
+})
+.filter(hasAnySensorData);
+}
 function makeActualDataset(field, values){
 return{
 label:metricLabelFor(field),
@@ -3378,114 +3453,200 @@ cubicInterpolationMode:"monotone"
 function drawCharts(){
 
 if(typeof Chart==="undefined"){
-
 const area=$("historyChartArea");
-
-if(area){
-area.innerHTML=
-'<div class="chart-empty">กำลังเตรียมกราฟ...</div>';
-}
-
+if(area)area.innerHTML='<div class="chart-empty">กำลังเตรียมกราฟ...</div>';
 if(historyActivated){
-ensureChartLibrary()
-.then(()=>drawCharts())
-.catch(e=>console.error("Chart load error:",e));
+ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load error:",e));
 }
-
 return;
 }
 
-const base=selectedRecords()
+const allBase=selectedRecords()
 .filter(r=>parseDate(r.timestamp))
 .sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
+const base=historyDisplayRows(allBase);
+const compareMode=historyNode==="compare";
+const averageMode=historyNode==="average";
+const areaAverageBase=averageMode?spatialAverageRows(allBase):[];
 
-if($("selectedMetricLabel"))$("selectedMetricLabel").textContent=metricLabel();
+if($("selectedMetricLabel")){
+const nodeText=compareMode
+?"แยก 3 จุด"
+:averageMode
+?"ค่าเฉลี่ยพื้นที่"
+:historyNodeLabel(historyNode);
+$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
+}
 
 historyGroupCharts=destroyChartList(historyGroupCharts);
 destroyChartSafe(historyChart);
 historyChart=null;
-
 const area=$("historyChartArea");
 if(!area)return;
 
-historyRangeCaption(base);
+historyRangeCaption(averageMode?(areaAverageBase.length?areaAverageBase:allBase):(base.length?base:allBase));
 
 if(!base.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
 ["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
 if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
-drawForecast(base);
+drawForecast([]);
 return;
 }
 
+// ALL + ค่าเฉลี่ยพื้นที่: 6 กราฟ ตัวแปรละ 1 เส้น
+// ค่าในแต่ละช่วงคำนวณแบบ "เฉลี่ยแต่ละจุดก่อน แล้วจึงเฉลี่ยพื้นที่"
+// เพื่อไม่ให้จุดที่ส่งข้อมูลถี่กว่ามีน้ำหนักมากกว่า
+if(metric==="all"&&averageMode){
+const avgBase=areaAverageBase;
+if(!avgBase.length){
+area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลสำหรับคำนวณค่าเฉลี่ยพื้นที่ในช่วงเวลาที่เลือก</div>';
+["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
+if($("trend"))$("trend").textContent="ไม่มีข้อมูล";
+drawForecast([]);
+return;
+}
+
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
+
+area.innerHTML=`<div class="metric-chart-grid-3">`+
+groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
+groupedChartShell("PM2.5","ค่าเฉลี่ยพื้นที่","historyPm25",miniLegend(["pm25"]))+
+groupedChartShell("PM10","ค่าเฉลี่ยพื้นที่","historyPm10",miniLegend(["pm10"]))+
+groupedChartShell("อุณหภูมิ","ค่าเฉลี่ยพื้นที่ • °C","historyTemp",miniLegend(["temperature"]))+
+groupedChartShell("ความชื้น","ค่าเฉลี่ยพื้นที่ • %","historyHumidity",miniLegend(["humidity"]))+
+groupedChartShell("แสง","ค่าเฉลี่ยพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
+
+const createAverage=(canvasId,field,yTitle)=>{
+const arr=avgBase.filter(r=>hasFiniteSensorValue(r[field]));
+const labels=historyLabelsToRangeEnd(arr);
+const vals=arr.map(r=>finiteNumberOrNull(r[field]));
+const c=new Chart($(canvasId),{
+type:"line",
+data:{labels,datasets:[makeActualDataset(field,padChartValuesToLabels(vals,labels))]},
+options:groupedChartOptions(yTitle)
+});
+historyGroupCharts.push(c);
+};
+createAverage("historyPm1","pm1","µg/m³");
+createAverage("historyPm25","pm25","µg/m³");
+createAverage("historyPm10","pm10","µg/m³");
+createAverage("historyTemp","temperature","°C");
+createAverage("historyHumidity","humidity","%");
+createAverage("historyLight","light","lux");
+
+drawForecast(avgBase);
+return;
+}
+
+// ALL + เปรียบเทียบ 3 จุด: แยกเป็น 6 กราฟ ตัวแปรละ 1 กราฟ และในแต่ละกราฟมี 3 เส้นตามสถานที่
+if(metric==="all"&&compareMode){
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
+
+area.innerHTML=`<div class="metric-chart-grid-3">`+
+groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
+groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด","historyPm25",miniLegend([]))+
+groupedChartShell("PM10","เปรียบเทียบ 3 จุด","historyPm10",miniLegend([]))+
+groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","historyTemp",miniLegend([]))+
+groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","historyHumidity",miniLegend([]))+
+groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","historyLight",miniLegend([]))+`</div>`;
+
+const createCompare=(canvasId,field,yTitle)=>{
+const data=buildNodeComparisonData(base,field);
+const c=new Chart($(canvasId),{
+type:"line",data,
+options:{...groupedChartOptions(yTitle),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
+});
+historyGroupCharts.push(c);
+};
+createCompare("historyPm1","pm1","µg/m³");
+createCompare("historyPm25","pm25","µg/m³");
+createCompare("historyPm10","pm10","µg/m³");
+createCompare("historyTemp","temperature","°C");
+createCompare("historyHumidity","humidity","%");
+createCompare("historyLight","light","lux");
+
+drawForecast(spatialAverageRows(base));
+return;
+}
+
+// ALL + จุดเดียว: คงรูปแบบเดิม แต่ข้อมูลทุกเส้นมาจากจุดเดียวกันเท่านั้น
 if(metric==="all"){
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
 if($("trendMin"))$("trendMin").textContent="—";
 if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="เปรียบเทียบ 6 ตัวแปร";
+if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
 
 area.innerHTML=
-groupedChartShell("ฝุ่นละออง","PM1.0 • PM2.5 • PM10","historyDust",miniLegend(["pm1","pm25","pm10"]))+
+groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
 `<div class="metric-chart-grid-3">`+
-groupedChartShell("อุณหภูมิ","หน่วย °C","historyTemp",miniLegend(["temperature"]))+
-groupedChartShell("ความชื้น","หน่วย %","historyHumidity",miniLegend(["humidity"]))+
-groupedChartShell("แสง","หน่วย lux","historyLight",miniLegend(["light"]))+
+groupedChartShell("อุณหภูมิ",`${historyNodeLabel(historyNode)} • °C`,"historyTemp",miniLegend(["temperature"]))+
+groupedChartShell("ความชื้น",`${historyNodeLabel(historyNode)} • %`,"historyHumidity",miniLegend(["humidity"]))+
+groupedChartShell("แสง",`${historyNodeLabel(historyNode)} • lux`,"historyLight",miniLegend(["light"]))+
 `</div>`;
 
 const labels=historyLabelsToRangeEnd(base);
-
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
-const vals=base.map(r=>{
-const v=finiteNumberOrNull(r[field]); return v;
-});
-const displayVals=padChartValuesToLabels(vals,labels);
-return makeActualDataset(field,displayVals);
+const vals=base.map(r=>finiteNumberOrNull(r[field]));
+return makeActualDataset(field,padChartValuesToLabels(vals,labels));
 });
 const c=new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)});
 historyGroupCharts.push(c);
 };
-
 create("historyDust",["pm1","pm25","pm10"],"µg/m³");
 create("historyTemp",["temperature"],"°C");
 create("historyHumidity",["humidity"],"%");
 create("historyLight",["light"],"lux");
-
 drawForecast(base);
 return;
 }
 
 area.innerHTML='<canvas id="historyChart"></canvas>';
 
-const arr=base.filter(r=>hasFiniteSensorValue(r[metric]));
-const values=arr.map(r=>finiteNumberOrNull(r[metric]));
-const labels=historyLabelsToRangeEnd(arr);
-const s=stats(arr,metric);
+const sourceRows=averageMode?areaAverageBase:base;
+const chartRows=sourceRows.filter(r=>hasFiniteSensorValue(r[metric]));
+const summaryRows=compareMode?spatialAverageRows(base,[metric]):chartRows;
+const summaryValues=summaryRows.map(r=>finiteNumberOrNull(r[metric])).filter(v=>v!==null);
+const s=stats(summaryRows,metric);
 
 if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
 if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
 if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
 if($("trendLast"))$("trendLast").textContent=s.last==null?"--":fmt(s.last);
-
 if($("trend")){
-const diff=values.length?values.at(-1)-values[0]:0;
-const pct=values[0]?diff/Math.abs(values[0])*100:0;
-$("trend").textContent=!values.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
+const diff=summaryValues.length?summaryValues.at(-1)-summaryValues[0]:0;
+const pct=summaryValues[0]?diff/Math.abs(summaryValues[0])*100:0;
+const trendText=!summaryValues.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
+$("trend").textContent=averageMode&&trendText!=="ไม่มีข้อมูล"?`${trendText} • ค่าเฉลี่ยพื้นที่`:trendText;
 }
 
-if(values.length){
+if(compareMode){
+const data=buildNodeComparisonData(base.filter(r=>hasFiniteSensorValue(r[metric])),metric);
+historyChart=new Chart($("historyChart"),{
+type:"line",data,
+options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
+});
+drawForecast(summaryRows);
+}else{
+const values=chartRows.map(r=>finiteNumberOrNull(r[metric]));
+const labels=historyLabelsToRangeEnd(chartRows);
 historyChart=new Chart($("historyChart"),{
 type:"line",
 data:{labels,datasets:[makeActualDataset(metric,padChartValuesToLabels(values,labels))]},
-options:{
-...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
-plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}
-}
+options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
 });
+drawForecast(chartRows);
 }
-
-drawForecast(arr);
 }
 
 // =====================================================
@@ -5880,7 +6041,8 @@ html:`
 <section class="help-section">
 <h4>ค่าเฉลี่ยทั้งพื้นที่คำนวณอย่างไร?</h4>
 <p>ใช้เฉพาะจุดที่ยังใช้งานได้และมีค่าจริงของตัวแปรนั้น</p>
-<div class="help-formula">ค่าเฉลี่ยพื้นที่ = Σ(ค่าของจุดที่มีข้อมูล) / จำนวนจุดที่มีข้อมูล</div>
+<div class="help-formula">ค่าเฉลี่ยพื้นที่ = Σ(ค่าเฉลี่ยของแต่ละจุดที่มีข้อมูลในช่วงเวลาเดียวกัน) / จำนวนจุดที่มีข้อมูล</div>
+<p>อุปกรณ์แต่ละจุดส่งข้อมูลของตัวเอง ระบบจึงเฉลี่ยข้อมูลภายในแต่ละจุดก่อน แล้วจึงนำค่าเฉลี่ยของจุดที่มีข้อมูลจริงมาเฉลี่ยพื้นที่อีกครั้ง เพื่อให้ทั้ง 3 จุดมีน้ำหนักเท่ากัน และไม่ถือว่าจุดที่ไม่มีข้อมูลมีค่าเป็น 0</p>
 <p>ถ้าจุดใดไม่มีข้อมูล จุดนั้นจะไม่ถูกนำไปหารและไม่ถูกแทนด้วย 0</p>
 </section>
 
@@ -6346,6 +6508,20 @@ updateCurrent();
 }
 );
 
+}
+
+const historyNodeSelect=
+$("historyNode");
+
+if(historyNodeSelect){
+historyNodeSelect.value=historyNode;
+historyNodeSelect.addEventListener(
+"change",
+e=>{
+historyNode=e.target.value;
+drawCharts();
+}
+);
 }
 
 const metricSelect=
