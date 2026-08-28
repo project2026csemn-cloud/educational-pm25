@@ -7315,3 +7315,261 @@ body.chart-zoom-open{
 @media(max-width:1100px){.dashboard-nav-inner{flex-wrap:wrap}.dashboard-system-pill{margin-left:auto}.dashboard-nav-links{order:3;flex-basis:100%;overflow-x:auto;padding-bottom:2px}.dashboard-nav-link{flex:0 0 auto}.overview-hero{grid-template-columns:1fr}.overview-main-value{min-width:0}.overview-title-row{align-items:center}}
 @media(max-width:760px){.dashboard-nav{top:6px}.dashboard-nav-inner{padding:8px}.dashboard-mobile-toggle{display:inline-flex}.dashboard-nav-links{display:none;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;overflow:visible}.dashboard-nav-links.open{display:flex}.dashboard-nav-link{text-align:left;width:100%}.dashboard-system-pill{font-size:.7rem;padding:0 10px}.overview-hero{padding:20px}.overview-title-row{display:block}.overview-quality-badge{margin-top:12px}.overview-metrics-grid,.overview-node-grid,.about-grid{grid-template-columns:1fr}.about-card-wide{grid-column:auto}.overview-section-head,.overview-alert-head{align-items:flex-start;flex-direction:column}.overview-main-value strong{font-size:3rem}.system-flow{align-items:stretch}.system-flow i{align-self:center}.about-credit-note{align-items:flex-start}.dashboard-page-heading{margin-top:2px}}
 @media(prefers-reduced-motion:reduce){.dashboard-page.active,.node.navigation-highlight{animation:none}.overview-node-card{transition:none}}
+
+
+/* =========================================================
+   HISTORY RANGE CONTEXT — 2026-08-28
+   แสดงวัน/เวลาเริ่ม-สิ้นสุดของกราฟให้ชัด โดยเฉพาะ 7/30 วัน
+   ========================================================= */
+.history-range-caption{
+    margin-top: 12px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(34,211,238,.14);
+    border-radius: 12px;
+    background: rgba(2,12,23,.34);
+}
+.history-range-edge{
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.history-range-edge span,
+.history-range-center span{
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+.history-range-edge b{
+    color: #cbd5e1;
+    font-size: 11px;
+    line-height: 1.35;
+}
+.history-range-edge-end{
+    text-align: right;
+}
+.history-range-center{
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.history-range-center span{
+    color: #67e8f9;
+}
+.history-range-center small{
+    color: #64748b;
+    font-size: 9px;
+}
+
+/* =========================================================
+   ABOUT — MEASUREMENT CRITERIA & REFERENCES
+   ========================================================= */
+.about-standards-section{
+    margin-top: 14px;
+    padding: 22px;
+}
+.about-standards-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.about-standards-header h2{
+    margin: 3px 0 6px;
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+.about-standards-header p{
+    margin: 0;
+    color: #94a3b8;
+    font-size: .86rem;
+    line-height: 1.65;
+    max-width: 900px;
+}
+.about-standard-badge{
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(34,211,238,.22);
+    background: rgba(34,211,238,.08);
+    color: #67e8f9;
+    font-size: .7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.about-standards-grid{
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 12px;
+}
+.about-standard-card{
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(148,163,184,.13);
+    border-radius: 16px;
+    background: rgba(5,20,35,.62);
+}
+.about-standard-card.about-standard-primary{
+    grid-column: span 2;
+}
+.about-standard-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.about-standard-head span{
+    color: #f8fafc;
+    font-size: 1rem;
+    font-weight: 900;
+}
+.about-standard-head b{
+    color: #67e8f9;
+    font-size: .68rem;
+    font-weight: 800;
+    text-align: right;
+}
+.about-standard-card p{
+    margin: 0;
+    color: #94a3b8;
+    font-size: .78rem;
+    line-height: 1.65;
+}
+.about-threshold-list{
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 7px;
+    margin-bottom: 12px;
+}
+.about-threshold-list.compact{
+    grid-template-columns: 1fr;
+}
+.about-threshold-list div{
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,.1);
+    background: rgba(15,35,56,.58);
+}
+.about-threshold-list span,
+.about-threshold-list b{
+    display: block;
+}
+.about-threshold-list span{
+    color: #94a3b8;
+    font-size: .65rem;
+}
+.about-threshold-list b{
+    margin-top: 3px;
+    color: #e2e8f0;
+    font-size: .7rem;
+}
+.about-standard-note{
+    padding-top: 10px;
+    border-top: 1px solid rgba(148,163,184,.1);
+}
+.about-standard-big{
+    margin: 4px 0 10px;
+    color: #67e8f9;
+    font-size: 1.65rem;
+    font-weight: 900;
+}
+.about-standard-big small{
+    font-size: .72rem;
+    color: #94a3b8;
+}
+.about-reference-box{
+    margin-top: 14px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(148,163,184,.13);
+}
+.about-reference-title{
+    margin-bottom: 10px;
+    color: #cbd5e1;
+    font-size: .78rem;
+    font-weight: 900;
+}
+.about-reference-links{
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 8px;
+}
+.about-reference-links a{
+    min-width: 0;
+    padding: 10px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid rgba(34,211,238,.12);
+    border-radius: 11px;
+    background: rgba(34,211,238,.04);
+    text-decoration: none;
+    transition: .2s ease;
+}
+.about-reference-links a:hover{
+    transform: translateY(-1px);
+    border-color: rgba(34,211,238,.34);
+    background: rgba(34,211,238,.08);
+}
+.about-reference-links span{
+    color: #64748b;
+    font-size: .61rem;
+}
+.about-reference-links b{
+    color: #bae6fd;
+    font-size: .68rem;
+    line-height: 1.35;
+}
+
+@media (max-width: 1000px){
+    .about-standards-grid{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .about-standard-card.about-standard-primary{
+        grid-column: span 2;
+    }
+    .about-reference-links{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .about-threshold-list{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+@media (max-width: 640px){
+    .history-range-caption{
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .history-range-center{
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+    .history-range-edge{
+        grid-row: 2;
+    }
+    .about-standards-section{
+        padding: 16px;
+    }
+    .about-standards-header{
+        flex-direction: column;
+    }
+    .about-standards-grid{
+        grid-template-columns: 1fr;
+    }
+    .about-standard-card.about-standard-primary{
+        grid-column: auto;
+    }
+    .about-threshold-list{
+        grid-template-columns: 1fr;
+    }
+    .about-reference-links{
+        grid-template-columns: 1fr;
+    }
+}
