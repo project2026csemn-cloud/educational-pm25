@@ -3237,26 +3237,43 @@ grid:{color:"rgba(148,163,184,.08)"}
 function forecastTickText(scale,value,index,ticks){
 const raw=scale.getLabelForValue(value);
 const text=String(raw??"");
+const labels=scale?.chart?.data?.labels||[];
+const forecastStart=labels.findIndex(v=>/^\+\d+\s*นาที/.test(String(v??"")));
+const actualCount=forecastStart>=0?forecastStart:labels.length;
+const width=Number(scale?.width||scale?.chart?.width||window.innerWidth||0);
 
-// จุดคาดการณ์ต้องอ่านได้ชัดเสมอ
-if(/^\+\d+\s*นาที/.test(text))return text;
+// Forecast ทั้ง 3 จุดเป็นข้อมูลสำคัญ จึงคงไว้เสมอ
+// แต่กราฟที่แคบจะย่อข้อความเพื่อไม่ให้ +10/+20/+30 นาทีชนกัน
+if(/^\+\d+\s*นาที/.test(text)){
+return width<430?text.replace(" นาที",""):text;
+}
 
 const d=parseDate(raw);
 if(!d)return text;
 
-const labels=scale?.chart?.data?.labels||[];
-const forecastStart=labels.findIndex(v=>/^\+\d+\s*นาที/.test(String(v??"")));
-const actualCount=forecastStart>=0?forecastStart:labels.length;
-const mobile=isMobileChart();
+// จำนวน label ของข้อมูลจริงอิงจากความกว้างของ canvas จริง
+// ไม่ใช้แค่ความกว้างหน้าจอ เพราะกราฟ 1/3 บน Desktop ก็อาจแคบได้
+let actualLabelCount=4;
+if(width<430)actualLabelCount=2;
+else if(width<620)actualLabelCount=3;
 
-// แสดงข้อมูลจริงแค่ไม่กี่จุด: ต้นช่วง / กลางช่วง / ปลายช่วง
 const wanted=new Set();
 if(actualCount>0){
 wanted.add(0);
-wanted.add(Math.max(0,actualCount-1));
-const divisions=mobile?2:3;
-for(let i=1;i<divisions;i++){
-wanted.add(Math.round((actualCount-1)*i/divisions));
+
+// เว้นข้อมูลจริงจุดสุดท้ายเมื่อมี Forecast เพื่อสร้างช่องว่างก่อน +10 นาที
+// ค่าจุดสุดท้ายยังดูได้จาก tooltip และเส้นกราฟตามปกติ
+const lastDisplayIndex=
+forecastStart>=0&&actualCount>2
+?actualCount-2
+:actualCount-1;
+
+wanted.add(Math.max(0,lastDisplayIndex));
+
+if(actualLabelCount>2&&lastDisplayIndex>0){
+for(let i=1;i<actualLabelCount-1;i++){
+wanted.add(Math.round(lastDisplayIndex*i/(actualLabelCount-1)));
+}
 }
 }
 
@@ -3278,6 +3295,7 @@ ticks:{
 autoSkip:false,
 maxRotation:0,
 minRotation:0,
+padding:8,
 font:{size:chartFontSize()},
 callback:function(value,index,ticks){
 return forecastTickText(this,value,index,ticks);
@@ -5860,7 +5878,12 @@ html:`
 </section>
 
 <section class="help-section">
-<h4>3) สภาพความร้อน</h4>
+<h4>3) PM10</h4>
+<p>PM10 มีมาตรฐานอากาศไทยแบบเฉลี่ย 24 ชั่วโมง 120 µg/m³ ระบบจึงใช้ค่ารอบล่าสุดที่สูงกว่า 120 µg/m³ เป็น <b>สัญญาณเฝ้าระวังเบื้องต้น</b> เท่านั้น ไม่สรุปว่าเกินมาตรฐาน 24 ชั่วโมงจากการวัดเพียงรอบเดียว</p>
+</section>
+
+<section class="help-section">
+<h4>4) สภาพความร้อน</h4>
 <p>คำนวณ Heat Index จากอุณหภูมิ + ความชื้น และใช้ระดับ: เฝ้าระวังตั้งแต่ 27°C, เตือนภัยตั้งแต่ 32°C, อันตรายตั้งแต่ 41°C และอันตรายมากเมื่อมากกว่า 54°C</p>
 </section>
 
@@ -5937,7 +5960,17 @@ html:`
 <section class="help-section">
 <h4>โซนนี้แบ่งเป็น 2 ส่วน</h4>
 <p><b>ตอนนี้เป็นอย่างไร</b> → สรุปสถานการณ์จากค่าล่าสุดและข้อมูลย้อนหลัง</p>
-<p><b>อีก 30 นาทีเป็นอย่างไร</b> → คาดการณ์ +10, +20 และ +30 นาที</p>
+<p><b>อีก 30 นาทีเป็นอย่างไร</b> → คาดการณ์แนวโน้มที่ +10, +20 และ +30 นาที</p>
+</section>
+
+<section class="help-section">
+<h4>ป้าย AI CACHED / GEMINI AI คืออะไร?</h4>
+<ul>
+<li><b>GEMINI AI</b> = ผลวิเคราะห์ข้อความในส่วนนี้สร้างโดย Gemini จากข้อมูล Sensor/ผลคำนวณที่ระบบส่งให้ เพื่อช่วยอธิบายแนวโน้มเป็นภาษาที่อ่านง่าย</li>
+<li><b>AI CACHED</b> = ระบบกำลังแสดงผล AI ที่คำนวณไว้ล่าสุดจาก Cache แทนการเรียก AI ใหม่ทุกครั้ง ช่วยลดการเรียก API และทำให้หน้าเว็บตอบสนองเร็วขึ้น ไม่ได้หมายความว่า Sensor หยุดวัด</li>
+<li><b>Statistical / Rule Engine</b> = ระบบสำรองเมื่อ AI ภายนอกไม่พร้อม โดยยังใช้ข้อมูล Sensor และกฎ/แบบจำลองของระบบได้</li>
+</ul>
+<div class="help-warning">AI ไม่ได้สร้างค่าที่ Sensor วัดขึ้นมาเอง ค่าจริงใน Dashboard มาจากอุปกรณ์ตรวจวัด ส่วน AI มีหน้าที่ช่วยแปลผลและอธิบาย</div>
 </section>
 
 <section class="help-section">
@@ -5954,6 +5987,18 @@ html:`
 </section>
 
 <section class="help-section">
+<h4>ทำไมโครงการเลือกคาดการณ์ 30 นาที?</h4>
+<p><b>30 นาทีเป็นขอบเขตที่โครงการกำหนด ไม่ใช่มาตรฐานสากลที่บังคับว่าต้องใช้ 30 นาที</b> โครงการนี้เน้นการเฝ้าดูสภาพแวดล้อมระดับพื้นที่แบบใกล้เวลาจริง และแบบจำลองปัจจุบันอาศัยแนวโน้มจาก Sensor ของสถานีเป็นหลัก จึงเลือกช่วงสั้น +10, +20 และ +30 นาที เพื่อให้ผลยังสัมพันธ์กับแนวโน้มล่าสุดและสื่อสารกับผู้ใช้ได้ง่าย</p>
+<p>U.S. EPA อธิบายว่าข้อมูล Air Sensor ความละเอียดสูงอาจผันผวนมาก และช่วงการเฉลี่ย/การนำข้อมูลไปใช้ควรเลือกตามวัตถุประสงค์ของงาน ส่วนงานวิจัยด้าน Multi-step Air Quality Forecasting พบโดยทั่วไปว่าเมื่อระยะพยากรณ์ยาวขึ้น ความไม่แน่นอนและความคลาดเคลื่อนมีแนวโน้มเพิ่มขึ้น</p>
+</section>
+
+<section class="help-section">
+<h4>คาดการณ์มากกว่า 30 นาทีได้ไหม?</h4>
+<p><b>ได้ในทางเทคนิค</b> เช่น 1 ชั่วโมง 3 ชั่วโมง หรือมากกว่านั้น แต่ไม่ควรเพียงยืดเส้น Linear Regression ออกไปแล้วถือว่าความน่าเชื่อถือเท่าเดิม เพราะ PM2.5 เปลี่ยนตามปัจจัยภายนอก เช่น ลม ฝน การแพร่กระจายของมลพิษ และแหล่งกำเนิด</p>
+<p>ถ้าจะขยายระยะ Forecast อย่างมีเหตุผล ควรเพิ่มข้อมูลอุตุนิยมวิทยา เช่น ความเร็ว/ทิศทางลม ฝน ความกดอากาศ รวมถึงประเมินโมเดลแยกตาม Forecast Horizon ด้วย MAE/RMSE หรือวิธี Validation อื่น งานวิจัย PM2.5 ระยะหลายชั่วโมงมักใช้ข้อมูลเชิงเวลา เชิงพื้นที่ และข้อมูลอุตุนิยมวิทยาร่วมกัน</p>
+</section>
+
+<section class="help-section">
 <h4>AI ทำหน้าที่อะไร?</h4>
 <p>AI ช่วยแปลผลเป็นภาษา เช่น เพิ่มขึ้น/ลดลง ปัจจัยเด่น และคำอธิบาย แต่ตัวเลข Forecast มีฐานจากข้อมูล Sensor และแบบจำลองเชิงสถิติ หาก AI ภายนอกใช้ไม่ได้ ระบบยังใช้ Statistical Forecast สำรองได้</p>
 </section>
@@ -5962,16 +6007,20 @@ html:`
 <h4>ข้อจำกัด</h4>
 <ul>
 <li>เป็น Forecast แนวโน้มของสถานี ไม่ใช่พยากรณ์อากาศจากกรมอุตุนิยมวิทยา</li>
-<li>ไม่มีข้อมูลลม ความกดอากาศ ปริมาณฝน หรือ cloud cover</li>
+<li>ระบบปัจจุบันไม่มีข้อมูลลม ความกดอากาศ ปริมาณฝน หรือ cloud cover</li>
 <li>BH1750 วัด lux ไม่ได้วัดเมฆหรือฝน</li>
 <li>Heat Index ไม่ใช่ WBGT</li>
+<li>ระยะ Forecast ที่ไกลขึ้นไม่ได้รับประกันว่าจะมีความแม่นยำเท่าระยะสั้น จนกว่าจะมีการทดสอบความคลาดเคลื่อนของโมเดลในแต่ละ Horizon</li>
 </ul>
 </section>
 
 <div class="help-sources">
-<b>อ้างอิง Heat Index:</b>
-<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา</a>
-<a href="https://www.weather.gov/tbw/heatindex" target="_blank" rel="noopener noreferrer">U.S. National Weather Service</a>
+<b>อ้างอิง:</b>
+<a href="https://www.epa.gov/air-sensor-toolbox/how-use-air-sensors-air-sensor-guidebook" target="_blank" rel="noopener noreferrer">U.S. EPA — Enhanced Air Sensor Guidebook</a>
+<a href="https://www.epa.gov/air-sensor-toolbox/air-sensor-use-and-study-design" target="_blank" rel="noopener noreferrer">U.S. EPA — Air Sensor Use and Study Design</a>
+<a href="https://www.mdpi.com/1424-8220/24/15/5069" target="_blank" rel="noopener noreferrer">Sensors (2024) — Multi-step Air Quality Forecasting</a>
+<a href="https://doi.org/10.1016/j.apr.2025.102406" target="_blank" rel="noopener noreferrer">Atmospheric Pollution Research — PM2.5 Multi-step Forecasting in Bangkok</a>
+<a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer">กรมอุตุนิยมวิทยา — Heat Index</a>
 </div>`
 }
 
