@@ -621,6 +621,7 @@ DASHBOARD NAVIGATION
             ข้อมูลย้อนหลัง
         </div>
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
+<div class="history-range-caption" id="historyRangeCaption" aria-live="polite"></div>
 </div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 แนวโน้มและคาดการณ์ 30 นาที</div><div class="chart-zone-subtitle">เส้นทึบคือข้อมูลที่วัดได้จริง และเส้นประคือค่าคาดการณ์จากข้อมูลย้อนหลังของสถานี</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
@@ -706,6 +707,76 @@ DASHBOARD NAVIGATION
     <article class="glass card about-card"><div class="about-card-icon">✓</div><div><h2>หลักการแสดงผล</h2><p>PM2.5 เป็นตัวหลักในการสื่อสารคุณภาพอากาศ ขณะที่ PM10, PM1.0, อุณหภูมิ, ความชื้น และแสงใช้เป็นข้อมูลประกอบตามหน้าที่ของแต่ละตัวแปร</p></div></article>
     <article class="glass card about-card"><div class="about-card-icon">?</div><div><h2>คำอธิบายและอ้างอิง</h2><p>ปุ่ม <b>?</b> ที่อยู่ในแต่ละส่วนของ Dashboard ยังใช้งานได้เหมือนเดิม เพื่ออธิบายวิธีคำนวณ เกณฑ์การตีความ และแหล่งอ้างอิงของโครงการ</p></div></article>
   </div>
+
+  <section class="glass card about-standards-section">
+    <div class="about-standards-header">
+      <div>
+        <div class="overview-eyebrow">MEASUREMENT CRITERIA & REFERENCES</div>
+        <h2>เกณฑ์การวัดและแหล่งอ้างอิง</h2>
+        <p>เกณฑ์ด้านล่างคือหลักที่โครงการใช้ในการสื่อสารผลบน Dashboard โดยแยกให้ชัดระหว่าง “เกณฑ์สุขภาพ/มาตรฐาน” กับ “ข้อมูลประกอบ”</p>
+      </div>
+      <span class="about-standard-badge">เกณฑ์ที่ใช้ในโครงการ</span>
+    </div>
+
+    <div class="about-standards-grid">
+      <article class="about-standard-card about-standard-primary">
+        <div class="about-standard-head"><span>PM2.5</span><b>ตัวหลักด้านคุณภาพอากาศ</b></div>
+        <div class="about-threshold-list">
+          <div><span>0–15.0 µg/m³</span><b>ดีมาก</b></div>
+          <div><span>15.1–25.0 µg/m³</span><b>ดี</b></div>
+          <div><span>25.1–37.5 µg/m³</span><b>ปานกลาง</b></div>
+          <div><span>37.6–75.0 µg/m³</span><b>เริ่มมีผลกระทบต่อสุขภาพ</b></div>
+          <div><span>75.1 µg/m³ ขึ้นไป</span><b>มีผลกระทบต่อสุขภาพ</b></div>
+        </div>
+        <p class="about-standard-note">Dashboard ใช้ระดับนี้เพื่อการสื่อสารและเฝ้าระวังเบื้องต้น ส่วนค่ามาตรฐาน PM2.5 ที่ 37.5 µg/m³ เป็นค่าเฉลี่ย 24 ชั่วโมง จึงไม่ควรนำค่ารอบล่าสุดไปสรุปว่า “ผ่าน/ไม่ผ่านมาตรฐาน 24 ชั่วโมง” โดยตรง</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>PM10</span><b>มาตรฐานอากาศไทย</b></div>
+        <div class="about-standard-big">≤ 120 <small>µg/m³</small></div>
+        <p>ค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของประเทศไทย โครงการใช้ค่ารอบล่าสุดที่มากกว่า 120 µg/m³ เป็นสัญญาณ “เฝ้าระวังเบื้องต้น” เท่านั้น ไม่ใช่ผลมาตรฐาน 24 ชั่วโมงอย่างเป็นทางการ</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>Heat Index</span><b>อุณหภูมิ + ความชื้น</b></div>
+        <div class="about-threshold-list compact">
+          <div><span>&lt; 27°C</span><b>ปกติ</b></div>
+          <div><span>27–31.9°C</span><b>เฝ้าระวัง</b></div>
+          <div><span>32–40.9°C</span><b>เตือนภัย</b></div>
+          <div><span>41–54°C</span><b>อันตราย</b></div>
+          <div><span>&gt; 54°C</span><b>อันตรายมาก</b></div>
+        </div>
+        <p class="about-standard-note">Heat Index ใช้ประเมินความร้อนที่ร่างกายรู้สึกได้ และไม่ใช่ WBGT</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>PM1.0</span><b>ข้อมูลประกอบ</b></div>
+        <p>โครงการไม่ใช้ PM1.0 ตัดสิน AQI หรือสุขภาพเพียงค่าเดียว เพราะเกณฑ์ AQI ที่โครงการอ้างอิงไม่ได้กำหนด PM1.0 เป็นตัวชี้วัดหลัก</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>อุณหภูมิ / ความชื้น</span><b>ไม่ตัดสินแยกเดี่ยว</b></div>
+        <p>นำสองค่านี้มาใช้ร่วมกันในการคำนวณ Heat Index แทนการตั้งเกณฑ์สุขภาพจากอุณหภูมิหรือความชื้นเพียงค่าเดียว</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>แสง (lux)</span><b>ข้อมูลสภาพแวดล้อม</b></div>
+        <p>ใช้แสดงความส่องสว่างและดูการเปลี่ยนแปลงย้อนหลัง ไม่ใช้ตัดสินคุณภาพอากาศ ความร้อน เมฆ หรือฝน</p>
+      </article>
+    </div>
+
+    <div class="about-reference-box">
+      <div class="about-reference-title">แหล่งอ้างอิงที่ใช้</div>
+      <div class="about-reference-links">
+        <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>AQI / PM2.5 ↗</b></a>
+        <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>มาตรฐาน PM10 ↗</b></a>
+        <a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer"><span>กรมอุตุนิยมวิทยา</span><b>Heat Index ↗</b></a>
+        <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer"><span>WHO</span><b>Air Quality Guidelines 2021 ↗</b></a>
+        <a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer"><span>ROHM</span><b>Ambient Light / lux ↗</b></a>
+      </div>
+    </div>
+  </section>
+
   <div class="about-credit-note glass card"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>ข้อมูลวิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำยังแสดงครบในแถบเครดิตด้านล่างของเว็บไซต์</p></div><span>↓</span></div>
 </section>
 
