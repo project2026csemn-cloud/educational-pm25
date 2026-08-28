@@ -709,25 +709,63 @@ DASHBOARD NAVIGATION
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
   <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><h1>เกี่ยวกับโครงการ</h1></div>
 
-  <section class="glass card about-detail-section about-interpretation-section">
-    <div class="about-detail-head"><div><div class="overview-eyebrow">HOW TO INTERPRET</div><h2>หลักการตีความข้อมูลบน Dashboard</h2></div></div>
-    <div class="about-interpretation-grid">
-      <article><b>PM2.5 เป็นตัวหลักด้านคุณภาพอากาศ</b><p>ใช้เป็นตัวแปรหลักในการสื่อสารระดับคุณภาพอากาศและการเฝ้าระวังด้านสุขภาพของโครงการ</p></article>
-      <article><b>PM10 ใช้ประกอบการเฝ้าระวัง</b><p>มีมาตรฐานแบบค่าเฉลี่ย 24 ชั่วโมง จึงไม่ควรนำค่ารอบล่าสุดเพียงค่าเดียวไปประกาศว่าเกินมาตรฐาน 24 ชั่วโมงอย่างเป็นทางการ</p></article>
-      <article><b>Heat Index ไม่ใช่ WBGT</b><p>ระบบใช้อุณหภูมิและความชื้นคำนวณ Heat Index เพื่อสื่อสารความร้อนที่ร่างกายรู้สึกได้ แต่ไม่ใช่การวัด WBGT</p></article>
-      <article><b>PM1.0 และแสงเป็นข้อมูลประกอบ</b><p>PM1.0 ไม่มีเกณฑ์ AQI ที่โครงการใช้ ส่วน lux ใช้ดูสภาพความส่องสว่าง ไม่ใช้พิสูจน์ฝน เมฆ หรือระดับอันตรายต่อสุขภาพ</p></article>
+  <section class="glass card about-detail-section about-interpretation-section about-reader-guide">
+    <div class="about-detail-head">
+      <div>
+        <div class="overview-eyebrow">HOW TO READ THE DASHBOARD</div>
+        <h2>อ่านข้อมูลบน Dashboard อย่างไร</h2>
+        <p class="about-section-lead">หน้านี้สรุปเฉพาะสิ่งที่ผู้ใช้งานควรรู้ เพื่อช่วยให้ดูข้อมูลได้ถูกความหมาย โดยไม่ลงรายละเอียดการทำงานภายในของระบบ</p>
+      </div>
     </div>
-    <div class="about-caution-box"><b>ข้อควรเข้าใจ:</b> ค่าบน Dashboard ส่วน “ข้อมูลปัจจุบัน” เป็นข้อมูลรอบล่าสุด/ระยะสั้น ส่วนมาตรฐานบางรายการกำหนดจากค่าเฉลี่ยตามช่วงเวลา เช่น 24 ชั่วโมง ดังนั้นระบบใช้ค่าปัจจุบันเพื่อสื่อสารและเฝ้าระวังเบื้องต้น ไม่ใช่การรับรองผลตรวจมาตรฐานจากสถานีอ้างอิงของหน่วยงานรัฐ</div>
+
+    <div class="about-reader-grid">
+      <article class="about-reader-card">
+        <div class="about-reader-icon">📍</div>
+        <div>
+          <b>ดูรายจุด เมื่อต้องการรู้สถานการณ์เฉพาะตำแหน่ง</b>
+          <p>ค่าของแต่ละจุดตรวจวัดอาจไม่เท่ากัน เพราะแต่ละตำแหน่งมีสภาพแวดล้อมต่างกัน จึงควรดูข้อมูลรายจุดเมื่อสนใจบริเวณใดบริเวณหนึ่ง</p>
+        </div>
+      </article>
+
+      <article class="about-reader-card">
+        <div class="about-reader-icon">≋</div>
+        <div>
+          <b>ใช้ “ค่าเฉลี่ยพื้นที่” เพื่อดูภาพรวม</b>
+          <p>ค่าเฉลี่ยพื้นที่ช่วยให้เห็นแนวโน้มโดยรวม แต่ไม่ควรใช้แทนค่าของแต่ละจุด เพราะบางตำแหน่งอาจสูงหรือต่ำกว่าค่าเฉลี่ยอย่างชัดเจน</p>
+        </div>
+      </article>
+
+      <article class="about-reader-card">
+        <div class="about-reader-icon">📈</div>
+        <div>
+          <b>กราฟย้อนหลังใช้ดูแนวโน้ม ไม่ใช่ดูเพียงจุดเดียว</b>
+          <p>เลือกช่วงเวลาที่เหมาะกับสิ่งที่ต้องการดู และพิจารณารูปแบบการเปลี่ยนแปลงต่อเนื่องร่วมกับค่าปัจจุบัน</p>
+        </div>
+      </article>
+
+      <article class="about-reader-card">
+        <div class="about-reader-icon">⚠</div>
+        <div>
+          <b>ค่ารอบล่าสุดกับค่าเฉลี่ยตามมาตรฐานเป็นคนละอย่าง</b>
+          <p>ค่าปัจจุบันใช้สำหรับติดตามและเฝ้าระวังเบื้องต้น ส่วนเกณฑ์บางรายการอ้างอิงค่าเฉลี่ยตามช่วงเวลา เช่น 24 ชั่วโมง จึงไม่ควรนำค่ารอบเดียวไปสรุปแทนค่าเฉลี่ยตามมาตรฐาน</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="about-reading-tip">
+      <div class="about-reading-tip-icon">💡</div>
+      <div><b>วิธีดูที่แนะนำ</b><span>เริ่มจากภาพรวม → ดูจุดที่ควรสนใจ → เปิดกราฟย้อนหลังของจุดนั้นเพื่อดูว่าค่าสูงเพียงชั่วคราวหรือมีแนวโน้มต่อเนื่อง</span></div>
+    </div>
   </section>
 
   <section class="glass card about-standards-section">
     <div class="about-standards-header">
       <div>
         <div class="overview-eyebrow">MEASUREMENT CRITERIA & REFERENCES</div>
-        <h2>เกณฑ์การวัดและแหล่งอ้างอิง</h2>
-        <p>เกณฑ์ด้านล่างคือหลักที่โครงการใช้ในการสื่อสารผลบน Dashboard โดยแยกให้ชัดระหว่าง “เกณฑ์สุขภาพ/มาตรฐาน” กับ “ข้อมูลประกอบ”</p>
+        <h2>เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ</h2>
+        <p>ใช้ส่วนนี้เมื่อต้องการรู้ว่าแต่ละระดับหมายถึงอะไร และเกณฑ์ใดเป็นค่าอ้างอิงตามช่วงเวลา โปรดอ่านหมายเหตุของแต่ละหัวข้อก่อนนำไปตีความ</p>
       </div>
-      <span class="about-standard-badge">เกณฑ์ที่ใช้ในโครงการ</span>
+      <span class="about-standard-badge">อ่านเกณฑ์ก่อนตีความ</span>
     </div>
 
     <div class="about-standards-grid">
@@ -784,7 +822,7 @@ DASHBOARD NAVIGATION
     </div>
 
     <div class="about-reference-box">
-      <div class="about-reference-title">แหล่งอ้างอิงที่ใช้</div>
+      <div class="about-reference-title">แหล่งอ้างอิงสำหรับตรวจสอบเพิ่มเติม</div>
       <div class="about-reference-links">
         <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>AQI / PM2.5 ↗</b></a>
         <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>มาตรฐาน PM10 ↗</b></a>
@@ -950,7 +988,7 @@ HELP / INFO POPOVER
 <div class="help-popover-header">
 <div>
 <div class="help-popover-eyebrow">
-                DASHBOARD HELP
+                คู่มือการใช้งาน
             </div>
 <h3 id="helpPopoverTitle">
                 คำอธิบาย
