@@ -699,14 +699,52 @@ DASHBOARD NAVIGATION
   <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><h1>เกี่ยวกับโครงการ</h1><p>ระบบตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ สำหรับติดตามสถานการณ์และสนับสนุนการตัดสินใจในสถานศึกษา</p></div>
   <div class="about-grid">
     <article class="glass card about-card about-card-wide">
-      <div class="about-card-icon">◎</div><div><h2>หลักการทำงานของระบบ</h2><p>อุปกรณ์ตรวจวัดทั้ง 3 จุดอ่านค่าจากเซนเซอร์ แล้วส่งข้อมูลผ่าน ESP-NOW มายัง Gateway จากนั้น Gateway ส่งข้อมูลขึ้น Cloudflare เพื่อจัดเก็บและให้ Dashboard เรียกใช้งาน</p>
-      <div class="system-flow"><span>จุดตรวจวัด 1–3</span><i>→</i><span>ESP-NOW</span><i>→</i><span>Gateway</span><i>→</i><span>Cloudflare</span><i>→</i><span>D1</span><i>→</i><span>Dashboard</span></div></div>
+      <div class="about-card-icon">◎</div>
+      <div>
+        <h2>ภาพรวมและวัตถุประสงค์ของโครงการ</h2>
+        <p>โครงการนี้พัฒนาระบบตรวจวัดคุณภาพอากาศในระดับพื้นที่ของสถานศึกษา เพื่อให้สามารถติดตามฝุ่นละออง สภาพอากาศแวดล้อม สถานะของอุปกรณ์ แนวโน้มย้อนหลัง และข้อมูลประกอบการตัดสินใจได้จากหน้า Dashboard เดียว</p>
+        <div class="about-chip-list about-chip-list-spaced"><span>ติดตามสถานการณ์</span><span>ดูข้อมูลย้อนหลัง</span><span>เปรียบเทียบ 3 จุด</span><span>แจ้งสิ่งที่ควรระวัง</span><span>วิเคราะห์แนวโน้ม</span></div>
+      </div>
     </article>
-    <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ข้อมูลที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง</span></div></div></article>
-    <article class="glass card about-card"><div class="about-card-icon">⌁</div><div><h2>อุปกรณ์หลัก</h2><p>ESP32 ทำหน้าที่ควบคุมระบบ ร่วมกับ PMS3003 สำหรับฝุ่น, AM2315 สำหรับอุณหภูมิ/ความชื้น และ BH1750 สำหรับความส่องสว่าง</p></div></article>
-    <article class="glass card about-card"><div class="about-card-icon">✓</div><div><h2>หลักการแสดงผล</h2><p>PM2.5 เป็นตัวหลักในการสื่อสารคุณภาพอากาศ ขณะที่ PM10, PM1.0, อุณหภูมิ, ความชื้น และแสงใช้เป็นข้อมูลประกอบตามหน้าที่ของแต่ละตัวแปร</p></div></article>
-    <article class="glass card about-card"><div class="about-card-icon">?</div><div><h2>คำอธิบายและอ้างอิง</h2><p>ปุ่ม <b>?</b> ที่อยู่ในแต่ละส่วนของ Dashboard ยังใช้งานได้เหมือนเดิม เพื่ออธิบายวิธีคำนวณ เกณฑ์การตีความ และแหล่งอ้างอิงของโครงการ</p></div></article>
+
+    <article class="glass card about-card about-card-wide">
+      <div class="about-card-icon">⇢</div><div><h2>สถาปัตยกรรมและหลักการทำงานของระบบ</h2><p>จุดตรวจวัดทั้ง 3 จุดอ่านค่าจากเซนเซอร์ แล้วส่งข้อมูลแบบไร้สายผ่าน ESP-NOW มายัง Gateway จากนั้น Gateway เชื่อมต่ออินเทอร์เน็ตและส่งข้อมูลไปยัง Cloudflare Worker เพื่อประมวลผล/ให้บริการ API และบันทึกข้อมูลใน D1 Database ก่อนที่ Dashboard จะเรียกข้อมูลมาแสดงผล</p>
+      <div class="system-flow"><span>จุดตรวจวัด 1–3</span><i>→</i><span>ESP-NOW</span><i>→</i><span>Gateway</span><i>→</i><span>Cloudflare Worker</span><i>→</i><span>D1 Database</span><i>→</i><span>Dashboard</span></div></div>
+    </article>
+
+    <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ตัวแปรที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง (lux)</span></div><p class="about-card-subtext">ตัวแปรแต่ละชนิดมีหน้าที่ต่างกัน จึงไม่ถูกนำมาบวกหรือเฉลี่ยรวมเป็นคะแนนสุขภาพเดียว</p></div></article>
+    <article class="glass card about-card"><div class="about-card-icon">⌁</div><div><h2>อุปกรณ์และเซนเซอร์หลัก</h2><p><b>ESP32</b> ควบคุมระบบและการสื่อสาร, <b>PMS3003</b> วัด PM1.0/PM2.5/PM10, <b>AM2315</b> วัดอุณหภูมิและความชื้น และ <b>BH1750</b> วัดความส่องสว่างหน่วย lux</p></div></article>
   </div>
+
+  <section class="glass card about-detail-section">
+    <div class="about-detail-head"><div><div class="overview-eyebrow">MEASUREMENT & DATA FLOW</div><h2>วิธีเก็บข้อมูลและตรวจสอบความถูกต้อง</h2></div><span class="about-standard-badge">Data Integrity</span></div>
+    <div class="about-detail-grid">
+      <article><b>1. อ่านหลายครั้งต่อหนึ่งรอบ</b><p>จุดตรวจวัดเก็บค่าหลายครั้งในช่วงประมาณ 1 นาที แล้วใช้เฉพาะครั้งที่อ่านสำเร็จเพื่อคำนวณค่าเฉลี่ยก่อนส่งหนึ่งชุดข้อมูล</p></article>
+      <article><b>2. ค่าที่อ่านไม่สำเร็จไม่ใช่ศูนย์</b><p>ค่าที่ไม่มีข้อมูลหรืออ่านไม่สำเร็จจะถูกเก็บ/ตีความเป็นไม่มีข้อมูล และไม่นำไปแทนด้วย 0 ในกราฟ ค่าเฉลี่ย หรือสถิติ</p></article>
+      <article><b>3. ค่าเฉลี่ยพื้นที่ใช้เฉพาะข้อมูลที่ใช้ได้</b><p>เมื่อเปรียบเทียบทั้ง 3 จุด ระบบจะใช้เฉพาะจุดที่ยังใช้งานได้และมีค่าจริงของตัวแปรนั้นในการคำนวณ</p></article>
+      <article><b>4. ข้อมูลย้อนหลังคงเวลาเดิม</b><p>ข้อมูลใน D1 ถูกเรียกตามช่วงเวลาที่เลือก เพื่อใช้สร้างสถิติ กราฟ แนวโน้ม และการส่งออก โดยไม่ใช้ค่าจำลองมาเติมช่องว่าง</p></article>
+    </div>
+  </section>
+
+  <section class="glass card about-detail-section">
+    <div class="about-detail-head"><div><div class="overview-eyebrow">DEVICE STATUS RULES</div><h2>กฎสถานะอุปกรณ์ของโครงการ</h2></div><span class="about-standard-badge">Project Rule</span></div>
+    <div class="about-status-rules">
+      <div><span class="about-rule-dot is-online"></span><b>ONLINE</b><p>Dashboard แสดงว่าอุปกรณ์ยังติดต่อระบบได้ โดยช่วง Sleep ตามรอบประหยัดพลังงานยังถูกนับเป็น ONLINE บนหน้าเว็บ</p></div>
+      <div><span class="about-rule-dot is-offline"></span><b>OFFLINE</b><p>ถ้าไม่มีการติดต่อใหม่เกิน 6 นาที ระบบจะแสดง Offline ซึ่งเป็นกฎภายในโครงการเพื่อให้สอดคล้องกับรอบวัดและ Sleep</p></div>
+      <div><span class="about-rule-dot is-gateway"></span><b>Gateway</b><p>ถ้า Gateway ขาดการเชื่อมต่อ Dashboard จะไม่ยืนยันว่าจุดตรวจวัดลูกยัง Online แม้ข้อมูลเดิมจะยังอยู่ในฐานข้อมูล</p></div>
+    </div>
+  </section>
+
+  <section class="glass card about-detail-section about-interpretation-section">
+    <div class="about-detail-head"><div><div class="overview-eyebrow">HOW TO INTERPRET</div><h2>หลักการตีความข้อมูลบน Dashboard</h2></div></div>
+    <div class="about-interpretation-grid">
+      <article><b>PM2.5 เป็นตัวหลักด้านคุณภาพอากาศ</b><p>ใช้เป็นตัวแปรหลักในการสื่อสารระดับคุณภาพอากาศและการเฝ้าระวังด้านสุขภาพของโครงการ</p></article>
+      <article><b>PM10 ใช้ประกอบการเฝ้าระวัง</b><p>มีมาตรฐานแบบค่าเฉลี่ย 24 ชั่วโมง จึงไม่ควรนำค่ารอบล่าสุดเพียงค่าเดียวไปประกาศว่าเกินมาตรฐาน 24 ชั่วโมงอย่างเป็นทางการ</p></article>
+      <article><b>Heat Index ไม่ใช่ WBGT</b><p>ระบบใช้อุณหภูมิและความชื้นคำนวณ Heat Index เพื่อสื่อสารความร้อนที่ร่างกายรู้สึกได้ แต่ไม่ใช่การวัด WBGT</p></article>
+      <article><b>PM1.0 และแสงเป็นข้อมูลประกอบ</b><p>PM1.0 ไม่มีเกณฑ์ AQI ที่โครงการใช้ ส่วน lux ใช้ดูสภาพความส่องสว่าง ไม่ใช้พิสูจน์ฝน เมฆ หรือระดับอันตรายต่อสุขภาพ</p></article>
+    </div>
+    <div class="about-caution-box"><b>ข้อควรเข้าใจ:</b> ค่าบน Dashboard ส่วน “ข้อมูลปัจจุบัน” เป็นข้อมูลรอบล่าสุด/ระยะสั้น ส่วนมาตรฐานบางรายการกำหนดจากค่าเฉลี่ยตามช่วงเวลา เช่น 24 ชั่วโมง ดังนั้นระบบใช้ค่าปัจจุบันเพื่อสื่อสารและเฝ้าระวังเบื้องต้น ไม่ใช่การรับรองผลตรวจมาตรฐานจากสถานีอ้างอิงของหน่วยงานรัฐ</div>
+  </section>
 
   <section class="glass card about-standards-section">
     <div class="about-standards-header">
@@ -777,7 +815,149 @@ DASHBOARD NAVIGATION
     </div>
   </section>
 
-  <div class="about-credit-note glass card"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>ข้อมูลวิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำยังแสดงครบในแถบเครดิตด้านล่างของเว็บไซต์</p></div><span>↓</span></div>
+  <div class="about-credit-note glass card"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>เครดิตของวิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำถูกรวมไว้ในหน้า “เกี่ยวกับโครงการ” เท่านั้น เพื่อไม่ให้รบกวนหน้าติดตามข้อมูลและกราฟ</p></div></div>
+
+  <!-- =========================================================
+CREDIT
+========================================================= -->
+<footer class="credit-bar">
+<div class="credit-glow credit-glow-1"></div>
+<div class="credit-glow credit-glow-2"></div>
+<div class="credit-inner">
+<!-- COLLEGE -->
+
+<!-- DEPARTMENT -->
+
+<!-- ADVISOR -->
+
+<!-- DEVELOPER 1 -->
+
+<!-- DEVELOPER 2 -->
+
+<div class="credit-box credit-college">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
+                    'img/ตราวิทลัยใหม่.png',
+                    'โลโก้วิทยาลัย'
+                )">
+<img alt="โลโก้วิทยาลัย" decoding="async" height="64" loading="lazy" src="img/ตราวิทลัยใหม่.png" width="64"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    COLLEGE
+                </div>
+<div class="credit-title">
+                    วิทยาลัยเสริมทักษะพระภิกษุ สามเณร
+                </div>
+<div class="credit-links">
+<a class="credit-link" href="https://www.spscollege.ac.th/" rel="noopener noreferrer" target="_blank">
+<span>
+                            เว็บไซต์วิทยาลัย
+                        </span>
+<span class="credit-arrow">
+                            ↗
+                        </span>
+</a>
+<a class="credit-link facebook-link" href="https://www.facebook.com/spscollege.ac.th?locale=th_TH" rel="noopener noreferrer" target="_blank">
+<span>
+                            Facebook วิทยาลัย
+                        </span>
+<span class="credit-arrow">
+                            ↗
+                        </span>
+</a>
+</div>
+</div>
+</div><div class="credit-box credit-department">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
+                    'img/ICT.jpg',
+                    'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
+                )">
+<img alt="โลโก้แผนก" decoding="async" height="64" loading="lazy" src="img/ICT.jpg" width="64"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    DEPARTMENT
+                </div>
+<div class="credit-title">
+                    แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร
+                </div>
+<div class="credit-links">
+<a class="credit-link facebook-link" href="https://www.facebook.com/ICT.CSEMN" rel="noopener noreferrer" target="_blank">
+<span>
+                            Facebook แผนก
+                        </span>
+<span class="credit-arrow">
+                            ↗
+                        </span>
+</a>
+</div>
+</div>
+</div><div class="credit-box credit-developer">
+<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
+                    'img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
+                    'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
+                )">
+<img alt="สามเณร ธรรมปพน" decoding="async" height="64" loading="lazy" src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg" width="64"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    DEVELOPER
+                </div>
+<div class="credit-title">
+                    สามเณร ธรรมปพน พุทธศาสน์ศรัทธา
+                </div>
+<div class="credit-role">
+                    SYSTEM DEVELOPER
+                </div>
+</div>
+</div><div class="credit-box credit-developer">
+<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
+                    'img/สามเณรรัฐภูมิสร้อยคำ.jpg',
+                    'สามเณร รัฐภูมิ สร้อยคำ'
+                )">
+<img alt="สามเณร รัฐภูมิ" decoding="async" height="64" loading="lazy" src="img/สามเณรรัฐภูมิสร้อยคำ.jpg" width="64"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    DEVELOPER
+                </div>
+<div class="credit-title">
+                    สามเณร รัฐภูมิ สร้อยคำ
+                </div>
+<div class="credit-role">
+                    SYSTEM DEVELOPER
+                </div>
+</div>
+</div><div class="credit-box credit-advisor">
+<div class="credit-icon credit-image-button" onclick="openCreditImage(
+                    'img/ฐาปกรณ์01.jpg',
+                    'นาย ฐาปกรณ์ ตรีชัยศรี'
+                )">
+<img alt="ครูที่ปรึกษา" decoding="async" height="64" loading="lazy" src="img/ฐาปกรณ์01.jpg" width="64"/>
+</div>
+<div class="credit-content">
+<div class="credit-label">
+                    ADVISOR
+                </div>
+<div class="credit-title">
+                    นาย ฐาปกรณ์ ตรีชัยศรี
+                </div>
+<div class="credit-role">
+                    PROJECT ADVISOR
+                </div>
+</div>
+</div></div>
+<div class="credit-bottom">
+<span class="credit-status-dot"></span>
+<span>
+            LOCAL AIR QUALITY AND PM2.5 MONITORING STATION
+        </span>
+<span class="credit-line"></span>
+<span>
+            SYSTEM CREDIT
+        </span>
+</div>
+</footer>
 </section>
 
 </main>
@@ -923,147 +1103,7 @@ EXPORT MODAL
 </div>
 </div>
 </div>
-<!-- =========================================================
-CREDIT
-========================================================= -->
-<footer class="credit-bar">
-<div class="credit-glow credit-glow-1"></div>
-<div class="credit-glow credit-glow-2"></div>
-<div class="credit-inner">
-<!-- COLLEGE -->
 
-<!-- DEPARTMENT -->
-
-<!-- ADVISOR -->
-
-<!-- DEVELOPER 1 -->
-
-<!-- DEVELOPER 2 -->
-
-<div class="credit-box credit-college">
-<div class="credit-icon credit-image-button" onclick="openCreditImage(
-                    'img/ตราวิทลัยใหม่.png',
-                    'โลโก้วิทยาลัย'
-                )">
-<img alt="โลโก้วิทยาลัย" decoding="async" height="64" loading="lazy" src="img/ตราวิทลัยใหม่.png" width="64"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    COLLEGE
-                </div>
-<div class="credit-title">
-                    วิทยาลัยเสริมทักษะพระภิกษุ สามเณร
-                </div>
-<div class="credit-links">
-<a class="credit-link" href="https://www.spscollege.ac.th/" rel="noopener noreferrer" target="_blank">
-<span>
-                            เว็บไซต์วิทยาลัย
-                        </span>
-<span class="credit-arrow">
-                            ↗
-                        </span>
-</a>
-<a class="credit-link facebook-link" href="https://www.facebook.com/spscollege.ac.th?locale=th_TH" rel="noopener noreferrer" target="_blank">
-<span>
-                            Facebook วิทยาลัย
-                        </span>
-<span class="credit-arrow">
-                            ↗
-                        </span>
-</a>
-</div>
-</div>
-</div><div class="credit-box credit-department">
-<div class="credit-icon credit-image-button" onclick="openCreditImage(
-                    'img/ICT.jpg',
-                    'โลโก้แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร'
-                )">
-<img alt="โลโก้แผนก" decoding="async" height="64" loading="lazy" src="img/ICT.jpg" width="64"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    DEPARTMENT
-                </div>
-<div class="credit-title">
-                    แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร
-                </div>
-<div class="credit-links">
-<a class="credit-link facebook-link" href="https://www.facebook.com/ICT.CSEMN" rel="noopener noreferrer" target="_blank">
-<span>
-                            Facebook แผนก
-                        </span>
-<span class="credit-arrow">
-                            ↗
-                        </span>
-</a>
-</div>
-</div>
-</div><div class="credit-box credit-developer">
-<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
-                    'img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg',
-                    'สามเณร ธรรมปพน พุทธศาสน์ศรัทธา'
-                )">
-<img alt="สามเณร ธรรมปพน" decoding="async" height="64" loading="lazy" src="img/สามเณรธรรมปพนพุทธศาสน์ศรัทธา.jpg" width="64"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    DEVELOPER
-                </div>
-<div class="credit-title">
-                    สามเณร ธรรมปพน พุทธศาสน์ศรัทธา
-                </div>
-<div class="credit-role">
-                    SYSTEM DEVELOPER
-                </div>
-</div>
-</div><div class="credit-box credit-developer">
-<div class="credit-icon credit-image-button credit-placeholder" onclick="openCreditImage(
-                    'img/สามเณรรัฐภูมิสร้อยคำ.jpg',
-                    'สามเณร รัฐภูมิ สร้อยคำ'
-                )">
-<img alt="สามเณร รัฐภูมิ" decoding="async" height="64" loading="lazy" src="img/สามเณรรัฐภูมิสร้อยคำ.jpg" width="64"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    DEVELOPER
-                </div>
-<div class="credit-title">
-                    สามเณร รัฐภูมิ สร้อยคำ
-                </div>
-<div class="credit-role">
-                    SYSTEM DEVELOPER
-                </div>
-</div>
-</div><div class="credit-box credit-advisor">
-<div class="credit-icon credit-image-button" onclick="openCreditImage(
-                    'img/ฐาปกรณ์01.jpg',
-                    'นาย ฐาปกรณ์ ตรีชัยศรี'
-                )">
-<img alt="ครูที่ปรึกษา" decoding="async" height="64" loading="lazy" src="img/ฐาปกรณ์01.jpg" width="64"/>
-</div>
-<div class="credit-content">
-<div class="credit-label">
-                    ADVISOR
-                </div>
-<div class="credit-title">
-                    นาย ฐาปกรณ์ ตรีชัยศรี
-                </div>
-<div class="credit-role">
-                    PROJECT ADVISOR
-                </div>
-</div>
-</div></div>
-<div class="credit-bottom">
-<span class="credit-status-dot"></span>
-<span>
-            LOCAL AIR QUALITY AND PM2.5 MONITORING STATION
-        </span>
-<span class="credit-line"></span>
-<span>
-            SYSTEM CREDIT
-        </span>
-</div>
-</footer>
 <!-- =========================================================
 CREDIT IMAGE VIEWER
 ========================================================= -->
