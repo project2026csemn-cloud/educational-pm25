@@ -8516,63 +8516,40 @@ setInterval(updateNavigationDashboard,2000);
 
 
 // =========================================================
-// V14 — MOBILE HELP POSITION SAFETY
-// Keeps every help popover inside the viewport on tablets/phones.
+// V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
 // =========================================================
 (function(){
-  function normalizeMobileHelp(){
-    if(!window.matchMedia("(max-width: 1023px)").matches) return;
+  function fitHelpToViewport(){
+    const popover=document.getElementById("helpPopover");
+    if(!popover || !popover.classList.contains("active")) return;
 
-    document.querySelectorAll(".help-popover").forEach(function(popover){
-      const visible =
-        popover.classList.contains("active") ||
-        popover.classList.contains("is-open") ||
-        popover.getAttribute("aria-hidden")==="false" ||
-        getComputedStyle(popover).display!=="none";
-
-      if(!visible) return;
-
+    if(window.matchMedia("(max-width: 1023px)").matches){
       popover.style.setProperty("position","fixed","important");
-      popover.style.setProperty("top","max(10px, env(safe-area-inset-top))","important");
-      popover.style.setProperty("right","10px","important");
-      popover.style.setProperty("bottom","max(10px, env(safe-area-inset-bottom))","important");
-      popover.style.setProperty("left","10px","important");
+      popover.style.setProperty("top","max(8px, env(safe-area-inset-top))","important");
+      popover.style.setProperty("right","8px","important");
+      popover.style.setProperty("bottom","max(8px, env(safe-area-inset-bottom))","important");
+      popover.style.setProperty("left","8px","important");
       popover.style.setProperty("width","auto","important");
       popover.style.setProperty("max-width","none","important");
       popover.style.setProperty("max-height","none","important");
       popover.style.setProperty("transform","none","important");
       popover.style.setProperty("margin","0","important");
-    });
+    }else{
+      // Let the desktop CSS own positioning.
+      ["position","top","right","bottom","left","width","max-width","max-height","transform","margin"]
+        .forEach(function(prop){ popover.style.removeProperty(prop); });
+    }
   }
 
-  document.addEventListener("click", function(e){
-    if(e.target.closest(".help-trigger")){
-      requestAnimationFrame(function(){
-        requestAnimationFrame(normalizeMobileHelp);
-      });
-    }
-  }, true);
-
-  window.addEventListener("resize", normalizeMobileHelp, {passive:true});
-  window.addEventListener("orientationchange", function(){
-    setTimeout(normalizeMobileHelp, 80);
+  // Run after the existing .help-button click handler has inserted content.
+  document.addEventListener("click",function(e){
+    if(!e.target.closest(".help-button")) return;
+    requestAnimationFrame(fitHelpToViewport);
   });
 
-  const observer = new MutationObserver(function(mutations){
-    if(!window.matchMedia("(max-width: 1023px)").matches) return;
-    for(const m of mutations){
-      if(m.type==="attributes" && m.target.classList && m.target.classList.contains("help-popover")){
-        normalizeMobileHelp();
-        break;
-      }
-    }
-  });
-
-  document.addEventListener("DOMContentLoaded", function(){
-    document.querySelectorAll(".help-popover").forEach(function(pop){
-      observer.observe(pop,{attributes:true,attributeFilter:["class","style","aria-hidden"]});
-    });
-    normalizeMobileHelp();
+  window.addEventListener("resize",fitHelpToViewport,{passive:true});
+  window.addEventListener("orientationchange",function(){
+    setTimeout(fitHelpToViewport,80);
   });
 })();
 
