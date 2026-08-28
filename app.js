@@ -296,43 +296,96 @@ hour12:false
 return d.toLocaleString("th-TH",opts);
 }
 
-function chartTickText(value){
+// =====================================================
+// ADAPTIVE TIME AXIS
+// มองช่วงยาว = เน้น "วันที่"
+// ซูมเข้า = เพิ่ม "เวลา" อัตโนมัติตามช่วงที่กำลังมอง
+// Tooltip ยังคงแสดงวัน/เวลาเต็มเสมอ
+// =====================================================
+function chartDayKey(value){
 const d=parseDate(value);
-
-if(!d){
-return String(value??"");
+if(!d)return"";
+return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
 }
 
-const longRange=[
-"24h",
-"7d",
-"30d",
-"custom"
-].includes(averageRange);
+function chartVisibleSpanMs(scale){
+const labels=scale?.chart?.data?.labels||[];
+if(!labels.length)return null;
 
-if(longRange){
-return d.toLocaleString(
-"th-TH",
-{
+const rawMin=Number.isFinite(Number(scale?.min))?Number(scale.min):0;
+const rawMax=Number.isFinite(Number(scale?.max))?Number(scale.max):labels.length-1;
+const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(rawMin)));
+const maxIndex=Math.max(0,Math.min(labels.length-1,Math.ceil(rawMax)));
+
+const start=parseDate(labels[minIndex]);
+const end=parseDate(labels[maxIndex]);
+if(!start||!end)return null;
+return Math.abs(end.getTime()-start.getTime());
+}
+
+function chartTickText(value,spanMs=null){
+const d=parseDate(value);
+if(!d)return String(value??"");
+
+const span=Number.isFinite(spanMs)?spanMs:null;
+const DAY=24*60*60*1000;
+const HOUR=60*60*1000;
+
+// 3 วันขึ้นไป: แสดงเป็นวัน เพื่ออ่านกราฟแบบรายวัน
+if(span!==null&&span>=3*DAY){
+return d.toLocaleDateString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short"
+});
+}
+
+// 12 ชั่วโมง - น้อยกว่า 3 วัน: แสดงวัน + เวลา
+if(span!==null&&span>=12*HOUR){
+return d.toLocaleString("th-TH",{
 timeZone:"Asia/Bangkok",
 day:"2-digit",
 month:"short",
 hour:"2-digit",
 minute:"2-digit",
 hour12:false
-}
-);
+});
 }
 
-return d.toLocaleTimeString(
-"th-TH",
-{
+// ซูมลงมาระดับนาที: ใช้เวลาเป็นหลัก
+if(span!==null&&span<60*60*1000){
+return d.toLocaleTimeString("th-TH",{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit",
+hour12:false
+});
+}
+
+return d.toLocaleTimeString("th-TH",{
 timeZone:"Asia/Bangkok",
 hour:"2-digit",
 minute:"2-digit",
 hour12:false
+});
 }
-);
+
+function adaptiveChartTickText(scale,value,index,ticks){
+const raw=scale.getLabelForValue(value);
+const span=chartVisibleSpanMs(scale);
+const text=chartTickText(raw,span);
+
+// ช่วงยาว: ถ้า autoSkip เลือก timestamp หลายจุดในวันเดียวกัน
+// ให้แสดงชื่อวันนั้นเพียงครั้งเดียว เพื่อลดข้อความซ้ำบนแกน X
+const DAY=24*60*60*1000;
+if(span!==null&&span>=3*DAY&&index>0&&Array.isArray(ticks)){
+const prevValue=ticks[index-1]?.value;
+const prevRaw=prevValue==null?null:scale.getLabelForValue(prevValue);
+if(prevRaw&&chartDayKey(prevRaw)===chartDayKey(raw))return"";
+}
+
+return text;
 }
 
 function graphTooltipTitle(items){
@@ -3020,8 +3073,8 @@ maxTicksLimit:mobile?5:10,
 maxRotation:mobile?0:45,
 minRotation:0,
 font:{size:mobile?10:12},
-callback:function(value){
-return chartTickText(this.getLabelForValue(value));
+callback:function(value,index,ticks){
+return adaptiveChartTickText(this,value,index,ticks);
 }
 }
 };
@@ -3077,8 +3130,8 @@ maxTicksLimit:chartTickLimit(),
 maxRotation:0,
 minRotation:0,
 font:{size:chartFontSize()},
-callback:function(value){
-return chartTickText(this.getLabelForValue(value));
+callback:function(value,index,ticks){
+return adaptiveChartTickText(this,value,index,ticks);
 }
 }
 },
@@ -7060,8 +7113,8 @@ maxTicksLimit:isTouch?7:12,
 font:{
 size:isTouch?11:12
 },
-callback:function(value){
-return chartTickText(this.getLabelForValue(value));
+callback:function(value,index,ticks){
+return adaptiveChartTickText(this,value,index,ticks);
 }
 },
 
