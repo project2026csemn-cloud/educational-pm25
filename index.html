@@ -4,8 +4,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร | แผนกเทคโนโลยีสารสนเทศและการสื่อสาร</title>
-<meta content="โครงการสถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ จัดทำโดยวิทยาลัยเสริมทักษะพระภิกษุ สามเณร และแผนกเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น, แสง แนวโน้มย้อนหลัง การคาดการณ์ และการวิเคราะห์คุณภาพอากาศ" name="description"/>
+<title>สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่</title>
+<meta content="ระบบตรวจวัดคุณภาพอากาศและฝุ่น PM2.5 ในระดับพื้นที่ แสดงข้อมูลจาก 3 จุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน แนวโน้ม และการคาดการณ์ 30 นาที" name="description"/>
 <meta content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, แผนกเทคโนโลยีสารสนเทศและการสื่อสาร, โครงงาน PM2.5, สถานีตรวจวัดคุณภาพอากาศ, PM2.5 ระดับพื้นที่, ระบบตรวจวัดคุณภาพอากาศ, PM1.0, PM2.5, PM10, ESP32, IoT, AI คุณภาพอากาศ" name="keywords"/>
 <meta content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" name="author"/>
 <meta content="index, follow" name="robots"/>
@@ -19,17 +19,24 @@
 <meta content="th_TH" property="og:locale"/>
 <meta content="website" property="og:type"/>
 <meta content="Local Air Quality and PM2.5 Monitoring Station" property="og:site_name"/>
-<meta content="สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ | วิทยาลัยเสริมทักษะพระภิกษุ สามเณร | แผนกเทคโนโลยีสารสนเทศและการสื่อสาร" property="og:title"/>
-<meta content="โครงการสถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ จัดทำโดยวิทยาลัยเสริมทักษะพระภิกษุ สามเณร และแผนกเทคโนโลยีสารสนเทศและการสื่อสาร แสดงข้อมูล PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น, แสง แนวโน้มย้อนหลัง การคาดการณ์ และการวิเคราะห์คุณภาพอากาศ" property="og:description"/>
+<meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
+<meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260828-v8" rel="stylesheet"/>
-<link href="img/icon.png" rel="icon" type="image/png"/>
+<link href="style.css?v=20260828-v9" rel="stylesheet"/>
+<link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
+<link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="img/icon.png" rel="shortcut icon" type="image/png"/>
+<meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5" name="application-name"/>
+<meta content="https://project2026csemn-cloud.github.io/educational-pm25/img/icon.png" property="og:image"/>
+<meta content="summary" name="twitter:card"/>
+<meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" name="twitter:title"/>
+<meta content="https://project2026csemn-cloud.github.io/educational-pm25/img/icon.png" name="twitter:image"/>
 
 <script type="application/ld+json">
     {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "สถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่",
+  "name": "สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่",
   "alternateName": "Local Air Quality and PM2.5 Monitoring Station",
   "url": "https://project2026csemn-cloud.github.io/educational-pm25/",
   "description": "โครงการสถานีตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ จัดทำโดยวิทยาลัยเสริมทักษะพระภิกษุ สามเณร และแผนกเทคโนโลยีสารสนเทศและการสื่อสาร",
@@ -711,6 +718,7 @@ DASHBOARD NAVIGATION
 
     <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ตัวแปรที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง (lux)</span></div><p class="about-card-subtext">ตัวแปรแต่ละชนิดมีหน้าที่ต่างกัน จึงไม่ถูกนำมาบวกหรือเฉลี่ยรวมเป็นคะแนนสุขภาพเดียว</p></div></article>
     <article class="glass card about-card"><div class="about-card-icon">⌁</div><div><h2>อุปกรณ์และเซนเซอร์หลัก</h2><p><b>ESP32</b> ควบคุมระบบและการสื่อสาร, <b>PMS3003</b> วัด PM1.0/PM2.5/PM10, <b>AM2315</b> วัดอุณหภูมิและความชื้น และ <b>BH1750</b> วัดความส่องสว่างหน่วย lux</p></div></article>
+    <article class="glass card about-card about-card-wide"><div class="about-card-icon">⌘</div><div><h2>เทคโนโลยีที่ใช้</h2><div class="about-chip-list"><span>ESP32</span><span>ESP-NOW</span><span>Cloudflare Worker</span><span>D1 Database</span><span>GitHub Pages</span><span>Chart.js</span><span>Telegram Bot</span><span>AI Analysis</span></div><p class="about-card-subtext">ส่วนรับข้อมูล ประมวลผล จัดเก็บ แสดงผล และแจ้งเตือนถูกแยกหน้าที่กัน เพื่อให้ระบบตรวจสอบและดูแลได้ง่ายขึ้น</p></div></article>
   </div>
 
   <section class="glass card about-detail-section">
@@ -726,9 +734,29 @@ DASHBOARD NAVIGATION
   <section class="glass card about-detail-section">
     <div class="about-detail-head"><div><div class="overview-eyebrow">DEVICE STATUS RULES</div><h2>กฎสถานะอุปกรณ์ของโครงการ</h2></div><span class="about-standard-badge">Project Rule</span></div>
     <div class="about-status-rules">
-      <div><span class="about-rule-dot is-online"></span><b>ONLINE</b><p>Dashboard แสดงว่าอุปกรณ์ยังติดต่อระบบได้ โดยช่วง Sleep ตามรอบประหยัดพลังงานยังถูกนับเป็น ONLINE บนหน้าเว็บ</p></div>
-      <div><span class="about-rule-dot is-offline"></span><b>OFFLINE</b><p>ถ้าไม่มีการติดต่อใหม่เกิน 6 นาที ระบบจะแสดง Offline ซึ่งเป็นกฎภายในโครงการเพื่อให้สอดคล้องกับรอบวัดและ Sleep</p></div>
+      <div><span class="about-rule-dot is-online"></span><b>ONLINE</b><p>Dashboard แสดงว่าอุปกรณ์ยังอยู่ในรอบการทำงานที่ระบบยืนยันได้ โดยช่วง Sleep ตามแผนประหยัดพลังงานยังนับว่าใช้งานได้บนหน้าเว็บ และจะรอการตื่นตามเวลาที่อุปกรณ์ควรกลับมา</p></div>
+      <div><span class="about-rule-dot is-offline"></span><b>OFFLINE</b><p>ระบบพิจารณาจากรอบการทำงานของอุปกรณ์: ก่อนหลับจุดตรวจวัดแจ้งสถานะ Sleep และระบบทราบเวลาที่ควรตื่น หากพ้นเวลาที่ควรกลับมาพร้อมช่วงเผื่อแล้วยังไม่มีการติดต่อ จึงถือว่าขาดการเชื่อมต่อ ไม่ได้ใช้ตัวเลข 6 นาทีเป็นเกณฑ์หลัก</p></div>
       <div><span class="about-rule-dot is-gateway"></span><b>สถานีรับข้อมูลหลัก (Gateway)</b><p>ถ้าสถานีรับข้อมูลหลักขาดการเชื่อมต่อ Dashboard จะไม่ยืนยันว่าจุดตรวจวัดลูกยัง Online แม้ข้อมูลเดิมจะยังอยู่ในฐานข้อมูล</p></div>
+    </div>
+  </section>
+
+  <section class="glass card about-detail-section">
+    <div class="about-detail-head"><div><div class="overview-eyebrow">ALERT & COMMUNICATION</div><h2>การแจ้งเตือนและการสื่อสารสถานะ</h2></div><span class="about-standard-badge">System Alert</span></div>
+    <div class="about-detail-grid">
+      <article><b>สถานีรับข้อมูลหลัก</b><p>แจ้งเมื่อสถานีรับข้อมูลหลักขาดการเชื่อมต่อและเมื่อกลับมาเชื่อมต่อ เพื่อให้ผู้ใช้ทราบว่าระบบยังรับข้อมูลจากจุดตรวจวัดได้หรือไม่</p></article>
+      <article><b>จุดตรวจวัดแต่ละจุด</b><p>แจ้งเมื่อจุดตรวจวัดไม่กลับมาตามรอบที่ควรตื่น และแจ้งอีกครั้งเมื่อมีการติดต่อใหม่จริง ส่วนการเข้า/ออก Sleep ตามปกติไม่สร้างการแจ้งเตือนรบกวนผู้ใช้</p></article>
+      <article><b>PM2.5 และ Heat Index</b><p>ใช้เป็นตัวหลักสำหรับการแจ้งเตือนด้านสุขภาพแบบทันเวลา โดยแจ้งเมื่อระดับเปลี่ยนเข้าสู่ช่วงที่ควรระวัง/อันตราย และแจ้งเมื่อกลับสู่ระดับปกติ</p></article>
+      <article><b>Telegram</b><p>ใช้เป็นช่องทางแจ้งเหตุสำคัญนอกหน้าเว็บ เช่น การเชื่อมต่อของระบบและระดับที่ควรเฝ้าระวัง เพื่อให้ผู้ดูแลไม่จำเป็นต้องเปิด Dashboard ตลอดเวลา</p></article>
+    </div>
+  </section>
+
+  <section class="glass card about-detail-section">
+    <div class="about-detail-head"><div><div class="overview-eyebrow">SCOPE & LIMITATIONS</div><h2>ขอบเขตและข้อจำกัดของระบบ</h2></div><span class="about-standard-badge">ควรอ่านก่อนตีความ</span></div>
+    <div class="about-detail-grid">
+      <article><b>เป็นการตรวจวัดระดับพื้นที่</b><p>ค่าที่แสดงสะท้อนสภาพแวดล้อมบริเวณติดตั้งเซนเซอร์ทั้ง 3 จุด ไม่ควรใช้แทนค่าของทั้งจังหวัดหรือพื้นที่ที่อยู่ห่างจากจุดตรวจวัด</p></article>
+      <article><b>ไม่ใช่สถานีอ้างอิงของหน่วยงานรัฐ</b><p>ระบบจัดทำเพื่อการศึกษา การติดตาม และการเฝ้าระวังในโครงการ จึงไม่ใช่เครื่องมือรับรองผลมาตรฐานอย่างเป็นทางการ</p></article>
+      <article><b>การคาดการณ์เป็นแนวโน้มระยะสั้น</b><p>Forecast +10/+20/+30 นาทีอาศัยข้อมูลจากสถานีและแบบจำลองเชิงสถิติ เพื่อช่วยมองแนวโน้ม ไม่ใช่พยากรณ์อากาศอย่างเป็นทางการ</p></article>
+      <article><b>ขึ้นกับการเชื่อมต่อและคุณภาพข้อมูล</b><p>หากสถานีรับข้อมูลหลัก อินเทอร์เน็ต หรือเซนเซอร์ขัดข้อง ระบบอาจมีช่วงข้อมูลขาดหาย ซึ่งจะแสดงเป็นไม่มีข้อมูลแทนการสร้างค่า 0 หรือค่าจำลอง</p></article>
     </div>
   </section>
 
@@ -1138,6 +1166,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260828-v8"></script>
+<script defer src="app.js?v=20260828-v9"></script>
 </div></body>
 </html>
