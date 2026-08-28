@@ -8182,3 +8182,95 @@ body > #historyRangePanel.history-range-panel *{
     #page-about .about-credit-section .about-credit-note h2{font-size:19px;}
     #page-about .about-credit-section .about-credit-note p{font-size:13px;}
 }
+
+
+/* =========================================================
+   V8 — HISTORY LABEL READABILITY + MOBILE RANGE MODAL
+   2026-08-28
+   ========================================================= */
+
+/* ช่วงยาวไม่ต้องแสดง timestamp ระดับวินาทีในแถบสรุปใต้กราฟ */
+.history-range-caption .history-range-edge b{
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+}
+.history-range-caption .history-range-center small{
+    white-space:nowrap;
+}
+
+/* มือถือ: ใช้เป็น full-screen sheet เกือบเต็มจอแทนการคำนวณ top:50%.
+   วิธีนี้ไม่ขึ้นกับ layout viewport / address bar ของ browser มือถือ */
+@media (max-width:700px){
+    body.history-range-modal-open{
+        overflow:hidden!important;
+        touch-action:none;
+    }
+
+    /* บนมือถือปิด backdrop-filter เพราะบาง browser สร้าง compositing layer
+       ที่ทำให้ fixed modal ถูก blur/หายตาม backdrop ได้ */
+    body.history-range-modal-open::before{
+        position:fixed!important;
+        inset:0!important;
+        background:rgba(2,8,18,.84)!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+        z-index:999900!important;
+    }
+
+    body > #historyRangePanel.history-range-panel{
+        position:fixed!important;
+        top:max(8px, env(safe-area-inset-top))!important;
+        right:8px!important;
+        bottom:max(8px, env(safe-area-inset-bottom))!important;
+        left:8px!important;
+        width:auto!important;
+        max-width:none!important;
+        height:auto!important;
+        max-height:none!important;
+        margin:0!important;
+        transform:none!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+        border-radius:18px!important;
+        z-index:1000000!important;
+        background:#091827!important;
+    }
+
+    body > #historyRangePanel .history-range-layout{
+        display:block!important;
+    }
+
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick{
+        width:100%!important;
+    }
+
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    /* ปุ่มยกเลิก/ใช้งานอยู่ให้เห็นง่ายแม้เนื้อหายาว */
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+        z-index:4!important;
+        background:#091827!important;
+        box-shadow:0 -10px 24px rgba(2,8,18,.78)!important;
+    }
+
+    .history-range-caption{
+        gap:8px!important;
+    }
+    .history-range-caption .history-range-edge b,
+    .history-range-caption .history-range-center small{
+        white-space:normal!important;
+    }
+}
+
+@media (max-width:390px){
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
