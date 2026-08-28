@@ -7740,3 +7740,166 @@ updateSmart();
 },
 5000
 );
+
+// =====================================================
+// NAVIGATION REDESIGN 2026-08-28
+// UI-only layer. Existing API, status, history, AI and export logic stay unchanged.
+// =====================================================
+const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
+let currentDashboardPage="overview";
+
+function getDashboardPageFromHash(){
+  const raw=String(location.hash||"").replace(/^#/,"").trim().toLowerCase();
+  return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
+}
+
+function openDashboardPage(page,{updateHash=true}={}){
+  page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
+  currentDashboardPage=page;
+  document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
+    panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
+  });
+  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>{
+    const active=btn.dataset.dashboardPage===page;
+    btn.classList.toggle("active",active);
+    btn.setAttribute("aria-current",active?"page":"false");
+  });
+  const links=$("dashboardNavLinks");
+  const toggle=$("dashboardMobileToggle");
+  if(links) links.classList.remove("open");
+  if(toggle) toggle.setAttribute("aria-expanded","false");
+  if(updateHash){
+    const next="#"+page;
+    if(location.hash!==next) history.replaceState(null,"",next);
+  }
+  if(page==="history" && typeof activateHistorySection==="function") activateHistorySection();
+  if(page==="analysis" && typeof activateAISection==="function") activateAISection();
+  if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
+    setTimeout(()=>{
+      try{
+        if(historyChart) historyChart.resize();
+        if(forecastChart) forecastChart.resize();
+        historyGroupCharts.forEach(c=>c?.resize?.());
+        forecastGroupCharts.forEach(c=>c?.resize?.());
+      }catch(e){}
+    },120);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function dashboardAlertCount(){
+  const box=$("alerts");
+  if(!box) return 0;
+  const text=(box.textContent||"").trim();
+  if(!text || /กำลังตรวจสอบ|ไม่พบ|ปกติ|ไม่มี.*เตือน/i.test(text)) return 0;
+  const explicit=box.querySelectorAll(".alert-item,.alert-row,[data-alert]").length;
+  return explicit||1;
+}
+
+function latestActiveNodes(){
+  return [1,2,3].map(getNode).filter(n=>n && ["online","sleep"].includes(getNodeStatus(n)));
+}
+
+function averageLatestField(field){
+  const values=latestActiveNodes().map(n=>finiteNumberOrNull(n[field])).filter(v=>v!==null);
+  if(!values.length) return null;
+  return values.reduce((a,b)=>a+b,0)/values.length;
+}
+
+function newestNodeTime(){
+  const dates=latestNodes.map(n=>parseDate(n?.timestamp||n?.reading_recorded_at||n?.status_recorded_at||n?.last_seen)).filter(Boolean);
+  if(!dates.length) return null;
+  return new Date(Math.max(...dates.map(d=>d.getTime())));
+}
+
+function overviewAdvice(pm25){
+  const g=pm25Guidance(pm25);
+  if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคุณภาพอากาศ";
+  if(g.level==="critical") return "คุณภาพอากาศอยู่ในระดับที่ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
+  if(g.level==="warning") return "ควรเฝ้าระวังฝุ่น PM2.5 โดยเฉพาะผู้ที่ไวต่อมลพิษทางอากาศ";
+  if(g.label==="ปานกลาง") return "คุณภาพอากาศโดยรวมอยู่ในระดับปานกลาง สามารถติดตามกิจกรรมได้ตามความเหมาะสม";
+  return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
+}
+
+function updateNavigationDashboard(){
+  const pm25=averageLatestField("pm25");
+  const temp=averageLatestField("temperature");
+  const hum=averageLatestField("humidity");
+  const guide=pm25Guidance(pm25);
+  const active=activeCount();
+
+  if($("overviewPM25")) $("overviewPM25").textContent=pm25===null?"--":fmt(pm25);
+  if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
+  if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
+  if($("overviewActiveNodes")) $("overviewActiveNodes").textContent=`${active} / ${TOTAL_NODES}`;
+  if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
+
+  const qb=$("overviewQualityBadge");
+  if(qb){
+    qb.textContent=guide.label||"รอข้อมูล";
+    qb.className="overview-quality-badge "+(guide.level==="critical"?"is-critical":guide.level==="warning"?"is-warning":guide.level==="normal"?"is-normal":"is-waiting");
+  }
+
+  const newest=newestNodeTime();
+  if($("overviewLastUpdated")){
+    $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${newest.toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})} น.`:"อัปเดตล่าสุด: --";
+  }
+
+  for(let i=1;i<=3;i++){
+    const node=getNode(i);
+    const st=getNodeDisplayStatus(node);
+    const dot=$("overviewNodeDot"+i);
+    const label=$("overviewNodeStatus"+i);
+    if(dot) dot.className=`overview-node-dot ${st}`;
+    if(label){
+      const t=node?.timestamp?thaiTime(node.timestamp):"--";
+      label.textContent=st==="online"?`ONLINE • ${t}`:"OFFLINE";
+    }
+  }
+
+  const systemOnline=apiConnectionOnline && motherOnline();
+  const navDot=$("navSystemDot");
+  const navText=$("navSystemStatus");
+  if(navDot) navDot.className=`dashboard-system-dot ${systemOnline?"is-online":"is-offline"}`;
+  if(navText) navText.textContent=!apiConnectionOnline?"API ขัดข้อง":systemOnline?`ระบบปกติ • ${active}/${TOTAL_NODES}`:"Gateway Offline";
+
+  const sourceAlerts=$("alerts");
+  const overviewAlerts=$("overviewAlerts");
+  if(sourceAlerts&&overviewAlerts) overviewAlerts.innerHTML=sourceAlerts.innerHTML;
+  const count=dashboardAlertCount();
+  const badge=$("navAlertBadge");
+  if(badge){
+    badge.textContent=String(count);
+    badge.classList.toggle("hidden",count===0);
+  }
+}
+
+function bindDashboardNavigation(){
+  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.dashboardPage)));
+  document.querySelectorAll("[data-go-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.goPage)));
+  document.querySelectorAll("[data-node-jump]").forEach(btn=>btn.addEventListener("click",()=>{
+    const n=btn.dataset.nodeJump;
+    openDashboardPage("monitoring");
+    setTimeout(()=>{
+      const card=$("nodeCard"+n);
+      if(!card) return;
+      card.scrollIntoView({behavior:"smooth",block:"center"});
+      card.classList.remove("navigation-highlight");
+      void card.offsetWidth;
+      card.classList.add("navigation-highlight");
+      setTimeout(()=>card.classList.remove("navigation-highlight"),1700);
+    },180);
+  }));
+  const toggle=$("dashboardMobileToggle");
+  const links=$("dashboardNavLinks");
+  if(toggle&&links) toggle.addEventListener("click",()=>{
+    const open=links.classList.toggle("open");
+    toggle.setAttribute("aria-expanded",open?"true":"false");
+  });
+  window.addEventListener("hashchange",()=>openDashboardPage(getDashboardPageFromHash(),{updateHash:false}));
+  openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
+}
+
+bindDashboardNavigation();
+updateNavigationDashboard();
+setInterval(updateNavigationDashboard,2000);
