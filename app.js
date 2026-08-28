@@ -449,16 +449,47 @@ if(chosen.length&&chosen.at(-1).value!==maxIndex&&span<3*DAY){
 chosen.push({value:maxIndex});
 }
 
-// จอเล็กไม่ยัด label แน่นเกินไป แต่ช่วงรายวันยังพยายามคงวันต่อวัน
-const maxTicks=window.innerWidth<=640?8:mode==="day"?35:14;
+// จำกัด tick ตาม "ความกว้างจริงของกราฟ" ไม่ใช่แค่ความกว้างหน้าจอ
+// สำคัญกับกราฟย่อย 3 ช่อง เพราะแม้ Desktop จะกว้าง แต่ canvas แต่ละช่องยังแคบ
+const scaleWidth=Math.max(1,Number(scale?.width||scale?.chart?.width||0));
+const minGapPx=mode==="day"?82:72;
+const maxTicksByWidth=Math.max(2,Math.floor(scaleWidth/minGapPx));
+const hardMax=window.innerWidth<=640?5:mode==="day"?10:12;
+const maxTicks=Math.max(2,Math.min(hardMax,maxTicksByWidth));
+
+let reduced=chosen;
 if(chosen.length>maxTicks){
 const stride=Math.ceil(chosen.length/maxTicks);
-const reduced=chosen.filter((_,i)=>i%stride===0);
+reduced=chosen.filter((_,i)=>i%stride===0);
 if(reduced.at(-1)?.value!==chosen.at(-1)?.value)reduced.push(chosen.at(-1));
-scale.ticks=reduced;
-}else{
-scale.ticks=chosen;
 }
+
+// category scale วางตำแหน่งตาม index ของข้อมูล ไม่ใช่ระยะเวลาจริง
+// ถ้าสองวันที่อยู่คนละวันแต่ index อยู่ใกล้กันมาก label จะชนกันได้
+// จึงกรองซ้ำด้วยระยะพิกเซลโดยประมาณบนแกน X
+const pixelSafe=[];
+let lastPx=-Infinity;
+const axisSpan=Math.max(1,maxIndex-minIndex);
+for(const tick of reduced){
+const px=((Number(tick.value)-minIndex)/axisSpan)*scaleWidth;
+if(px-lastPx>=minGapPx||pixelSafe.length===0){
+pixelSafe.push(tick);
+lastPx=px;
+}
+}
+
+// เก็บปลายช่วงไว้ถ้ามีระยะพอ; ถ้าใกล้ label ก่อนหน้ามากให้แทนตัวก่อนหน้าแทนการซ้อน
+const lastTick=reduced.at(-1);
+if(lastTick&&pixelSafe.at(-1)?.value!==lastTick.value){
+const lastPxWanted=((Number(lastTick.value)-minIndex)/axisSpan)*scaleWidth;
+if(lastPxWanted-lastPx>=minGapPx){
+pixelSafe.push(lastTick);
+}else if(pixelSafe.length>1){
+pixelSafe[pixelSafe.length-1]=lastTick;
+}
+}
+
+scale.ticks=pixelSafe;
 }
 
 function adaptiveChartTickText(scale,value,index,ticks){
@@ -3243,9 +3274,10 @@ const actualCount=forecastStart>=0?forecastStart:labels.length;
 const width=Number(scale?.width||scale?.chart?.width||window.innerWidth||0);
 
 // Forecast ทั้ง 3 จุดเป็นข้อมูลสำคัญ จึงคงไว้เสมอ
-// แต่กราฟที่แคบจะย่อข้อความเพื่อไม่ให้ +10/+20/+30 นาทีชนกัน
+// กราฟย่อยบน Desktop มี canvas แคบกว่าหน้าจอมาก จึงใช้ +10/+20/+30 แบบสั้น
+// ส่วนกราฟใหญ่ยังแสดง +10 นาที / +20 นาที / +30 นาทีเต็ม
 if(/^\+\d+\s*นาที/.test(text)){
-return width<430?text.replace(" นาที",""):text;
+return width<760?text.replace(" นาที",""):text;
 }
 
 const d=parseDate(raw);
@@ -3254,8 +3286,8 @@ if(!d)return text;
 // จำนวน label ของข้อมูลจริงอิงจากความกว้างของ canvas จริง
 // ไม่ใช้แค่ความกว้างหน้าจอ เพราะกราฟ 1/3 บน Desktop ก็อาจแคบได้
 let actualLabelCount=4;
-if(width<430)actualLabelCount=2;
-else if(width<620)actualLabelCount=3;
+if(width<520)actualLabelCount=2;
+else if(width<760)actualLabelCount=3;
 
 const wanted=new Set();
 if(actualCount>0){
@@ -3291,6 +3323,12 @@ function forecastChartOptions(yTitle){
 const base=groupedChartOptions(yTitle);
 base.scales.x={
 grid:{display:false},
+title:{
+display:true,
+text:"เวลา  •  +10 / +20 / +30 = นาทีข้างหน้า",
+font:{size:Math.max(10,chartFontSize()-2),weight:"500"},
+padding:{top:4}
+},
 ticks:{
 autoSkip:false,
 maxRotation:0,
