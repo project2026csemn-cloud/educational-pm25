@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260829-admin-v4" rel="stylesheet"/>
+<link href="style.css?v=20260829-admin-v5" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -1141,7 +1141,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260829-admin-v4"></script>
+<script defer src="app.js?v=20260829-admin-v5"></script>
 </div>
 <!-- =========================================================
 ADMIN MODE
@@ -1197,7 +1197,10 @@ ADMIN MODE
 
         <div class="admin-editor-scroll">
         <section class="admin-tab-panel active" data-admin-panel="devices">
-          <div class="admin-section-head"><h3>จัดการจุดตรวจวัด</h3><p>กำหนดชื่อและรายละเอียดที่ต้องการให้ผู้ใช้งานเห็นบน Dashboard</p></div>
+          <div class="admin-section-head admin-section-head-row">
+<div><h3>จัดการจุดตรวจวัด</h3><p>กำหนดชื่อและรายละเอียดที่ต้องการให้ผู้ใช้งานเห็นบน Dashboard</p></div>
+<button class="admin-reset-button" type="button" data-admin-reset="devices">↺ ค่าเริ่มต้นหมวดนี้</button>
+</div>
           <div class="admin-device-grid">
             <article class="admin-device-card">
               <div class="admin-device-card-head">
@@ -1208,9 +1211,9 @@ ADMIN MODE
                 <span class="admin-device-id">Number 1</span>
               </div>
               <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName1" maxlength="60" placeholder="เช่น จุดตรวจวัด 1"></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation1" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription1" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName1" maxlength="60" placeholder="เช่น จุดตรวจวัด 1"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation1" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription1" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
               </div>
             </article>
             <article class="admin-device-card">
@@ -1222,9 +1225,9 @@ ADMIN MODE
                 <span class="admin-device-id">Number 2</span>
               </div>
               <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName2" maxlength="60" placeholder="เช่น จุดตรวจวัด 2"></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation2" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription2" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName2" maxlength="60" placeholder="เช่น จุดตรวจวัด 2"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation2" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription2" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
               </div>
             </article>
             <article class="admin-device-card">
@@ -1236,33 +1239,39 @@ ADMIN MODE
                 <span class="admin-device-id">Number 3</span>
               </div>
               <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName3" maxlength="60" placeholder="เช่น จุดตรวจวัด 3"></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation3" maxlength="100" placeholder="เช่น บริเวณหอพัก"></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription3" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea></label>
+                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName3" maxlength="60" placeholder="เช่น จุดตรวจวัด 3"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
+                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation3" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
+                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription3" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
               </div>
             </article>
           </div>
         </section>
 
         <section class="admin-tab-panel" data-admin-panel="help">
-          <div class="admin-section-head"><h3>คำอธิบายในปุ่ม ?</h3><p>ข้อความนี้จะแสดงเพิ่มด้านบนของคำอธิบายเดิม เพื่อไม่ลบเนื้อหาหลักโดยไม่ตั้งใจ</p></div>
-          <label class="admin-field"><span>ภาพรวมคุณภาพอากาศ</span><textarea id="adminHelpOverview" maxlength="3000" rows="5"></textarea></label>
-          <label class="admin-field"><span>จุดตรวจวัด</span><textarea id="adminHelpMonitoring" maxlength="3000" rows="5"></textarea></label>
-          <label class="admin-field"><span>แนวโน้มข้อมูลย้อนหลัง</span><textarea id="adminHelpHistory" maxlength="4000" rows="6"></textarea></label>
-          <label class="admin-field"><span>กราฟคาดการณ์ 30 นาที</span><textarea id="adminHelpForecast" maxlength="4000" rows="6"></textarea></label>
+          <div class="admin-section-head admin-section-head-row">
+<div><h3>คำอธิบายในปุ่ม ?</h3><p>ข้อความนี้จะแสดงเพิ่มด้านบนของคำอธิบายเดิม เพื่อไม่ลบเนื้อหาหลักโดยไม่ตั้งใจ</p></div>
+<button class="admin-reset-button" type="button" data-admin-reset="help">↺ ค่าเริ่มต้นหมวดนี้</button>
+</div>
+          <label class="admin-field"><span>ภาพรวมคุณภาพอากาศ</span><textarea id="adminHelpOverview" maxlength="3000" rows="5"></textarea><small class="admin-display-hint">แสดงที่: ภาพรวม → ปุ่ม ? ของภาพรวมคุณภาพอากาศ</small></label>
+          <label class="admin-field"><span>จุดตรวจวัด</span><textarea id="adminHelpMonitoring" maxlength="3000" rows="5"></textarea><small class="admin-display-hint">แสดงที่: จุดตรวจวัด → ปุ่ม ?</small></label>
+          <label class="admin-field"><span>แนวโน้มข้อมูลย้อนหลัง</span><textarea id="adminHelpHistory" maxlength="4000" rows="6"></textarea><small class="admin-display-hint">แสดงที่: สถิติและกราฟ → ปุ่ม ? ของแนวโน้มข้อมูลย้อนหลัง</small></label>
+          <label class="admin-field"><span>กราฟคาดการณ์ 30 นาที</span><textarea id="adminHelpForecast" maxlength="4000" rows="6"></textarea><small class="admin-display-hint">แสดงที่: วิเคราะห์และคาดการณ์ → ปุ่ม ? ของกราฟคาดการณ์ 30 นาที</small></label>
         </section>
 
         <section class="admin-tab-panel" data-admin-panel="about">
-          <div class="admin-section-head"><h3>เกี่ยวกับโครงการ</h3><p>ข้อความสาธารณะที่แสดงในหน้าเกี่ยวกับโครงการ</p></div>
-          <label class="admin-field"><span>หัวข้อหน้า</span><input id="adminAboutHeading" maxlength="120"></label>
-          <label class="admin-field"><span>ข้อความแนะนำโครงการ</span><textarea id="adminAboutIntro" maxlength="1800" rows="8"></textarea></label>
+          <div class="admin-section-head admin-section-head-row">
+<div><h3>เกี่ยวกับโครงการ</h3><p>ข้อความสาธารณะที่แสดงในหน้าเกี่ยวกับโครงการ</p></div>
+<button class="admin-reset-button" type="button" data-admin-reset="about">↺ ค่าเริ่มต้นหมวดนี้</button>
+</div>
+          <label class="admin-field"><span>หัวข้อหน้า</span><input id="adminAboutHeading" maxlength="120"><small class="admin-display-hint">แสดงที่: หน้าเกี่ยวกับโครงการ → หัวข้อด้านบน</small></label>
+          <label class="admin-field"><span>ข้อความแนะนำโครงการ</span><textarea id="adminAboutIntro" maxlength="1800" rows="8"></textarea><small class="admin-display-hint">แสดงใต้หัวข้อหน้าเกี่ยวกับโครงการ</small></label>
         </section>
         </div>
       </div>
 
       <footer class="admin-editor-footer">
         <div class="admin-message hidden" id="adminSaveMessage"></div>
-        <button class="admin-secondary-button" id="adminReloadButton" type="button">โหลดค่าล่าสุด</button>
+        <button class="admin-secondary-button" id="adminReloadButton" type="button">↻ โหลดค่าที่บันทึกไว้</button>
         <button class="admin-primary-button" id="adminSaveButton" type="button">บันทึกการเปลี่ยนแปลง</button>
       </footer>
     </div>
