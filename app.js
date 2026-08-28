@@ -8513,3 +8513,66 @@ function bindDashboardNavigation(){
 bindDashboardNavigation();
 updateNavigationDashboard();
 setInterval(updateNavigationDashboard,2000);
+
+
+// =========================================================
+// V14 — MOBILE HELP POSITION SAFETY
+// Keeps every help popover inside the viewport on tablets/phones.
+// =========================================================
+(function(){
+  function normalizeMobileHelp(){
+    if(!window.matchMedia("(max-width: 1023px)").matches) return;
+
+    document.querySelectorAll(".help-popover").forEach(function(popover){
+      const visible =
+        popover.classList.contains("active") ||
+        popover.classList.contains("is-open") ||
+        popover.getAttribute("aria-hidden")==="false" ||
+        getComputedStyle(popover).display!=="none";
+
+      if(!visible) return;
+
+      popover.style.setProperty("position","fixed","important");
+      popover.style.setProperty("top","max(10px, env(safe-area-inset-top))","important");
+      popover.style.setProperty("right","10px","important");
+      popover.style.setProperty("bottom","max(10px, env(safe-area-inset-bottom))","important");
+      popover.style.setProperty("left","10px","important");
+      popover.style.setProperty("width","auto","important");
+      popover.style.setProperty("max-width","none","important");
+      popover.style.setProperty("max-height","none","important");
+      popover.style.setProperty("transform","none","important");
+      popover.style.setProperty("margin","0","important");
+    });
+  }
+
+  document.addEventListener("click", function(e){
+    if(e.target.closest(".help-trigger")){
+      requestAnimationFrame(function(){
+        requestAnimationFrame(normalizeMobileHelp);
+      });
+    }
+  }, true);
+
+  window.addEventListener("resize", normalizeMobileHelp, {passive:true});
+  window.addEventListener("orientationchange", function(){
+    setTimeout(normalizeMobileHelp, 80);
+  });
+
+  const observer = new MutationObserver(function(mutations){
+    if(!window.matchMedia("(max-width: 1023px)").matches) return;
+    for(const m of mutations){
+      if(m.type==="attributes" && m.target.classList && m.target.classList.contains("help-popover")){
+        normalizeMobileHelp();
+        break;
+      }
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function(){
+    document.querySelectorAll(".help-popover").forEach(function(pop){
+      observer.observe(pop,{attributes:true,attributeFilter:["class","style","aria-hidden"]});
+    });
+    normalizeMobileHelp();
+  });
+})();
+
