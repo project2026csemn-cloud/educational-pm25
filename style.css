@@ -10460,3 +10460,49 @@ img,svg,canvas{max-width:100%}
         font-size:10px;
     }
 }
+
+
+/* =========================================================
+   ADMIN MODE V5 — category reset + display hints
+   ========================================================= */
+.admin-section-head-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+}
+.admin-section-head-row>div{min-width:0}
+.admin-reset-button{
+    flex:0 0 auto;
+    min-height:36px;
+    padding:7px 10px;
+    border:1px solid rgba(251,191,36,.22);
+    border-radius:10px;
+    background:rgba(245,158,11,.07);
+    color:#fcd34d;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+}
+.admin-reset-button:hover{
+    border-color:rgba(251,191,36,.45);
+    background:rgba(245,158,11,.12);
+}
+.admin-display-hint{
+    display:block;
+    margin-top:5px;
+    color:#64748b;
+    font-size:10.5px;
+    font-weight:600;
+    line-height:1.45;
+}
+.admin-field:focus-within .admin-display-hint{color:#7dd3fc}
+@media(max-width:640px){
+    .admin-section-head-row{gap:10px}
+    .admin-reset-button{
+        min-height:34px;
+        padding:6px 8px;
+        font-size:9.5px;
+    }
+    .admin-display-hint{font-size:9.5px}
+}
