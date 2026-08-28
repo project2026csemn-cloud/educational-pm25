@@ -8274,7 +8274,78 @@ body > #historyRangePanel.history-range-panel *{
         grid-template-columns:1fr!important;
     }
 }
-\n\n/* =========================================================\n   V9 FINAL RESPONSIVE / MODAL HARDENING\n   ========================================================= */\n\n/* Keep all dashboard dialogs above chart/canvas stacking contexts. */\n#historyRangePanel,\n#exportModal,\n#helpModal,\n#chartExpandModal,\n#creditImageModal {\n    position: fixed;\n    isolation: isolate;\n}\n\n/* Avoid tiny secondary text on compact screens. */\n@media (max-width: 760px) {\n    body { font-size: 14px; }\n\n    .text-\\[10px\\],\n    .text-\\[11px\\],\n    .text-xs,\n    .overview-eyebrow,\n    .about-card-subtext,\n    .current-environment-detail,\n    .ai-intelligence-statusline,\n    .credit-label {\n        font-size: 12px !important;\n        line-height: 1.5 !important;\n    }\n\n    .dashboard-nav-link,\n    button, select, input {\n        min-height: 42px;\n    }\n\n    #historyRangePanel {\n        inset: 0 !important;\n        width: 100vw !important;\n        height: 100dvh !important;\n        max-width: none !important;\n        max-height: none !important;\n        margin: 0 !important;\n        transform: none !important;\n        overflow: auto !important;\n        overscroll-behavior: contain;\n        z-index: 2147483000 !important;\n    }\n\n    #historyRangePanel .history-range-dialog,\n    #historyRangePanel .range-calendar-panel,\n    #historyRangePanel .history-range-panel-inner {\n        width: min(100% - 20px, 680px) !important;\n        max-width: 680px !important;\n        margin: max(10px, env(safe-area-inset-top)) auto max(10px, env(safe-area-inset-bottom)) !important;\n    }\n\n    .about-detail-grid,\n    .about-interpretation-grid,\n    .about-supporting-grid {\n        grid-template-columns: 1fr !important;\n    }\n}\n\n@media (min-width: 761px) and (max-width: 1100px) {\n    .about-detail-grid,\n    .about-interpretation-grid {\n        grid-template-columns: repeat(2, minmax(0, 1fr));\n    }\n}\n
+
+
+/* =========================================================
+   V9 FINAL RESPONSIVE / MODAL HARDENING
+   ========================================================= */
+
+/* Keep all dashboard dialogs above chart/canvas stacking contexts. */
+#historyRangePanel,
+#exportModal,
+#helpModal,
+#chartExpandModal,
+#creditImageModal {
+    position: fixed;
+    isolation: isolate;
+}
+
+/* Avoid tiny secondary text on compact screens. */
+@media (max-width: 760px) {
+    body { font-size: 14px; }
+
+    .text-\\[10px\\],
+    .text-\\[11px\\],
+    .text-xs,
+    .overview-eyebrow,
+    .about-card-subtext,
+    .current-environment-detail,
+    .ai-intelligence-statusline,
+    .credit-label {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+    .dashboard-nav-link,
+    button, select, input {
+        min-height: 42px;
+    }
+
+    #historyRangePanel {
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 !important;
+        transform: none !important;
+        overflow: auto !important;
+        overscroll-behavior: contain;
+        z-index: 2147483000 !important;
+    }
+
+    #historyRangePanel .history-range-dialog,
+    #historyRangePanel .range-calendar-panel,
+    #historyRangePanel .history-range-panel-inner {
+        width: min(100% - 20px, 680px) !important;
+        max-width: 680px !important;
+        margin: max(10px, env(safe-area-inset-top)) auto max(10px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .about-detail-grid,
+    .about-interpretation-grid,
+    .about-supporting-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+    .about-detail-grid,
+    .about-interpretation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 
 /* =========================================================
    HISTORY NODE COMPARISON — 2026-08-28
@@ -8454,4 +8525,270 @@ body > #historyRangePanel.history-range-panel *{
 @media(max-width:640px){
   .forecast-accuracy-note{padding:11px 12px;gap:10px}
   .forecast-accuracy-note span{font-size:11px}
+}
+
+
+/* =========================================================
+   V11 MOBILE UX / READABILITY / HELP CONSOLIDATION
+   Final override layer for compact screens.
+   ========================================================= */
+html,body{max-width:100%;overflow-x:clip}
+.section-title-with-help{min-width:0}
+.overview-title-help,.chart-title-with-help{display:flex;align-items:center;gap:10px;min-width:0}
+.chart-title-with-help .chart-zone-title{min-width:0}
+.forecast-display-panel-compact{padding:12px 14px!important}
+.forecast-display-panel-compact .forecast-display-controls{width:100%;margin:0!important}
+
+/* Important secondary text should never be microscopic. */
+.monitoring-status-label,
+.monitoring-status-hint,
+.current-environment-detail,
+.history-range-caption,
+.metric-chart-subtitle,
+.chart-series-controls-help,
+.ai-result-summary,
+.ai-observation,
+.ai-recommendation,
+.ai-forecast-details,
+.ai-forecast-subtitle,
+.ai-forecast-generated,
+.ai-meta-row,
+.ai-analysis-footer,
+.about-reader-card p,
+.about-reading-tip span,
+.credit-subtitle{font-size:max(12px,.78rem);line-height:1.55}
+
+@media (max-width:760px){
+  html,body{width:100%;overflow-x:clip}
+  body{font-size:15px!important;line-height:1.55}
+  body>.max-w-\[1800px\]{padding:10px!important}
+
+  /* Header */
+  header.glass.card{padding:13px!important;margin-bottom:10px!important;gap:10px!important}
+  header .flex.items-center.gap-4{gap:11px!important;align-items:center!important}
+  header img.w-20{width:54px!important;height:54px!important}
+  header .text-xl{font-size:17px!important;line-height:1.35!important}
+  header .text-sm{font-size:13px!important;line-height:1.5!important}
+
+  /* Decorative English eyebrows are unnecessary on a phone. */
+  .overview-eyebrow{display:none!important}
+
+  /* Navigation: never truncate the status message. */
+  .dashboard-nav{top:max(4px,env(safe-area-inset-top))!important;margin-bottom:12px!important}
+  .dashboard-nav-inner{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;gap:8px!important;padding:8px!important;align-items:center!important}
+  .dashboard-mobile-toggle{grid-column:1!important;min-height:44px!important;font-size:14px!important}
+  .dashboard-system-pill{grid-column:2!important;justify-self:stretch!important;justify-content:center!important;max-width:none!important;min-width:0!important;min-height:44px!important;padding:7px 10px!important;font-size:12.5px!important;line-height:1.3!important;white-space:normal!important;text-align:center!important;overflow:visible!important;text-overflow:clip!important}
+  #navSystemStatus{min-width:0;overflow-wrap:anywhere}
+  .dashboard-nav-links{grid-column:1/-1!important;width:100%!important;margin:0!important}
+  .dashboard-nav-link{min-height:46px!important;font-size:15px!important;padding:11px 13px!important}
+
+  /* Page headings */
+  .dashboard-page-heading{margin:6px 0 12px!important}
+  .dashboard-page-heading h1{font-size:24px!important;line-height:1.3!important}
+  .dashboard-page-heading p{font-size:14px!important;line-height:1.65!important;margin-top:5px!important}
+
+  /* Overview */
+  .overview-hero{padding:16px!important;gap:15px!important}
+  .overview-title-row{display:block!important}
+  .overview-title-help{align-items:flex-start!important}
+  .overview-title{font-size:24px!important;line-height:1.3!important}
+  .overview-subtitle{font-size:14px!important;line-height:1.65!important;margin-top:6px!important}
+  .overview-quality-badge{margin-top:11px!important;font-size:14px!important;min-height:38px!important;padding:8px 11px!important}
+  .overview-guidance{font-size:15px!important;line-height:1.7!important;margin-top:13px!important}
+  .overview-freshness{font-size:13px!important;line-height:1.5!important;margin-top:10px!important}
+  .overview-main-value{padding:13px 14px!important}
+  .overview-main-label{font-size:13px!important}
+  .overview-main-value strong{font-size:42px!important;line-height:1.05!important}
+  .overview-main-unit{font-size:14px!important}
+  .overview-metrics-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .overview-metric-card{min-height:0!important;padding:14px!important}
+  .overview-metric-card>span{font-size:14px!important}
+  .overview-metric-card>b{font-size:24px!important;line-height:1.2!important}
+  .overview-metric-card small{font-size:13px!important}
+  .overview-section-head{gap:9px!important;margin-top:18px!important}
+  .overview-section-head h2,.overview-alert-head h2{font-size:19px!important;line-height:1.35!important}
+  .overview-link-button{font-size:14px!important;width:100%!important;justify-content:center!important;min-height:42px!important}
+  .overview-node-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .overview-node-card{min-height:62px!important;padding:12px 13px!important}
+  .overview-node-card b{font-size:15px!important}
+  .overview-node-card small{font-size:13px!important}
+
+  /* Summary */
+  .smart-summary-card{padding:15px!important}
+  .smart-summary-header{align-items:flex-start!important}
+  .smart-summary-mode{display:none!important}
+  .smart-summary-body{font-size:14px!important;line-height:1.65!important}
+  .smart-summary-headline{font-size:17px!important}
+  .smart-summary-stat-label{font-size:12px!important;letter-spacing:.04em!important}
+  .smart-summary-stat-value{font-size:14px!important}
+  .smart-summary-stat-sub{font-size:12px!important}
+  .smart-summary-activity{font-size:14px!important}
+  .smart-summary-note{font-size:13px!important}
+
+  /* Monitoring */
+  .monitoring-card{padding:15px!important}
+  .monitoring-card>.flex.justify-between{display:block!important}
+  .monitoring-status-cluster{grid-template-columns:1fr!important;min-width:0!important;width:100%!important;margin-top:12px!important}
+  .monitoring-status-card{padding:12px 13px!important}
+  .monitoring-status-label{font-size:13px!important}
+  .monitoring-status-value,.monitoring-node-count-value{font-size:16px!important}
+  .monitoring-status-hint{font-size:13px!important;line-height:1.55!important}
+  .node{padding:14px!important}
+  .node .font-black{font-size:17px!important}
+  .node [id$="status"]{font-size:13px!important}
+  .badge{font-size:12.5px!important;min-height:32px!important}
+
+  /* History controls and statistics */
+  .historical-section{padding:15px!important}
+  .historical-section h2{font-size:20px!important}
+  .history-toolbar{display:grid!important;grid-template-columns:1fr!important;width:100%!important;gap:9px!important;margin-top:2px!important}
+  .history-toolbar>select,.history-toolbar>.relative,.history-toolbar>button{width:100%!important;min-width:0!important}
+  .history-metric-select,.history-toolbar-button{min-height:46px!important;font-size:15px!important}
+  #historyRangeButton{width:100%!important;justify-content:space-between!important}
+  .history-export-button{justify-content:center!important}
+  .historical-section>.soft{padding:14px!important}
+  .historical-section>.soft .grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px 12px!important}
+  .historical-section>.soft .grid-cols-5>div:last-child{grid-column:1/-1!important}
+  .historical-section>.soft .grid-cols-5 span{font-size:13px!important}
+  .historical-section>.soft .grid-cols-5 b{font-size:21px!important;margin-top:4px!important;overflow-wrap:anywhere}
+  #selectedMetricLabel{font-size:14px!important}
+
+  /* Charts */
+  .dashboard-charts-zone{grid-template-columns:1fr!important;gap:12px!important}
+  .dashboard-chart-card{padding:14px!important;overflow:hidden!important}
+  .chart-zone-heading{margin-bottom:8px!important}
+  .chart-title-with-help{justify-content:space-between!important;align-items:center!important}
+  .chart-zone-title{font-size:18px!important;line-height:1.35!important}
+  .chart-zone-subtitle{display:none!important}
+  .bottom-chart-wrap{padding:10px!important;margin-top:8px!important}
+  .chart-render-area{width:100%!important;min-width:0!important;min-height:300px!important;overflow:hidden!important}
+  .chart-render-area canvas{max-width:100%!important}
+  .metric-chart-card{padding:12px!important}
+  .metric-chart-title{font-size:16px!important}
+  .metric-chart-subtitle{font-size:13px!important}
+  .metric-chart-legend{font-size:13px!important;gap:7px!important;flex-wrap:wrap!important}
+  .chart-series-controls{gap:7px!important}
+  .chart-series-button,.chart-series-single-label,.chart-series-show-all{font-size:13px!important;min-height:42px!important}
+  .history-range-caption{font-size:13px!important;line-height:1.5!important;grid-template-columns:1fr!important;text-align:left!important}
+  .history-range-caption>*{text-align:left!important}
+
+  /* Forecast face: only controls stay visible; explanation lives in ?. */
+  .forecast-display-panel{padding:11px!important;margin-top:8px!important}
+  .forecast-display-copy{display:none!important}
+  .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;min-width:0!important}
+  .forecast-actual-label,.forecast-toggle-name{font-size:14px!important}
+  .forecast-actual-note,.forecast-toggle-status{font-size:12px!important}
+  .forecast-switch{min-height:42px!important;flex-shrink:0!important}
+  .forecast-accuracy-note{display:none!important}
+
+  /* Analysis: make meaningful text readable; hide decorative micro labels. */
+  .ai-forecast-kicker,.forecast-base-label{display:none!important}
+  .ai-forecast-topbar{padding:13px!important}
+  .ai-forecast-subtitle{font-size:13px!important}
+  .ai-forecast-status{font-size:13px!important;min-height:36px!important}
+  .ai-forecast-refresh,.ai-refresh-button{font-size:14px!important;min-height:44px!important}
+  .ai-forecast-details,.ai-result-summary,.ai-observation,.ai-recommendation{font-size:14px!important;line-height:1.7!important}
+  .ai-forecast-headline,.ai-result-headline{font-size:17px!important}
+  .ai-forecast-label,.ai-result-label{font-size:12px!important;letter-spacing:.03em!important}
+  .ai-forecast-generated,.ai-generated-at,.ai-meta-row,.ai-analysis-footer{font-size:12px!important;line-height:1.5!important}
+  .ai-confidence small{font-size:11px!important;line-height:1.45!important}
+
+  /* Help becomes a readable near-fullscreen sheet. */
+  .help-popover{position:fixed!important;inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;border-radius:18px!important;overflow:hidden!important}
+  .help-popover-header{position:sticky!important;top:0!important;z-index:2!important;padding:14px 15px!important;background:#091827!important}
+  .help-popover-eyebrow{display:none!important}
+  .help-popover-header h3{font-size:19px!important;line-height:1.35!important}
+  .help-popover-close{width:44px!important;height:44px!important;font-size:24px!important}
+  .help-popover-body{padding:14px 14px 20px!important;font-size:15px!important;line-height:1.75!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+  .help-intro-card{padding:14px!important}
+  .help-intro-card b{font-size:16px!important}
+  .help-intro-card span{font-size:14px!important}
+  .help-popover-body .help-section{padding:14px!important;margin-bottom:11px!important}
+  .help-popover-body .help-section h4{font-size:16px!important}
+  .help-popover-body .help-section p{font-size:14px!important;line-height:1.75!important}
+  .help-simple-grid{grid-template-columns:1fr!important}
+  .help-simple-grid b,.help-choice-list b,.help-steps b{font-size:14px!important}
+  .help-simple-grid span,.help-choice-list span,.help-steps small,.help-muted{font-size:13px!important;line-height:1.65!important}
+  .help-warning,.help-tip span{font-size:13.5px!important;line-height:1.7!important}
+  .help-steps li{align-items:flex-start!important}
+  .help-steps li>span{flex:0 0 30px!important;width:30px!important;height:30px!important;font-size:13px!important}
+
+  /* Date-range modal */
+  body>#historyRangePanel.history-range-panel{inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-height:none!important;border-radius:18px!important;padding:0!important}
+  #historyRangePanel .history-range-calendar{padding:14px!important}
+  #historyRangePanel .history-range-quick{padding:12px 14px!important}
+  #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #rangeCalendarTitle{font-size:17px!important}
+  #rangeCalendarGrid .range-calendar-day{min-height:42px!important;font-size:14px!important}
+  #historyRangePanel .text-\[11px\],#historyRangePanel .text-xs{font-size:13px!important}
+  #historyRangePanel input{font-size:16px!important;min-height:42px!important}
+
+  /* Export modal */
+  .export-modal{padding:8px!important}
+  .export-modal-dialog{width:calc(100vw - 16px)!important;max-width:none!important;max-height:calc(100dvh - 16px)!important}
+  .export-modal-title{font-size:19px!important}
+  .export-modal-subtitle,.export-summary-note,.export-preview-note,.export-field>span{font-size:13px!important;line-height:1.55!important}
+  .export-date-grid{grid-template-columns:1fr!important}
+  .export-date-arrow{transform:rotate(90deg);justify-self:center}
+  .export-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
+  .export-table{font-size:13px!important;min-width:700px!important}
+  .export-modal-footer{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .export-cancel-button,.export-excel-button{font-size:14px!important;min-height:46px!important}
+
+  /* About / credits */
+  .about-reader-card p,.about-reading-tip span,.about-detail-section p,.about-detail-section li{font-size:14px!important;line-height:1.75!important}
+  .about-reader-card b,.about-card h2{font-size:16px!important}
+  .credit-label,.credit-role,.credit-bottom{display:none!important}
+  .credit-title{font-size:15px!important}
+  .credit-subtitle{font-size:13px!important}
+  .credit-link{font-size:13px!important;min-height:40px!important}
+}
+
+@media (max-width:390px){
+  body>.max-w-\[1800px\]{padding:8px!important}
+  header img.w-20{width:48px!important;height:48px!important}
+  header .text-xl{font-size:16px!important}
+  .dashboard-nav-inner{grid-template-columns:1fr!important}
+  .dashboard-mobile-toggle,.dashboard-system-pill{grid-column:1!important;width:100%!important}
+  .dashboard-system-pill{justify-self:stretch!important}
+  .overview-title{font-size:22px!important}
+  .overview-main-value strong{font-size:38px!important}
+  .historical-section>.soft .grid-cols-5{grid-template-columns:1fr!important}
+  .historical-section>.soft .grid-cols-5>div:last-child{grid-column:auto!important}
+  #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:1fr!important}
+  .export-modal-footer{grid-template-columns:1fr!important}
+  .chart-render-area{min-height:280px!important}
+}
+
+@media (min-width:761px) and (max-width:1100px){
+  .dashboard-charts-zone{grid-template-columns:1fr!important}
+  .history-toolbar{flex-wrap:wrap!important}
+  .history-toolbar>*{flex:1 1 180px!important}
+  .help-popover{width:min(680px,calc(100vw - 32px))!important;max-height:82vh!important}
+}
+
+@media (orientation:landscape) and (max-height:600px) and (max-width:1000px){
+  .help-popover{inset:6px!important}
+  .help-popover-body{padding-bottom:16px!important}
+  body>#historyRangePanel.history-range-panel{inset:6px!important}
+  .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
+}
+
+/* V11.1 — final tiny-text and header-brand guard */
+@media (max-width:760px){
+  .text-\[8px\],.text-\[9px\],.text-\[10px\],.text-\[11px\],.text-xs{
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+  header .flex.items-center.gap-4>div:first-child{
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    flex:0 0 auto!important;
+  }
+}
+@media(max-width:390px){
+  header img.w-20{width:44px!important;height:44px!important}
+  header .flex.items-center.gap-4{align-items:flex-start!important}
 }
