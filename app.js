@@ -523,20 +523,53 @@ firstData&&firstData>w.start
 
 const displayEnd=w.end;
 
+const spanMs=Math.max(0,displayEnd.getTime()-displayStart.getTime());
+const DAY=24*60*60*1000;
+
+const edgeText=(d)=>{
+if(spanMs>=3*DAY){
+return d.toLocaleDateString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+year:"numeric"
+});
+}
+return d.toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+});
+};
+
+const latestText=lastData
+?lastData.toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+})
+:null;
+
 el.innerHTML=
 `<div class="history-range-edge history-range-edge-start">
 <span>เริ่ม</span>
-<b>${esc(thaiChartDateTime(displayStart,false))}</b>
+<b>${esc(edgeText(displayStart))}</b>
 </div>
 <div class="history-range-center">
 <span>${esc(rangeLabel())}</span>
-${lastData
-?`<small>ข้อมูลล่าสุด ${esc(thaiChartDateTime(lastData,false))}</small>`
+${latestText
+?`<small>ข้อมูลล่าสุด ${esc(latestText)}</small>`
 :`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
 </div>
 <div class="history-range-edge history-range-edge-end">
 <span>${averageRange==="custom"?"สิ้นสุด":"ถึงปัจจุบัน"}</span>
-<b>${esc(thaiChartDateTime(displayEnd,false))}</b>
+<b>${esc(edgeText(displayEnd))}</b>
 </div>`;
 }
 
@@ -3233,6 +3266,59 @@ grid:{color:"rgba(148,163,184,.08)"}
 }
 };
 }
+function forecastTickText(scale,value,index,ticks){
+const raw=scale.getLabelForValue(value);
+const text=String(raw??"");
+
+// จุดคาดการณ์ต้องอ่านได้ชัดเสมอ
+if(/^\+\d+\s*นาที/.test(text))return text;
+
+const d=parseDate(raw);
+if(!d)return text;
+
+const labels=scale?.chart?.data?.labels||[];
+const forecastStart=labels.findIndex(v=>/^\+\d+\s*นาที/.test(String(v??"")));
+const actualCount=forecastStart>=0?forecastStart:labels.length;
+const mobile=isMobileChart();
+
+// แสดงข้อมูลจริงแค่ไม่กี่จุด: ต้นช่วง / กลางช่วง / ปลายช่วง
+const wanted=new Set();
+if(actualCount>0){
+wanted.add(0);
+wanted.add(Math.max(0,actualCount-1));
+const divisions=mobile?2:3;
+for(let i=1;i<divisions;i++){
+wanted.add(Math.round((actualCount-1)*i/divisions));
+}
+}
+
+if(!wanted.has(Number(value)))return"";
+
+return d.toLocaleTimeString("th-TH",{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+});
+}
+
+function forecastChartOptions(yTitle){
+const base=groupedChartOptions(yTitle);
+base.scales.x={
+grid:{display:false},
+ticks:{
+autoSkip:false,
+maxRotation:0,
+minRotation:0,
+font:{size:chartFontSize()},
+callback:function(value,index,ticks){
+return forecastTickText(this,value,index,ticks);
+}
+}
+};
+return base;
+}
+
 function makeActualDataset(field, values){
 return{
 label:metricLabelFor(field),
@@ -3582,7 +3668,7 @@ datasets.push(makeForecastDataset(field,raw.length,current,pts));
 const c=new Chart($(canvasId),{
 type:"line",
 data:{labels,datasets},
-options:groupedChartOptions(yTitle)
+options:forecastChartOptions(yTitle)
 });
 forecastGroupCharts.push(c);
 };
@@ -3625,7 +3711,7 @@ forecastChart=new Chart($("forecastChart"),{
 type:"line",
 data:{labels,datasets},
 options:{
-...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
+...forecastChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
 plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}
 }
 });
@@ -3884,6 +3970,10 @@ renderRangeCalendar();
 panel.classList.remove(
 "hidden"
 );
+
+// ทุกครั้งที่เปิด ให้เริ่มที่ส่วนบนของหน้าต่างเลือกช่วงเวลา
+// สำคัญกับมือถือ เพราะ panel อาจเคยค้าง scroll จากครั้งก่อน
+panel.scrollTop=0;
 
 document.body.classList.add(
 "history-range-modal-open"
