@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260828-v9" rel="stylesheet"/>
+<link href="style.css?v=20260828-v10" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -125,7 +125,7 @@ DASHBOARD NAVIGATION
     </div>
     <div class="dashboard-system-pill" id="dashboardSystemPill" title="สถานะระบบโดยรวม">
       <span class="dashboard-system-dot is-checking" id="navSystemDot"></span>
-      <span id="navSystemStatus">กำลังตรวจสอบระบบ</span>
+      <span id="navSystemStatus">กำลังตรวจสอบสถานะ</span>
       <span class="dashboard-alert-badge hidden" id="navAlertBadge">0</span>
     </div>
   </div>
@@ -140,7 +140,7 @@ DASHBOARD NAVIGATION
       <div class="overview-title-row">
         <div>
           <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
-          <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดให้อ่านง่าย โดยใช้ข้อมูลจากจุดตรวจวัดที่ระบบยืนยันว่าใช้งานได้</p>
+          <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดให้อ่านง่าย โดยใช้ข้อมูลจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
         </div>
         <div class="overview-quality-badge is-waiting" id="overviewQualityBadge">รอข้อมูล</div>
       </div>
@@ -157,7 +157,7 @@ DASHBOARD NAVIGATION
   <div class="overview-metrics-grid">
     <div class="overview-metric-card glass card"><span>อุณหภูมิเฉลี่ย</span><b id="overviewTemp">--</b><small>°C</small></div>
     <div class="overview-metric-card glass card"><span>ความชื้นเฉลี่ย</span><b id="overviewHumidity">--</b><small>%</small></div>
-    <div class="overview-metric-card glass card"><span>จุดที่ใช้งานได้</span><b id="overviewActiveNodes">0 / 3</b><small>จุดตรวจวัด</small></div>
+    <div class="overview-metric-card glass card"><span>จุดตรวจวัด ONLINE</span><b id="overviewActiveNodes">0 / 3</b><small>จุดตรวจวัด</small></div>
   </div>
 
   <div class="overview-section-head">
@@ -220,7 +220,7 @@ DASHBOARD NAVIGATION
 <div class="monitoring-status-card monitoring-node-count">
 <div class="monitoring-status-label">จุดตรวจวัดที่เชื่อมต่อ</div>
 <div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
-<div class="monitoring-status-hint">จำนวนจุดที่ระบบยืนยันว่าใช้งานได้</div>
+<div class="monitoring-status-hint">จำนวนจุดตรวจวัดที่มีสถานะ ONLINE</div>
 </div>
 </div>
 </div>
@@ -393,7 +393,7 @@ DASHBOARD NAVIGATION
 <span class="current-environment-icon">◎</span>
 </div>
 <b class="current-environment-value" id="currentOverallValue">--</b>
-<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดตรวจวัดที่ใช้งาน</div>
+<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดตรวจวัดที่มีสถานะ ONLINE</div>
 </div>
 <div class="current-environment-item">
 <div class="current-environment-item-top">
@@ -417,7 +417,7 @@ DASHBOARD NAVIGATION
 <button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button>
 </div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
 <span class="current-environment-footer-dot"></span>
-<span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากอุปกรณ์ที่ระบบยืนยันว่าใช้งานได้</span>
+<span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</span>
 </div>
 </div></section>
 </section>
@@ -633,13 +633,13 @@ DASHBOARD NAVIGATION
         </div>
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
 <div class="history-range-caption" id="historyRangeCaption" aria-live="polite"></div>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 แนวโน้มและคาดการณ์ 30 นาที</div><div class="chart-zone-subtitle">เส้นทึบคือข้อมูลที่วัดได้จริง และเส้นประคือค่าคาดการณ์จากข้อมูลย้อนหลังของสถานี</div></div></div><div class="forecast-display-panel" id="forecastGuide">
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><div class="chart-zone-subtitle">เส้นทึบ = ข้อมูลที่วัดได้จริง • เส้นประ = ค่าประมาณ +10, +20 และ +30 นาทีของภาพรวมพื้นที่</div></div></div><div class="forecast-display-panel" id="forecastGuide">
 <div class="forecast-display-copy">
 <div class="forecast-display-title">
-                    การแสดงผลกราฟ
+                    วิธีอ่านกราฟคาดการณ์
                 </div>
 <div class="forecast-display-subtitle">
-                    เปิดหรือซ่อนเส้นคาดการณ์บนกราฟ
+                    ค่าคาดการณ์เป็นค่าประมาณ ไม่ใช่ค่าที่วัดได้ล่วงหน้า
                 </div>
 </div>
 <div class="forecast-display-controls">
@@ -674,11 +674,18 @@ DASHBOARD NAVIGATION
 </button>
 </div>
 </div>
+<div class="forecast-accuracy-note" role="note">
+  <div class="forecast-accuracy-icon">i</div>
+  <div>
+    <b>ความแม่นยำของการคาดการณ์</b>
+    <span>ขณะนี้ยังไม่มีคะแนนความแม่นยำที่ผ่านการประเมินจากการเทียบค่าคาดการณ์กับค่าที่วัดจริงย้อนหลังอย่างเพียงพอ จึงควรใช้กราฟนี้เพื่อดู “แนวโน้มที่อาจเกิดขึ้น” เท่านั้น</span>
+  </div>
+</div>
 </div><div id="forecastChartArea" class="chart-render-area mt-3"><canvas class="bottom-forecast-canvas" id="forecastChart"></canvas></div></div></section>
 </section>
 
 <section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div><h1>วิเคราะห์และคาดการณ์</h1><p>สรุปสถานการณ์ปัจจุบัน วิเคราะห์แนวโน้ม และคาดการณ์ข้อมูลในอีก 30 นาทีจากระบบเดิม</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div><h1>วิเคราะห์และคาดการณ์</h1><p>สรุปสถานการณ์ปัจจุบันและแสดงค่าประมาณแนวโน้มในอีก 30 นาที เพื่อใช้ประกอบการติดตาม ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p></div>
   <section class="glass card p-5 mb-4 ai-intelligence-section">
 <div class="ai-intelligence-header">
 <div>
@@ -1153,6 +1160,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260828-v9"></script>
+<script defer src="app.js?v=20260828-v10"></script>
 </div></body>
 </html>
