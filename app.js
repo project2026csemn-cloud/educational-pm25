@@ -3058,7 +3058,7 @@ boxWidth:mobile?12:18,
 boxHeight:3,
 usePointStyle:false,
 padding:mobile?10:16,
-font:{size:mobile?11:13,weight:"600"}
+font:{size:mobile?12:13,weight:"600"}
 }
 };
 }
@@ -3072,7 +3072,7 @@ autoSkip:true,
 maxTicksLimit:mobile?5:10,
 maxRotation:mobile?0:45,
 minRotation:0,
-font:{size:mobile?10:12},
+font:{size:mobile?12:12},
 callback:function(value,index,ticks){
 return adaptiveChartTickText(this,value,index,ticks);
 }
@@ -3082,7 +3082,7 @@ return adaptiveChartTickText(this,value,index,ticks);
 
 function graphYAxisTicks(){
 const mobile=isMobileChart();
-return{maxTicksLimit:mobile?5:8,font:{size:mobile?10:12}};
+return{maxTicksLimit:mobile?5:8,font:{size:mobile?12:12}};
 }
 
 
@@ -3690,6 +3690,10 @@ button.removeAttribute(
 
 function closeHistoryRangePicker(){
 
+document.body.classList.remove(
+"history-range-modal-open"
+);
+
 const panel=
 $("historyRangePanel");
 
@@ -3783,6 +3787,10 @@ renderRangeCalendar();
 
 panel.classList.remove(
 "hidden"
+);
+
+document.body.classList.add(
+"history-range-modal-open"
 );
 
 button?.setAttribute(
@@ -7111,7 +7119,7 @@ maxRotation:0,
 autoSkip:true,
 maxTicksLimit:isTouch?7:12,
 font:{
-size:isTouch?11:12
+size:isTouch?12:12
 },
 callback:function(value,index,ticks){
 return adaptiveChartTickText(this,value,index,ticks);
@@ -7134,7 +7142,7 @@ color:"rgba(148,163,184,.10)"
 ticks:{
 color:"#94a3b8",
 font:{
-size:isTouch?11:12
+size:isTouch?12:12
 }
 },
 
