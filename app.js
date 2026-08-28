@@ -1323,7 +1323,7 @@ st.textContent=
 "API ERROR";
 
 ac.textContent=
-"ไม่สามารถตรวจสอบระบบได้";
+"ตรวจสอบจำนวนจุดไม่ได้";
 
 }else if(
 motherOnline()
@@ -1336,7 +1336,7 @@ st.textContent=
 "ONLINE";
 
 ac.textContent=
-`${activeCount()} / ${TOTAL_NODES} Nodes active`;
+`${activeCount()} / ${TOTAL_NODES} จุด`;
 
 }else{
 
@@ -1347,7 +1347,7 @@ st.textContent=
 "OFFLINE";
 
 ac.textContent=
-`0 / ${TOTAL_NODES} Nodes active`;
+`0 / ${TOTAL_NODES} จุด`;
 
 }
 
@@ -3828,6 +3828,12 @@ function openHistoryRangePicker(){
 
 const panel=
 $("historyRangePanel");
+
+// ย้าย modal ไปเป็นลูกของ body เพื่อไม่ให้ติด stacking context / content-visibility
+// ของโซนกราฟ ซึ่งเคยทำให้ backdrop อยู่ทับหน้าต่างเลือกเวลา
+if(panel && panel.parentElement !== document.body){
+    document.body.appendChild(panel);
+}
 
 const button=
 $("historyRangeButton");
