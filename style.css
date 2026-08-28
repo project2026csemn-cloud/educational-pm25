@@ -7573,3 +7573,27 @@ body.chart-zoom-open{
         grid-template-columns: 1fr;
     }
 }
+
+
+/* =========================================================
+   ABOUT PROJECT — DETAILED DOCUMENTATION 2026-08-28 V3
+   ========================================================= */
+.about-chip-list-spaced{margin-top:14px}
+.about-card-subtext{margin-top:12px!important}
+.about-detail-section{margin-top:14px;padding:24px}
+.about-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+.about-detail-head h2{margin:4px 0 0;font-size:1.25rem}
+.about-detail-grid,.about-interpretation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.about-detail-grid article,.about-interpretation-grid article{padding:17px 18px;border-radius:15px;background:#091827;border:1px solid rgba(148,163,184,.14)}
+.about-detail-grid article b,.about-interpretation-grid article b{display:block;margin-bottom:7px;color:#eaf2f8}
+.about-detail-grid article p,.about-interpretation-grid article p{margin:0;color:#94a3b8;line-height:1.7;font-size:.86rem}
+.about-status-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.about-status-rules>div{position:relative;padding:18px;border-radius:15px;background:#091827;border:1px solid rgba(148,163,184,.14)}
+.about-status-rules b{display:inline-block;margin-left:8px}.about-status-rules p{margin:8px 0 0;color:#94a3b8;line-height:1.7;font-size:.86rem}
+.about-rule-dot{display:inline-block;width:9px;height:9px;border-radius:999px}.about-rule-dot.is-online{background:#34d399;box-shadow:0 0 10px rgba(52,211,153,.35)}.about-rule-dot.is-offline{background:#64748b}.about-rule-dot.is-gateway{background:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.35)}
+.about-caution-box{margin-top:14px;padding:15px 17px;border-radius:14px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);color:#cbd5e1;line-height:1.7;font-size:.86rem}.about-caution-box b{color:#fbbf24}
+#page-about>.credit-bar{margin-top:18px;border-radius:20px;overflow:hidden}
+#page-about .about-credit-note{margin-top:18px}
+
+@media(max-width:900px){.about-status-rules{grid-template-columns:1fr}.about-detail-grid,.about-interpretation-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.about-detail-section{padding:18px}.about-detail-head{flex-direction:column}.about-detail-head .about-standard-badge{align-self:flex-start}}
