@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260828-v10" rel="stylesheet"/>
+<link href="style.css?v=20260828-v11" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -103,7 +103,7 @@ HEADER
 <div class="font-bold" id="clock">
                 --
             </div>
-<div class="text-xs text-slate-400 mt-1"></div>
+
 </div>
 </div>
 </header>
@@ -139,8 +139,11 @@ DASHBOARD NAVIGATION
       <div class="overview-eyebrow">AIR QUALITY OVERVIEW</div>
       <div class="overview-title-row">
         <div>
-          <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
-          <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดให้อ่านง่าย โดยใช้ข้อมูลจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
+          <div class="section-title-with-help overview-title-help">
+            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
+            <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
+          </div>
+          <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
         </div>
         <div class="overview-quality-badge is-waiting" id="overviewQualityBadge">รอข้อมูล</div>
       </div>
@@ -213,14 +216,14 @@ DASHBOARD NAVIGATION
 <div class="monitoring-status-label">สถานีรับข้อมูลหลัก</div>
 <div class="monitoring-status-value">
 <span class="text-slate-500" id="gatewayDotTop">●</span>
-<span id="gatewayStatusTop">CHECKING</span>
+<span id="gatewayStatusTop">กำลังตรวจสอบ</span>
 </div>
 <div class="monitoring-status-hint">รับข้อมูลจากจุดตรวจวัดและส่งขึ้นระบบ</div>
 </div>
 <div class="monitoring-status-card monitoring-node-count">
-<div class="monitoring-status-label">จุดตรวจวัดที่เชื่อมต่อ</div>
+<div class="monitoring-status-label">จุดตรวจวัด ONLINE</div>
 <div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
-<div class="monitoring-status-hint">จำนวนจุดตรวจวัดที่มีสถานะ ONLINE</div>
+<div class="monitoring-status-hint">จำนวนจุดที่ระบบแสดงเป็น ONLINE ขณะนี้</div>
 </div>
 </div>
 </div>
@@ -627,21 +630,10 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 <!-- HISTORY CHART -->
-</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 แนวโน้มข้อมูลย้อนหลัง</div><div class="chart-zone-subtitle">แยกเส้นตามจุดตรวจวัดเพื่อไม่ให้ค่าจากคนละพื้นที่ต่อกันเป็นเส้นเดียว</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
-<div class="text-xs text-slate-400 mb-3">
-            ข้อมูลย้อนหลัง
-        </div>
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">📈 แนวโน้มข้อมูลย้อนหลัง</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟแนวโน้มข้อมูลย้อนหลัง" class="help-button" data-help="historyChart" type="button">?</button></div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
 <div class="history-range-caption" id="historyRangeCaption" aria-live="polite"></div>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><div class="chart-zone-subtitle">เส้นทึบ = ข้อมูลที่วัดได้จริง • เส้นประ = ค่าประมาณ +10, +20 และ +30 นาทีของภาพรวมพื้นที่</div></div></div><div class="forecast-display-panel" id="forecastGuide">
-<div class="forecast-display-copy">
-<div class="forecast-display-title">
-                    วิธีอ่านกราฟคาดการณ์
-                </div>
-<div class="forecast-display-subtitle">
-                    ค่าคาดการณ์เป็นค่าประมาณ ไม่ใช่ค่าที่วัดได้ล่วงหน้า
-                </div>
-</div>
+</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟคาดการณ์ 30 นาที" class="help-button" data-help="forecastChart" type="button">?</button></div></div><div class="forecast-display-panel forecast-display-panel-compact" id="forecastGuide">
 <div class="forecast-display-controls">
 <div class="forecast-actual-legend">
 <span class="forecast-actual-line"></span>
@@ -674,13 +666,7 @@ DASHBOARD NAVIGATION
 </button>
 </div>
 </div>
-<div class="forecast-accuracy-note" role="note">
-  <div class="forecast-accuracy-icon">i</div>
-  <div>
-    <b>ความแม่นยำของการคาดการณ์</b>
-    <span>ขณะนี้ยังไม่มีคะแนนความแม่นยำที่ผ่านการประเมินจากการเทียบค่าคาดการณ์กับค่าที่วัดจริงย้อนหลังอย่างเพียงพอ จึงควรใช้กราฟนี้เพื่อดู “แนวโน้มที่อาจเกิดขึ้น” เท่านั้น</span>
-  </div>
-</div>
+
 </div><div id="forecastChartArea" class="chart-render-area mt-3"><canvas class="bottom-forecast-canvas" id="forecastChart"></canvas></div></div></section>
 </section>
 
@@ -1160,6 +1146,6 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260828-v10"></script>
+<script defer src="app.js?v=20260828-v11"></script>
 </div></body>
 </html>
