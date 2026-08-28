@@ -10115,3 +10115,348 @@ img,svg,canvas{max-width:100%}
 .admin-editor-view.hidden{
     display:none !important;
 }
+
+/* =========================================================
+   ADMIN MODE V4 — fixed sidebar + non-scroll category menu
+   ========================================================= */
+
+/* Editor body */
+.admin-modal.is-editor .admin-dialog{
+    width:min(1120px,calc(100vw - 36px));
+    height:min(790px,calc(100dvh - 36px));
+    max-height:min(790px,calc(100dvh - 36px));
+}
+
+.admin-editor-view{
+    min-height:0;
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+}
+
+/* Toolbar is now one compact status strip */
+.admin-editor-toolbar{
+    flex:0 0 auto;
+    min-height:54px;
+    padding:9px 18px;
+}
+
+/* Main two-column workspace */
+.admin-workspace{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    overflow:hidden;
+}
+
+/* Sidebar never scrolls horizontally */
+.admin-sidebar{
+    min-width:0;
+    padding:16px 12px;
+    border-right:1px solid rgba(148,163,184,.12);
+    background:linear-gradient(180deg,rgba(8,24,39,.72),rgba(6,19,31,.90));
+    overflow:hidden;
+}
+.admin-sidebar-title{
+    margin:0 7px 10px;
+    color:#64748b;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+}
+
+/* Important: no horizontal scrolling on these 3 categories */
+.admin-tabs{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:7px;
+    width:100%;
+    padding:0;
+    overflow:visible;
+    border:0;
+}
+.admin-tab{
+    width:100%;
+    min-width:0;
+    min-height:64px;
+    display:grid;
+    grid-template-columns:36px minmax(0,1fr);
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    text-align:left;
+    white-space:normal;
+    border:1px solid transparent;
+    border-radius:12px;
+    background:transparent;
+    color:#94a3b8;
+}
+.admin-tab:hover{
+    border-color:rgba(148,163,184,.13);
+    background:rgba(15,23,42,.45);
+    color:#e2e8f0;
+}
+.admin-tab.active{
+    border-color:rgba(56,189,248,.24);
+    background:linear-gradient(135deg,rgba(14,165,233,.14),rgba(6,182,212,.06));
+    color:#e0f2fe;
+    box-shadow:inset 3px 0 0 rgba(34,211,238,.8);
+}
+.admin-tab-icon{
+    width:34px;
+    height:34px;
+    display:grid;
+    place-items:center;
+    border-radius:10px;
+    background:rgba(15,23,42,.72);
+    color:#7dd3fc;
+    font-size:15px;
+    font-weight:900;
+}
+.admin-tab.active .admin-tab-icon{
+    background:rgba(14,165,233,.16);
+}
+.admin-tab-copy{
+    min-width:0;
+    display:block;
+}
+.admin-tab-copy b{
+    display:block;
+    overflow:hidden;
+    font-size:12.5px;
+    line-height:1.35;
+    text-overflow:ellipsis;
+}
+.admin-tab-copy small{
+    display:block;
+    margin-top:2px;
+    color:#64748b;
+    font-size:9.5px;
+    line-height:1.35;
+}
+.admin-tab.active .admin-tab-copy small{
+    color:#94a3b8;
+}
+.admin-sidebar-note{
+    margin:14px 7px 0;
+    padding-top:12px;
+    border-top:1px solid rgba(148,163,184,.09);
+    color:#64748b;
+    font-size:10px;
+    line-height:1.55;
+}
+
+/* Only content area scrolls vertically */
+.admin-editor-scroll{
+    min-width:0;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:18px 22px 24px;
+    scrollbar-gutter:stable;
+}
+
+/* Better content width so it doesn't feel stretched */
+.admin-tab-panel{
+    width:min(760px,100%);
+    margin:0 auto;
+}
+.admin-tab-panel[data-admin-panel="devices"]{
+    width:min(800px,100%);
+}
+
+/* Slightly cleaner cards */
+.admin-device-card{
+    padding:14px 15px;
+    border-radius:14px;
+}
+.admin-device-fields{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+
+/* Help/About form widths */
+.admin-tab-panel[data-admin-panel="help"] .admin-field,
+.admin-tab-panel[data-admin-panel="about"] .admin-field{
+    margin-bottom:15px;
+}
+.admin-tab-panel[data-admin-panel="help"] textarea{
+    min-height:110px;
+}
+.admin-tab-panel[data-admin-panel="about"] textarea{
+    min-height:180px;
+}
+
+/* Footer stays fixed, outside scroll area */
+.admin-editor-footer{
+    flex:0 0 auto;
+    min-height:58px;
+    padding:9px 18px;
+}
+
+/* Tablet */
+@media(max-width:900px){
+    .admin-workspace{
+        grid-template-columns:190px minmax(0,1fr);
+    }
+    .admin-sidebar{
+        padding:13px 9px;
+    }
+    .admin-tab{
+        grid-template-columns:32px minmax(0,1fr);
+        gap:8px;
+        min-height:60px;
+        padding:8px;
+    }
+    .admin-tab-icon{
+        width:31px;
+        height:31px;
+    }
+    .admin-tab-copy small{
+        display:none;
+    }
+    .admin-editor-scroll{
+        padding:16px;
+    }
+}
+
+/* Mobile:
+   categories become 3 fixed equal buttons.
+   No horizontal swipe / no carousel / no overflow-x.
+*/
+@media(max-width:640px){
+    .admin-modal.is-editor .admin-dialog{
+        width:100%;
+        height:calc(100dvh - 12px);
+        max-height:calc(100dvh - 12px);
+    }
+
+    .admin-editor-toolbar{
+        min-height:auto;
+        padding:9px 12px;
+    }
+    .admin-editor-toolbar>div span{
+        display:none;
+    }
+
+    .admin-workspace{
+        display:flex;
+        flex-direction:column;
+        min-height:0;
+        overflow:hidden;
+    }
+
+    .admin-sidebar{
+        flex:0 0 auto;
+        padding:8px 10px 9px;
+        border-right:0;
+        border-bottom:1px solid rgba(148,163,184,.12);
+        overflow:hidden;
+        background:#081827;
+    }
+    .admin-sidebar-title,
+    .admin-sidebar-note{
+        display:none;
+    }
+
+    .admin-tabs{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+        padding:0;
+        overflow:visible;
+    }
+    .admin-tab{
+        min-width:0;
+        min-height:48px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        padding:7px 5px;
+        text-align:center;
+        border:1px solid rgba(148,163,184,.11);
+        border-radius:10px;
+        background:rgba(15,23,42,.45);
+        box-shadow:none;
+    }
+    .admin-tab.active{
+        border-color:rgba(56,189,248,.34);
+        background:rgba(14,165,233,.13);
+        box-shadow:inset 0 -2px 0 rgba(34,211,238,.8);
+    }
+    .admin-tab-icon{
+        flex:0 0 auto;
+        width:25px;
+        height:25px;
+        border-radius:7px;
+        font-size:11px;
+    }
+    .admin-tab-copy{
+        min-width:0;
+    }
+    .admin-tab-copy b{
+        font-size:10.5px;
+        line-height:1.2;
+        white-space:normal;
+    }
+    .admin-tab-copy small{
+        display:none;
+    }
+
+    .admin-editor-scroll{
+        flex:1 1 auto;
+        min-height:0;
+        padding:13px 12px 18px;
+        overflow-y:auto;
+        overflow-x:hidden;
+        scrollbar-gutter:auto;
+    }
+
+    .admin-tab-panel,
+    .admin-tab-panel[data-admin-panel="devices"]{
+        width:100%;
+        margin:0;
+    }
+
+    .admin-section-head{
+        margin-bottom:11px;
+    }
+    .admin-section-head h3{
+        font-size:15px;
+    }
+    .admin-section-head p{
+        font-size:11.5px;
+    }
+
+    .admin-device-fields{
+        grid-template-columns:1fr;
+    }
+    .admin-device-card-head{
+        margin-bottom:11px;
+    }
+
+    .admin-editor-footer{
+        min-height:auto;
+        padding:8px 10px max(8px,env(safe-area-inset-bottom));
+    }
+}
+
+/* Very narrow phones */
+@media(max-width:380px){
+    .admin-tabs{
+        gap:4px;
+    }
+    .admin-tab{
+        gap:4px;
+        padding:6px 3px;
+    }
+    .admin-tab-icon{
+        display:none;
+    }
+    .admin-tab-copy b{
+        font-size:10px;
+    }
+}
