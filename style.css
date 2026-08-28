@@ -8285,3 +8285,116 @@ body > #historyRangePanel.history-range-panel *{
 @media(max-width:760px){
   .history-toolbar .history-metric-select,#historyNode{width:100%;min-width:0;}
 }
+
+
+/* =========================================================
+   PUBLIC GUIDE / HELP READABILITY — 2026-08-28
+   ========================================================= */
+.about-section-lead{
+    margin-top:8px;
+    max-width:900px;
+    color:#94a3b8;
+    font-size:14px;
+    line-height:1.8;
+}
+.about-reader-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    margin-top:18px;
+}
+.about-reader-card{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    padding:18px;
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:18px;
+    background:rgba(15,23,42,.44);
+}
+.about-reader-icon{
+    flex:0 0 42px;
+    width:42px;
+    height:42px;
+    border-radius:13px;
+    display:grid;
+    place-items:center;
+    background:rgba(34,211,238,.09);
+    border:1px solid rgba(34,211,238,.16);
+    font-size:20px;
+}
+.about-reader-card b{display:block;color:#f8fafc;font-size:15px;line-height:1.55}
+.about-reader-card p{margin:6px 0 0;color:#94a3b8;font-size:13.5px;line-height:1.8}
+.about-reading-tip{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    margin-top:14px;
+    padding:15px 17px;
+    border-radius:16px;
+    border:1px solid rgba(34,211,238,.16);
+    background:rgba(34,211,238,.06);
+}
+.about-reading-tip-icon{font-size:20px;line-height:1.3}
+.about-reading-tip b{display:block;color:#cffafe;margin-bottom:3px}
+.about-reading-tip span{display:block;color:#cbd5e1;font-size:13.5px;line-height:1.75}
+
+.help-popover{
+    width:min(620px,calc(100vw - 24px));
+    max-height:min(78vh,760px);
+}
+.help-popover-header{padding:18px 20px}
+.help-popover-body{padding:18px 20px 22px;line-height:1.8}
+.help-popover-body .help-section{margin:0 0 14px;padding:15px 16px;border-radius:16px;background:rgba(15,23,42,.42);border:1px solid rgba(148,163,184,.12)}
+.help-popover-body .help-section h4{margin:0 0 7px;color:#f8fafc;font-size:15px;line-height:1.5}
+.help-popover-body .help-section p{margin:0;color:#cbd5e1;font-size:13.5px;line-height:1.8}
+.help-intro-card{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding:15px 16px;
+    margin-bottom:14px;
+    border-radius:16px;
+    background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(59,130,246,.06));
+    border:1px solid rgba(34,211,238,.18);
+}
+.help-intro-card b{color:#e0f2fe;font-size:15px;line-height:1.5}
+.help-intro-card span{color:#cbd5e1;font-size:13.5px;line-height:1.75}
+.help-simple-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.help-simple-grid>div,.help-choice-list>div{
+    padding:11px 12px;
+    border-radius:13px;
+    background:rgba(2,6,23,.34);
+    border:1px solid rgba(148,163,184,.10);
+}
+.help-simple-grid b,.help-choice-list b{display:block;color:#e2e8f0;font-size:13.5px;margin-bottom:3px}
+.help-simple-grid span,.help-choice-list span{display:block;color:#94a3b8;font-size:12.5px;line-height:1.65}
+.help-choice-list{display:grid;gap:8px}
+.help-tip{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    margin:3px 0 14px;
+    padding:13px 15px;
+    border-radius:14px;
+    background:rgba(16,185,129,.07);
+    border:1px solid rgba(16,185,129,.16);
+}
+.help-tip b{flex:0 0 auto;color:#a7f3d0}
+.help-tip span{color:#cbd5e1;font-size:13px;line-height:1.7}
+.help-steps{list-style:none!important;margin:0!important;padding:0!important;display:grid;gap:9px}
+.help-steps li{display:flex;gap:10px;align-items:center;padding:10px 11px;border-radius:12px;background:rgba(2,6,23,.32)}
+.help-steps li>span{width:28px;height:28px;display:grid;place-items:center;border-radius:999px;background:rgba(34,211,238,.11);color:#67e8f9;font-weight:800;font-size:12px}
+.help-steps b{display:block;color:#e2e8f0;font-size:13.5px}
+.help-steps small{display:block;color:#94a3b8;font-size:12px;margin-top:1px}
+.help-warning{font-size:13px;line-height:1.75}
+.help-muted{font-size:12.5px!important;color:#94a3b8!important;margin-top:7px!important}
+
+@media(max-width:760px){
+    .about-reader-grid{grid-template-columns:1fr}
+    .about-reader-card{padding:15px}
+    .help-popover{width:calc(100vw - 16px);max-height:84vh}
+    .help-popover-header{padding:15px 16px}
+    .help-popover-body{padding:14px 14px 18px}
+    .help-simple-grid{grid-template-columns:1fr}
+}
