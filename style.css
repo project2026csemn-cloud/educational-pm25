@@ -10105,3 +10105,13 @@ img,svg,canvas{max-width:100%}
         flex:1 1 130px;
     }
 }
+
+/* =========================================================
+   ADMIN MODE V3 — visibility fix
+   สำคัญ: ต้องอยู่หลัง .admin-login-view / .admin-editor-view
+   เพื่อไม่ให้ display:flex ของ editor เขียนทับ .hidden
+   ========================================================= */
+.admin-login-view.hidden,
+.admin-editor-view.hidden{
+    display:none !important;
+}
