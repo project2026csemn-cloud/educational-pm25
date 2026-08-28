@@ -8398,3 +8398,60 @@ body > #historyRangePanel.history-range-panel *{
     .help-popover-body{padding:14px 14px 18px}
     .help-simple-grid{grid-template-columns:1fr}
 }
+
+
+/* =========================================================
+   UX CLARITY — STATUS + FORECAST EXPLANATION
+   ========================================================= */
+.dashboard-system-dot.is-warning{
+  background:#f59e0b;
+  box-shadow:0 0 0 4px rgba(245,158,11,.12),0 0 16px rgba(245,158,11,.35);
+}
+
+.forecast-accuracy-note{
+  margin-top:14px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid rgba(245,158,11,.22);
+  border-radius:14px;
+  background:rgba(245,158,11,.07);
+  color:#cbd5e1;
+  line-height:1.65;
+}
+.forecast-accuracy-note b{
+  display:block;
+  color:#fbbf24;
+  margin-bottom:2px;
+  font-size:13px;
+}
+.forecast-accuracy-note span{
+  display:block;
+  font-size:12px;
+  color:#94a3b8;
+}
+.forecast-accuracy-icon{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:12px;
+  color:#fbbf24;
+  border:1px solid rgba(245,158,11,.28);
+  background:rgba(245,158,11,.10);
+}
+.ai-confidence small{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  font-weight:500;
+  color:#64748b;
+}
+@media(max-width:640px){
+  .forecast-accuracy-note{padding:11px 12px;gap:10px}
+  .forecast-accuracy-note span{font-size:11px}
+}
