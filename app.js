@@ -371,6 +371,95 @@ hour12:false
 });
 }
 
+// =====================================================
+// ADAPTIVE CALENDAR TICKS
+// ช่วงยาว: สร้าง tick ตามวันจริง (1 tick ต่อ 1 วัน)
+// เมื่อซูมเข้า: เพิ่มความละเอียดเป็น 6 ชม. / 2 ชม. / 30 นาที / 5 นาที
+// ทำให้แกน X เป็นเหมือน timeline ที่เจาะรายละเอียดได้เรื่อย ๆ
+// =====================================================
+function chartBucketKey(date,stepMs){
+const d=parseDate(date);
+if(!d)return"";
+const t=d.getTime();
+return String(Math.floor(t/stepMs));
+}
+
+function chartDayBucketKey(date){
+const d=parseDate(date);
+if(!d)return"";
+return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
+}
+
+function buildAdaptiveTimeTicks(scale){
+const labels=scale?.chart?.data?.labels||[];
+if(!Array.isArray(labels)||labels.length<2)return;
+
+const minRaw=Number.isFinite(Number(scale.min))?Number(scale.min):0;
+const maxRaw=Number.isFinite(Number(scale.max))?Number(scale.max):labels.length-1;
+const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(minRaw)));
+const maxIndex=Math.max(minIndex,Math.min(labels.length-1,Math.ceil(maxRaw)));
+
+const start=parseDate(labels[minIndex]);
+const end=parseDate(labels[maxIndex]);
+if(!start||!end)return;
+
+const span=Math.max(0,end.getTime()-start.getTime());
+const MINUTE=60*1000;
+const HOUR=60*MINUTE;
+const DAY=24*HOUR;
+
+let mode="minute";
+let stepMs=5*MINUTE;
+
+// 3 วันขึ้นไป = 1 tick ต่อวัน (วันที่เท่านั้น)
+if(span>=3*DAY){
+mode="day";
+}else if(span>=DAY){
+mode="bucket";
+stepMs=6*HOUR;
+}else if(span>=6*HOUR){
+mode="bucket";
+stepMs=2*HOUR;
+}else if(span>=HOUR){
+mode="bucket";
+stepMs=30*MINUTE;
+}else if(span>=20*MINUTE){
+mode="bucket";
+stepMs=5*MINUTE;
+}else{
+mode="bucket";
+stepMs=MINUTE;
+}
+
+const chosen=[];
+let lastKey=null;
+
+for(let i=minIndex;i<=maxIndex;i++){
+const d=parseDate(labels[i]);
+if(!d)continue;
+const key=mode==="day"?chartDayBucketKey(d):chartBucketKey(d,stepMs);
+if(!key||key===lastKey)continue;
+chosen.push({value:i});
+lastKey=key;
+}
+
+// รักษาปลายช่วงไว้เสมอเมื่อมีพื้นที่พอ เพื่อให้ผู้ใช้เห็นขอบเขตที่กำลังดู
+if(chosen.length&&chosen.at(-1).value!==maxIndex&&span<3*DAY){
+chosen.push({value:maxIndex});
+}
+
+// จอเล็กไม่ยัด label แน่นเกินไป แต่ช่วงรายวันยังพยายามคงวันต่อวัน
+const maxTicks=window.innerWidth<=640?8:mode==="day"?35:14;
+if(chosen.length>maxTicks){
+const stride=Math.ceil(chosen.length/maxTicks);
+const reduced=chosen.filter((_,i)=>i%stride===0);
+if(reduced.at(-1)?.value!==chosen.at(-1)?.value)reduced.push(chosen.at(-1));
+scale.ticks=reduced;
+}else{
+scale.ticks=chosen;
+}
+}
+
 function adaptiveChartTickText(scale,value,index,ticks){
 const raw=scale.getLabelForValue(value);
 const span=chartVisibleSpanMs(scale);
@@ -3068,7 +3157,7 @@ const mobile=isMobileChart();
 return{
 grid:{display:false},
 ticks:{
-autoSkip:true,
+autoSkip:false,
 maxTicksLimit:mobile?5:10,
 maxRotation:mobile?0:45,
 minRotation:0,
@@ -3124,8 +3213,9 @@ tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}
 scales:{
 x:{
 grid:{display:false},
+afterBuildTicks(scale){buildAdaptiveTimeTicks(scale);},
 ticks:{
-autoSkip:true,
+autoSkip:false,
 maxTicksLimit:chartTickLimit(),
 maxRotation:0,
 minRotation:0,
@@ -6496,7 +6586,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-มือถือ: ใช้สองนิ้วซูม • ลากซ้าย–ขวา • แตะจุดดูค่า
+ช่วงยาวแสดงเป็นรายวัน • ซูมเข้าเพื่อดูเวลา • มือถือใช้สองนิ้วซูม • ลากซ้าย–ขวา
 </div>
 </div>
 
@@ -7108,6 +7198,7 @@ x:{
 type:"category",
 min:fullMin,
 max:fullMax,
+afterBuildTicks(scale){buildAdaptiveTimeTicks(scale);},
 
 grid:{
 color:"rgba(148,163,184,.09)"
@@ -7116,8 +7207,8 @@ color:"rgba(148,163,184,.09)"
 ticks:{
 color:"#94a3b8",
 maxRotation:0,
-autoSkip:true,
-maxTicksLimit:isTouch?7:12,
+autoSkip:false,
+maxTicksLimit:isTouch?8:35,
 font:{
 size:isTouch?12:12
 },
