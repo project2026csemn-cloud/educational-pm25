@@ -8642,7 +8642,13 @@ if(preview)preview.textContent=String(e.target.value||"").trim()||`จุดต�
 });
 }
 $("adminLogoutButton")?.addEventListener("click",async()=>{try{if(adminSessionToken)await adminFetch(API.adminLogout,{method:"POST"}).catch(()=>{})}finally{clearAdminSession();setAdminView(false);setAdminMessage("adminLoginMessage","ออกจากระบบแล้ว","success")}});
-document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{const t=b.dataset.adminTab;document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".admin-tab-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===t))}));
+document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
+const t=b.dataset.adminTab;
+document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
+document.querySelectorAll(".admin-tab-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===t));
+const scroller=document.querySelector(".admin-editor-scroll");
+if(scroller)scroller.scrollTop=0;
+}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.classList.contains("active"))closeAdminModal()});
 }
 (function startAdminFeatures(){const run=()=>{bindAdminMode();loadPublicDisplayConfig()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run()})();
