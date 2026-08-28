@@ -12,7 +12,8 @@ forecast:`${BASE}/api/ai_forecast`,
 publicConfig:`${BASE}/api/public_config`,
 adminLogin:`${BASE}/api/admin/login`,
 adminConfig:`${BASE}/api/admin/config`,
-adminLogout:`${BASE}/api/admin/logout`
+adminLogout:`${BASE}/api/admin/logout`,
+adminAudit:`${BASE}/api/admin/audit_log`
 };
 
 const TOTAL_NODES=3;
@@ -8592,7 +8593,7 @@ about_intro:"",
 help_overview:"",
 help_monitoring:"",
 help_history:"",
-help_forecast:""
+help_forecast:"",announcement_enabled:"0",announcement_severity:"info",announcement_title:"",announcement_message:""
 }
 };
 
@@ -8624,9 +8625,10 @@ $("adminHelpMonitoring").value="";
 $("adminHelpHistory").value="";
 $("adminHelpForecast").value="";
 }else if(category==="about"){
-$("adminAboutHeading").value="เกี่ยวกับโครงการ";
-$("adminAboutIntro").value="";
-}else{return;}
+$("adminAboutHeading").value="เกี่ยวกับโครงการ";$("adminAboutIntro").value="";
+}else if(category==="announcement"){
+$("adminAnnouncementEnabled").checked=false;$("adminAnnouncementSeverity").value="info";$("adminAnnouncementTitle").value="";$("adminAnnouncementMessage").value="";
+}else{return;}updateAdminPreviews();
 
 setAdminDirtyState(true);
 setAdminMessage("adminSaveMessage",`คืนค่าเริ่มต้นหมวด ${name} แล้ว — กดบันทึกเพื่อยืนยัน`,"success");
@@ -8634,6 +8636,17 @@ const scroller=document.querySelector(".admin-editor-scroll");
 if(scroller)scroller.scrollTop=0;
 }
 
+
+function updateAdminPreviews(){
+const n=String($("adminDeviceName1")?.value||"จุดตรวจวัด 1").trim()||"จุดตรวจวัด 1",l=String($("adminDeviceLocation1")?.value||"").trim(),d=String($("adminDeviceDescription1")?.value||"").trim();
+if($("adminPreviewDeviceTitle"))$("adminPreviewDeviceTitle").textContent=n;if($("adminPreviewDeviceLocation"))$("adminPreviewDeviceLocation").textContent=l||"ยังไม่ได้ระบุสถานที่";if($("adminPreviewDeviceDescription"))$("adminPreviewDeviceDescription").textContent=d||"ยังไม่มีคำอธิบายเพิ่มเติม";
+if($("adminPreviewHelp"))$("adminPreviewHelp").textContent=String($("adminHelpOverview")?.value||"").trim()||"ยังไม่ได้เพิ่มคำอธิบายจากผู้ดูแล";
+if($("adminPreviewAboutHeading"))$("adminPreviewAboutHeading").textContent=String($("adminAboutHeading")?.value||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";if($("adminPreviewAboutIntro"))$("adminPreviewAboutIntro").textContent=String($("adminAboutIntro")?.value||"").trim()||"ยังไม่มีข้อความแนะนำเพิ่มเติม";
+const s=String($("adminAnnouncementSeverity")?.value||"info"),p=$("adminAnnouncementPreview");if(p)p.className=`site-announcement is-${["info","warning","maintenance"].includes(s)?s:"info"}`;if($("adminPreviewAnnouncementTitle"))$("adminPreviewAnnouncementTitle").textContent=String($("adminAnnouncementTitle")?.value||"").trim()||"ประกาศจากระบบ";if($("adminPreviewAnnouncementMessage"))$("adminPreviewAnnouncementMessage").textContent=String($("adminAnnouncementMessage")?.value||"").trim()||"ยังไม่มีรายละเอียดประกาศ";
+}
+function formatAdminAuditTime(v){if(!v)return"-";const d=new Date(String(v).replace(" ","T")+"Z");return Number.isNaN(d.getTime())?String(v):d.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"});}
+function adminAuditLabel(a){return({update_public_config:"บันทึกการตั้งค่าสาธารณะ",login_success:"เข้าสู่ระบบผู้ดูแลสำเร็จ"})[a]||String(a||"กิจกรรมผู้ดูแล");}
+async function loadAdminAudit(){const b=$("adminAuditList");if(!b)return;b.innerHTML='<div class="admin-audit-empty">กำลังโหลด...</div>';try{const j=await adminFetch(API.adminAudit),r=Array.isArray(j.data)?j.data:[];b.innerHTML=r.length?r.map(x=>`<div class="admin-audit-item"><div class="admin-audit-time">${adminEscapeHtml(formatAdminAuditTime(x.created_at))}</div><div class="admin-audit-action">${adminEscapeHtml(adminAuditLabel(x.action))}</div></div>`).join(""):'<div class="admin-audit-empty">ยังไม่มีประวัติการแก้ไข</div>'}catch(e){b.innerHTML=`<div class="admin-audit-empty">${adminEscapeHtml(e.message)}</div>`}}
 function configDevice(deviceId){return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;}
 function adminHelpPrefix(helpKey){
 const map={overviewQuality:"help_overview",monitoring:"help_monitoring",historyChart:"help_history",historical:"help_history",forecastChart:"help_forecast",ai:"help_forecast"};
@@ -8649,6 +8662,9 @@ if(ot)ot.textContent=name;if(ol){ol.textContent=loc;ol.classList.toggle("hidden"
 }
 const h=$("publicAboutHeading"),intro=$("publicAboutIntro"),heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ",about=String(publicDisplayConfig?.content?.about_intro||"").trim();
 if(h)h.textContent=heading;if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about)}
+const ann=publicDisplayConfig?.content||{},aw=$("siteAnnouncementWrap"),ab=$("siteAnnouncement"),at=$("siteAnnouncementTitle"),am=$("siteAnnouncementMessage"),ai=$("siteAnnouncementIcon");
+const ae=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
+if(aw){aw.classList.toggle("hidden",!ae);if(ae){const sev=["info","warning","maintenance"].includes(String(ann.announcement_severity))?String(ann.announcement_severity):"info";ab.className=`site-announcement is-${sev}`;at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";am.textContent=String(ann.announcement_message||"").trim();ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";}}
 if(historyActivated&&typeof Chart!=="undefined"){try{drawCharts()}catch(e){console.warn("Chart label refresh failed",e)}}
 }
 async function loadPublicDisplayConfig(){
@@ -8687,10 +8703,11 @@ const preview=$(`adminDevicePreviewName${i}`);
 if(preview)preview.textContent=name;
 }
 const c=data?.content||{};$("adminAboutHeading").value=c.about_heading||"เกี่ยวกับโครงการ";$("adminAboutIntro").value=c.about_intro||"";$("adminHelpOverview").value=c.help_overview||"";$("adminHelpMonitoring").value=c.help_monitoring||"";$("adminHelpHistory").value=c.help_history||"";$("adminHelpForecast").value=c.help_forecast||"";
+$("adminAnnouncementEnabled").checked=String(c.announcement_enabled||"0")==="1";$("adminAnnouncementSeverity").value=["info","warning","maintenance"].includes(String(c.announcement_severity))?String(c.announcement_severity):"info";$("adminAnnouncementTitle").value=c.announcement_title||"";$("adminAnnouncementMessage").value=c.announcement_message||"";updateAdminPreviews();
 setAdminDirtyState(false);
 }
 async function loadAdminConfig(){if(!adminSessionToken)throw new Error("กรุณาเข้าสู่ระบบผู้ดูแล");setAdminView(true);setAdminMessage("adminSaveMessage","กำลังโหลด...");try{const j=await adminFetch(API.adminConfig);fillAdminEditor(j.data);setAdminMessage("adminSaveMessage","");return j.data}catch(e){setAdminMessage("adminSaveMessage",e.message,"error");throw e}}
-function collectAdminConfig(){return{devices:[1,2,3].map(i=>({device_id:`Number ${i}`,display_name:String($(`adminDeviceName${i}`)?.value||"").trim(),location_name:String($(`adminDeviceLocation${i}`)?.value||"").trim(),description:String($(`adminDeviceDescription${i}`)?.value||"").trim()})),content:{about_heading:String($("adminAboutHeading")?.value||"").trim(),about_intro:String($("adminAboutIntro")?.value||"").trim(),help_overview:String($("adminHelpOverview")?.value||"").trim(),help_monitoring:String($("adminHelpMonitoring")?.value||"").trim(),help_history:String($("adminHelpHistory")?.value||"").trim(),help_forecast:String($("adminHelpForecast")?.value||"").trim()}}}
+function collectAdminConfig(){return{devices:[1,2,3].map(i=>({device_id:`Number ${i}`,display_name:String($(`adminDeviceName${i}`)?.value||"").trim(),location_name:String($(`adminDeviceLocation${i}`)?.value||"").trim(),description:String($(`adminDeviceDescription${i}`)?.value||"").trim()})),content:{about_heading:String($("adminAboutHeading")?.value||"").trim(),about_intro:String($("adminAboutIntro")?.value||"").trim(),help_overview:String($("adminHelpOverview")?.value||"").trim(),help_monitoring:String($("adminHelpMonitoring")?.value||"").trim(),help_history:String($("adminHelpHistory")?.value||"").trim(),help_forecast:String($("adminHelpForecast")?.value||"").trim(),announcement_enabled:$("adminAnnouncementEnabled")?.checked?"1":"0",announcement_severity:String($("adminAnnouncementSeverity")?.value||"info"),announcement_title:String($("adminAnnouncementTitle")?.value||"").trim(),announcement_message:String($("adminAnnouncementMessage")?.value||"").trim()}}}
 async function saveAdminConfig(){const b=$("adminSaveButton");if(b)b.disabled=true;setAdminMessage("adminSaveMessage","กำลังบันทึก...");try{const j=await adminFetch(API.adminConfig,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(collectAdminConfig())});publicDisplayConfig=j.data;fillAdminEditor(j.data);applyPublicDisplayConfig();setAdminMessage("adminSaveMessage","บันทึกเรียบร้อย","success")}catch(e){setAdminMessage("adminSaveMessage",e.message,"error");if(!adminSessionToken)setAdminView(false)}finally{if(b)b.disabled=false}}
 async function loginAdmin(password){const b=$("adminLoginButton");if(b)b.disabled=true;setAdminMessage("adminLoginMessage","กำลังตรวจสอบ...");try{const r=await fetch(API.adminLogin,{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({password})});let j={};try{j=await r.json()}catch{}if(!r.ok||!j?.success||!j?.token)throw new Error(j?.message||"เข้าสู่ระบบไม่สำเร็จ");adminSessionToken=j.token;sessionStorage.setItem("pm25_admin_session",adminSessionToken);$("adminPassword").value="";setAdminMessage("adminLoginMessage","");setAdminView(true);await loadAdminConfig()}catch(e){clearAdminSession();setAdminView(false);setAdminMessage("adminLoginMessage",e.message,"error")}finally{if(b)b.disabled=false}}
 function bindAdminMode(){
@@ -8707,19 +8724,15 @@ const preview=$(`adminDevicePreviewName${i}`);
 if(preview)preview.textContent=String(e.target.value||"").trim()||`จุดตรวจวัด ${i}`;
 });
 }
-document.querySelectorAll("#adminEditorView input,#adminEditorView textarea").forEach(el=>{
-el.addEventListener("input",()=>setAdminDirtyState(true));
-});
-document.querySelectorAll("[data-admin-reset]").forEach(btn=>{
-btn.addEventListener("click",()=>resetAdminCategory(btn.dataset.adminReset));
-});
+document.querySelectorAll("#adminEditorView input,#adminEditorView textarea,#adminEditorView select").forEach(el=>{const ev=(el.type==="checkbox"||el.tagName==="SELECT")?"change":"input";el.addEventListener(ev,()=>{setAdminDirtyState(true);updateAdminPreviews()});});
+document.querySelectorAll("[data-admin-reset]").forEach(btn=>{btn.addEventListener("click",()=>resetAdminCategory(btn.dataset.adminReset));});$("adminAuditReload")?.addEventListener("click",loadAdminAudit);
 $("adminLogoutButton")?.addEventListener("click",async()=>{try{if(adminSessionToken)await adminFetch(API.adminLogout,{method:"POST"}).catch(()=>{})}finally{clearAdminSession();setAdminView(false);setAdminMessage("adminLoginMessage","ออกจากระบบแล้ว","success")}});
 document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
 const t=b.dataset.adminTab;
 document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
 document.querySelectorAll(".admin-tab-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===t));
 const scroller=document.querySelector(".admin-editor-scroll");
-if(scroller)scroller.scrollTop=0;
+if(scroller)scroller.scrollTop=0;if(t==="audit")loadAdminAudit();
 }));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.classList.contains("active"))closeAdminModal()});
 }
