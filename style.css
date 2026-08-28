@@ -9486,3 +9486,147 @@ img,svg,canvas{max-width:100%}
   }
 }
 
+
+/* =========================================================
+   V16 — PUBLIC UI POLISH
+   Cross-device density, typography and public-facing cleanup.
+   No data/API/forecast calculation changes.
+   ========================================================= */
+
+/* Section headings: keep title + ? aligned without squeezing. */
+.section-title-with-help,
+.chart-zone-heading{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.section-title-with-help > :first-child,
+.chart-zone-heading > :first-child{min-width:0!important}
+.section-title-with-help .help-trigger,
+.chart-zone-heading .help-trigger{flex:0 0 auto!important}
+
+/* Reduce decorative microcopy, but keep operational text readable. */
+.monitoring-status-hint,
+.overview-freshness,
+.history-range-caption,
+.metric-chart-subtitle,
+.metric-chart-legend,
+.ai-generated-at,
+.ai-forecast-generated{
+  font-size:13px!important;
+  line-height:1.55!important;
+}
+
+/* Public cards should not waste vertical space. */
+.monitoring-node-card,
+.node-card{
+  padding:16px!important;
+}
+.monitoring-node-card .node-metrics,
+.node-card .node-metrics{
+  gap:12px!important;
+}
+.monitoring-node-card .node-metric,
+.node-card .node-metric{
+  min-height:0!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+/* Forecast: area scope must remain visible; deeper explanation belongs in ?. */
+.forecast-scope-label{
+  font-size:13px!important;
+  line-height:1.45!important;
+  font-weight:700!important;
+}
+
+/* Help content hierarchy for general users. */
+.help-popover-body .help-section{
+  margin-bottom:16px!important;
+}
+.help-popover-body .help-section h4{
+  font-size:15px!important;
+  line-height:1.4!important;
+  margin-bottom:6px!important;
+}
+.help-popover-body .help-section p,
+.help-popover-body .help-section li{
+  line-height:1.7!important;
+}
+
+/* ---------- Desktop / Laptop ---------- */
+@media (min-width:1024px){
+  .monitoring-node-card,
+  .node-card{padding:18px!important}
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{gap:14px!important}
+  .dashboard-chart-card{min-width:0!important}
+  .chart-zone-heading{align-items:flex-start!important}
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width:761px) and (max-width:1023px){
+  .monitoring-node-card,
+  .node-card{padding:16px!important}
+  .chart-zone-heading{align-items:flex-start!important}
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width:760px){
+  .monitoring-node-card,
+  .node-card{
+    padding:14px!important;
+    border-radius:16px!important;
+  }
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{
+    gap:8px!important;
+  }
+  .monitoring-node-card .node-metric,
+  .node-card .node-metric{
+    padding:8px!important;
+  }
+
+  .section-title-with-help,
+  .chart-zone-heading{
+    align-items:flex-start!important;
+  }
+
+  /* Keep necessary context, remove only redundant decorative copy. */
+  .overview-eyebrow,
+  .chart-zone-eyebrow{
+    display:none!important;
+  }
+
+  .monitoring-status-hint,
+  .overview-freshness,
+  .history-range-caption,
+  .metric-chart-subtitle,
+  .metric-chart-legend{
+    font-size:13px!important;
+  }
+
+  /* Forecast empty-state should be one clear message rather than oversized blocks. */
+  .ai-forecast-status,
+  .forecast-empty-state{
+    min-height:0!important;
+    padding-top:12px!important;
+    padding-bottom:12px!important;
+  }
+
+  /* Help title remains visible while content scrolls. */
+  .help-popover-header{
+    position:sticky!important;
+    top:0!important;
+  }
+}
+
+/* Very small phones */
+@media (max-width:390px){
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{gap:7px!important}
+  .monitoring-node-card .node-metric,
+  .node-card .node-metric{padding:7px!important}
+}
+
