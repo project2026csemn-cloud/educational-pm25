@@ -435,6 +435,13 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 <div class="history-toolbar">
+<select aria-label="เลือกจุดตรวจวัดสำหรับกราฟย้อนหลัง" class="history-metric-select" id="historyNode">
+<option selected="" value="compare">เปรียบเทียบ 3 จุด</option>
+<option value="average">ค่าเฉลี่ยพื้นที่</option>
+<option value="Number 1">จุดตรวจวัด 1</option>
+<option value="Number 2">จุดตรวจวัด 2</option>
+<option value="Number 3">จุดตรวจวัด 3</option>
+</select>
 <select aria-label="เลือกตัวแปร" class="history-metric-select" id="metric"><option selected="" value="all">ALL</option>
 <option value="pm25">PM2.5</option>
 <option value="pm1">PM1.0</option>
@@ -620,7 +627,7 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 <!-- HISTORY CHART -->
-</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 แนวโน้มข้อมูลย้อนหลัง</div><div class="chart-zone-subtitle">ดูการเปลี่ยนแปลงของค่าที่ตรวจวัดตามช่วงเวลาที่เลือก</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="chart-zone-title">📈 แนวโน้มข้อมูลย้อนหลัง</div><div class="chart-zone-subtitle">แยกเส้นตามจุดตรวจวัดเพื่อไม่ให้ค่าจากคนละพื้นที่ต่อกันเป็นเส้นเดียว</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div class="text-xs text-slate-400 mb-3">
             ข้อมูลย้อนหลัง
         </div>
@@ -700,55 +707,24 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><h1>เกี่ยวกับโครงการ</h1><p>ระบบตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ สำหรับติดตามสถานการณ์และสนับสนุนการตัดสินใจในสถานศึกษา</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><h1>เกี่ยวกับโครงการ</h1><p>ระบบตรวจวัดคุณภาพอากาศและฝุ่นละออง PM2.5 ในระดับพื้นที่ สำหรับติดตามสถานการณ์ เปรียบเทียบจุดตรวจวัด และสนับสนุนการตัดสินใจจากข้อมูลที่แสดงบน Dashboard</p></div>
   <div class="about-grid">
     <article class="glass card about-card about-card-wide">
       <div class="about-card-icon">◎</div>
       <div>
         <h2>ภาพรวมและวัตถุประสงค์ของโครงการ</h2>
-        <p>โครงการนี้พัฒนาระบบตรวจวัดคุณภาพอากาศในระดับพื้นที่ของสถานศึกษา เพื่อให้สามารถติดตามฝุ่นละออง สภาพอากาศแวดล้อม สถานะของอุปกรณ์ แนวโน้มย้อนหลัง และข้อมูลประกอบการตัดสินใจได้จากหน้า Dashboard เดียว</p>
+        <p>โครงการนี้พัฒนาระบบติดตามคุณภาพอากาศในระดับพื้นที่ เพื่อให้ผู้ใช้ดูค่าปัจจุบัน ข้อมูลย้อนหลัง ความแตกต่างระหว่างจุดตรวจวัด การแจ้งเตือน และแนวโน้มที่ช่วยประกอบการตัดสินใจได้จากหน้า Dashboard เดียว</p>
         <div class="about-chip-list about-chip-list-spaced"><span>ติดตามสถานการณ์</span><span>ดูข้อมูลย้อนหลัง</span><span>เปรียบเทียบ 3 จุด</span><span>แจ้งสิ่งที่ควรระวัง</span><span>วิเคราะห์แนวโน้ม</span></div>
       </div>
     </article>
 
+    <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ตัวแปรที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง (lux)</span></div><p class="about-card-subtext">ตัวแปรแต่ละชนิดมีหน้าที่ต่างกัน จึงแสดงแยกกันเพื่อให้ผู้ใช้ตีความได้ตรงกับความหมายของข้อมูล</p></div></article>
+    <article class="glass card about-card"><div class="about-card-icon">⌁</div><div><h2>อุปกรณ์และเซนเซอร์หลัก</h2><p><b>PMS3003</b> ใช้ตรวจวัด PM1.0/PM2.5/PM10, <b>AM2315</b> ใช้ตรวจวัดอุณหภูมิและความชื้น และ <b>BH1750</b> ใช้ตรวจวัดความส่องสว่างหน่วย lux</p></div></article>
+
     <article class="glass card about-card about-card-wide">
-      <div class="about-card-icon">⇢</div><div><h2>สถาปัตยกรรมและหลักการทำงานของระบบ</h2><p>จุดตรวจวัดทั้ง 3 จุดอ่านค่าจากเซนเซอร์ แล้วส่งข้อมูลแบบไร้สายผ่าน ESP-NOW มายังสถานีรับข้อมูลหลัก (Gateway) จากนั้นสถานีรับข้อมูลหลักเชื่อมต่ออินเทอร์เน็ตและส่งข้อมูลไปยัง Cloudflare Worker เพื่อประมวลผล/ให้บริการ API และบันทึกข้อมูลใน D1 Database ก่อนที่ Dashboard จะเรียกข้อมูลมาแสดงผล</p>
-      <div class="system-flow"><span>จุดตรวจวัด 1–3</span><i>→</i><span>ESP-NOW</span><i>→</i><span>สถานีรับข้อมูลหลัก</span><i>→</i><span>Cloudflare Worker</span><i>→</i><span>D1 Database</span><i>→</i><span>Dashboard</span></div></div>
+      <div class="about-card-icon">🔔</div><div><h2>การใช้งานและการแจ้งเตือน</h2><p>ผู้ใช้สามารถติดตามสถานการณ์จาก Dashboard และรับการแจ้งเตือนเหตุสำคัญผ่านช่องทาง Telegram ของโครงการ โดยรายละเอียดเชิงโครงสร้าง การประมวลผลภายใน และกลไกระบบหลังบ้านไม่ได้เผยแพร่บนหน้าเว็บไซต์สาธารณะ</p></div>
     </article>
-
-    <article class="glass card about-card"><div class="about-card-icon">◌</div><div><h2>ตัวแปรที่ตรวจวัด</h2><div class="about-chip-list"><span>PM1.0</span><span>PM2.5</span><span>PM10</span><span>อุณหภูมิ</span><span>ความชื้น</span><span>แสง (lux)</span></div><p class="about-card-subtext">ตัวแปรแต่ละชนิดมีหน้าที่ต่างกัน จึงไม่ถูกนำมาบวกหรือเฉลี่ยรวมเป็นคะแนนสุขภาพเดียว</p></div></article>
-    <article class="glass card about-card"><div class="about-card-icon">⌁</div><div><h2>อุปกรณ์และเซนเซอร์หลัก</h2><p><b>ESP32</b> ควบคุมระบบและการสื่อสาร, <b>PMS3003</b> วัด PM1.0/PM2.5/PM10, <b>AM2315</b> วัดอุณหภูมิและความชื้น และ <b>BH1750</b> วัดความส่องสว่างหน่วย lux</p></div></article>
-    <article class="glass card about-card about-card-wide"><div class="about-card-icon">⌘</div><div><h2>เทคโนโลยีที่ใช้</h2><div class="about-chip-list"><span>ESP32</span><span>ESP-NOW</span><span>Cloudflare Worker</span><span>D1 Database</span><span>GitHub Pages</span><span>Chart.js</span><span>Telegram Bot</span><span>AI Analysis</span></div><p class="about-card-subtext">ส่วนรับข้อมูล ประมวลผล จัดเก็บ แสดงผล และแจ้งเตือนถูกแยกหน้าที่กัน เพื่อให้ระบบตรวจสอบและดูแลได้ง่ายขึ้น</p></div></article>
   </div>
-
-  <section class="glass card about-detail-section">
-    <div class="about-detail-head"><div><div class="overview-eyebrow">MEASUREMENT & DATA FLOW</div><h2>วิธีเก็บข้อมูลและตรวจสอบความถูกต้อง</h2></div><span class="about-standard-badge">Data Integrity</span></div>
-    <div class="about-detail-grid">
-      <article><b>1. อ่านหลายครั้งต่อหนึ่งรอบ</b><p>จุดตรวจวัดเก็บค่าหลายครั้งในช่วงประมาณ 1 นาที แล้วใช้เฉพาะครั้งที่อ่านสำเร็จเพื่อคำนวณค่าเฉลี่ยก่อนส่งหนึ่งชุดข้อมูล</p></article>
-      <article><b>2. ค่าที่อ่านไม่สำเร็จไม่ใช่ศูนย์</b><p>ค่าที่ไม่มีข้อมูลหรืออ่านไม่สำเร็จจะถูกเก็บ/ตีความเป็นไม่มีข้อมูล และไม่นำไปแทนด้วย 0 ในกราฟ ค่าเฉลี่ย หรือสถิติ</p></article>
-      <article><b>3. ค่าเฉลี่ยพื้นที่ใช้เฉพาะข้อมูลที่ใช้ได้</b><p>เมื่อเปรียบเทียบทั้ง 3 จุด ระบบจะใช้เฉพาะจุดที่ยังใช้งานได้และมีค่าจริงของตัวแปรนั้นในการคำนวณ</p></article>
-      <article><b>4. ข้อมูลย้อนหลังคงเวลาเดิม</b><p>ข้อมูลใน D1 ถูกเรียกตามช่วงเวลาที่เลือก เพื่อใช้สร้างสถิติ กราฟ แนวโน้ม และการส่งออก โดยไม่ใช้ค่าจำลองมาเติมช่องว่าง</p></article>
-    </div>
-  </section>
-
-  <section class="glass card about-detail-section">
-    <div class="about-detail-head"><div><div class="overview-eyebrow">DEVICE STATUS RULES</div><h2>กฎสถานะอุปกรณ์ของโครงการ</h2></div><span class="about-standard-badge">Project Rule</span></div>
-    <div class="about-status-rules">
-      <div><span class="about-rule-dot is-online"></span><b>ONLINE</b><p>Dashboard แสดงว่าอุปกรณ์ยังอยู่ในรอบการทำงานที่ระบบยืนยันได้ โดยช่วง Sleep ตามแผนประหยัดพลังงานยังนับว่าใช้งานได้บนหน้าเว็บ และจะรอการตื่นตามเวลาที่อุปกรณ์ควรกลับมา</p></div>
-      <div><span class="about-rule-dot is-offline"></span><b>OFFLINE</b><p>ระบบพิจารณาจากรอบการทำงานของอุปกรณ์: ก่อนหลับจุดตรวจวัดแจ้งสถานะ Sleep และระบบทราบเวลาที่ควรตื่น หากพ้นเวลาที่ควรกลับมาพร้อมช่วงเผื่อแล้วยังไม่มีการติดต่อ จึงถือว่าขาดการเชื่อมต่อ ไม่ได้ใช้ตัวเลข 6 นาทีเป็นเกณฑ์หลัก</p></div>
-      <div><span class="about-rule-dot is-gateway"></span><b>สถานีรับข้อมูลหลัก (Gateway)</b><p>ถ้าสถานีรับข้อมูลหลักขาดการเชื่อมต่อ Dashboard จะไม่ยืนยันว่าจุดตรวจวัดลูกยัง Online แม้ข้อมูลเดิมจะยังอยู่ในฐานข้อมูล</p></div>
-    </div>
-  </section>
-
-  <section class="glass card about-detail-section">
-    <div class="about-detail-head"><div><div class="overview-eyebrow">ALERT & COMMUNICATION</div><h2>การแจ้งเตือนและการสื่อสารสถานะ</h2></div><span class="about-standard-badge">System Alert</span></div>
-    <div class="about-detail-grid">
-      <article><b>สถานีรับข้อมูลหลัก</b><p>แจ้งเมื่อสถานีรับข้อมูลหลักขาดการเชื่อมต่อและเมื่อกลับมาเชื่อมต่อ เพื่อให้ผู้ใช้ทราบว่าระบบยังรับข้อมูลจากจุดตรวจวัดได้หรือไม่</p></article>
-      <article><b>จุดตรวจวัดแต่ละจุด</b><p>แจ้งเมื่อจุดตรวจวัดไม่กลับมาตามรอบที่ควรตื่น และแจ้งอีกครั้งเมื่อมีการติดต่อใหม่จริง ส่วนการเข้า/ออก Sleep ตามปกติไม่สร้างการแจ้งเตือนรบกวนผู้ใช้</p></article>
-      <article><b>PM2.5 และ Heat Index</b><p>ใช้เป็นตัวหลักสำหรับการแจ้งเตือนด้านสุขภาพแบบทันเวลา โดยแจ้งเมื่อระดับเปลี่ยนเข้าสู่ช่วงที่ควรระวัง/อันตราย และแจ้งเมื่อกลับสู่ระดับปกติ</p></article>
-      <article><b>Telegram</b><p>ใช้เป็นช่องทางแจ้งเหตุสำคัญนอกหน้าเว็บ เช่น การเชื่อมต่อของระบบและระดับที่ควรเฝ้าระวัง เพื่อให้ผู้ดูแลไม่จำเป็นต้องเปิด Dashboard ตลอดเวลา</p></article>
-    </div>
-  </section>
 
   <section class="glass card about-detail-section">
     <div class="about-detail-head"><div><div class="overview-eyebrow">SCOPE & LIMITATIONS</div><h2>ขอบเขตและข้อจำกัดของระบบ</h2></div><span class="about-standard-badge">ควรอ่านก่อนตีความ</span></div>
