@@ -13,7 +13,8 @@ forecast:`${BASE}/api/ai_forecast`
 
 const TOTAL_NODES=3;
 const MOTHER_OFFLINE_MS=60*1000;
-const NODE_OFFLINE_MS=6*60*1000;
+// Node offline timing is decided by the Worker using the expected-wake rule.
+// Dashboard trusts the normalized status returned by the API.
 
 const $=
 id=>
@@ -906,46 +907,13 @@ if(
 !motherOnline()||
 !node
 ){
-
-return"offline";
-
+return "offline";
 }
 
-const s=
-String(
-node.status||
-"offline"
-)
-.toLowerCase();
+const s=String(node.status||"offline").toLowerCase();
 
-if(
-s==="offline"
-){
-
-return"offline";
-
-}
-
-const d=
-parseDate(
-
-node.last_seen||
-node.status_recorded_at||
-node.timestamp
-
-);
-
-if(
-!d||
-Date.now()-
-d.getTime()>
-NODE_OFFLINE_MS
-){
-
-return"offline";
-
-}
-
+// Offline/expected-wake decisions are made by the Worker.
+// Sleep is preserved internally and displayed as available by getNodeDisplayStatus().
 return s==="sleep"
 ?"sleep"
 :s==="online"
@@ -2283,7 +2251,7 @@ if(
 ){
 
 return resetCurrent(
-"Gateway Offline • ไม่สามารถประเมินข้อมูลปัจจุบันได้"
+"สถานีรับข้อมูลหลักขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
 );
 
 }
@@ -5751,9 +5719,9 @@ html:`
 <h4>ONLINE / OFFLINE หมายถึงอะไร?</h4>
 <ul>
 <li><b>ONLINE</b> = จุดตรวจวัดยังติดต่อกับระบบได้ โดยหน้า Dashboard นับช่วง Sleep ตามรอบประหยัดพลังงานเป็น ONLINE ด้วย</li>
-<li><b>OFFLINE</b> = ไม่ได้รับการติดต่อใหม่เกิน 6 นาที หรือ Gateway ขาดการเชื่อมต่อ</li>
+<li><b>OFFLINE</b> = จุดตรวจวัดไม่กลับมาตามเวลาที่ควรตื่นพร้อมช่วงเผื่อ หรือสถานีรับข้อมูลหลักขาดการเชื่อมต่อ</li>
 </ul>
-<p class="help-muted">เกณฑ์ 6 นาทีเป็น <b>กฎของโครงการ</b> เพื่อให้สัมพันธ์กับรอบ Sleep/วัดข้อมูล ไม่ใช่มาตรฐานจากหน่วยงานภายนอก</p>
+<p class="help-muted">ระบบใช้รอบ Sleep/Expected Wake ของอุปกรณ์ ไม่ได้ใช้ตัวเลข 6 นาทีเป็นเกณฑ์หลัก เมื่อพ้นเวลาที่ควรตื่นและช่วงเผื่อแล้วยังไม่มีการติดต่อจึงถือว่า Offline</p>
 </section>
 
 <section class="help-section">
@@ -5875,8 +5843,14 @@ html:`
 
 <section class="help-section">
 <h4>1) การเชื่อมต่อ</h4>
-<p>ถ้าจุดใดไม่มีการติดต่อใหม่เกิน 6 นาที ระบบจะแจ้งว่าขาดการเชื่อมต่อ หาก Gateway ขาดการเชื่อมต่อ ระบบจะไม่ยืนยันสถานะลูกทั้ง 3 จุด</p>
-<p class="help-muted">6 นาทีเป็นกฎภายในโครงการตามรอบ Sleep/วัดข้อมูล</p>
+<p>ระบบทราบรอบที่จุดตรวจวัดควรตื่นจาก Sleep หากพ้นเวลาที่ควรกลับมาพร้อมช่วงเผื่อแล้วยังไม่มีการติดต่อ ระบบจะแจ้งว่าขาดการเชื่อมต่อ หากสถานีรับข้อมูลหลักขาดการเชื่อมต่อ ระบบจะไม่ยืนยันสถานะของจุดตรวจวัดทั้ง 3 จุด</p>
+<p class="help-muted">การเข้า Sleep และตื่นตามแผนถือเป็นการทำงานปกติ จึงไม่สร้างการแจ้งเตือน Offline/Online ซ้ำโดยไม่จำเป็น</p>
+</section>
+
+<section class="help-section">
+<h4>การแจ้งเตือน Telegram</h4>
+<p>Telegram ใช้แจ้งเหตุที่ต้องให้ผู้ดูแลรับรู้ ได้แก่ สถานีรับข้อมูลหลักขาด/กลับมาเชื่อมต่อ จุดตรวจวัดขาด/กลับมาเชื่อมต่อ และการเปลี่ยนระดับของ PM2.5 หรือ Heat Index ที่ระบบใช้เฝ้าระวัง</p>
+<p class="help-muted">Sleep ตามรอบปกติไม่แจ้งเตือน และระบบพยายามส่งเมื่อสถานะหรือระดับเปลี่ยนเพื่อลดข้อความซ้ำ</p>
 </section>
 
 <section class="help-section">
@@ -5934,6 +5908,12 @@ html:`
 <li><b>อุณหภูมิ + ความชื้น</b> → ใช้ร่วมกันใน Heat Index; ไม่ตัดสินความเสี่ยงจากกราฟใดกราฟหนึ่งเพียงตัวเดียว</li>
 <li><b>แสง</b> → ไม่มี Health Threshold ในโครงการ; lux ใช้ดูการเปลี่ยนแปลงของความส่องสว่าง</li>
 </ul>
+</section>
+
+<section class="help-section">
+<h4>การอ่านแกนเวลาและการซูมกราฟ</h4>
+<p>เมื่อเลือกช่วงยาว เช่น 7 วันหรือ 30 วัน แกนล่างจะแสดงวันที่เป็นหลักเพื่อให้อ่านภาพรวมง่าย เมื่อซูมเข้าเหลือช่วงสั้น ระบบจะเพิ่มรายละเอียดเป็นชั่วโมงและนาที ส่วน Tooltip จะแสดงวันและเวลาของจุดข้อมูลจริงเสมอ</p>
+<p class="help-muted">การซูมเปลี่ยนเฉพาะมุมมอง ไม่ได้แก้ไขค่าที่เก็บในฐานข้อมูล</p>
 </section>
 
 <section class="help-section">
@@ -8290,7 +8270,7 @@ function updateNavigationDashboard(){
   const navDot=$("navSystemDot");
   const navText=$("navSystemStatus");
   if(navDot) navDot.className=`dashboard-system-dot ${systemOnline?"is-online":"is-offline"}`;
-  if(navText) navText.textContent=!apiConnectionOnline?"API ขัดข้อง":systemOnline?`ระบบปกติ • ${active}/${TOTAL_NODES}`:"Gateway Offline";
+  if(navText) navText.textContent=!apiConnectionOnline?"API ขัดข้อง":systemOnline?`ระบบปกติ • ${active}/${TOTAL_NODES}`:"สถานีรับข้อมูลหลักขาดการเชื่อมต่อ";
 
   const sourceAlerts=$("alerts");
   const overviewAlerts=$("overviewAlerts");
