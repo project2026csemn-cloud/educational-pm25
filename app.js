@@ -8800,9 +8800,12 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
   }
 
   function fitOpenFloatingUI(){
+    // V10: History Range ใช้ CSS full-screen mobile modal โดยตรง
+    // ห้ามคำนวณ width/left/top จาก VisualViewport เพราะบาง browser
+    // รายงานค่าชั่วคราวแคบมาก ทำให้ panel ไปกองมุมซ้าย
     const range = document.getElementById("historyRangePanel");
-    if(range && !range.classList.contains("hidden")){
-      fitFloating(range);
+    if(range && !range.classList.contains("hidden") && range.parentElement !== document.body){
+      document.body.appendChild(range);
     }
 
     const help = document.getElementById("helpPopover");
@@ -8813,6 +8816,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
 
   function restoreDesktop(){
     if(isMobileViewport()) return;
+    // History Range ไม่มี inline VisualViewport positioning ตั้งแต่ V10
     clearFit(document.getElementById("historyRangePanel"));
     clearFit(document.getElementById("helpPopover"));
   }
