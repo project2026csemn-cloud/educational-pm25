@@ -11023,3 +11023,119 @@ select{
         display:none;
     }
 }
+
+/* =========================================================
+   V9 — MOBILE FLOATING UI HARDENING
+   Fixes range picker / help / dialogs on devices whose
+   visual viewport differs from the layout viewport.
+   ========================================================= */
+
+/* History picker: desktop remains a true viewport modal. */
+#historyRangePanel.history-range-panel{
+    box-sizing:border-box!important;
+    position:fixed!important;
+    z-index:2147483000!important;
+}
+
+/* Help is also a viewport-level dialog. */
+#helpPopover.help-popover{
+    box-sizing:border-box!important;
+    position:fixed!important;
+    z-index:2147483000!important;
+}
+
+/* Other floating windows: cap them to the visible screen. */
+.export-modal-dialog,
+.admin-dialog,
+.credit-image-window,
+.chart-zoom-dialog{
+    box-sizing:border-box;
+    max-width:calc(100vw - 20px)!important;
+    max-height:calc(100dvh - 20px)!important;
+}
+
+/* Mobile fallback when VisualViewport JS is unavailable. */
+@media(max-width:760px){
+    #historyRangePanel.history-range-panel,
+    #helpPopover.help-popover{
+        position:fixed!important;
+        inset:8px!important;
+        left:8px!important;
+        right:8px!important;
+        top:8px!important;
+        bottom:8px!important;
+
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+        height:auto!important;
+        max-height:none!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        overflow:auto!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    #historyRangePanel .history-range-layout{
+        width:100%!important;
+        min-width:0!important;
+    }
+
+    #historyRangePanel input[type="datetime-local"]{
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    #historyRangePanel .history-range-calendar,
+    #historyRangePanel .history-range-quick,
+    #historyRangePanel > .border-t{
+        min-width:0!important;
+        max-width:100%!important;
+    }
+
+    #helpPopover .help-popover-header,
+    #helpPopover .help-popover-body{
+        min-width:0!important;
+        max-width:100%!important;
+    }
+}
+
+/* Very small phones. */
+@media(max-width:360px){
+    #historyRangePanel.history-range-panel,
+    #helpPopover.help-popover{
+        inset:5px!important;
+        left:5px!important;
+        right:5px!important;
+        top:5px!important;
+        bottom:5px!important;
+        border-radius:14px!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:12px 9px!important;
+    }
+
+    #historyRangePanel .history-range-quick{
+        padding:10px 9px 12px!important;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        gap:5px!important;
+    }
+}
+
+/* Prevent old positioning rules from creating a tiny left-corner box. */
+@media(max-width:760px){
+    body > #historyRangePanel.history-range-panel,
+    body > #helpPopover.help-popover{
+        contain:none!important;
+        clip:auto!important;
+        float:none!important;
+    }
+}
