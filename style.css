@@ -11606,3 +11606,333 @@ body > #historyRangePanel.history-range-modal{
         max-height:calc(100dvh - 12px)!important;
     }
 }
+
+/* =========================================================
+   V13 — HISTORY RANGE MODAL SCROLL FIX
+   Root fix:
+   - New modal ID isolates it from legacy #historyRangePanel rules.
+   - The DIALOG itself scrolls on mobile (most robust touch behavior).
+   - Header stays sticky; all hidden content can be reached.
+   ========================================================= */
+
+body.history-range-modal-open{
+    overflow:hidden!important;
+    touch-action:none;
+}
+
+#historyRangeModal.history-range-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483000!important;
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100vw!important;
+    height:100dvh!important;
+    padding:18px!important;
+    margin:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    touch-action:auto!important;
+}
+
+#historyRangeModal.history-range-modal.active{
+    display:flex!important;
+}
+
+#historyRangeModal .history-range-modal-backdrop{
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    background:rgba(2,8,18,.78)!important;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+}
+
+#historyRangeModal .history-range-modal-dialog{
+    position:relative!important;
+    z-index:1!important;
+    width:min(760px,calc(100vw - 36px))!important;
+    max-width:760px!important;
+    max-height:calc(100dvh - 36px)!important;
+    margin:0!important;
+
+    /* V13: scroll the dialog itself, not a nested flex child. */
+    display:block!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-y!important;
+
+    border:1px solid rgba(148,163,184,.18)!important;
+    border-radius:20px!important;
+    background:linear-gradient(145deg,rgba(7,24,39,.995),rgba(7,22,36,.995))!important;
+    box-shadow:0 35px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.025)!important;
+    color:#eaf2f8!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-modal-header{
+    position:sticky!important;
+    top:0!important;
+    z-index:20!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+    padding:18px 20px!important;
+    border-bottom:1px solid rgba(51,65,85,.72)!important;
+    background:rgba(7,24,39,.985)!important;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+}
+
+#historyRangeModal .history-range-modal-title-wrap{
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+}
+
+#historyRangeModal .history-range-modal-icon{
+    flex:0 0 42px!important;
+    width:42px!important;
+    height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(34,211,238,.18)!important;
+    border-radius:12px!important;
+    background:rgba(34,211,238,.08)!important;
+}
+
+#historyRangeModal .history-range-modal-title{
+    margin:0!important;
+    color:#fff!important;
+    font-size:20px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+#historyRangeModal .history-range-modal-subtitle{
+    margin:3px 0 0!important;
+    color:#64748b!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+}
+
+#historyRangeModal .history-range-modal-close{
+    flex:0 0 40px!important;
+    width:40px!important;
+    height:40px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid rgba(71,85,105,.55)!important;
+    border-radius:10px!important;
+    background:rgba(15,35,56,.92)!important;
+    color:#94a3b8!important;
+    font-size:23px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+#historyRangeModal .history-range-modal-body{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 180px!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+#historyRangeModal .history-range-calendar{
+    min-width:0!important;
+    padding:16px!important;
+    border-right:1px solid #1e293b!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-quick{
+    min-width:0!important;
+    padding:12px!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #quickRangeList.quick-range-list{
+    display:flex!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    gap:5px!important;
+    width:100%!important;
+    margin-top:6px!important;
+}
+
+#historyRangeModal #quickRangeList .quick-range-option{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:40px!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    border:1px solid rgba(71,85,105,.45)!important;
+    border-radius:10px!important;
+    background:rgba(9,24,39,.7)!important;
+    color:#cbd5e1!important;
+    font-size:13px!important;
+    font-weight:800!important;
+    white-space:normal!important;
+    cursor:pointer!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #quickRangeList .quick-range-option.active,
+#historyRangeModal #quickRangeList .quick-range-option[aria-current="true"]{
+    background:rgba(34,211,238,.12)!important;
+    border-color:rgba(34,211,238,.38)!important;
+    color:#67e8f9!important;
+}
+
+#historyRangeModal .history-range-modal-body > .border-t{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal input[type="datetime-local"]{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+/* Make final action area easy to reach after scrolling. */
+#historyRangeModal .history-range-modal-body > .border-t:last-child{
+    background:#091827!important;
+}
+
+/* ---------------- Mobile ---------------- */
+@media(max-width:760px){
+
+    body.history-range-modal-open{
+        overflow:hidden!important;
+        position:static!important;
+    }
+
+    #historyRangeModal.history-range-modal{
+        padding:
+            max(8px,env(safe-area-inset-top))
+            max(8px,env(safe-area-inset-right))
+            max(8px,env(safe-area-inset-bottom))
+            max(8px,env(safe-area-inset-left))!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        width:100%!important;
+        max-width:none!important;
+        max-height:calc(
+            100dvh
+            - max(16px,env(safe-area-inset-top) + env(safe-area-inset-bottom))
+        )!important;
+        border-radius:16px!important;
+    }
+
+    #historyRangeModal .history-range-modal-header{
+        padding:13px 14px!important;
+        gap:10px!important;
+    }
+
+    #historyRangeModal .history-range-modal-icon{
+        width:38px!important;
+        height:38px!important;
+        flex-basis:38px!important;
+    }
+
+    #historyRangeModal .history-range-modal-title{
+        font-size:18px!important;
+    }
+
+    #historyRangeModal .history-range-modal-subtitle{
+        font-size:12px!important;
+    }
+
+    #historyRangeModal .history-range-modal-close{
+        width:44px!important;
+        height:44px!important;
+        flex-basis:44px!important;
+    }
+
+    #historyRangeModal .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    #historyRangeModal .history-range-calendar{
+        padding:14px!important;
+        border-right:0!important;
+        border-bottom:1px solid #1e293b!important;
+    }
+
+    #historyRangeModal .history-range-quick{
+        padding:12px 14px 14px!important;
+    }
+
+    #historyRangeModal #quickRangeList.quick-range-list{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:7px!important;
+    }
+
+    #historyRangeModal #quickRangeList .quick-range-option{
+        min-height:44px!important;
+        font-size:14px!important;
+    }
+
+    #historyRangeModal input[type="datetime-local"]{
+        min-height:44px!important;
+        font-size:16px!important;
+    }
+
+    #historyRangeModal #historyRangeCancel,
+    #historyRangeModal #historyRangeApply{
+        min-height:46px!important;
+    }
+}
+
+@media(max-width:360px){
+    #historyRangeModal.history-range-modal{
+        padding:5px!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        max-height:calc(100dvh - 10px)!important;
+        border-radius:13px!important;
+    }
+
+    #historyRangeModal #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
+
+/* Short landscape phones */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+    #historyRangeModal.history-range-modal{
+        padding:5px!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        width:min(760px,100%)!important;
+        max-height:calc(100dvh - 10px)!important;
+    }
+}
