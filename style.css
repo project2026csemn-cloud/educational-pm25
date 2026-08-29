@@ -11139,3 +11139,123 @@ select{
         float:none!important;
     }
 }
+
+/* =========================================================
+   V10 — HISTORY RANGE MOBILE MODAL FINAL FIX
+   Do NOT size this dialog from VisualViewport JS.
+   CSS owns the entire geometry on mobile.
+   ========================================================= */
+
+@media (max-width:760px){
+
+    body.history-range-modal-open{
+        overflow:hidden!important;
+    }
+
+    body.history-range-modal-open::before{
+        content:""!important;
+        position:fixed!important;
+        inset:0!important;
+        width:100vw!important;
+        height:100dvh!important;
+        z-index:2147482000!important;
+        background:rgba(2,8,18,.88)!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+        pointer-events:auto!important;
+    }
+
+    body > #historyRangePanel.history-range-panel{
+        position:fixed!important;
+
+        /* Explicit four-edge geometry; no translate / calculated width. */
+        inset:
+            max(6px,env(safe-area-inset-top))
+            max(6px,env(safe-area-inset-right))
+            max(6px,env(safe-area-inset-bottom))
+            max(6px,env(safe-area-inset-left))!important;
+
+        top:max(6px,env(safe-area-inset-top))!important;
+        right:max(6px,env(safe-area-inset-right))!important;
+        bottom:max(6px,env(safe-area-inset-bottom))!important;
+        left:max(6px,env(safe-area-inset-left))!important;
+
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+
+        height:auto!important;
+        min-height:0!important;
+        max-height:none!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        display:block;
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+
+        border-radius:16px!important;
+        z-index:2147483000!important;
+        box-sizing:border-box!important;
+
+        /* Defeat any stale V9 inline geometry if browser restored page state. */
+        translate:none!important;
+    }
+
+    body > #historyRangePanel.history-range-panel.hidden{
+        display:none!important;
+    }
+
+    body > #historyRangePanel > .grid,
+    body > #historyRangePanel .history-range-layout{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+    }
+
+    body > #historyRangePanel > .grid > *,
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick,
+    body > #historyRangePanel > .border-t{
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    body > #historyRangePanel input,
+    body > #historyRangePanel select,
+    body > #historyRangePanel button{
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    body > #historyRangePanel input[type="datetime-local"]{
+        width:100%!important;
+        font-size:16px!important;
+    }
+
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+        z-index:8!important;
+        background:#091827!important;
+    }
+}
+
+/* Extra-small devices */
+@media (max-width:360px){
+    body > #historyRangePanel.history-range-panel{
+        border-radius:12px!important;
+    }
+
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
