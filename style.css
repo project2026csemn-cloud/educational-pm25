@@ -11329,3 +11329,280 @@ select{
         bottom:max(4px,env(safe-area-inset-bottom))!important;
     }
 }
+
+/* =========================================================
+   V12 — HISTORY RANGE = EXPORT-STYLE MODAL
+   The range picker no longer behaves as a popover/sheet.
+   It uses the same stable fixed-modal architecture as Export.
+   ========================================================= */
+
+body.history-range-modal-open{
+    overflow:hidden!important;
+}
+
+.history-range-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483000!important;
+
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    width:100vw!important;
+    height:100dvh!important;
+    padding:18px!important;
+    margin:0!important;
+
+    box-sizing:border-box!important;
+}
+
+.history-range-modal.active{
+    display:flex!important;
+}
+
+.history-range-modal-backdrop{
+    position:absolute!important;
+    inset:0!important;
+    background:rgba(2,8,18,.76)!important;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+}
+
+.history-range-modal-dialog{
+    position:relative!important;
+    z-index:1!important;
+
+    width:min(760px,calc(100vw - 36px))!important;
+    max-width:760px!important;
+    max-height:calc(100dvh - 36px)!important;
+
+    display:flex!important;
+    flex-direction:column!important;
+
+    margin:0!important;
+    transform:none!important;
+    overflow:hidden!important;
+
+    border:1px solid rgba(148,163,184,.18)!important;
+    border-radius:20px!important;
+    background:linear-gradient(145deg,rgba(7,24,39,.995),rgba(7,22,36,.995))!important;
+    box-shadow:0 35px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.025)!important;
+    color:#eaf2f8!important;
+    box-sizing:border-box!important;
+}
+
+.history-range-modal-header{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+    padding:18px 20px!important;
+    border-bottom:1px solid rgba(51,65,85,.72)!important;
+}
+
+.history-range-modal-title-wrap{
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+}
+
+.history-range-modal-icon{
+    flex:0 0 42px!important;
+    width:42px!important;
+    height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(34,211,238,.18)!important;
+    border-radius:12px!important;
+    background:rgba(34,211,238,.08)!important;
+    font-size:18px!important;
+}
+
+.history-range-modal-title{
+    margin:0!important;
+    color:#fff!important;
+    font-size:20px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+.history-range-modal-subtitle{
+    margin:3px 0 0!important;
+    color:#64748b!important;
+    font-size:11px!important;
+    line-height:1.45!important;
+}
+
+.history-range-modal-close{
+    flex:0 0 38px!important;
+    width:38px!important;
+    height:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid rgba(71,85,105,.55)!important;
+    border-radius:10px!important;
+    background:rgba(15,35,56,.78)!important;
+    color:#94a3b8!important;
+    font-family:inherit!important;
+    font-size:23px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+.history-range-modal-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    width:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain!important;
+    box-sizing:border-box!important;
+}
+
+/* Neutralize every old popover/sheet rule against this component. */
+body > #historyRangePanel.history-range-modal{
+    top:0!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    max-height:none!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    translate:none!important;
+}
+
+/* Internal content */
+.history-range-modal .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(210px,.62fr)!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+.history-range-modal .history-range-calendar,
+.history-range-modal .history-range-quick{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+.history-range-modal input[type="datetime-local"]{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+/* Mobile: exactly the same geometry strategy as Export. */
+@media(max-width:760px){
+
+    .history-range-modal{
+        padding:10px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:calc(100vw - 20px)!important;
+        max-width:none!important;
+        max-height:calc(100dvh - 20px)!important;
+        border-radius:16px!important;
+    }
+
+    .history-range-modal-header{
+        padding:13px 14px!important;
+        gap:10px!important;
+    }
+
+    .history-range-modal-icon{
+        width:38px!important;
+        height:38px!important;
+        flex-basis:38px!important;
+        font-size:17px!important;
+    }
+
+    .history-range-modal-title{
+        font-size:18px!important;
+    }
+
+    .history-range-modal-subtitle{
+        font-size:12px!important;
+        line-height:1.45!important;
+    }
+
+    .history-range-modal-close{
+        width:42px!important;
+        height:42px!important;
+        flex-basis:42px!important;
+    }
+
+    .history-range-modal .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    .history-range-modal .history-range-calendar{
+        padding:14px!important;
+    }
+
+    .history-range-modal .history-range-quick{
+        padding:12px 14px 15px!important;
+    }
+
+    .history-range-modal #quickRangeList.quick-range-list{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .history-range-modal input[type="datetime-local"]{
+        font-size:16px!important;
+        min-height:42px!important;
+    }
+
+    .history-range-modal #historyRangeCancel,
+    .history-range-modal #historyRangeApply{
+        min-height:44px!important;
+    }
+}
+
+@media(max-width:360px){
+
+    .history-range-modal{
+        padding:6px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:calc(100vw - 12px)!important;
+        max-height:calc(100dvh - 12px)!important;
+        border-radius:14px!important;
+    }
+
+    .history-range-modal #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+
+    .history-range-modal-title{
+        font-size:17px!important;
+    }
+}
+
+/* Landscape phones */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+    .history-range-modal{
+        padding:6px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:min(760px,calc(100vw - 12px))!important;
+        max-height:calc(100dvh - 12px)!important;
+    }
+}
