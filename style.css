@@ -11936,3 +11936,189 @@ body.history-range-modal-open{
         max-height:calc(100dvh - 10px)!important;
     }
 }
+
+/* =========================================================
+   V14 — RANGE MODAL CLEANUP AFTER VIDEO QA
+   V13 scroll works, but the weekday row was still depending
+   on legacy utility styles tied to the old modal ID.
+   This block makes every calendar layout rule explicit.
+   ========================================================= */
+
+#historyRangeModal .range-calendar-weekdays{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0 0 8px!important;
+    color:#64748b!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .range-calendar-weekdays > div{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    padding:0!important;
+    margin:0!important;
+    font-size:11px!important;
+    font-weight:750!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+}
+
+#historyRangeModal #rangeCalendarGrid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+    grid-auto-rows:38px!important;
+    gap:5px!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day,
+#historyRangeModal #rangeCalendarGrid button{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:38px!important;
+    min-height:38px!important;
+    max-height:38px!important;
+    padding:0!important;
+    margin:0!important;
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+    background:transparent!important;
+    color:#dbe7f3!important;
+    font-size:12px!important;
+    font-weight:700!important;
+    line-height:1!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-muted{
+    color:#475569!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-in-range{
+    background:rgba(34,211,238,.08)!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-start,
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-end{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.24)!important;
+    border-color:rgba(103,232,249,.48)!important;
+    font-weight:900!important;
+}
+
+/* Keep month title/nav on one row. */
+#historyRangeModal .history-range-calendar > .flex.items-center.justify-between{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    width:100%!important;
+}
+
+#historyRangeModal #calendarPrev,
+#historyRangeModal #calendarNext{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    min-height:38px!important;
+    padding:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+/* Custom range section: always a clean single column on phones. */
+@media(max-width:760px){
+    #historyRangeModal .range-calendar-weekdays{
+        gap:3px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays > div{
+        height:26px!important;
+        font-size:12px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid{
+        gap:4px!important;
+        grid-auto-rows:42px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid .range-calendar-day,
+    #historyRangeModal #rangeCalendarGrid button{
+        height:42px!important;
+        min-height:42px!important;
+        max-height:42px!important;
+        font-size:14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t.p-4{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:12px!important;
+        padding:14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t:last-child{
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        gap:10px!important;
+        padding:12px 14px 14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t:last-child > .flex{
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:8px!important;
+        width:100%!important;
+    }
+
+    #historyRangeModal #historyRangeCancel,
+    #historyRangeModal #historyRangeApply{
+        width:100%!important;
+        margin:0!important;
+    }
+}
+
+/* 320–360px: keep 7 calendar columns, just reduce gaps/padding. */
+@media(max-width:360px){
+    #historyRangeModal .history-range-calendar{
+        padding:10px 8px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays{
+        gap:2px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays > div{
+        font-size:10.5px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid{
+        gap:2px!important;
+        grid-auto-rows:38px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid .range-calendar-day,
+    #historyRangeModal #rangeCalendarGrid button{
+        height:38px!important;
+        min-height:38px!important;
+        max-height:38px!important;
+        font-size:12px!important;
+        border-radius:8px!important;
+    }
+}
