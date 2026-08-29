@@ -4081,7 +4081,7 @@ document.body.classList.remove(
 );
 
 const panel=
-$("historyRangePanel");
+$("historyRangeModal");
 
 const button=
 $("historyRangeButton");
@@ -4128,7 +4128,7 @@ $("customRangeError")
 function openHistoryRangePicker(){
 
 const panel=
-$("historyRangePanel");
+$("historyRangeModal");
 
 // ทำงานแบบ Export modal: ย้าย modal ไปใต้ body โดยตรง
 // แล้วให้ CSS ของ modal คุมตำแหน่งทั้งหมด
@@ -6457,7 +6457,7 @@ e=>{
 e.stopPropagation();
 
 const panel=
-$("historyRangePanel");
+$("historyRangeModal");
 
 if(!panel){
 return;
@@ -6597,13 +6597,13 @@ $("historyRangeModalClose")
 closeHistoryRangePicker
 );
 
-$("historyRangePanel")
+$("historyRangeModal")
 ?.addEventListener(
 "click",
 e=>{
 
 const modal=
-$("historyRangePanel");
+$("historyRangeModal");
 
 if(
 e.target===modal||
