@@ -4088,8 +4088,13 @@ $("historyRangeButton");
 
 if(panel){
 
-panel.classList.add(
-"hidden"
+panel.classList.remove(
+"active"
+);
+
+panel.setAttribute(
+"aria-hidden",
+"true"
 );
 
 }
@@ -4125,8 +4130,8 @@ function openHistoryRangePicker(){
 const panel=
 $("historyRangePanel");
 
-// ย้าย modal ไปเป็นลูกของ body เพื่อไม่ให้ติด stacking context / content-visibility
-// ของโซนกราฟ ซึ่งเคยทำให้ backdrop อยู่ทับหน้าต่างเลือกเวลา
+// ทำงานแบบ Export modal: ย้าย modal ไปใต้ body โดยตรง
+// แล้วให้ CSS ของ modal คุมตำแหน่งทั้งหมด
 if(panel && panel.parentElement !== document.body){
     document.body.appendChild(panel);
 }
@@ -4177,13 +4182,23 @@ averageRange==="custom"
 
 renderRangeCalendar();
 
-panel.classList.remove(
-"hidden"
+panel.classList.add(
+"active"
 );
 
-// ทุกครั้งที่เปิด ให้เริ่มที่ส่วนบนของหน้าต่างเลือกช่วงเวลา
-// สำคัญกับมือถือ เพราะ panel อาจเคยค้าง scroll จากครั้งก่อน
-panel.scrollTop=0;
+panel.setAttribute(
+"aria-hidden",
+"false"
+);
+
+const modalBody=
+panel.querySelector(
+".history-range-modal-body"
+);
+
+if(modalBody){
+modalBody.scrollTop=0;
+}
 
 document.body.classList.add(
 "history-range-modal-open"
@@ -6449,8 +6464,8 @@ return;
 }
 
 if(
-panel.classList.contains(
-"hidden"
+!panel.classList.contains(
+"active"
 )
 ){
 
@@ -6576,22 +6591,25 @@ $("historyRangeCancel")
 closeHistoryRangePicker
 );
 
+$("historyRangeModalClose")
+?.addEventListener(
+"click",
+closeHistoryRangePicker
+);
+
 $("historyRangePanel")
 ?.addEventListener(
 "click",
-e=>
-e.stopPropagation()
-);
-
-document
-.addEventListener(
-"click",
 e=>{
 
+const modal=
+$("historyRangePanel");
+
 if(
-!$("historyRangePicker")
-?.contains(
-e.target
+e.target===modal||
+e.target?.dataset?.historyRangeClose==="true"||
+e.target?.classList?.contains(
+"history-range-modal-backdrop"
 )
 ){
 
@@ -8803,11 +8821,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
     // V10: History Range ใช้ CSS full-screen mobile modal โดยตรง
     // ห้ามคำนวณ width/left/top จาก VisualViewport เพราะบาง browser
     // รายงานค่าชั่วคราวแคบมาก ทำให้ panel ไปกองมุมซ้าย
-    const range = document.getElementById("historyRangePanel");
-    if(range && !range.classList.contains("hidden") && range.parentElement !== document.body){
-      document.body.appendChild(range);
-    }
-
     const help = document.getElementById("helpPopover");
     if(help && help.classList.contains("active")){
       fitFloating(help);
@@ -8816,8 +8829,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
 
   function restoreDesktop(){
     if(isMobileViewport()) return;
-    // History Range ไม่มี inline VisualViewport positioning ตั้งแต่ V10
-    clearFit(document.getElementById("historyRangePanel"));
     clearFit(document.getElementById("helpPopover"));
   }
 
@@ -8827,7 +8838,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
   }
 
   // Watch both dialogs so opening them from any existing code path is safe.
-  ["historyRangePanel","helpPopover"].forEach(id=>{
+  ["helpPopover"].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
 
@@ -8861,4 +8872,5 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
       setTimeout(refresh,80);
     }
   });
+
 })();
