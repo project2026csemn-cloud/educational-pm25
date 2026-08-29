@@ -8737,3 +8737,125 @@ if(scroller)scroller.scrollTop=0;if(t==="audit")loadAdminAudit();
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.classList.contains("active"))closeAdminModal()});
 }
 (function startAdminFeatures(){const run=()=>{bindAdminMode();loadPublicDisplayConfig()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run()})();
+
+// =========================================================
+// V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
+// Some mobile browsers use a visual viewport smaller or
+// offset from the CSS layout viewport. This keeps modal-like
+// UI inside the actually visible screen.
+// =========================================================
+(function setupVisualViewportFloatingUI(){
+
+  const MOBILE_MAX = 760;
+  const GAP = 8;
+
+  function isMobileViewport(){
+    return window.matchMedia(`(max-width:${MOBILE_MAX}px)`).matches;
+  }
+
+  function visibleViewport(){
+    const vv = window.visualViewport;
+    return {
+      left: vv ? vv.offsetLeft : 0,
+      top: vv ? vv.offsetTop : 0,
+      width: vv ? vv.width : window.innerWidth,
+      height: vv ? vv.height : window.innerHeight
+    };
+  }
+
+  function clearFit(el){
+    if(!el) return;
+    [
+      "position","left","right","top","bottom",
+      "width","height","minWidth","maxWidth",
+      "minHeight","maxHeight","margin","transform"
+    ].forEach(prop=>el.style.removeProperty(prop));
+  }
+
+  function fitFloating(el){
+    if(!el || !isMobileViewport()) return;
+
+    // Portal to BODY. This avoids transformed/content-visibility ancestors
+    // becoming a fixed-position containing block on some browsers.
+    if(el.parentElement !== document.body){
+      document.body.appendChild(el);
+    }
+
+    const v = visibleViewport();
+    const gap = Math.min(GAP, Math.max(4, v.width * 0.02));
+    const width = Math.max(240, v.width - gap * 2);
+    const height = Math.max(240, v.height - gap * 2);
+
+    el.style.setProperty("position","fixed","important");
+    el.style.setProperty("left",`${v.left + gap}px`,"important");
+    el.style.setProperty("top",`${v.top + gap}px`,"important");
+    el.style.setProperty("right","auto","important");
+    el.style.setProperty("bottom","auto","important");
+    el.style.setProperty("width",`${width}px`,"important");
+    el.style.setProperty("max-width",`${width}px`,"important");
+    el.style.setProperty("height","auto","important");
+    el.style.setProperty("max-height",`${height}px`,"important");
+    el.style.setProperty("margin","0","important");
+    el.style.setProperty("transform","none","important");
+  }
+
+  function fitOpenFloatingUI(){
+    const range = document.getElementById("historyRangePanel");
+    if(range && !range.classList.contains("hidden")){
+      fitFloating(range);
+    }
+
+    const help = document.getElementById("helpPopover");
+    if(help && help.classList.contains("active")){
+      fitFloating(help);
+    }
+  }
+
+  function restoreDesktop(){
+    if(isMobileViewport()) return;
+    clearFit(document.getElementById("historyRangePanel"));
+    clearFit(document.getElementById("helpPopover"));
+  }
+
+  function refresh(){
+    if(isMobileViewport()) fitOpenFloatingUI();
+    else restoreDesktop();
+  }
+
+  // Watch both dialogs so opening them from any existing code path is safe.
+  ["historyRangePanel","helpPopover"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+
+    const observer=new MutationObserver(()=>{
+      requestAnimationFrame(refresh);
+    });
+
+    observer.observe(el,{
+      attributes:true,
+      attributeFilter:["class","aria-hidden"]
+    });
+  });
+
+  window.addEventListener("resize",refresh,{passive:true});
+  window.addEventListener("orientationchange",()=>{
+    setTimeout(refresh,80);
+    setTimeout(refresh,260);
+  },{passive:true});
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize",refresh,{passive:true});
+    window.visualViewport.addEventListener("scroll",refresh,{passive:true});
+  }
+
+  document.addEventListener("click",e=>{
+    if(
+      e.target.closest?.("#historyRangeButton") ||
+      e.target.closest?.(".help-button")
+    ){
+      requestAnimationFrame(refresh);
+      setTimeout(refresh,80);
+    }
+  });
+
+})();
