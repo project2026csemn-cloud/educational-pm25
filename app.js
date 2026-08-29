@@ -8872,5 +8872,4 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
       setTimeout(refresh,80);
     }
   });
-
 })();
