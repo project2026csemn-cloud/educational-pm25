@@ -11259,3 +11259,73 @@ select{
         grid-template-columns:1fr!important;
     }
 }
+
+/* =========================================================
+   V11 — HISTORY RANGE MOBILE COMPACT SHEET
+   V10 fixed the left-corner bug but stretched the panel to
+   almost the full screen height. V11 keeps it viewport-safe
+   while letting the panel fit its actual content.
+   ========================================================= */
+
+@media (max-width:760px){
+
+    body > #historyRangePanel.history-range-panel{
+        /* Anchor to the bottom instead of pinning all 4 edges. */
+        top:auto!important;
+        bottom:max(6px,env(safe-area-inset-bottom))!important;
+        left:max(6px,env(safe-area-inset-left))!important;
+        right:max(6px,env(safe-area-inset-right))!important;
+
+        width:auto!important;
+        height:auto!important;
+        min-height:0!important;
+        max-height:calc(100dvh - max(12px,env(safe-area-inset-top) + env(safe-area-inset-bottom)))!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        border-radius:16px!important;
+    }
+
+    /* Keep the contents compact and natural-height. */
+    body > #historyRangePanel > .grid,
+    body > #historyRangePanel .history-range-layout{
+        height:auto!important;
+        min-height:0!important;
+        align-content:start!important;
+    }
+
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick{
+        height:auto!important;
+        min-height:0!important;
+    }
+
+    /* Footer no longer needs to hold a full-height sheet together. */
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+    }
+}
+
+/* Short landscape phones: use nearly the full visible height,
+   but still never create an artificial blank area. */
+@media (max-width:900px) and (orientation:landscape) and (max-height:520px){
+    body > #historyRangePanel.history-range-panel{
+        top:6px!important;
+        bottom:6px!important;
+        max-height:none!important;
+        height:auto!important;
+    }
+}
+
+/* Very narrow phones: retain compact layout. */
+@media (max-width:360px){
+    body > #historyRangePanel.history-range-panel{
+        left:4px!important;
+        right:4px!important;
+        bottom:max(4px,env(safe-area-inset-bottom))!important;
+    }
+}
