@@ -23,7 +23,6 @@ document.getElementById(id);
 
 let latestNodes=[];
 let records=[];
-let historyMeta={bucket_minutes:null,aggregated:false};
 let motherStatus=null;
 let alertStates=[];
 let standardsData=null;
@@ -554,7 +553,7 @@ el.innerHTML=
 <b>${esc(edgeText(displayStart))}</b>
 </div>
 <div class="history-range-center">
-<span>${esc(rangeLabel())}</span>
+<span>${esc(rangeLabel())}${esc(areaCoverageNote)}</span>
 ${latestText
 ?`<small>ข้อมูลล่าสุด ${esc(latestText)}</small>`
 :`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
@@ -1119,12 +1118,6 @@ await fetchJson(
 `${API.history}?range=${encodeURIComponent(apiRange())}`
 );
 
-historyMeta={
-bucket_minutes:
-Number(j?.bucket_minutes)||null,
-aggregated:
-Boolean(j?.aggregated)
-};
 
 return(
 Array.isArray(
@@ -1319,10 +1312,10 @@ n
 }
 
 const dot=
-$("gatewayDotTop");
+$("dataStateDotTop");
 
 const st=
-$("gatewayStatusTop");
+$("dataStateStatusTop");
 
 const ac=
 $("nodesActiveTop");
@@ -3455,17 +3448,15 @@ return makeNodeDataset(nodeId,field,vals);
 return{labels,datasets};
 }
 
+function distinctMonitoringPoints(rows){
+return new Set(
+(rows||[])
+.map(r=>String(r?.device_id||""))
+.filter(id=>DEVICE_IDS.includes(id))
+).size;
+}
+
 function spatialAverageRows(rows,fields=GRAPH_FIELDS,bucketMs=5*60*1000){
-// IMPORTANT:
-// อุปกรณ์ทั้ง 3 จุดส่งข้อมูลของใครของมันมายังระบบ
-// จึงห้ามเอา "ทุกแถว" ใน bucket มาหารรวมโดยตรง เพราะจุดที่ส่งถี่กว่า
-// จะมีน้ำหนักมากกว่าจุดอื่นโดยไม่ตั้งใจ
-//
-// วิธีที่ใช้:
-// 1) แบ่งข้อมูลตามช่วงเวลา (time bucket)
-// 2) ในแต่ละ bucket หาเฉลี่ยของ "แต่ละจุด" ก่อน
-// 3) เอาค่าเฉลี่ยของจุดที่มีข้อมูลจริงมาเฉลี่ยอีกครั้งแบบให้น้ำหนักเท่ากัน
-// ไม่มีข้อมูล = ไม่นับเป็น 0
 const buckets=new Map();
 const validNodes=new Set(HISTORY_NODES);
 
@@ -5175,7 +5166,7 @@ if(
 payload.ai===true&&
 payload.cached===true
 ){
-return"is-cached";
+return"is-ready";
 }
 
 if(
@@ -5211,7 +5202,7 @@ if(
 payload.ai===true&&
 payload.cached===true
 ){
-return"AI CACHED";
+return"ข้อมูลพร้อมใช้งาน";
 }
 
 if(
@@ -5694,7 +5685,7 @@ payload?.provider;
 
 providerLabel.textContent=
 provider==="gemini"
-?"Gemini AI"
+?"ระบบวิเคราะห์"
 :provider==="cloudflare"
 ?"ระบบวิเคราะห์"
 :payload?.ai===false
