@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่</title>
 <meta content="ระบบตรวจวัดคุณภาพอากาศและฝุ่น PM2.5 ในระดับพื้นที่ แสดงข้อมูลจาก 3 จุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน แนวโน้ม และการคาดการณ์ 30 นาที" name="description"/>
-<meta content="วิทยาลัยเสริมทักษะพระภิกษุ สามเณร, แผนกเทคโนโลยีสารสนเทศและการสื่อสาร, โครงงาน PM2.5, สถานีตรวจวัดคุณภาพอากาศ, PM2.5 ระดับพื้นที่, ระบบตรวจวัดคุณภาพอากาศ, PM1.0, PM2.5, PM10, ESP32, IoT, AI คุณภาพอากาศ" name="keywords"/>
+<meta content="โครงงาน PM2.5, คุณภาพอากาศระดับพื้นที่, PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น, ดัชนีความร้อน" name="keywords"/>
 <meta content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" name="author"/>
 <meta content="index, follow" name="robots"/>
 <meta content="index, follow" name="googlebot"/>
@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260901-deep-audit-v17" rel="stylesheet"/>
+<link href="style.css?v=20260901-public-safe-final-v19" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -52,15 +52,11 @@
     },
     {
       "@type": "Thing",
-      "name": "ESP32"
-    },
-    {
-      "@type": "Thing",
       "name": "IoT"
     },
     {
       "@type": "Thing",
-      "name": "AI วิเคราะห์คุณภาพอากาศ"
+      "name": "วิเคราะห์แนวโน้มคุณภาพอากาศ"
     }
   ],
   "publisher": {
@@ -122,7 +118,6 @@ DASHBOARD NAVIGATION
       <button class="dashboard-nav-link" type="button" data-dashboard-page="history">สถิติและกราฟ</button>
       <button class="dashboard-nav-link" type="button" data-dashboard-page="analysis">วิเคราะห์และคาดการณ์</button>
       <button class="dashboard-nav-link" type="button" data-dashboard-page="about">เกี่ยวกับโครงการ</button>
-      <button class="dashboard-nav-link admin-open-button" id="adminOpenButton" type="button" aria-haspopup="dialog">🔒 ผู้ดูแล</button>
     </div>
     <div class="dashboard-system-pill" id="dashboardSystemPill" title="สถานะระบบโดยรวม">
       <span class="dashboard-system-dot is-checking" id="navSystemDot"></span>
@@ -142,7 +137,7 @@ DASHBOARD NAVIGATION
       <div class="overview-title-row">
         <div>
           <div class="section-title-with-help overview-title-help">
-            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
+            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ <button type="button" class="context-help-button" data-v18-help="systemGuide" aria-label="ดูคำอธิบาย">?</button></h1>
             <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
           </div>
           <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
@@ -200,7 +195,7 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด</h1><p>ดูสถานะสถานีรับข้อมูลหลักและข้อมูลล่าสุดจากอุปกรณ์ทั้ง 3 จุด พร้อมเปรียบเทียบค่าปัจจุบัน</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด <button type="button" class="context-help-button" data-v18-help="monitoring" aria-label="ดูคำอธิบาย">?</button></h1><p>ดูความพร้อมของระบบและข้อมูลล่าสุดจากทั้ง 3 จุด พร้อมเปรียบเทียบสถานการณ์ปัจจุบัน</p></div>
   <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
 <div class="flex justify-between items-center mb-3">
 <div>
@@ -215,7 +210,7 @@ DASHBOARD NAVIGATION
 </div>
 <div class="monitoring-status-cluster">
 <div class="monitoring-status-card monitoring-primary-status">
-<div class="monitoring-status-label">สถานีรับข้อมูลหลัก</div>
+<div class="monitoring-status-label">ความพร้อมของระบบ</div>
 <div class="monitoring-status-value">
 <span class="text-slate-500" id="gatewayDotTop">●</span>
 <span id="gatewayStatusTop">กำลังตรวจสอบ</span>
@@ -777,6 +772,10 @@ DASHBOARD NAVIGATION
           <div><span>37.6–75.0 µg/m³</span><b>เริ่มมีผลกระทบต่อสุขภาพ</b></div>
           <div><span>75.1 µg/m³ ขึ้นไป</span><b>มีผลกระทบต่อสุขภาพ</b></div>
         </div>
+        <p class="about-standard-note">
+          การเทียบมาตรฐาน PM2.5 ของประเทศไทยใช้ค่าเฉลี่ย 24 ชั่วโมง
+          โดยกำหนดไว้ไม่เกิน 37.5 µg/m³
+        </p>
         <p class="about-standard-note">Dashboard ใช้ระดับนี้เพื่อการสื่อสารและเฝ้าระวังเบื้องต้น ส่วนค่ามาตรฐาน PM2.5 ที่ 37.5 µg/m³ เป็นค่าเฉลี่ย 24 ชั่วโมง จึงไม่ควรนำค่ารอบล่าสุดไปสรุปว่า “ผ่าน/ไม่ผ่านมาตรฐาน 24 ชั่วโมง” โดยตรง</p>
       </article>
 
@@ -827,7 +826,6 @@ DASHBOARD NAVIGATION
         <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>มาตรฐาน PM10 ↗</b></a>
         <a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer"><span>กรมอุตุนิยมวิทยา</span><b>Heat Index ↗</b></a>
         <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer"><span>WHO</span><b>Air Quality Guidelines 2021 ↗</b></a>
-        <a href="https://www.rohm.com/products/sensors-mems/ambient-light-sensor-ics" target="_blank" rel="noopener noreferrer"><span>ROHM</span><b>Ambient Light / lux ↗</b></a>
       </div>
     </div>
   </section>
@@ -1059,7 +1057,7 @@ EXPORT MODAL
 </div>
 <div class="export-summary-note">
 <div>
-                        ส่งออกเฉพาะข้อมูล Sensor ที่สถานะ
+                        ส่งออกเฉพาะข้อมูลตรวจวัดที่สถานะ
                         <b class="text-emerald-400">
                             ONLINE
                         </b>
@@ -1144,181 +1142,21 @@ window.addEventListener("load",()=>{
   setTimeout(()=>{
     const clock=document.getElementById("clock");
     if(clock && (clock.textContent.trim()==="--" || clock.textContent.trim()==="")){
-      console.error("app.js did not start. Check that app.js exists in the repository root.");
-      clock.textContent="JS ERROR";
+      console.error("Dashboard initialization failed.");
+      clock.textContent="SYSTEM ERROR";
       const g=document.getElementById("gatewayStatus");
-      if(g)g.textContent="APP.JS NOT LOADED";
+      if(g)g.textContent="ไม่พร้อมใช้งาน";
     }
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260901-deep-audit-v17"></script>
+<script defer src="app.js?v=20260901-public-safe-final-v19"></script>
 </div>
-<!-- =========================================================
-ADMIN MODE
-========================================================= -->
-<div class="admin-modal" id="adminModal" aria-hidden="true">
-  <div class="admin-modal-backdrop" id="adminModalBackdrop"></div>
-  <section class="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="adminDialogTitle">
-    <header class="admin-dialog-header">
-      <div>
-        <div class="admin-kicker">ADMIN MODE</div>
-        <h2 id="adminDialogTitle">ผู้ดูแลระบบ</h2>
-        <p id="adminDialogSubtitle">จัดการข้อมูลที่แสดงบน Dashboard</p>
-      </div>
-      <button class="admin-close-button" id="adminCloseButton" type="button" aria-label="ปิด">×</button>
-    </header>
-
-    <div class="admin-login-view" id="adminLoginView">
-      <form class="admin-login-card" id="adminLoginForm">
-        <div class="admin-lock-icon">🔐</div>
-        <h3>เข้าสู่ระบบผู้ดูแล</h3>
-        <p>กรอกรหัส ADMIN_PASSWORD ที่ตั้งไว้ใน Cloudflare</p>
-        <label class="admin-field"><span>รหัสผ่านผู้ดูแล</span><input id="adminPassword" type="password" autocomplete="current-password" maxlength="200" required></label>
-        <div class="admin-message hidden" id="adminLoginMessage"></div>
-        <button class="admin-primary-button" id="adminLoginButton" type="submit">เข้าสู่ระบบ</button>
-      </form>
-    </div>
-
-    <div class="admin-editor-view hidden" id="adminEditorView">
-      <div class="admin-editor-toolbar">
-        <div><b>โหมดผู้ดูแลกำลังทำงาน</b><span>ข้อมูลที่บันทึกจะใช้กับ Dashboard สาธารณะ</span></div>
-        <button class="admin-logout-button" id="adminLogoutButton" type="button">ออกจากระบบ</button>
-      </div>
-
-      <div class="admin-workspace">
-        <aside class="admin-sidebar" aria-label="เมนูผู้ดูแล">
-          <div class="admin-sidebar-title">เมนูจัดการ</div>
-          <div class="admin-tabs" role="tablist">
-            <button class="admin-tab active" type="button" data-admin-tab="devices">
-              <span class="admin-tab-icon">📍</span>
-              <span class="admin-tab-copy"><b>จุดตรวจวัด</b><small>ชื่อ สถานที่ และคำอธิบาย</small></span>
-            </button>
-            <button class="admin-tab" type="button" data-admin-tab="help">
-              <span class="admin-tab-icon">?</span>
-              <span class="admin-tab-copy"><b>คำอธิบาย</b><small>ข้อความในปุ่มช่วยเหลือ</small></span>
-            </button>
-            <button class="admin-tab" type="button" data-admin-tab="about">
-              <span class="admin-tab-icon">ℹ</span>
-              <span class="admin-tab-copy"><b>เกี่ยวกับโครงการ</b><small>หัวข้อและข้อความแนะนำ</small></span>
-            </button>
-            <button class="admin-tab" type="button" data-admin-tab="announcement">
-              <span class="admin-tab-icon">📢</span>
-              <span class="admin-tab-copy"><b>ประกาศระบบ</b><small>แจ้งข่าวหรือบำรุงรักษา</small></span>
-            </button>
-            <button class="admin-tab" type="button" data-admin-tab="audit">
-              <span class="admin-tab-icon">🕘</span>
-              <span class="admin-tab-copy"><b>ประวัติการแก้ไข</b><small>กิจกรรมผู้ดูแลล่าสุด</small></span>
-            </button>
-          </div>
-          <div class="admin-sidebar-note">รหัส Number 1–3 เป็นรหัสภายในและไม่ถูกเปลี่ยน</div>
-        </aside>
-
-        <div class="admin-editor-scroll">
-        <section class="admin-tab-panel active" data-admin-panel="devices">
-          <div class="admin-section-head admin-section-head-row">
-<div><h3>จัดการจุดตรวจวัด</h3><p>กำหนดชื่อและรายละเอียดที่ต้องการให้ผู้ใช้งานเห็นบน Dashboard</p></div>
-<button class="admin-reset-button" type="button" data-admin-reset="devices">↺ ค่าเริ่มต้นหมวดนี้</button>
-</div>
-          <div class="admin-device-grid">
-            <article class="admin-device-card">
-              <div class="admin-device-card-head">
-                <div>
-                  <span class="admin-device-index">จุดตรวจวัด 1</span>
-                  <strong id="adminDevicePreviewName1">จุดตรวจวัด 1</strong>
-                </div>
-                <span class="admin-device-id">Number 1</span>
-              </div>
-              <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName1" maxlength="60" placeholder="เช่น จุดตรวจวัด 1"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation1" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription1" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
-              </div>
-            </article>
-            <article class="admin-device-card">
-              <div class="admin-device-card-head">
-                <div>
-                  <span class="admin-device-index">จุดตรวจวัด 2</span>
-                  <strong id="adminDevicePreviewName2">จุดตรวจวัด 2</strong>
-                </div>
-                <span class="admin-device-id">Number 2</span>
-              </div>
-              <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName2" maxlength="60" placeholder="เช่น จุดตรวจวัด 2"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation2" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription2" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
-              </div>
-            </article>
-            <article class="admin-device-card">
-              <div class="admin-device-card-head">
-                <div>
-                  <span class="admin-device-index">จุดตรวจวัด 3</span>
-                  <strong id="adminDevicePreviewName3">จุดตรวจวัด 3</strong>
-                </div>
-                <span class="admin-device-id">Number 3</span>
-              </div>
-              <div class="admin-device-fields">
-                <label class="admin-field"><span>ชื่อที่แสดง</span><input id="adminDeviceName3" maxlength="60" placeholder="เช่น จุดตรวจวัด 3"><small class="admin-display-hint">แสดงที่: การ์ดจุดตรวจวัด, หน้าภาพรวม และตัวเลือกกราฟ</small></label>
-                <label class="admin-field"><span>ชื่อสถานที่</span><input id="adminDeviceLocation3" maxlength="100" placeholder="เช่น บริเวณหอพัก"><small class="admin-display-hint">แสดงใต้ชื่อจุดตรวจวัดและในตัวเลือกกราฟ</small></label>
-                <label class="admin-field admin-field-wide"><span>คำอธิบายสั้น ๆ</span><textarea id="adminDeviceDescription3" maxlength="300" rows="2" placeholder="รายละเอียดเพิ่มเติมของจุดตรวจวัดนี้"></textarea><small class="admin-display-hint">แสดงที่: การ์ดรายละเอียดของจุดตรวจวัด</small></label>
-              </div>
-            </article>
-          </div>
-          <div class="admin-preview-box"><div class="admin-preview-label">ตัวอย่างก่อนบันทึก</div>
-            <div class="admin-preview-device"><strong id="adminPreviewDeviceTitle">จุดตรวจวัด 1</strong><b id="adminPreviewDeviceLocation">ยังไม่ได้ระบุสถานที่</b><p id="adminPreviewDeviceDescription">ยังไม่มีคำอธิบายเพิ่มเติม</p></div>
-          </div>
-        </section>
-
-        <section class="admin-tab-panel" data-admin-panel="help">
-          <div class="admin-section-head admin-section-head-row">
-<div><h3>คำอธิบายในปุ่ม ?</h3><p>ข้อความนี้จะแสดงเพิ่มด้านบนของคำอธิบายเดิม เพื่อไม่ลบเนื้อหาหลักโดยไม่ตั้งใจ</p></div>
-<button class="admin-reset-button" type="button" data-admin-reset="help">↺ ค่าเริ่มต้นหมวดนี้</button>
-</div>
-          <label class="admin-field"><span>ภาพรวมคุณภาพอากาศ</span><textarea id="adminHelpOverview" maxlength="3000" rows="5"></textarea><small class="admin-display-hint">แสดงที่: ภาพรวม → ปุ่ม ? ของภาพรวมคุณภาพอากาศ</small></label>
-          <label class="admin-field"><span>จุดตรวจวัด</span><textarea id="adminHelpMonitoring" maxlength="3000" rows="5"></textarea><small class="admin-display-hint">แสดงที่: จุดตรวจวัด → ปุ่ม ?</small></label>
-          <label class="admin-field"><span>แนวโน้มข้อมูลย้อนหลัง</span><textarea id="adminHelpHistory" maxlength="4000" rows="6"></textarea><small class="admin-display-hint">แสดงที่: สถิติและกราฟ → ปุ่ม ? ของแนวโน้มข้อมูลย้อนหลัง</small></label>
-          <label class="admin-field"><span>กราฟคาดการณ์ 30 นาที</span><textarea id="adminHelpForecast" maxlength="4000" rows="6"></textarea><small class="admin-display-hint">แสดงที่: วิเคราะห์และคาดการณ์ → ปุ่ม ? ของกราฟคาดการณ์ 30 นาที</small></label>
-          <div class="admin-preview-box"><div class="admin-preview-label">ตัวอย่างข้อความเพิ่มเติม</div><div class="admin-preview-help"><b>คำอธิบายเพิ่มเติม</b><p id="adminPreviewHelp">ยังไม่ได้เพิ่มคำอธิบายจากผู้ดูแล</p></div></div>
-        </section>
-
-        <section class="admin-tab-panel" data-admin-panel="about">
-          <div class="admin-section-head admin-section-head-row">
-<div><h3>เกี่ยวกับโครงการ</h3><p>ข้อความสาธารณะที่แสดงในหน้าเกี่ยวกับโครงการ</p></div>
-<button class="admin-reset-button" type="button" data-admin-reset="about">↺ ค่าเริ่มต้นหมวดนี้</button>
-</div>
-          <label class="admin-field"><span>หัวข้อหน้า</span><input id="adminAboutHeading" maxlength="120"><small class="admin-display-hint">แสดงที่: หน้าเกี่ยวกับโครงการ → หัวข้อด้านบน</small></label>
-          <label class="admin-field"><span>ข้อความแนะนำโครงการ</span><textarea id="adminAboutIntro" maxlength="1800" rows="8"></textarea><small class="admin-display-hint">แสดงใต้หัวข้อหน้าเกี่ยวกับโครงการ</small></label>
-          <div class="admin-preview-box"><div class="admin-preview-label">ตัวอย่างก่อนบันทึก</div><div class="admin-preview-about"><small>PROJECT INFORMATION</small><h3 id="adminPreviewAboutHeading">เกี่ยวกับโครงการ</h3><p id="adminPreviewAboutIntro">ยังไม่มีข้อความแนะนำเพิ่มเติม</p></div></div>
-        </section>
-
-        <section class="admin-tab-panel" data-admin-panel="announcement">
-          <div class="admin-section-head admin-section-head-row">
-            <div><h3>ประกาศระบบ</h3><p>แจ้งบำรุงรักษา จุดตรวจวัดขัดข้อง หรือข้อมูลสำคัญแก่ผู้เข้าชม</p></div>
-            <button class="admin-reset-button" type="button" data-admin-reset="announcement">↺ ค่าเริ่มต้นหมวดนี้</button>
-          </div>
-          <label class="admin-toggle-field"><input id="adminAnnouncementEnabled" type="checkbox"><span><b>เปิดแสดงประกาศ</b><small>ปิดเพื่อซ่อนประกาศโดยไม่ลบข้อความ</small></span></label>
-          <label class="admin-field"><span>ระดับประกาศ</span><select id="adminAnnouncementSeverity"><option value="info">ข้อมูลทั่วไป</option><option value="warning">แจ้งเตือน</option><option value="maintenance">บำรุงรักษา</option></select></label>
-          <label class="admin-field"><span>หัวข้อประกาศ</span><input id="adminAnnouncementTitle" maxlength="120" placeholder="เช่น แจ้งบำรุงรักษาจุดตรวจวัด 2"></label>
-          <label class="admin-field"><span>รายละเอียด</span><textarea id="adminAnnouncementMessage" maxlength="1200" rows="6"></textarea><small class="admin-display-hint">แสดงเป็นแถบประกาศด้านบนของ Dashboard ทุกหน้า</small></label>
-          <div class="admin-preview-box"><div class="admin-preview-label">ตัวอย่างประกาศ</div><div class="site-announcement is-info" id="adminAnnouncementPreview"><span class="site-announcement-icon">ℹ</span><div><strong id="adminPreviewAnnouncementTitle">ประกาศจากระบบ</strong><p id="adminPreviewAnnouncementMessage">ยังไม่มีรายละเอียดประกาศ</p></div></div></div>
-        </section>
-
-        <section class="admin-tab-panel" data-admin-panel="audit">
-          <div class="admin-section-head"><h3>ประวัติการแก้ไข</h3><p>กิจกรรมล่าสุดของผู้ดูแลแบบอ่านอย่างเดียว</p></div>
-          <div class="admin-audit-toolbar"><button class="admin-secondary-button" id="adminAuditReload" type="button">↻ โหลดประวัติล่าสุด</button></div>
-          <div class="admin-audit-list" id="adminAuditList"><div class="admin-audit-empty">กดโหลดประวัติล่าสุดเพื่อดูข้อมูล</div></div>
-        </section>
-        </div>
-      </div>
-
-      <footer class="admin-editor-footer">
-        <div class="admin-message hidden" id="adminSaveMessage"></div>
-        <button class="admin-secondary-button" id="adminReloadButton" type="button">↻ โหลดค่าที่บันทึกไว้</button>
-        <button class="admin-primary-button" id="adminSaveButton" type="button">บันทึกการเปลี่ยนแปลง</button>
-      </footer>
-    </div>
-  </section>
-</div>
-
+<div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
+<div class="v18-info-backdrop" data-v18-info-close></div>
+<section class="v18-info-dialog" role="dialog" aria-modal="true" aria-labelledby="v18InfoTitle">
+<header class="v18-info-header"><div><small>คำอธิบายข้อมูล</small><h2 id="v18InfoTitle">ข้อมูล</h2></div><button type="button" data-v18-info-close aria-label="ปิด">×</button></header>
+<div class="v18-info-body" id="v18InfoBody"></div>
+</section></div>
 </body>
 </html>
