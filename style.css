@@ -12122,3 +12122,12 @@ body.history-range-modal-open{
         border-radius:8px!important;
     }
 }
+
+/* =========================================================
+   V15 — NAV ALERT COUNT REMOVED
+   ป้ายตัวเลขสีแดงหลังสถานะระบบถูกยกเลิก
+   ========================================================= */
+#navAlertBadge,
+.dashboard-system-pill > .dashboard-alert-badge{
+    display:none!important;
+}
