@@ -9,11 +9,7 @@ alerts:`${BASE}/api/alert_states`,
 standards:`${BASE}/api/standards.php`,
 ai:`${BASE}/api/ai_analysis`,
 forecast:`${BASE}/api/ai_forecast`,
-publicConfig:`${BASE}/api/public_config`,
-adminLogin:`${BASE}/api/admin/login`,
-adminConfig:`${BASE}/api/admin/config`,
-adminLogout:`${BASE}/api/admin/logout`,
-adminAudit:`${BASE}/api/admin/audit_log`
+publicConfig:`${BASE}/api/public_config`
 };
 
 const TOTAL_NODES=3;
@@ -27,6 +23,7 @@ document.getElementById(id);
 
 let latestNodes=[];
 let records=[];
+let historyMeta={bucket_minutes:null,aggregated:false};
 let motherStatus=null;
 let alertStates=[];
 let standardsData=null;
@@ -77,7 +74,6 @@ devices:[
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
-let adminSessionToken=sessionStorage.getItem("pm25_admin_session")||"";
 
 
 // =====================================================
@@ -562,6 +558,7 @@ el.innerHTML=
 ${latestText
 ?`<small>ข้อมูลล่าสุด ${esc(latestText)}</small>`
 :`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
+
 </div>
 <div class="history-range-edge history-range-edge-end">
 <span>${averageRange==="custom"?"สิ้นสุด":"ถึงปัจจุบัน"}</span>
@@ -886,14 +883,13 @@ MOTHER_OFFLINE_MS
 // =====================================================
 // NODE STATUS RULE
 //
-// สถานีรับข้อมูลหลัก OFFLINE
+// ระบบข้อมูล OFFLINE
 // -> Node ทุกตัว Offline
 //
 // ONLINE / SLEEP
-// -> ต้องไม่เกิน 6 นาที
+// -> Dashboard เชื่อสถานะที่ Worker คำนวณจาก Firmware timing
 //
-// เกิน 6 นาที
-// -> Offline
+// Device state is normalized before display.
 // =====================================================
 
 function getNodeStatus(node){
@@ -1086,6 +1082,25 @@ if(
 averageRange==="custom"
 ){
 
+if(!customRangeStart){
+return"30d";
+}
+
+const ageMs=
+Math.max(
+0,
+Date.now()-
+customRangeStart.getTime()
+);
+
+if(ageMs<=24*60*60*1000){
+return"24h";
+}
+
+if(ageMs<=7*24*60*60*1000){
+return"7d";
+}
+
 return"30d";
 
 }
@@ -1103,6 +1118,13 @@ const j=
 await fetchJson(
 `${API.history}?range=${encodeURIComponent(apiRange())}`
 );
+
+historyMeta={
+bucket_minutes:
+Number(j?.bucket_minutes)||null,
+aggregated:
+Boolean(j?.aggregated)
+};
 
 return(
 Array.isArray(
@@ -1275,10 +1297,15 @@ $("lastUpdate"+i);
 
 if(t){
 
+const valueTime=
+n?.reading_recorded_at||
+n?.timestamp||
+null;
+
 t.textContent=
-n?.timestamp
+valueTime
 ?thaiTime(
-n.timestamp
+valueTime
 )
 :"--";
 
@@ -1448,54 +1475,45 @@ label:"ไม่มีข้อมูล"
 
 }
 
-if(
-n<=15
-){
+const apiLevels=
+standardsData?.realtime_guidance?.levels;
 
+if(Array.isArray(apiLevels)&&apiLevels.length){
+const row=apiLevels.find(x=>{
+const max=x?.max;
+return max===null||max===undefined||n<=Number(max);
+});
+if(row){
+const apiLevel=String(row.level||"good");
 return{
-level:"normal",
-label:"ดีมาก"
+level:
+apiLevel==="critical"
+?"critical"
+:apiLevel==="warning"
+?"warning"
+:"normal",
+label:String(row.label||"")
 };
-
+}
 }
 
-if(
-n<=25
-){
-
-return{
-level:"normal",
-label:"ดี"
-};
-
+if(n<=15){
+return{level:"normal",label:"ดีมาก"};
 }
 
-if(
-n<=37.5
-){
-
-return{
-level:"normal",
-label:"ปานกลาง"
-};
-
+if(n<=25){
+return{level:"normal",label:"ดี"};
 }
 
-if(
-n<=75
-){
-
-return{
-level:"warning",
-label:"เริ่มมีผลกระทบต่อสุขภาพ"
-};
-
+if(n<=37.5){
+return{level:"normal",label:"ปานกลาง"};
 }
 
-return{
-level:"critical",
-label:"มีผลกระทบต่อสุขภาพ"
-};
+if(n<=75){
+return{level:"warning",label:"เริ่มมีผลกระทบต่อสุขภาพ"};
+}
+
+return{level:"critical",label:"มีผลกระทบต่อสุขภาพ"};
 
 }
 
@@ -1621,19 +1639,37 @@ if(n===null){
 return{level:"no_data",label:"ไม่มีข้อมูล"};
 }
 
+// เกณฑ์เฝ้าระวัง Heat Index ของไทย:
+// <27, 27.0–32.9, 33.0–41.9, 42.0–51.9, >=52.0 °C
+const apiLevels=
+standardsData?.heat_index?.levels;
+
+if(Array.isArray(apiLevels)&&apiLevels.length){
+const row=apiLevels.find(x=>{
+const max=x?.max;
+return max===null||max===undefined||n<=Number(max);
+});
+if(row){
+return{
+level:String(row.level||"normal"),
+label:String(row.label||"")
+};
+}
+}
+
 if(n<27){
 return{level:"normal",label:"ต่ำกว่าเกณฑ์เฝ้าระวัง"};
 }
 
-if(n<32){
+if(n<33){
 return{level:"watch",label:"เฝ้าระวัง"};
 }
 
-if(n<41){
+if(n<42){
 return{level:"warning",label:"เตือนภัย"};
 }
 
-if(n<=54){
+if(n<52){
 return{level:"critical",label:"อันตราย"};
 }
 
@@ -2246,7 +2282,7 @@ if(
 ){
 
 return resetCurrent(
-"สถานีรับข้อมูลหลักขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
+"ระบบข้อมูลขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
 );
 
 }
@@ -2730,6 +2766,44 @@ detail:
 
 });
 
+}else{
+
+// ระดับ "เฝ้าระวัง" (27.0–32.9°C) ไม่จำเป็นต้อง Telegram
+// แต่ควรแสดงบน Dashboard เพื่อให้ผู้ใช้วางแผนกิจกรรมได้
+const hi=
+heatIndexC(
+n?.temperature,
+n?.humidity
+);
+
+const h=
+heatLevel(
+hi
+);
+
+if(h.level==="watch"){
+list.push({
+icon:"🟢",
+title:`จุดตรวจวัด ${i} • เฝ้าระวังความร้อน`,
+detail:`${fmt(hi)} °C • ${h.label}`
+});
+}
+
+}
+
+// PM10 > 120 รอบล่าสุด = สัญญาณเฝ้าระวังเบื้องต้นเท่านั้น
+// ไม่เรียกว่า "เกินมาตรฐาน 24 ชั่วโมง"
+const pm10=
+finiteNumberOrNull(
+n?.pm10
+);
+
+if(pm10!==null&&pm10>120){
+list.push({
+icon:"🟡",
+title:`จุดตรวจวัด ${i} • PM10 ควรเฝ้าระวัง`,
+detail:`${fmt(pm10)} µg/m³ • ค่ารอบล่าสุดสูงกว่า 120; การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง`
+});
 }
 
 }
@@ -3763,9 +3837,28 @@ b.classList.toggle(
 !forecastVisible
 );
 
+b.setAttribute(
+"aria-checked",
+forecastVisible
+?"true"
+:"false"
+);
+
+b.setAttribute(
+"aria-pressed",
+forecastVisible
+?"true"
+:"false"
+);
+
+b.title=
+forecastVisible
+?"กดเพื่อซ่อน Forecast"
+:"กดเพื่อแสดง Forecast";
+
 l.textContent=
 forecastVisible
-?"เปิดการคาดการณ์"
+?"กำลังแสดงการคาดการณ์"
 :"ซ่อนการคาดการณ์";
 
 if(s){
@@ -3777,22 +3870,51 @@ forecastVisible
 
 }
 
-if(
-forecastChart
-?.data
-?.datasets
-){
+// V16:
+// เดิมซ่อนเฉพาะ forecastChart ตัวเดียว
+// แต่ตอน ALL จะใช้ forecastGroupCharts หลายกราฟ
+// จึงทำให้กด OFF แล้วเส้น Forecast ยังอยู่
+const charts=[
+forecastChart,
+...forecastGroupCharts
+]
+.filter(Boolean);
 
-forecastChart.data.datasets.forEach((ds,i)=>{
-const isForecast=String(ds.label||"").includes("Forecast");
-if(isForecast){
-forecastChart.setDatasetVisibility(i,forecastVisible);
+charts.forEach(chart=>{
+
+if(
+!chart?.data?.datasets
+){
+return;
 }
+
+chart.data.datasets.forEach((ds,i)=>{
+
+const isForecast=
+String(
+ds?.label||
+""
+)
+.includes(
+"Forecast"
+);
+
+if(isForecast){
+
+chart.setDatasetVisibility(
+i,
+forecastVisible
+);
+
+}
+
 });
 
-forecastChart.update();
+chart.update(
+"none"
+);
 
-}
+});
 
 }
 
@@ -3869,9 +3991,20 @@ data:[...raw,null,null,null],
 rawValues:[...raw,null,null,null]
 });
 const pts=pointFor(field);
-if((isAI||isStatistical)&&pts&&forecastVisible){
+if((isAI||isStatistical)&&pts){
 const current=[...raw].reverse().find(v=>v!==null);
-datasets.push(makeForecastDataset(field,raw.length,current,pts));
+const forecastDs=
+makeForecastDataset(
+field,
+raw.length,
+current,
+pts
+);
+forecastDs.hidden=
+!forecastVisible;
+datasets.push(
+forecastDs
+);
 }
 }
 const c=new Chart($(canvasId),{
@@ -3909,11 +4042,25 @@ const current=values.at(-1);
 const datasets=[makeActualDataset(metric,values)];
 const pts=pointFor(metric);
 
-if((isAI||isStatistical)&&pts&&forecastVisible){
+if((isAI||isStatistical)&&pts){
 labels.push("+10 นาที","+20 นาที","+30 นาที");
 datasets[0].data=[...values,null,null,null];
 datasets[0].rawValues=[...values,null,null,null];
-datasets.push(makeForecastDataset(metric,values.length,current,pts));
+
+const forecastDs=
+makeForecastDataset(
+metric,
+values.length,
+current,
+pts
+);
+
+forecastDs.hidden=
+!forecastVisible;
+
+datasets.push(
+forecastDs
+);
 }
 
 forecastChart=new Chart($("forecastChart"),{
@@ -5039,7 +5186,7 @@ return"is-connected";
 
 if(
 payload.reason===
-"gateway_offline"
+"data_unavailable"
 ){
 return"is-unavailable";
 }
@@ -5075,9 +5222,9 @@ return"AI CONNECTED";
 
 if(
 payload.reason===
-"gateway_offline"
+"data_unavailable"
 ){
-return"GATEWAY OFFLINE";
+return"ระบบข้อมูล OFFLINE";
 }
 
 if(
@@ -5261,7 +5408,7 @@ ${esc(normalizeProjectWording(data.recommendation)||"ติดตามข้อ
 
 </div>
 
-<div class="ai-meta-row"><span>วิเคราะห์จากข้อมูลล่าสุดและข้อมูลย้อนหลังของสถานี</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(data.confidence)}</span></div>`;
+<div class="ai-meta-row"><span>วิเคราะห์จากข้อมูลล่าสุดและข้อมูลย้อนหลังของพื้นที่</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(data.confidence)}</span></div>`;
 
 }
 
@@ -5496,7 +5643,7 @@ return value;
 
 let s=String(value);
 
-/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก AI/cache เวอร์ชันเก่า */
+/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก ผลวิเคราะห์เวอร์ชันก่อนหน้า */
 s=s
 .replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
 .replaceAll("การตรวจวัดสิ่งแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
@@ -5549,7 +5696,7 @@ providerLabel.textContent=
 provider==="gemini"
 ?"Gemini AI"
 :provider==="cloudflare"
-?"Cloudflare Workers AI"
+?"ระบบวิเคราะห์"
 :payload?.ai===false
 ?"Rule / Statistical Engine"
 :"กำลังรอการวิเคราะห์...";
@@ -5566,6 +5713,15 @@ providerLabel.textContent=
 if(box){
 box.innerHTML=
 '<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
+}
+
+// V16: หน้าสถิติและกราฟต้องบอกผู้ใช้ชัดเจนว่า Forecast ยังประมวลผลอยู่
+const chartMessage=
+$("forecastMessage");
+
+if(chartMessage){
+chartMessage.innerHTML=
+'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
 }
 
 if(badge){
@@ -5626,7 +5782,7 @@ const p=
 payload?.provider==="gemini"
 ?"GEMINI AI"
 :payload?.provider==="cloudflare"
-?"CLOUDFLARE AI"
+?"ระบบวิเคราะห์"
 :payload?.provider==="rule"
 ?"RULE ENGINE"
 :"AI";
@@ -5835,6 +5991,15 @@ return;
 aiForecastLoading=
 true;
 
+// แสดงสถานะรอทันทีในหน้ากราฟ ไม่ปล่อยข้อความเก่าค้างระหว่างประมวลผล
+const forecastMessageEl=
+$("forecastMessage");
+
+if(forecastMessageEl){
+forecastMessageEl.innerHTML=
+'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
+}
+
 renderAIForecast(
 aiForecastPayload
 );
@@ -5904,6 +6069,73 @@ drawCharts();
 // =====================================================
 
 const HELP_CONTENT={
+
+systemGuide:{
+title:"📘 วิธีอ่านข้อมูลจากระบบ",
+html:`
+<div class="help-intro-card">
+<b>อ่านให้ง่าย: ตอนนี้เป็นอย่างไร • ค่านี้หมายถึงอะไร • ควรปฏิบัติตัวอย่างไร</b>
+<span>คำอธิบายเน้นข้อมูลที่จำเป็นต่อการตีความ โดยไม่ลงรายละเอียดการทำงานภายใน</span>
+</div>
+
+<section class="help-section">
+<h4>PM2.5</h4>
+<p>ฝุ่นละอองขนาดเล็กไม่เกิน 2.5 ไมโครเมตร ใช้เป็นตัวหลักในการสื่อสถานการณ์คุณภาพอากาศ ค่ายิ่งสูงยิ่งควรลดการสัมผัส โดยเฉพาะกลุ่มที่ไวต่อมลพิษทางอากาศ</p>
+</section>
+
+<section class="help-section">
+<h4>PM1.0 และ PM10</h4>
+<p><b>PM1.0</b> เป็นข้อมูลประกอบสำหรับติดตามการเปลี่ยนแปลงของอนุภาคขนาดเล็กมาก ส่วน <b>PM10</b> ใช้ติดตามฝุ่นขนาดไม่เกิน 10 ไมโครเมตร การพิจารณามาตรฐานต้องอ้างอิงช่วงเวลาเฉลี่ยตามที่เกณฑ์กำหนด ไม่ควรสรุปจากค่ารอบเดียว</p>
+</section>
+
+<section class="help-section">
+<h4>ดัชนีความร้อน (Heat Index)</h4>
+<p>ใช้ประเมินความร้อนที่ร่างกายรู้สึก โดยพิจารณาอุณหภูมิร่วมกับความชื้นสัมพัทธ์</p>
+<div class="help-choice-list">
+<div><b>&lt; 27°C</b><span>ต่ำกว่าเกณฑ์เฝ้าระวัง</span></div>
+<div><b>27.0–32.9°C</b><span>เฝ้าระวัง</span></div>
+<div><b>33.0–41.9°C</b><span>เตือนภัย</span></div>
+<div><b>42.0–51.9°C</b><span>อันตราย</span></div>
+<div><b>≥ 52.0°C</b><span>อันตรายมาก</span></div>
+</div>
+</section>
+
+<section class="help-section">
+<h4>ความสว่าง (Lux)</h4>
+<p>ใช้บอกระดับความสว่างในบริเวณจุดตรวจวัด เป็นข้อมูลสภาพแวดล้อมประกอบ และ <b>ไม่ใช่ UV Index</b></p>
+</section>
+
+<section class="help-section">
+<h4>สถานะจุดตรวจวัด</h4>
+<div class="help-choice-list">
+<div><b>ONLINE</b><span>พร้อมให้ข้อมูลตามปกติ</span></div>
+<div><b>SLEEP</b><span>อยู่ในช่วงพักตามรอบการทำงาน ถือเป็นสถานะปกติ</span></div>
+<div><b>OFFLINE</b><span>ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</span></div>
+</div>
+</section>
+
+<section class="help-section">
+<h4>ข้อมูลล่าสุด</h4>
+<p>เวลาที่แสดงกับค่าตรวจวัดหมายถึงเวลาของข้อมูลชุดนั้น จึงอาจต่างจากเวลาที่สถานะของจุดตรวจวัดเปลี่ยนแปลง</p>
+</section>
+
+<section class="help-section">
+<h4>ค่าเฉลี่ยพื้นที่</h4>
+<p>เป็นค่าภาพรวมจากข้อมูลที่มีอยู่ในพื้นที่สำหรับช่วงเวลาที่เลือก ใช้ช่วยดูสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
+</section>
+
+<section class="help-section">
+<h4>แนวโน้มล่วงหน้า 30 นาที</h4>
+<p>แสดงค่าประมาณที่อาจเกิดขึ้นในอีก 10, 20 และ 30 นาที เพื่อช่วยดูทิศทางระยะสั้น ไม่ใช่ค่ารับประกันและไม่ใช่การพยากรณ์อากาศอย่างเป็นทางการ</p>
+<p><b>ความเชื่อมั่น</b> ใช้บอกระดับความพร้อมของข้อมูลประกอบการคาดการณ์ ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</p>
+</section>
+
+<div class="help-warning">
+<b>ขอบเขตการใช้งาน</b>
+<span>ข้อมูลนี้ใช้เพื่อติดตามสถานการณ์และสนับสนุนการตัดสินใจระดับพื้นที่ ควรพิจารณาข้อมูลหรือประกาศจากหน่วยงานทางการร่วมด้วยเมื่อมีสถานการณ์สำคัญ</span>
+</div>
+`
+},
 
 overviewQuality:{
 title:"🌿 ภาพรวมคุณภาพอากาศ",
@@ -6036,7 +6268,7 @@ html:`
 <div><b>ONLINE 2/3</b><span>มี 2 จุด ONLINE และมี 1 จุด OFFLINE</span></div>
 <div><b>ONLINE 0/3</b><span>ไม่มีจุดตรวจวัดใดที่ระบบยืนยันว่า ONLINE ในขณะนั้น</span></div>
 </div>
-<div class="help-warning">ตัวเลข 0/3, 1/3, 2/3, 3/3 นับเฉพาะ “จุดตรวจวัด 1–3” ไม่ได้นับสถานีรับข้อมูลหลักรวมเข้าไปด้วย</div>
+<div class="help-warning">ตัวเลข 0/3, 1/3, 2/3, 3/3 นับเฉพาะ “จุดตรวจวัด 1–3” ไม่ได้นับระบบข้อมูลรวมเข้าไปด้วย</div>
 </section>
 <section class="help-section">
 <h4>“ข้อมูลล่าสุด” หมายถึงอะไร?</h4>
@@ -6234,7 +6466,7 @@ title.textContent=x.title;
 }
 
 if(body){
-body.innerHTML=adminHelpPrefix(b.dataset.help)+x.html;
+body.innerHTML=x.html;
 }
 
 if(!p){
@@ -8453,7 +8685,12 @@ function averageLatestField(field){
 }
 
 function newestNodeTime(){
-  const dates=latestNodes.map(n=>parseDate(n?.timestamp||n?.reading_recorded_at||n?.status_recorded_at||n?.last_seen)).filter(Boolean);
+  // "ข้อมูลล่าสุด" ต้องอ้างเวลา Sensor reading จริง
+  // ไม่ใช่เวลา ONLINE/SLEEP เพราะ status ใหม่อาจใช้ค่าการวัดเดิมแสดงอยู่
+  const dates=latestNodes
+    .map(n=>parseDate(n?.reading_recorded_at))
+    .filter(Boolean);
+
   if(!dates.length) return null;
   return new Date(Math.max(...dates.map(d=>d.getTime())));
 }
@@ -8514,7 +8751,7 @@ function updateNavigationDashboard(){
     navLabel="ระบบข้อมูล OFFLINE";
   }else if(!motherOnline()){
     navState="is-offline";
-    navLabel="สถานีรับข้อมูลหลัก OFFLINE";
+    navLabel="ระบบข้อมูล OFFLINE";
   }else if(active===TOTAL_NODES){
     navState="is-online";
     navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
@@ -8604,167 +8841,91 @@ setInterval(updateNavigationDashboard,2000);
 })();
 
 // =========================================================
-// ADMIN MODE V2
+// PUBLIC DISPLAY CONFIG
 // =========================================================
-function adminEscapeHtml(value){return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
-
-const ADMIN_DEFAULTS={
-devices:[1,2,3].map(i=>({
-device_id:`Number ${i}`,
-display_name:`จุดตรวจวัด ${i}`,
-location_name:"",
-description:""
-})),
-content:{
-about_heading:"เกี่ยวกับโครงการ",
-about_intro:"",
-help_overview:"",
-help_monitoring:"",
-help_history:"",
-help_forecast:"",announcement_enabled:"0",announcement_severity:"info",announcement_title:"",announcement_message:""
-}
-};
-
-let adminHasUnsavedChanges=false;
-
-function setAdminDirtyState(dirty=true){
-adminHasUnsavedChanges=!!dirty;
-const save=$("adminSaveButton");
-if(save)save.textContent=adminHasUnsavedChanges?"บันทึกการเปลี่ยนแปลง •":"บันทึกการเปลี่ยนแปลง";
+function configDevice(deviceId){
+return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
 }
 
-function resetAdminCategory(category){
-const labels={devices:"จุดตรวจวัด",help:"คำอธิบาย",about:"เกี่ยวกับโครงการ"};
-const name=labels[category]||category;
-if(!window.confirm(`คืนค่าเริ่มต้นของหมวด “${name}” หรือไม่?\n\nการเปลี่ยนแปลงจะยังไม่ถูกบันทึกจนกว่าจะกด “บันทึกการเปลี่ยนแปลง”`))return;
-
-if(category==="devices"){
-for(let i=1;i<=3;i++){
-const d=ADMIN_DEFAULTS.devices[i-1];
-$(`adminDeviceName${i}`).value=d.display_name;
-$(`adminDeviceLocation${i}`).value=d.location_name;
-$(`adminDeviceDescription${i}`).value=d.description;
-const preview=$(`adminDevicePreviewName${i}`);
-if(preview)preview.textContent=d.display_name;
-}
-}else if(category==="help"){
-$("adminHelpOverview").value="";
-$("adminHelpMonitoring").value="";
-$("adminHelpHistory").value="";
-$("adminHelpForecast").value="";
-}else if(category==="about"){
-$("adminAboutHeading").value="เกี่ยวกับโครงการ";$("adminAboutIntro").value="";
-}else if(category==="announcement"){
-$("adminAnnouncementEnabled").checked=false;$("adminAnnouncementSeverity").value="info";$("adminAnnouncementTitle").value="";$("adminAnnouncementMessage").value="";
-}else{return;}updateAdminPreviews();
-
-setAdminDirtyState(true);
-setAdminMessage("adminSaveMessage",`คืนค่าเริ่มต้นหมวด ${name} แล้ว — กดบันทึกเพื่อยืนยัน`,"success");
-const scroller=document.querySelector(".admin-editor-scroll");
-if(scroller)scroller.scrollTop=0;
-}
-
-
-function updateAdminPreviews(){
-const n=String($("adminDeviceName1")?.value||"จุดตรวจวัด 1").trim()||"จุดตรวจวัด 1",l=String($("adminDeviceLocation1")?.value||"").trim(),d=String($("adminDeviceDescription1")?.value||"").trim();
-if($("adminPreviewDeviceTitle"))$("adminPreviewDeviceTitle").textContent=n;if($("adminPreviewDeviceLocation"))$("adminPreviewDeviceLocation").textContent=l||"ยังไม่ได้ระบุสถานที่";if($("adminPreviewDeviceDescription"))$("adminPreviewDeviceDescription").textContent=d||"ยังไม่มีคำอธิบายเพิ่มเติม";
-if($("adminPreviewHelp"))$("adminPreviewHelp").textContent=String($("adminHelpOverview")?.value||"").trim()||"ยังไม่ได้เพิ่มคำอธิบายจากผู้ดูแล";
-if($("adminPreviewAboutHeading"))$("adminPreviewAboutHeading").textContent=String($("adminAboutHeading")?.value||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";if($("adminPreviewAboutIntro"))$("adminPreviewAboutIntro").textContent=String($("adminAboutIntro")?.value||"").trim()||"ยังไม่มีข้อความแนะนำเพิ่มเติม";
-const s=String($("adminAnnouncementSeverity")?.value||"info"),p=$("adminAnnouncementPreview");if(p)p.className=`site-announcement is-${["info","warning","maintenance"].includes(s)?s:"info"}`;if($("adminPreviewAnnouncementTitle"))$("adminPreviewAnnouncementTitle").textContent=String($("adminAnnouncementTitle")?.value||"").trim()||"ประกาศจากระบบ";if($("adminPreviewAnnouncementMessage"))$("adminPreviewAnnouncementMessage").textContent=String($("adminAnnouncementMessage")?.value||"").trim()||"ยังไม่มีรายละเอียดประกาศ";
-}
-function formatAdminAuditTime(v){if(!v)return"-";const d=new Date(String(v).replace(" ","T")+"Z");return Number.isNaN(d.getTime())?String(v):d.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"});}
-function adminAuditLabel(a){return({update_public_config:"บันทึกการตั้งค่าสาธารณะ",login_success:"เข้าสู่ระบบผู้ดูแลสำเร็จ"})[a]||String(a||"กิจกรรมผู้ดูแล");}
-async function loadAdminAudit(){const b=$("adminAuditList");if(!b)return;b.innerHTML='<div class="admin-audit-empty">กำลังโหลด...</div>';try{const j=await adminFetch(API.adminAudit),r=Array.isArray(j.data)?j.data:[];b.innerHTML=r.length?r.map(x=>`<div class="admin-audit-item"><div class="admin-audit-time">${adminEscapeHtml(formatAdminAuditTime(x.created_at))}</div><div class="admin-audit-action">${adminEscapeHtml(adminAuditLabel(x.action))}</div></div>`).join(""):'<div class="admin-audit-empty">ยังไม่มีประวัติการแก้ไข</div>'}catch(e){b.innerHTML=`<div class="admin-audit-empty">${adminEscapeHtml(e.message)}</div>`}}
-function configDevice(deviceId){return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;}
-function adminHelpPrefix(helpKey){
-const map={overviewQuality:"help_overview",monitoring:"help_monitoring",historyChart:"help_history",historical:"help_history",forecastChart:"help_forecast",ai:"help_forecast"};
-const key=map[helpKey]; if(!key)return"";
-const text=String(publicDisplayConfig?.content?.[key]||"").trim(); if(!text)return"";
-return `<div class="admin-help-extra"><b>คำอธิบายเพิ่มเติม</b><span>${adminEscapeHtml(text)}</span></div>`;
-}
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
-const d=configDevice(`Number ${i}`)||{},name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`,loc=String(d.location_name||"").trim(),desc=String(d.description||"").trim();
-const ot=$(`overviewNodeTitle${i}`),ol=$(`overviewNodeLocation${i}`),nt=$(`nodeTitle${i}`),nl=$(`nodeLocation${i}`),nd=$(`nodeDescription${i}`),ho=$(`historyNodeOption${i}`);
-if(ot)ot.textContent=name;if(ol){ol.textContent=loc;ol.classList.toggle("hidden",!loc)}if(nt)nt.textContent=name;if(nl){nl.textContent=loc;nl.classList.toggle("hidden",!loc)}if(nd){nd.textContent=desc;nd.classList.toggle("hidden",!desc)}if(ho)ho.textContent=loc?`${name} • ${loc}`:name;
+const d=configDevice(`Number ${i}`)||{};
+const name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`;
+const loc=String(d.location_name||"").trim();
+const desc=String(d.description||"").trim();
+
+const ot=$(`overviewNodeTitle${i}`);
+const ol=$(`overviewNodeLocation${i}`);
+const nt=$(`nodeTitle${i}`);
+const nl=$(`nodeLocation${i}`);
+const nd=$(`nodeDescription${i}`);
+const ho=$(`historyNodeOption${i}`);
+
+if(ot)ot.textContent=name;
+if(ol){ol.textContent=loc;ol.classList.toggle("hidden",!loc);}
+if(nt)nt.textContent=name;
+if(nl){nl.textContent=loc;nl.classList.toggle("hidden",!loc);}
+if(nd){nd.textContent=desc;nd.classList.toggle("hidden",!desc);}
+if(ho)ho.textContent=loc?`${name} • ${loc}`:name;
 }
-const h=$("publicAboutHeading"),intro=$("publicAboutIntro"),heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ",about=String(publicDisplayConfig?.content?.about_intro||"").trim();
-if(h)h.textContent=heading;if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about)}
-const ann=publicDisplayConfig?.content||{},aw=$("siteAnnouncementWrap"),ab=$("siteAnnouncement"),at=$("siteAnnouncementTitle"),am=$("siteAnnouncementMessage"),ai=$("siteAnnouncementIcon");
-const ae=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
-if(aw){aw.classList.toggle("hidden",!ae);if(ae){const sev=["info","warning","maintenance"].includes(String(ann.announcement_severity))?String(ann.announcement_severity):"info";ab.className=`site-announcement is-${sev}`;at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";am.textContent=String(ann.announcement_message||"").trim();ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";}}
-if(historyActivated&&typeof Chart!=="undefined"){try{drawCharts()}catch(e){console.warn("Chart label refresh failed",e)}}
+
+const h=$("publicAboutHeading");
+const intro=$("publicAboutIntro");
+const heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";
+const about=String(publicDisplayConfig?.content?.about_intro||"").trim();
+
+if(h)h.textContent=heading;
+if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about);}
+
+const ann=publicDisplayConfig?.content||{};
+const aw=$("siteAnnouncementWrap");
+const ab=$("siteAnnouncement");
+const at=$("siteAnnouncementTitle");
+const am=$("siteAnnouncementMessage");
+const ai=$("siteAnnouncementIcon");
+const enabled=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
+
+if(aw){
+aw.classList.toggle("hidden",!enabled);
+if(enabled){
+const sev=["info","warning","maintenance"].includes(String(ann.announcement_severity))
+?String(ann.announcement_severity):"info";
+ab.className=`site-announcement is-${sev}`;
+at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";
+am.textContent=String(ann.announcement_message||"").trim();
+ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
 }
+}
+
+if(historyActivated&&typeof Chart!=="undefined"){
+try{drawCharts();}catch(e){console.warn("Chart label refresh failed",e);}
+}
+}
+
 async function loadPublicDisplayConfig(){
-try{const r=await fetch(API.publicConfig,{cache:"no-store",headers:{Accept:"application/json"}});if(!r.ok)throw new Error(`HTTP ${r.status}`);const j=await r.json();if(!j?.success||!j?.data)throw new Error(j?.message||"Config API error");publicDisplayConfig=j.data;applyPublicDisplayConfig();return j.data}
-catch(e){console.warn("Public config unavailable; using defaults.",e);applyPublicDisplayConfig();return publicDisplayConfig}
+try{
+const r=await fetch(API.publicConfig,{cache:"no-store",headers:{Accept:"application/json"}});
+if(!r.ok)throw new Error(`HTTP ${r.status}`);
+const j=await r.json();
+if(!j?.success||!j?.data)throw new Error("Public config unavailable");
+publicDisplayConfig=j.data;
+applyPublicDisplayConfig();
+return j.data;
+}catch(e){
+console.warn("Public display config unavailable; using defaults.");
+applyPublicDisplayConfig();
+return publicDisplayConfig;
 }
-function setAdminMessage(id,msg,type=""){const e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle("hidden",!msg);e.classList.toggle("is-error",type==="error");e.classList.toggle("is-success",type==="success")}
-function setAdminView(logged){
-$("adminLoginView")?.classList.toggle("hidden",logged);
-$("adminEditorView")?.classList.toggle("hidden",!logged);
-$("adminModal")?.classList.toggle("is-editor",logged);
-const subtitle=$("adminDialogSubtitle");
-if(subtitle)subtitle.textContent=logged
-?"แก้ไขข้อมูลสาธารณะของ Dashboard"
-:"เข้าสู่ระบบเพื่อจัดการข้อมูลที่แสดงบน Dashboard";
 }
-function clearAdminSession(){adminSessionToken="";sessionStorage.removeItem("pm25_admin_session")}
-function openAdminModal(){const m=$("adminModal");if(!m)return;m.classList.add("active");m.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");setAdminMessage("adminLoginMessage","");setAdminMessage("adminSaveMessage","");if(adminSessionToken){loadAdminConfig().catch(()=>{clearAdminSession();setAdminView(false)})}else setAdminView(false)}
-function closeAdminModal(){
-const m=$("adminModal");if(!m)return;
-if(adminHasUnsavedChanges&&!window.confirm("มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการปิดหน้าต่างผู้ดูแลหรือไม่?"))return;
-m.classList.remove("active");
-m.setAttribute("aria-hidden","true");
-document.body.classList.remove("modal-open");
+
+(function startPublicDisplayConfig(){
+const run=()=>loadPublicDisplayConfig();
+if(document.readyState==="loading"){
+document.addEventListener("DOMContentLoaded",run,{once:true});
+}else{
+run();
 }
-async function adminFetch(url,opt={}){const headers={Accept:"application/json",...(opt.headers||{})};if(adminSessionToken)headers.Authorization=`Bearer ${adminSessionToken}`;const r=await fetch(url,{cache:"no-store",...opt,headers});let j={};try{j=await r.json()}catch{}if(r.status===401)clearAdminSession();if(!r.ok||!j?.success)throw new Error(j?.message||`HTTP ${r.status}`);return j}
-function fillAdminEditor(data){
-const ds=Array.isArray(data?.devices)?data.devices:[];
-for(let i=1;i<=3;i++){
-const d=ds.find(x=>x.device_id===`Number ${i}`)||{};
-const name=d.display_name||`จุดตรวจวัด ${i}`;
-$(`adminDeviceName${i}`).value=name;
-$(`adminDeviceLocation${i}`).value=d.location_name||"";
-$(`adminDeviceDescription${i}`).value=d.description||"";
-const preview=$(`adminDevicePreviewName${i}`);
-if(preview)preview.textContent=name;
-}
-const c=data?.content||{};$("adminAboutHeading").value=c.about_heading||"เกี่ยวกับโครงการ";$("adminAboutIntro").value=c.about_intro||"";$("adminHelpOverview").value=c.help_overview||"";$("adminHelpMonitoring").value=c.help_monitoring||"";$("adminHelpHistory").value=c.help_history||"";$("adminHelpForecast").value=c.help_forecast||"";
-$("adminAnnouncementEnabled").checked=String(c.announcement_enabled||"0")==="1";$("adminAnnouncementSeverity").value=["info","warning","maintenance"].includes(String(c.announcement_severity))?String(c.announcement_severity):"info";$("adminAnnouncementTitle").value=c.announcement_title||"";$("adminAnnouncementMessage").value=c.announcement_message||"";updateAdminPreviews();
-setAdminDirtyState(false);
-}
-async function loadAdminConfig(){if(!adminSessionToken)throw new Error("กรุณาเข้าสู่ระบบผู้ดูแล");setAdminView(true);setAdminMessage("adminSaveMessage","กำลังโหลด...");try{const j=await adminFetch(API.adminConfig);fillAdminEditor(j.data);setAdminMessage("adminSaveMessage","");return j.data}catch(e){setAdminMessage("adminSaveMessage",e.message,"error");throw e}}
-function collectAdminConfig(){return{devices:[1,2,3].map(i=>({device_id:`Number ${i}`,display_name:String($(`adminDeviceName${i}`)?.value||"").trim(),location_name:String($(`adminDeviceLocation${i}`)?.value||"").trim(),description:String($(`adminDeviceDescription${i}`)?.value||"").trim()})),content:{about_heading:String($("adminAboutHeading")?.value||"").trim(),about_intro:String($("adminAboutIntro")?.value||"").trim(),help_overview:String($("adminHelpOverview")?.value||"").trim(),help_monitoring:String($("adminHelpMonitoring")?.value||"").trim(),help_history:String($("adminHelpHistory")?.value||"").trim(),help_forecast:String($("adminHelpForecast")?.value||"").trim(),announcement_enabled:$("adminAnnouncementEnabled")?.checked?"1":"0",announcement_severity:String($("adminAnnouncementSeverity")?.value||"info"),announcement_title:String($("adminAnnouncementTitle")?.value||"").trim(),announcement_message:String($("adminAnnouncementMessage")?.value||"").trim()}}}
-async function saveAdminConfig(){const b=$("adminSaveButton");if(b)b.disabled=true;setAdminMessage("adminSaveMessage","กำลังบันทึก...");try{const j=await adminFetch(API.adminConfig,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(collectAdminConfig())});publicDisplayConfig=j.data;fillAdminEditor(j.data);applyPublicDisplayConfig();setAdminMessage("adminSaveMessage","บันทึกเรียบร้อย","success")}catch(e){setAdminMessage("adminSaveMessage",e.message,"error");if(!adminSessionToken)setAdminView(false)}finally{if(b)b.disabled=false}}
-async function loginAdmin(password){const b=$("adminLoginButton");if(b)b.disabled=true;setAdminMessage("adminLoginMessage","กำลังตรวจสอบ...");try{const r=await fetch(API.adminLogin,{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({password})});let j={};try{j=await r.json()}catch{}if(!r.ok||!j?.success||!j?.token)throw new Error(j?.message||"เข้าสู่ระบบไม่สำเร็จ");adminSessionToken=j.token;sessionStorage.setItem("pm25_admin_session",adminSessionToken);$("adminPassword").value="";setAdminMessage("adminLoginMessage","");setAdminView(true);await loadAdminConfig()}catch(e){clearAdminSession();setAdminView(false);setAdminMessage("adminLoginMessage",e.message,"error")}finally{if(b)b.disabled=false}}
-function bindAdminMode(){
-$("adminOpenButton")?.addEventListener("click",openAdminModal);$("adminCloseButton")?.addEventListener("click",closeAdminModal);$("adminModalBackdrop")?.addEventListener("click",closeAdminModal);
-$("adminLoginForm")?.addEventListener("submit",e=>{e.preventDefault();const p=String($("adminPassword")?.value||"");if(!p){setAdminMessage("adminLoginMessage","กรุณากรอกรหัสผ่าน","error");return}loginAdmin(p)});
-$("adminSaveButton")?.addEventListener("click",saveAdminConfig);
-$("adminReloadButton")?.addEventListener("click",()=>{
-if(adminHasUnsavedChanges&&!window.confirm("โหลดค่าที่บันทึกไว้ใหม่หรือไม่? การแก้ไขที่ยังไม่ได้บันทึกจะหายไป"))return;
-loadAdminConfig().catch(()=>{});
-});
-for(let i=1;i<=3;i++){
-$(`adminDeviceName${i}`)?.addEventListener("input",e=>{
-const preview=$(`adminDevicePreviewName${i}`);
-if(preview)preview.textContent=String(e.target.value||"").trim()||`จุดตรวจวัด ${i}`;
-});
-}
-document.querySelectorAll("#adminEditorView input,#adminEditorView textarea,#adminEditorView select").forEach(el=>{const ev=(el.type==="checkbox"||el.tagName==="SELECT")?"change":"input";el.addEventListener(ev,()=>{setAdminDirtyState(true);updateAdminPreviews()});});
-document.querySelectorAll("[data-admin-reset]").forEach(btn=>{btn.addEventListener("click",()=>resetAdminCategory(btn.dataset.adminReset));});$("adminAuditReload")?.addEventListener("click",loadAdminAudit);
-$("adminLogoutButton")?.addEventListener("click",async()=>{try{if(adminSessionToken)await adminFetch(API.adminLogout,{method:"POST"}).catch(()=>{})}finally{clearAdminSession();setAdminView(false);setAdminMessage("adminLoginMessage","ออกจากระบบแล้ว","success")}});
-document.querySelectorAll(".admin-tab").forEach(b=>b.addEventListener("click",()=>{
-const t=b.dataset.adminTab;
-document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x===b));
-document.querySelectorAll(".admin-tab-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===t));
-const scroller=document.querySelector(".admin-editor-scroll");
-if(scroller)scroller.scrollTop=0;if(t==="audit")loadAdminAudit();
-}));
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.classList.contains("active"))closeAdminModal()});
-}
-(function startAdminFeatures(){const run=()=>{bindAdminMode();loadPublicDisplayConfig()};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run()})();
+})();
 
 // =========================================================
 // V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
@@ -8883,3 +9044,40 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("adminModal")?.cl
     }
   });
 })();
+
+
+// =====================================================
+// V18 — CONTEXTUAL EXPLANATIONS
+// =====================================================
+const V18_INFO={
+monitoring:{
+title:"สถานะจุดตรวจวัด",
+html:`<p><b>ONLINE</b> — พร้อมให้ข้อมูลตามปกติ</p>
+<p><b>SLEEP</b> — อยู่ในช่วงพักตามรอบการทำงาน ถือเป็นสถานะปกติ</p>
+<p><b>OFFLINE</b> — ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</p>
+<p><b>ข้อมูลล่าสุด</b> — เวลาของข้อมูลตรวจวัดชุดที่กำลังแสดง ซึ่งอาจต่างจากเวลาที่สถานะเปลี่ยนแปลง</p>`
+},
+history:{
+title:"กราฟย้อนหลังและค่าเฉลี่ยพื้นที่",
+html:`<p>กราฟย้อนหลังใช้ดูข้อมูลตามช่วงเวลาที่เลือกและเปรียบเทียบแต่ละจุดได้</p>
+<p><b>ค่าเฉลี่ยพื้นที่</b> ใช้ช่วยมองสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
+<p>ช่วงเวลาที่ยาวอาจแสดงข้อมูลในระดับรายละเอียดที่เหมาะสมเพื่อให้อ่านแนวโน้มได้ชัดเจน</p>`
+},
+forecast:{
+title:"แนวโน้มล่วงหน้า 30 นาที",
+html:`<p>แสดงค่าประมาณที่อาจเกิดขึ้นในอีก <b>10, 20 และ 30 นาที</b> เพื่อช่วยดูทิศทางระยะสั้น</p>
+<p>ผลลัพธ์ <b>ไม่ใช่ค่ารับประกัน</b> และไม่ใช่การพยากรณ์อากาศอย่างเป็นทางการ</p>
+<p><b>ความเชื่อมั่น</b> ใช้บอกระดับความพร้อมของข้อมูลประกอบการคาดการณ์ ไม่ใช่เปอร์เซ็นต์ Accuracy</p>`
+},
+systemGuide:{
+title:"วิธีอ่านข้อมูลจากระบบ",
+html:`<p><b>PM2.5</b> เป็นตัวหลักสำหรับสื่อสถานการณ์คุณภาพอากาศ</p>
+<p><b>Heat Index</b> ใช้ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้น</p>
+<p><b>Lux</b> ใช้บอกระดับความสว่าง และไม่ใช่ UV Index</p>
+<p>หน้า Dashboard เน้นให้เข้าใจว่า <b>สถานการณ์เป็นอย่างไร → ค่าหมายถึงอะไร → ควรปฏิบัติตัวอย่างไร</b></p>`
+}
+};
+function v18OpenInfo(key){const t=V18_INFO[key],m=$("v18InfoModal");if(!t||!m)return;$("v18InfoTitle").textContent=t.title;$("v18InfoBody").innerHTML=t.html;m.classList.add("active");m.setAttribute("aria-hidden","false");document.body.classList.add("v18-modal-open");}
+function v18CloseInfo(){const m=$("v18InfoModal");if(!m)return;m.classList.remove("active");m.setAttribute("aria-hidden","true");document.body.classList.remove("v18-modal-open");}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-v18-help]");if(b){e.preventDefault();v18OpenInfo(b.dataset.v18Help);return;}if(e.target.closest("[data-v18-info-close]")){e.preventDefault();v18CloseInfo();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.classList.contains("active"))v18CloseInfo();});
