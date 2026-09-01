@@ -8104,6 +8104,12 @@ updateSmart();
 
 updateAlertUI();
 
+// V15: warm Forecast cache/request หลังข้อมูลหลักพร้อม
+// เพื่อให้เมื่อเปิด "สถิติและกราฟ" กราฟคาดการณ์พร้อมเร็วขึ้น
+if(typeof loadAIForecast==="function"){
+  loadAIForecast(false);
+}
+
 }catch(e){
 
 console.error(
@@ -8402,7 +8408,17 @@ function openDashboardPage(page,{updateHash=true}={}){
     const next="#"+page;
     if(location.hash!==next) history.replaceState(null,"",next);
   }
-  if(page==="history" && typeof activateHistorySection==="function") activateHistorySection();
+  if(page==="history"){
+    if(typeof activateHistorySection==="function") activateHistorySection();
+
+    // V15:
+    // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
+    // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
+    if(typeof loadAIForecast==="function"){
+      loadAIForecast(false);
+    }
+  }
+
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
   if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
     setTimeout(()=>{
@@ -8516,12 +8532,6 @@ function updateNavigationDashboard(){
   const sourceAlerts=$("alerts");
   const overviewAlerts=$("overviewAlerts");
   if(sourceAlerts&&overviewAlerts) overviewAlerts.innerHTML=sourceAlerts.innerHTML;
-  const count=dashboardAlertCount();
-  const badge=$("navAlertBadge");
-  if(badge){
-    badge.textContent=String(count);
-    badge.classList.toggle("hidden",count===0);
-  }
 }
 
 function bindDashboardNavigation(){
