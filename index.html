@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260901-public-safe-final-v19" rel="stylesheet"/>
+<link href="style.css?v=20260901-final-audit-v20" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -212,8 +212,8 @@ DASHBOARD NAVIGATION
 <div class="monitoring-status-card monitoring-primary-status">
 <div class="monitoring-status-label">ความพร้อมของระบบ</div>
 <div class="monitoring-status-value">
-<span class="text-slate-500" id="gatewayDotTop">●</span>
-<span id="gatewayStatusTop">กำลังตรวจสอบ</span>
+<span class="text-slate-500" id="dataStateDotTop">●</span>
+<span id="dataStateStatusTop">กำลังตรวจสอบ</span>
 </div>
 <div class="monitoring-status-hint">รับข้อมูลจากจุดตรวจวัดและส่งขึ้นระบบ</div>
 </div>
@@ -1144,13 +1144,13 @@ window.addEventListener("load",()=>{
     if(clock && (clock.textContent.trim()==="--" || clock.textContent.trim()==="")){
       console.error("Dashboard initialization failed.");
       clock.textContent="SYSTEM ERROR";
-      const g=document.getElementById("gatewayStatus");
+      const g=document.getElementById("dataStateStatus");
       if(g)g.textContent="ไม่พร้อมใช้งาน";
     }
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260901-public-safe-final-v19"></script>
+<script defer src="app.js?v=20260901-final-audit-v20"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
@@ -1158,5 +1158,6 @@ window.addEventListener("load",()=>{
 <header class="v18-info-header"><div><small>คำอธิบายข้อมูล</small><h2 id="v18InfoTitle">ข้อมูล</h2></div><button type="button" data-v18-info-close aria-label="ปิด">×</button></header>
 <div class="v18-info-body" id="v18InfoBody"></div>
 </section></div>
+
 </body>
 </html>
