@@ -470,39 +470,61 @@ return text;
 
 function graphTooltipTitle(items){
 const first=items?.[0];
-const parsedX=finiteNumberOrNull(first?.parsed?.x);
 
-// ใช้ parsed.x เป็นเวลาเฉพาะกราฟที่ส่ง epoch milliseconds จริง
-// Category chart จะให้ parsed.x เป็น index เช่น 0,1,2... ถ้านำไป new Date()
-// จะกลายเป็นปี 1970 / พ.ศ. 2513 ซึ่งผิด
+if(!first){
+return"";
+}
+
+const parsedX=
+finiteNumberOrNull(
+first?.parsed?.x
+);
+
+// Zoom/linear-time chart:
+// parsed.x is epoch milliseconds, so this is the exact timestamp
+// of the selected point for that dataset.
 if(
 parsedX!==null&&
 parsedX>100000000000
 ){
-const d=new Date(parsedX);
-return Number.isFinite(d.getTime())
-?thaiChartDateTime(d,false)
+const d=
+new Date(parsedX);
+
+return Number.isFinite(
+d.getTime()
+)
+?thaiChartDateTime(
+d,
+false
+)
 :"";
 }
 
-const raw=first?.label;
+const raw=
+first?.label;
+
 if(raw==null){
 return"";
 }
 
-// Forecast label ไม่ใช่ timestamp
+// Forecast labels are not timestamps.
 if(
-/^\+\d+\s*นาที/.test(
+/^\+\d+\s*นาที/
+.test(
 String(raw)
 )
 ){
 return String(raw);
 }
 
-const d=parseDate(raw);
+const d=
+parseDate(raw);
 
 return d
-?thaiChartDateTime(d,false)
+?thaiChartDateTime(
+d,
+false
+)
 :String(raw);
 }
 
@@ -3314,10 +3336,17 @@ return{
 responsive:true,
 maintainAspectRatio:false,
 animation:false,
-interaction:{mode:"index",intersect:false},
+interaction:{mode:"nearest",intersect:true},
 plugins:{
 legend:{display:false},
-tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}
+tooltip:{
+mode:"nearest",
+intersect:true,
+callbacks:{
+title:graphTooltipTitle,
+label:graphTooltipLabel
+}
+}
 },
 scales:{
 x:{
@@ -3498,6 +3527,10 @@ function historyRowsForNode(rows,nodeId){
 return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
 }
 
+// UX RULE:
+// - compare = หลายเส้น แต่ Tooltip แสดงเฉพาะเส้นที่ชี้
+// - Number 1/2/3 = กรองเหลือข้อมูลของจุดที่เลือกจริง
+// - Zoom viewer สามารถกดชื่อจุดเพื่อ isolate เส้นเดียว
 function historyDisplayRows(rows){
 // compare และ average ต้องเห็นข้อมูลดิบของทั้ง 3 จุดก่อน
 // แล้วค่อยแยกเส้นหรือคำนวณค่าเฉลี่ยพื้นที่ในขั้นสร้างกราฟ
@@ -4441,6 +4474,8 @@ plugins:{
 legend:
 graphLegendOptions(),
 tooltip:{
+mode:"nearest",
+intersect:true,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -4727,6 +4762,8 @@ plugins:{
 legend:
 graphLegendOptions(),
 tooltip:{
+mode:"nearest",
+intersect:true,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -4858,6 +4895,8 @@ plugins:{
 legend:
 graphLegendOptions(),
 tooltip:{
+mode:"nearest",
+intersect:true,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -7883,7 +7922,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-ช่วงยาวแสดงเป็นรายวัน • ซูมเข้าเพื่อดูเวลา • มือถือใช้สองนิ้วซูม • ลากซ้าย–ขวา
+เลือกเส้นที่ต้องการด้านล่าง • ชี้/แตะจุดเพื่อดู “ค่าของเส้นนั้น” และเวลาที่ข้อมูลจุดนั้นถูกบันทึก
 </div>
 </div>
 
@@ -7899,14 +7938,14 @@ viewer.innerHTML=`
 <div class="chart-zoom-statusbar">
 <span>🔎 ซูมช่วงเวลา</span>
 <span>↔ ลากเพื่อเลื่อน</span>
-<span>● แตะ/ชี้จุดเพื่อดูค่า</span>
+<span>● ชี้จุด = ค่า + เวลาจริงของจุดนั้น</span>
 </div>
 
 <div class="chart-series-controls" id="chartSeriesControls">
 <div class="chart-series-controls-head">
 <div>
 <div class="chart-series-controls-title">ข้อมูลที่แสดง</div>
-<div class="chart-series-controls-help">แตะชื่อข้อมูลเพื่อซ่อนหรือแสดงเส้นกราฟ</div>
+<div class="chart-series-controls-help">เลือกชื่อข้อมูลเพื่อดูเส้นนั้นเพียงเส้นเดียว • กด “แสดงทั้งหมด” เพื่อกลับมาดูทุกเส้น</div>
 </div>
 <button type="button" class="chart-series-show-all" id="chartSeriesShowAll">แสดงทั้งหมด</button>
 </div>
@@ -8314,14 +8353,15 @@ index
 return;
 }
 
-const visible=
-chartInteractiveInstance.isDatasetVisible(
-index
-);
-
+// เลือกเส้นเดียวให้ชัดเจน:
+// ผู้ใช้กด "จุดตรวจวัด 1" = เห็นเฉพาะจุด 1
+chartInteractiveInstance.data.datasets.forEach(
+(_,datasetIndex)=>{
 chartInteractiveInstance.setDatasetVisibility(
-index,
-!visible
+datasetIndex,
+datasetIndex===index
+);
+}
 );
 
 chartInteractiveInstance.update(
@@ -8463,8 +8503,7 @@ normalized:true,
 
 interaction:{
 mode:"nearest",
-intersect:false,
-axis:"x"
+intersect:true
 },
 
 layout:{
@@ -8484,8 +8523,8 @@ display:false
 
 tooltip:{
 enabled:true,
-mode:"index",
-intersect:false,
+mode:"nearest",
+intersect:true,
 callbacks:{
 title:graphTooltipTitle,
 label:graphTooltipLabel
