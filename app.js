@@ -3541,7 +3541,7 @@ function drawCharts(){
 
 if(typeof Chart==="undefined"){
 const area=$("historyChartArea");
-if(area)area.innerHTML='<div class="chart-empty">กำลังเตรียมกราฟ...</div>';
+if(area)area.innerHTML='<div class="chart-empty chart-loading-state"><b>กำลังโหลดข้อมูลย้อนหลัง</b><span>กราฟจะพร้อมแสดงอัตโนมัติเมื่อข้อมูลโหลดเสร็จ</span></div>';
 if(historyActivated){
 ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load error:",e));
 }
@@ -3955,7 +3955,7 @@ return pts.every(v=>v!==null)?pts:null;
 if(metric==="all"){
 const actual=(arr||[]).filter(r=>parseDate(r.timestamp)).slice(-12);
 if(!actual.length){
-area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
+area.innerHTML='<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
 return;
 }
 
@@ -4024,7 +4024,7 @@ area.innerHTML='<canvas class="bottom-forecast-canvas" id="forecastChart"></canv
 
 const actual=(arr||[]).filter(r=>parseDate(r.timestamp)&&hasFiniteSensorValue(r[metric])).slice(-12);
 if(!actual.length){
-area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลจริงสำหรับสร้างกราฟ</div>';
+area.innerHTML='<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
 return;
 }
 const values=actual.map(r=>finiteNumberOrNull(r[metric]));
@@ -6099,8 +6099,7 @@ html:`
 <section class="help-section">
 <h4>สถานะจุดตรวจวัด</h4>
 <div class="help-choice-list">
-<div><b>ONLINE</b><span>พร้อมให้ข้อมูลตามปกติ</span></div>
-<div><b>SLEEP</b><span>อยู่ในช่วงพักตามรอบการทำงาน ถือเป็นสถานะปกติ</span></div>
+<div><b>ONLINE</b><span>จุดตรวจวัดพร้อมใช้งานและระบบยังยืนยันการทำงานได้ตามปกติ</span></div>
 <div><b>OFFLINE</b><span>ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</span></div>
 </div>
 </section>
@@ -8193,45 +8192,17 @@ loadAIForecast(false);
 
 function setupDeferredSections(){
 
-const historyTargets=[
-document.querySelector(".historical-section"),
-document.querySelector(".dashboard-charts-zone")
-]
-.filter(Boolean);
+// Historical data is useful immediately after opening the dashboard.
+// Start preparing it in the background without waiting for the user to scroll.
+activateHistorySection();
 
 const aiTarget=
 document.querySelector(".ai-intelligence-section");
 
 if(
-"IntersectionObserver" in window
+"IntersectionObserver" in window &&
+aiTarget
 ){
-
-if(historyTargets.length){
-
-const historyObserver=
-new IntersectionObserver(
-entries=>{
-
-if(
-entries.some(x=>x.isIntersecting)
-){
-historyObserver.disconnect();
-activateHistorySection();
-}
-
-},
-{
-rootMargin:"700px 0px"
-}
-);
-
-historyTargets.forEach(
-x=>historyObserver.observe(x)
-);
-
-}
-
-if(aiTarget){
 
 const aiObserver=
 new IntersectionObserver(
@@ -8252,13 +8223,10 @@ rootMargin:"500px 0px"
 
 aiObserver.observe(aiTarget);
 
-}
-
 }else{
 
 setTimeout(
 ()=>{
-activateHistorySection();
 activateAISection();
 },
 1200
@@ -9043,8 +9011,7 @@ run();
 const V18_INFO={
 monitoring:{
 title:"สถานะจุดตรวจวัด",
-html:`<p><b>ONLINE</b> — พร้อมให้ข้อมูลตามปกติ</p>
-<p><b>SLEEP</b> — อยู่ในช่วงพักตามรอบการทำงาน ถือเป็นสถานะปกติ</p>
+html:`<p><b>ONLINE</b> — จุดตรวจวัดพร้อมใช้งานและระบบยังยืนยันการทำงานได้ตามปกติ</p>
 <p><b>OFFLINE</b> — ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</p>
 <p><b>ข้อมูลล่าสุด</b> — เวลาของข้อมูลตรวจวัดชุดที่กำลังแสดง ซึ่งอาจต่างจากเวลาที่สถานะเปลี่ยนแปลง</p>`
 },
