@@ -946,9 +946,22 @@ return st==="offline"?"offline":"online";
 // FETCH
 // =====================================================
 
-async function fetchJson(url){
+async function fetchJson(url,timeoutMs=15000){
 
-const r=
+const controller=
+new AbortController();
+
+const timer=
+setTimeout(
+()=>controller.abort(),
+timeoutMs
+);
+
+let r;
+
+try{
+
+r=
 await fetch(
 
 url+
@@ -964,10 +977,17 @@ Date.now(),
 cache:"no-store",
 headers:{
 Accept:"application/json"
-}
+},
+signal:controller.signal
 }
 
 );
+
+}finally{
+
+clearTimeout(timer);
+
+}
 
 if(!r.ok){
 
@@ -1115,7 +1135,8 @@ async function loadHistory(){
 
 const j=
 await fetchJson(
-`${API.history}?range=${encodeURIComponent(apiRange())}`
+`${API.history}?range=${encodeURIComponent(apiRange())}`,
+20000
 );
 
 
@@ -3928,7 +3949,12 @@ if(!area)return;
 const isAI=aiForecastPayload?.ai===true;
 const isStatistical=
 !isAI&&
-aiForecastPayload?.reason==="all_ai_unavailable";
+[
+"all_ai_unavailable",
+"fast_forecast"
+].includes(
+aiForecastPayload?.reason
+);
 
 const provider=isAI
 ?(
@@ -3938,7 +3964,7 @@ aiForecastPayload?.provider==="cloudflare"
 ?"ระบบวิเคราะห์"
 :"AI"
 )
-:"Statistical Model";
+:"ระบบคาดการณ์";
 
 const pointFor=field=>{
 const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
@@ -5239,7 +5265,7 @@ payload.reason===
 return"ใช้ข้อมูลย้อนหลัง";
 }
 
-return"RULE FALLBACK";
+return"ระบบสำรอง";
 
 }
 
@@ -5771,17 +5797,17 @@ badge.className=
 
 const p=
 payload?.provider==="gemini"
-?"GEMINI AI"
+?"ระบบวิเคราะห์"
 :payload?.provider==="cloudflare"
 ?"ระบบวิเคราะห์"
 :payload?.provider==="rule"
-?"RULE ENGINE"
+?"ระบบคาดการณ์"
 :"AI";
 
 badge.textContent=
 isAI
 ?p
-:"RULE ENGINE";
+:"ระบบคาดการณ์";
 
 }
 
@@ -5791,17 +5817,29 @@ return;
 
 if(!isAI){
 
-const reasonText=
-payload.reason==="gemini_quota_exhausted"
-?"โควตา Gemini ฟรีถึงขีดจำกัดแล้ว ระบบข้อมูลจริงยังทำงานตามปกติ"
-:payload.reason==="gemini_secret_not_configured"
-?"ยังไม่ได้ตั้งค่า GEMINI_API_KEY"
-:"ไม่สามารถเชื่อม Gemini ได้ในขณะนี้";
+if(
+payload?.reason==="fast_forecast" ||
+payload?.reason==="all_ai_unavailable"
+){
+
+const d=
+payload.data||
+{};
+
+box.innerHTML=
+`<div class="ai-ready-summary">
+<b>${esc(d.headline||"แนวโน้มระยะสั้นพร้อมใช้งาน")}</b>
+<div class="mt-1">${esc(d.air_forecast||"ระบบกำลังประเมินแนวโน้มจากข้อมูลที่มีอยู่")}</div>
+${d.heat_forecast?`<div class="mt-1">${esc(d.heat_forecast)}</div>`:""}
+</div>`;
+
+return;
+}
 
 box.innerHTML=
 `<div class="ai-unavailable">
-<b>การวิเคราะห์ขั้นสูงยังไม่พร้อม</b>
-<div class="mt-1">${esc(reasonText)}</div>
+<b>ยังไม่สามารถสร้างแนวโน้มได้</b>
+<div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div>
 </div>`;
 
 return;
@@ -6159,7 +6197,7 @@ html:`
 },
 
 historyChart:{
-title:"📈 แนวโน้มข้อมูลย้อนหลัง",
+title:"📈 กราฟข้อมูลย้อนหลัง",
 html:`
 <div class="help-intro-card"><b>กราฟนี้แสดง “สิ่งที่วัดได้แล้วในอดีต”</b><span>ใช้ดูว่าค่าต่าง ๆ เปลี่ยนขึ้น ลง หรือค่อนข้างคงที่ตามเวลาอย่างไร กราฟนี้ไม่ใช่การคาดการณ์อนาคต</span></div>
 <section class="help-section">
@@ -8142,14 +8180,49 @@ return chartLibraryPromise;
 
 }
 
-async function activateHistorySection(){
+function setHistoryChartMessage(title,detail="",isError=false){
 
-if(historyLoading){
+const area=
+$("historyChartArea");
+
+if(!area){
+return;
+}
+
+area.innerHTML=
+`<div class="chart-loading-state ${isError?"is-error":""}">
+<b>${esc(title)}</b>
+${detail?`<span>${esc(detail)}</span>`:""}
+${isError?`<button type="button" class="chart-state-retry" id="historyRetryButton">ลองใหม่</button>`:""}
+</div>`;
+
+if(isError){
+
+$("historyRetryButton")?.addEventListener(
+"click",
+()=>{
+activateHistorySection(true);
+},
+{once:true}
+);
+
+}
+
+}
+
+async function activateHistorySection(force=false){
+
+if(historyLoading&&!force){
 return;
 }
 
 historyActivated=true;
 historyLoading=true;
+
+setHistoryChartMessage(
+"กำลังโหลดข้อมูลย้อนหลัง",
+"กรุณารอสักครู่"
+);
 
 try{
 
@@ -8167,6 +8240,14 @@ drawCharts();
 console.error(
 "Deferred history/chart load error:",
 e
+);
+
+setHistoryChartMessage(
+"โหลดข้อมูลย้อนหลังไม่สำเร็จ",
+e?.name==="AbortError"
+?"การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่"
+:"ไม่สามารถโหลดข้อมูลได้ในขณะนี้ กรุณาลองใหม่",
+true
 );
 
 }finally{
@@ -8417,6 +8498,12 @@ drawCharts();
 console.error(
 "History error:",
 e
+);
+
+setHistoryChartMessage(
+"อัปเดตข้อมูลย้อนหลังไม่สำเร็จ",
+"กรุณาลองใหม่อีกครั้ง",
+true
 );
 
 }
