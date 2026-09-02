@@ -12208,3 +12208,99 @@ body.history-range-modal-open{
     font-size:13px;
     line-height:1.65;
 }
+
+
+/* =========================================================
+   V21 — UX POLISH BEFORE LOGIN
+   ========================================================= */
+
+/* Four references = four equal columns; no empty fifth slot. */
+.about-reference-links{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+
+/* All help triggers must be true circles. */
+.help-button,
+.context-help-button{
+    box-sizing:border-box!important;
+    width:28px!important;
+    height:28px!important;
+    min-width:28px!important;
+    min-height:28px!important;
+    max-width:28px!important;
+    max-height:28px!important;
+    flex:0 0 28px!important;
+    padding:0!important;
+    border-radius:50%!important;
+    aspect-ratio:1/1!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    line-height:1!important;
+}
+
+/* Historical graph starts loading immediately and explains its state. */
+.chart-loading-state{
+    min-height:220px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+}
+.chart-loading-state b{color:#e2e8f0;font-size:14px}
+.chart-loading-state span{color:#64748b;font-size:12px}
+
+/* Forecast intentionally communicates that analysis needs a short moment. */
+.forecast-wait-state{
+    min-height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:13px;
+    padding:24px;
+    text-align:left;
+    color:#94a3b8;
+}
+.forecast-wait-state > div{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    max-width:520px;
+}
+.forecast-wait-state b{
+    color:#e2e8f0;
+    font-size:15px;
+}
+.forecast-wait-state span{
+    color:#64748b;
+    font-size:12.5px;
+    line-height:1.65;
+}
+.forecast-wait-spinner{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    border:2px solid rgba(34,211,238,.18);
+    border-top-color:#22d3ee;
+    border-radius:50%;
+    animation:v21ForecastSpin .8s linear infinite;
+}
+.forecast-wait-state.is-idle .forecast-wait-spinner{display:none}
+@keyframes v21ForecastSpin{to{transform:rotate(360deg)}}
+
+@media(max-width:1000px){
+    .about-reference-links{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+}
+@media(max-width:640px){
+    .about-reference-links{
+        grid-template-columns:1fr!important;
+    }
+    .forecast-wait-state{
+        min-height:220px;
+        padding:18px;
+    }
+}
