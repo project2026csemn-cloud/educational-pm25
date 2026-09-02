@@ -12340,3 +12340,9 @@ body.history-range-modal-open{
 .ai-ready-summary b{
     color:#e2e8f0;
 }
+
+
+/* V23 — history retry remains compact */
+.chart-state-retry{
+  touch-action:manipulation;
+}
