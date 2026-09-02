@@ -3948,78 +3948,577 @@ return list.find(x=>x?.field===field)||null;
 function aiDirectionText(direction){
 return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
 }
-function drawForecast(arr){
-forecastGroupCharts=destroyChartList(forecastGroupCharts);
-destroyChartSafe(forecastChart);
-forecastChart=null;
+function forecastScopeData(scope){
 
-const area=$("forecastChartArea");
-if(!area)return;
+const list=
+Array.isArray(
+aiForecastPayload?.data?.scope_forecasts
+)
+?aiForecastPayload.data.scope_forecasts
+:[];
 
-const isAI=aiForecastPayload?.ai===true;
-const isStatistical=
-!isAI&&
-[
-"all_ai_unavailable",
-"fast_forecast"
-].includes(
-aiForecastPayload?.reason
+const found=
+list.find(
+x=>
+String(x?.scope||"").trim()===scope
 );
 
-const provider=isAI
-?(
-aiForecastPayload?.provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:aiForecastPayload?.provider==="gemini"
-?"ระบบวิเคราะห์"
-:"AI"
-)
-:"ระบบคาดการณ์";
+if(found){
+return found;
+}
 
-const pointFor=field=>{
-const fp=Array.isArray(aiForecastPayload?.data?.forecast_points)
-?aiForecastPayload.data.forecast_points.find(x=>x?.field===field):null;
-if(!fp)return null;
+// backward compatibility: old Worker had AREA only
+if(scope==="AREA"&&aiForecastPayload?.data){
+return{
+scope:"AREA",
+confidence:
+aiForecastPayload.data.confidence||
+"low",
+trend_analysis:
+aiForecastPayload.data.trend_analysis||
+[],
+forecast_points:
+aiForecastPayload.data.forecast_points||
+[]
+};
+}
+
+return null;
+}
+
+function forecastPointsForScope(scope,field){
+
+const s=
+forecastScopeData(scope);
+
+const fp=
+Array.isArray(
+s?.forecast_points
+)
+?s.forecast_points.find(
+x=>x?.field===field
+)
+:null;
+
+if(!fp){
+return null;
+}
+
 const pts=[
 finiteNumberOrNull(fp.p10),
 finiteNumberOrNull(fp.p20),
 finiteNumberOrNull(fp.p30)
 ];
-return pts.every(v=>v!==null)?pts:null;
-};
 
-if(metric==="all"){
-const actual=(arr||[]).filter(r=>parseDate(r.timestamp)).slice(-12);
-if(!actual.length){
-area.innerHTML='<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
+return pts.every(
+v=>v!==null
+)
+?pts
+:null;
+}
+
+function selectedForecastScope(){
+
+if(historyNode==="average"){
+return"AREA";
+}
+
+if(
+["Number 1","Number 2","Number 3"]
+.includes(historyNode)
+){
+return historyNode;
+}
+
+return"AREA";
+}
+
+function recentRowsForScope(
+allRows,
+scope,
+field=null,
+limit=12
+){
+
+let rows;
+
+if(scope==="AREA"){
+rows=
+spatialAverageRows(
+allRows,
+field?[field]:GRAPH_FIELDS
+);
+}else{
+rows=
+historyRowsForNode(
+allRows,
+scope
+);
+}
+
+return rows
+.filter(r=>
+parseDate(r?.timestamp)&&
+(
+field
+?hasFiniteSensorValue(r?.[field])
+:hasAnySensorData(r)
+)
+)
+.sort(
+(a,b)=>
+parseDate(a.timestamp)-
+parseDate(b.timestamp)
+)
+.slice(-limit);
+}
+
+function buildForecastCompareData(
+allRows,
+field
+){
+
+const actualByNode={};
+const labelSet=new Set();
+
+for(const nodeId of HISTORY_NODES){
+
+const rows=
+recentRowsForScope(
+allRows,
+nodeId,
+field,
+12
+);
+
+actualByNode[nodeId]=rows;
+
+for(const r of rows){
+labelSet.add(r.timestamp);
+}
+}
+
+const actualLabels=
+[...labelSet]
+.sort(
+(a,b)=>
+parseDate(a)-
+parseDate(b)
+);
+
+const labels=[
+...actualLabels,
+"+10 นาที",
+"+20 นาที",
+"+30 นาที"
+];
+
+const datasets=[];
+
+for(const nodeId of HISTORY_NODES){
+
+const rows=
+actualByNode[nodeId];
+
+const map=
+new Map(
+rows.map(
+r=>[
+r.timestamp,
+finiteNumberOrNull(r[field])
+]
+)
+);
+
+const actualValues=
+actualLabels.map(
+label=>
+map.has(label)
+?map.get(label)
+:null
+);
+
+datasets.push(
+makeNodeDataset(
+nodeId,
+field,
+[
+...actualValues,
+null,
+null,
+null
+]
+)
+);
+
+const pts=
+forecastPointsForScope(
+nodeId,
+field
+);
+
+if(pts){
+
+const latestRow=
+[...rows]
+.reverse()
+.find(
+r=>
+hasFiniteSensorValue(
+r[field]
+)
+);
+
+const current=
+latestRow
+?finiteNumberOrNull(
+latestRow[field]
+)
+:null;
+
+const forecastValues=
+new Array(
+actualLabels.length+3
+)
+.fill(null);
+
+if(
+latestRow&&
+current!==null
+){
+
+const idx=
+actualLabels.indexOf(
+latestRow.timestamp
+);
+
+if(idx>=0){
+forecastValues[idx]=current;
+}
+}
+
+forecastValues[
+actualLabels.length
+]=pts[0];
+
+forecastValues[
+actualLabels.length+1
+]=pts[1];
+
+forecastValues[
+actualLabels.length+2
+]=pts[2];
+
+const fd=
+makeNodeDataset(
+nodeId,
+field,
+forecastValues
+);
+
+fd.label=
+`${historyNodeLabel(nodeId)} • คาดการณ์`;
+
+fd.borderDash=[
+6,
+5
+];
+
+fd.pointRadius=2;
+fd.tension=.08;
+fd.hidden=
+!forecastVisible;
+
+datasets.push(fd);
+}
+}
+
+return{
+labels,
+datasets
+};
+}
+
+function drawForecast(arr){
+
+forecastGroupCharts=
+destroyChartList(
+forecastGroupCharts
+);
+
+destroyChartSafe(
+forecastChart
+);
+
+forecastChart=null;
+
+const area=
+$("forecastChartArea");
+
+if(!area){
 return;
 }
 
+const allRows=
+selectedRecords()
+.filter(
+r=>parseDate(r?.timestamp)
+)
+.sort(
+(a,b)=>
+parseDate(a.timestamp)-
+parseDate(b.timestamp)
+);
+
+const compareMode=
+historyNode==="compare";
+
+const scope=
+selectedForecastScope();
+
+const resultReady=
+aiForecastPayload?.data&&
+(
+aiForecastPayload.ai===true||
+[
+"all_ai_unavailable",
+"fast_forecast"
+]
+.includes(
+aiForecastPayload?.reason
+)
+);
+
+const providerText=
+aiForecastPayload?.ai===true
+?(
+aiForecastPayload?.provider==="gemini"
+?"AI • Gemini"
+:aiForecastPayload?.provider==="cloudflare"
+?"AI • Workers AI"
+:"AI"
+)
+:"ระบบสำรองเชิงคำนวณ";
+
+if(metric==="all"){
+
+if(compareMode){
+
 area.innerHTML=
-groupedChartShell("ฝุ่นละออง","ข้อมูลจริง + AI Forecast","forecastDust",miniLegend(["pm1","pm25","pm10"]))+
 `<div class="metric-chart-grid-3">`+
-groupedChartShell("อุณหภูมิ","ข้อมูลจริง + AI Forecast","forecastTemp",miniLegend(["temperature"]))+
-groupedChartShell("ความชื้น","ข้อมูลจริง + AI Forecast","forecastHumidity",miniLegend(["humidity"]))+
-groupedChartShell("แสง","ข้อมูลจริง + AI Forecast","forecastLight",miniLegend(["light"]))+
+groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
+groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
+groupedChartShell("PM10","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm10",miniLegend([]))+
+groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","forecastTemp",miniLegend([]))+
+groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","forecastHumidity",miniLegend([]))+
+groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","forecastLight",miniLegend([]))+
 `</div>`;
 
-const actualLabels=actual.map(r=>r.timestamp);
-const labels=[...actualLabels,"+10 นาที","+20 นาที","+30 นาที"];
+const createCompare=
+(canvasId,field,yTitle)=>{
 
-const create=(canvasId,fields,yTitle)=>{
+const data=
+buildForecastCompareData(
+allRows,
+field
+);
+
+const c=
+new Chart(
+$(canvasId),
+{
+type:"line",
+data,
+options:{
+...forecastChartOptions(
+yTitle
+),
+plugins:{
+legend:
+graphLegendOptions(),
+tooltip:{
+callbacks:{
+title:
+graphTooltipTitle,
+label:
+graphTooltipLabel
+}
+}
+}
+}
+}
+);
+
+forecastGroupCharts.push(c);
+};
+
+createCompare(
+"forecastPm1",
+"pm1",
+"µg/m³"
+);
+
+createCompare(
+"forecastPm25",
+"pm25",
+"µg/m³"
+);
+
+createCompare(
+"forecastPm10",
+"pm10",
+"µg/m³"
+);
+
+createCompare(
+"forecastTemp",
+"temperature",
+"°C"
+);
+
+createCompare(
+"forecastHumidity",
+"humidity",
+"%"
+);
+
+createCompare(
+"forecastLight",
+"light",
+"lux"
+);
+
+if($("forecastMessage")){
+
+$("forecastMessage").innerHTML=
+resultReady
+?`<b class="text-cyan-300">คาดการณ์ 30 นาที • เปรียบเทียบ 3 จุด • ทุกตัวแปร</b>
+<div class="mt-2">${esc(providerText)} • แต่ละจุดคำนวณจากข้อมูลของจุดนั้นแยกกัน</div>
+<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที • ค่าเฉลี่ยพื้นที่ไม่ได้ถูกนำไปแทนค่าของแต่ละจุด</div>`
+:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
+}
+
+updateForecastToggle();
+return;
+}
+
+// ALL + AREA หรือจุดเดียว
+const rows=
+recentRowsForScope(
+allRows,
+scope,
+null,
+12
+);
+
+if(!rows.length){
+area.innerHTML=
+'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
+return;
+}
+
+const scopeLabel=
+scope==="AREA"
+?"ค่าเฉลี่ยพื้นที่"
+:historyNodeLabel(scope);
+
+area.innerHTML=
+groupedChartShell(
+"ฝุ่นละออง",
+`${scopeLabel} • ข้อมูลจริง + คาดการณ์`,
+"forecastDust",
+miniLegend(
+["pm1","pm25","pm10"]
+)
+)+
+`<div class="metric-chart-grid-3">`+
+groupedChartShell(
+"อุณหภูมิ",
+`${scopeLabel} • °C`,
+"forecastTemp",
+miniLegend(
+["temperature"]
+)
+)+
+groupedChartShell(
+"ความชื้น",
+`${scopeLabel} • %`,
+"forecastHumidity",
+miniLegend(
+["humidity"]
+)
+)+
+groupedChartShell(
+"แสง",
+`${scopeLabel} • lux`,
+"forecastLight",
+miniLegend(
+["light"]
+)
+)+
+`</div>`;
+
+const actualLabels=
+rows.map(
+r=>r.timestamp
+);
+
+const labels=[
+...actualLabels,
+"+10 นาที",
+"+20 นาที",
+"+30 นาที"
+];
+
+const create=
+(canvasId,fields,yTitle)=>{
+
 const datasets=[];
+
 for(const field of fields){
-const raw=actual.map(r=>{
-const v=finiteNumberOrNull(r[field]); return v;
-});
+
+const raw=
+rows.map(
+r=>
+finiteNumberOrNull(
+r[field]
+)
+);
+
 datasets.push({
-...makeActualDataset(field,raw),
-data:[...raw,null,null,null],
-rawValues:[...raw,null,null,null]
+...makeActualDataset(
+field,
+raw
+),
+data:[
+...raw,
+null,
+null,
+null
+],
+rawValues:[
+...raw,
+null,
+null,
+null
+]
 });
-const pts=pointFor(field);
-if((isAI||isStatistical)&&pts){
-const current=[...raw].reverse().find(v=>v!==null);
+
+const pts=
+forecastPointsForScope(
+scope,
+field
+);
+
+if(pts){
+
+const current=
+[...raw]
+.reverse()
+.find(
+v=>v!==null
+);
+
 const forecastDs=
 makeForecastDataset(
 field,
@@ -4027,54 +4526,204 @@ raw.length,
 current,
 pts
 );
+
 forecastDs.hidden=
 !forecastVisible;
+
 datasets.push(
 forecastDs
 );
 }
 }
-const c=new Chart($(canvasId),{
+
+const c=
+new Chart(
+$(canvasId),
+{
 type:"line",
-data:{labels,datasets},
-options:forecastChartOptions(yTitle)
-});
+data:{
+labels,
+datasets
+},
+options:
+forecastChartOptions(
+yTitle
+)
+}
+);
+
 forecastGroupCharts.push(c);
 };
 
-create("forecastDust",["pm1","pm25","pm10"],"µg/m³");
-create("forecastTemp",["temperature"],"°C");
-create("forecastHumidity",["humidity"],"%");
-create("forecastLight",["light"],"lux");
+create(
+"forecastDust",
+["pm1","pm25","pm10"],
+"µg/m³"
+);
+
+create(
+"forecastTemp",
+["temperature"],
+"°C"
+);
+
+create(
+"forecastHumidity",
+["humidity"],
+"%"
+);
+
+create(
+"forecastLight",
+["light"],
+"lux"
+);
 
 if($("forecastMessage")){
-$("forecastMessage").innerHTML=(isAI||isStatistical)
-?`<b class="text-cyan-300">คาดการณ์ 30 นาที • ภาพรวมพื้นที่ • ทุกตัวแปร</b><div class="mt-2">เส้นทึบ = ข้อมูลจริงย้อนหลัง • เส้นประ = ค่าประมาณ +10, +20 และ +30 นาที</div><div class="text-[12px] text-slate-500 mt-2">ใช้เพื่อดูแนวโน้มระยะสั้นเท่านั้น • ยังไม่มีคะแนนความแม่นยำที่ผ่านการประเมินจากค่าจริงย้อนหลังอย่างเพียงพอ</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอสำหรับแสดงแนวโน้มระยะสั้น</div></div>';
+$("forecastMessage").innerHTML=
+resultReady
+?`<b class="text-cyan-300">คาดการณ์ 30 นาที • ${esc(scopeLabel)} • ทุกตัวแปร</b>
+<div class="mt-2">${esc(providerText)} • แสดง +10, +20 และ +30 นาที</div>
+<div class="text-[12px] text-slate-500 mt-2">ผลคาดการณ์ใช้ข้อมูลของ ${esc(scopeLabel)} โดยตรง • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
+:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
 }
+
 updateForecastToggle();
 return;
 }
 
-area.innerHTML='<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
+// ตัวแปรเดียว
+let rows;
 
-const actual=(arr||[]).filter(r=>parseDate(r.timestamp)&&hasFiniteSensorValue(r[metric])).slice(-12);
-if(!actual.length){
-area.innerHTML='<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
+if(compareMode){
+
+const data=
+buildForecastCompareData(
+allRows,
+metric
+);
+
+if(
+!data.labels.length
+){
+area.innerHTML=
+'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
 return;
 }
-const values=actual.map(r=>finiteNumberOrNull(r[metric]));
-const labels=actual.map(r=>r.timestamp);
-const current=values.at(-1);
-const datasets=[makeActualDataset(metric,values)];
-const pts=pointFor(metric);
 
-if((isAI||isStatistical)&&pts){
-labels.push("+10 นาที","+20 นาที","+30 นาที");
-datasets[0].data=[...values,null,null,null];
-datasets[0].rawValues=[...values,null,null,null];
+area.innerHTML=
+'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
 
-const forecastDs=
+forecastChart=
+new Chart(
+$("forecastChart"),
+{
+type:"line",
+data,
+options:{
+...forecastChartOptions(
+`${metricLabel()} ${metricUnit()}`.trim()
+),
+plugins:{
+legend:
+graphLegendOptions(),
+tooltip:{
+callbacks:{
+title:
+graphTooltipTitle,
+label:
+graphTooltipLabel
+}
+}
+}
+}
+}
+);
+
+if($("forecastMessage")){
+$("forecastMessage").innerHTML=
+resultReady
+?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • เปรียบเทียบ 3 จุด • ${metricLabel()}</b>
+<div class="mt-2">${esc(providerText)} • จุด 1/2/3 ถูกคาดการณ์แยกจากข้อมูลของแต่ละจุด</div>
+<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
+:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
+}
+
+updateForecastToggle();
+return;
+}
+
+rows=
+recentRowsForScope(
+allRows,
+scope,
+metric,
+12
+);
+
+if(!rows.length){
+area.innerHTML=
+'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
+return;
+}
+
+const scopeLabel=
+scope==="AREA"
+?"ค่าเฉลี่ยพื้นที่"
+:historyNodeLabel(scope);
+
+const values=
+rows.map(
+r=>
+finiteNumberOrNull(
+r[metric]
+)
+);
+
+const labels=
+rows.map(
+r=>r.timestamp
+);
+
+const datasets=[
+makeActualDataset(
+metric,
+values
+)
+];
+
+const pts=
+forecastPointsForScope(
+scope,
+metric
+);
+
+if(pts){
+
+labels.push(
+"+10 นาที",
+"+20 นาที",
+"+30 นาที"
+);
+
+datasets[0].data=[
+...values,
+null,
+null,
+null
+];
+
+datasets[0].rawValues=[
+...values,
+null,
+null,
+null
+];
+
+const current=
+values.at(-1);
+
+const fd=
 makeForecastDataset(
 metric,
 values.length,
@@ -4082,41 +4731,61 @@ current,
 pts
 );
 
-forecastDs.hidden=
+fd.hidden=
 !forecastVisible;
 
 datasets.push(
-forecastDs
+fd
 );
 }
 
-forecastChart=new Chart($("forecastChart"),{
+area.innerHTML=
+'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
+
+forecastChart=
+new Chart(
+$("forecastChart"),
+{
 type:"line",
-data:{labels,datasets},
+data:{
+labels,
+datasets
+},
 options:{
-...forecastChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),
-plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}
+...forecastChartOptions(
+`${metricLabel()} ${metricUnit()}`.trim()
+),
+plugins:{
+legend:
+graphLegendOptions(),
+tooltip:{
+callbacks:{
+title:
+graphTooltipTitle,
+label:
+graphTooltipLabel
 }
-});
+}
+}
+}
+}
+);
 
 if($("forecastMessage")){
-if((isAI||isStatistical)&&pts){
-const trend=aiTrendFor(metric);
-const fallbackDirection=
-pts[2]>current
-?"↗ เพิ่มขึ้น"
-:pts[2]<current
-?"↘ ลดลง"
-:"→ ค่อนข้างคงที่";
+
+const p30=
+pts
+?pts[2]
+:null;
+
 $("forecastMessage").innerHTML=
-`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • ภาพรวมพื้นที่ • ${metricLabel()}</b>
-<div class="mt-2">${esc(isAI?aiDirectionText(trend?.direction):fallbackDirection)} • ค่าประมาณที่ +30 นาที <b>${fmt(pts[2])} ${metricUnit()}</b></div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริงย้อนหลัง • เส้นประ = ค่าประมาณ +10, +20 และ +30 นาที • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>
-<div class="text-[12px] text-slate-500 mt-1">ยังไม่มีคะแนนความแม่นยำที่ผ่านการประเมินจากค่าจริงย้อนหลังอย่างเพียงพอ</div>`;
-}else{
-$("forecastMessage").innerHTML='<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอสำหรับแสดงแนวโน้มระยะสั้น</div></div>';
+pts
+?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • ${esc(scopeLabel)} • ${metricLabel()}</b>
+<div class="mt-2">${esc(providerText)} • ค่าประมาณ +30 นาที <b>${fmt(p30)} ${metricUnit()}</b></div>
+<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
+:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">AI/ข้อมูลของมุมมองนี้ยังไม่มีค่าคาดการณ์ที่ใช้ได้</div></div>';
 }
-}
+
 updateForecastToggle();
 }
 
