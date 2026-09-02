@@ -553,7 +553,7 @@ el.innerHTML=
 <b>${esc(edgeText(displayStart))}</b>
 </div>
 <div class="history-range-center">
-<span>${esc(rangeLabel())}${esc(areaCoverageNote)}</span>
+<span>${esc(rangeLabel())}</span>
 ${latestText
 ?`<small>ข้อมูลล่าสุด ${esc(latestText)}</small>`
 :`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
