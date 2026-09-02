@@ -4270,9 +4270,9 @@ if(metric==="all"){
 if(compareMode){
 
 const compareLegend=
-`<span><i style="background:${NODE_COLORS["Number 1"]}"></i>จุด 1</span>`+
-`<span><i style="background:${NODE_COLORS["Number 2"]}"></i>จุด 2</span>`+
-`<span><i style="background:${NODE_COLORS["Number 3"]}"></i>จุด 3</span>`;
+`<span><i style="background:${HISTORY_NODE_COLORS["Number 1"]}"></i>จุด 1</span>`+
+`<span><i style="background:${HISTORY_NODE_COLORS["Number 2"]}"></i>จุด 2</span>`+
+`<span><i style="background:${HISTORY_NODE_COLORS["Number 3"]}"></i>จุด 3</span>`;
 
 area.innerHTML=
 `<div class="forecast-reading-guide">
