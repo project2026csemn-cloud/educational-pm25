@@ -1136,7 +1136,7 @@ async function loadHistory(){
 const j=
 await fetchJson(
 `${API.history}?range=${encodeURIComponent(apiRange())}`,
-20000
+25000
 );
 
 
@@ -1357,7 +1357,7 @@ dot.className=
 "text-red-400";
 
 st.textContent=
-"API ERROR";
+"ไม่พร้อมใช้งาน";
 
 ac.textContent=
 "ตรวจสอบจำนวนจุดไม่ได้";
@@ -8501,7 +8501,7 @@ e
 );
 
 setHistoryChartMessage(
-"อัปเดตข้อมูลย้อนหลังไม่สำเร็จ",
+"โหลดกราฟข้อมูลย้อนหลังไม่สำเร็จ",
 "กรุณาลองใหม่อีกครั้ง",
 true
 );
