@@ -790,6 +790,10 @@ cleanSensorNumber(
 d.light
 ),
 
+// NOTE:
+// recorded_at/timestamp จาก get_latest คือ "เวลาสถานะล่าสุด"
+// เพราะ API object รวม latest status + latest reading ไว้ด้วยกัน
+// ห้ามใช้ field นี้เป็นเวลาของ Sensor reading ใน UI
 timestamp:
 d.recorded_at||
 d.timestamp||
@@ -1337,6 +1341,46 @@ st==="offline"
 
 }
 
+function nodeReadingTime(node){
+
+if(!node){
+return null;
+}
+
+// API ปัจจุบันแยกเวลาสถานะกับเวลาค่าตรวจวัดไว้แล้ว
+// เวลาที่อยู่ข้างค่าฝุ่น/อุณหภูมิ/ความชื้น/แสง
+// ต้องใช้ reading_recorded_at เท่านั้น
+if(node.reading_recorded_at){
+return node.reading_recorded_at;
+}
+
+// Legacy fallback:
+// ใช้ timestamp ได้เฉพาะเมื่อ object นั้นมี Sensor data จริง
+// เพื่อไม่ให้เวลา ONLINE/SLEEP ถูกนำมาแสดงเป็น "เวลาอัปเดตค่า"
+const hasReading=
+[
+"pm1",
+"pm25",
+"pm10",
+"temperature",
+"humidity",
+"light"
+]
+.some(
+field=>
+hasFiniteSensorValue(
+node?.[field]
+)
+);
+
+return(
+hasReading&&
+node.timestamp
+)
+?node.timestamp
+:null;
+}
+
 function renderMonitoring(){
 
 for(
@@ -1359,9 +1403,9 @@ $("lastUpdate"+i);
 if(t){
 
 const valueTime=
-n?.reading_recorded_at||
-n?.timestamp||
-null;
+nodeReadingTime(
+n
+);
 
 t.textContent=
 valueTime
@@ -9568,14 +9612,30 @@ function averageLatestField(field){
 }
 
 function newestNodeTime(){
-  // "ข้อมูลล่าสุด" ต้องอ้างเวลา Sensor reading จริง
-  // ไม่ใช่เวลา ONLINE/SLEEP เพราะ status ใหม่อาจใช้ค่าการวัดเดิมแสดงอยู่
-  const dates=latestNodes
-    .map(n=>parseDate(n?.reading_recorded_at))
-    .filter(Boolean);
 
-  if(!dates.length) return null;
-  return new Date(Math.max(...dates.map(d=>d.getTime())));
+const dates=
+latestNodes
+.map(
+n=>
+parseDate(
+nodeReadingTime(
+n
+)
+)
+)
+.filter(Boolean);
+
+if(!dates.length){
+return null;
+}
+
+return new Date(
+Math.max(
+...dates.map(
+d=>d.getTime()
+)
+)
+);
 }
 
 function overviewAdvice(pm25){
@@ -9618,8 +9678,22 @@ function updateNavigationDashboard(){
     const label=$("overviewNodeStatus"+i);
     if(dot) dot.className=`overview-node-dot ${st}`;
     if(label){
-      const t=node?.timestamp?thaiTime(node.timestamp):"--";
-      label.textContent=st==="online"?`ONLINE • ${t}`:"OFFLINE";
+      const readingTime=
+nodeReadingTime(
+node
+);
+
+const t=
+readingTime
+?thaiTime(
+readingTime
+)
+:"--";
+
+label.textContent=
+st==="online"
+?`ONLINE • ข้อมูลล่าสุด ${t}`
+:"OFFLINE";
     }
   }
 
