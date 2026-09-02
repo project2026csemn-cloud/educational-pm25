@@ -3268,17 +3268,23 @@ return window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
 }
 
 function graphLegendOptions(){
-const mobile=isMobileChart();
 return{
 display:true,
 position:"top",
 align:"start",
 labels:{
-boxWidth:mobile?12:18,
-boxHeight:3,
-usePointStyle:false,
-padding:mobile?10:16,
-font:{size:mobile?12:13,weight:"600"}
+boxWidth:18,
+boxHeight:2,
+padding:14,
+font:{
+size:Math.max(10,chartFontSize()-1)
+},
+sort:(a,b)=>{
+const af=String(a?.text||"").includes("คาดการณ์")||String(a?.text||"").includes("Forecast");
+const bf=String(b?.text||"").includes("คาดการณ์")||String(b?.text||"").includes("Forecast");
+if(af!==bf)return af?1:-1;
+return Number(a?.datasetIndex||0)-Number(b?.datasetIndex||0);
+}
 }
 };
 }
@@ -4230,7 +4236,8 @@ const labels=[
 "+30 นาที"
 ];
 
-const datasets=[];
+const actualDatasets=[];
+const forecastDatasets=[];
 
 for(const nodeId of HISTORY_NODES){
 
@@ -4255,7 +4262,7 @@ map.has(label)
 :null
 );
 
-datasets.push(
+actualDatasets.push(
 makeNodeDataset(
 nodeId,
 field,
@@ -4348,13 +4355,16 @@ fd.tension=.08;
 fd.hidden=
 !forecastVisible;
 
-datasets.push(fd);
+forecastDatasets.push(fd);
 }
 }
 
 return{
 labels,
-datasets
+datasets:[
+...actualDatasets,
+...forecastDatasets
+]
 };
 }
 
