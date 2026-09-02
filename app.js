@@ -469,7 +469,17 @@ return text;
 }
 
 function graphTooltipTitle(items){
-const raw=items?.[0]?.label;
+const first=items?.[0];
+const parsedX=finiteNumberOrNull(first?.parsed?.x);
+
+if(parsedX!==null){
+const d=new Date(parsedX);
+return Number.isFinite(d.getTime())
+?thaiChartDateTime(d,false)
+:"";
+}
+
+const raw=first?.label;
 if(raw==null){
 return"";
 }
@@ -7030,6 +7040,8 @@ function cloneChartDatasetForViewer(ds){
 
 const copy={
 label:ds.label||"ข้อมูล",
+metricField:ds.metricField,
+rawValues:Array.isArray(ds.rawValues)?[...ds.rawValues]:null,
 
 data:Array.isArray(ds.data)
 ?ds.data.map(
@@ -7222,12 +7234,9 @@ let span=
 viewMax-viewMin;
 
 const minSpan=
-Math.max(
-2,
 Math.min(
-6,
+60*1000,
 total
-)
 );
 
 if(span<minSpan){
@@ -7259,10 +7268,10 @@ return;
 clampWindow();
 
 chartInteractiveInstance.options.scales.x.min=
-Math.floor(viewMin);
+viewMin;
 
 chartInteractiveInstance.options.scales.x.max=
-Math.ceil(viewMax);
+viewMax;
 
 chartInteractiveInstance.update("none");
 
@@ -7650,13 +7659,21 @@ Array.isArray(original.data.labels)
 ?[...original.data.labels]
 :[];
 
-if(labels.length<2){
+const timeValues=
+labels.map(v=>{
+const d=parseDate(v);
+return d?d.getTime():null;
+});
+
+const validTimes=
+timeValues.filter(Number.isFinite);
+
+if(validTimes.length<2){
 return;
 }
 
-fullMin=0;
-fullMax=
-labels.length-1;
+fullMin=Math.min(...validTimes);
+fullMax=Math.max(...validTimes);
 
 viewMin=fullMin;
 viewMax=fullMax;
@@ -7673,9 +7690,23 @@ destroyInteractiveChart();
 const viewerCanvas=$("chartZoomCanvas");
 
 const datasets=
-original.data.datasets.map(
-cloneChartDatasetForViewer
-);
+original.data.datasets.map(ds=>{
+const copy=cloneChartDatasetForViewer(ds);
+const source=Array.isArray(ds.data)?ds.data:[];
+copy.data=labels.map((label,index)=>{
+const x=timeValues[index];
+const raw=source[index];
+const y=
+raw&&typeof raw==="object"
+?finiteNumberOrNull(raw.y)
+:finiteNumberOrNull(raw);
+
+return Number.isFinite(x)&&y!==null
+?{x,y}
+:null;
+}).filter(Boolean);
+return copy;
+});
 
 const unit=
 chartViewerUnitFromOriginal(original);
@@ -7752,10 +7783,9 @@ size:12
 scales:{
 
 x:{
-type:"category",
+type:"linear",
 min:fullMin,
 max:fullMax,
-afterBuildTicks(scale){buildAdaptiveTimeTicks(scale);},
 
 grid:{
 color:"rgba(148,163,184,.09)"
@@ -7764,13 +7794,43 @@ color:"rgba(148,163,184,.09)"
 ticks:{
 color:"#94a3b8",
 maxRotation:0,
-autoSkip:false,
-maxTicksLimit:isTouch?8:35,
+autoSkip:true,
+maxTicksLimit:isTouch?7:14,
 font:{
 size:isTouch?12:12
 },
-callback:function(value,index,ticks){
-return adaptiveChartTickText(this,value,index,ticks);
+callback:function(value){
+const span=Math.max(0,Number(this.max)-Number(this.min));
+const d=new Date(Number(value));
+if(!Number.isFinite(d.getTime()))return"";
+
+const DAY=24*60*60*1000;
+if(span>=3*DAY){
+return d.toLocaleDateString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short"
+});
+}
+
+if(span>=DAY){
+return d.toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+});
+}
+
+return d.toLocaleTimeString("th-TH",{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+second:span<=10*60*1000?"2-digit":undefined,
+hour12:false
+});
 }
 },
 
