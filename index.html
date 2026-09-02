@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260901-final-audit-v20" rel="stylesheet"/>
+<link href="style.css?v=20260901-ux-v21" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -137,7 +137,7 @@ DASHBOARD NAVIGATION
       <div class="overview-title-row">
         <div>
           <div class="section-title-with-help overview-title-help">
-            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ <button type="button" class="context-help-button" data-v18-help="systemGuide" aria-label="ดูคำอธิบาย">?</button></h1>
+            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
             <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
           </div>
           <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
@@ -195,7 +195,7 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด <button type="button" class="context-help-button" data-v18-help="monitoring" aria-label="ดูคำอธิบาย">?</button></h1><p>ดูความพร้อมของระบบและข้อมูลล่าสุดจากทั้ง 3 จุด พร้อมเปรียบเทียบสถานการณ์ปัจจุบัน</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด</h1><p>ดูความพร้อมของระบบและข้อมูลล่าสุดจากทั้ง 3 จุด พร้อมเปรียบเทียบสถานการณ์ปัจจุบัน</p></div>
   <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
 <div class="flex justify-between items-center mb-3">
 <div>
@@ -668,7 +668,7 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 
-</div><div id="forecastChartArea" class="chart-render-area mt-3"><canvas class="bottom-forecast-canvas" id="forecastChart"></canvas></div></div></section>
+</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมแนวโน้มล่วงหน้า</b><span>กรุณารอสักครู่ ระบบต้องใช้ข้อมูลล่าสุดร่วมกับข้อมูลย้อนหลังเพื่อสร้างกราฟคาดการณ์</span></div></div></div></div></section>
 </section>
 
 <section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
@@ -696,7 +696,7 @@ DASHBOARD NAVIGATION
 <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
 </div>
 </div>
-<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังรอ AI Trend Analysis...</div>
+<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังเตรียมข้อมูลสำหรับการวิเคราะห์แนวโน้ม...</div>
 </section>
 </section>
 
@@ -1150,7 +1150,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260901-final-audit-v20"></script>
+<script defer src="app.js?v=20260901-ux-v21"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
