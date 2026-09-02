@@ -3349,7 +3349,8 @@ const labels=scale?.chart?.data?.labels||[];
 
 const forecastStart=
 labels.findIndex(
-v=>/^\+\d+\s*นาที/.test(
+v=>
+/^\+\d+\s*นาที/.test(
 String(v??"")
 )
 );
@@ -3359,15 +3360,11 @@ forecastStart>=0
 ?forecastStart
 :labels.length;
 
-// แก้การซ้อนของ +10 +20 +30:
-// ให้แสดงข้อความ Forecast เพียงจุดกลาง (+20) แล้วรวมเป็นป้ายเดียว
-// ตำแหน่งจุด Forecast ทั้ง 3 บนเส้นยังอยู่ครบและ tooltip ยังดูได้ตามปกติ
-if(/^\+\d+\s*นาที/.test(text)){
-if(text.startsWith("+20")){
-return window.innerWidth<=640
-?"+10 / +20 / +30"
-:"+10   •   +20   •   +30";
-}
+// Forecast ทั้ง 3 จุดยังอยู่บนกราฟและ Tooltip เหมือนเดิม
+// แต่ไม่แสดง +10/+20/+30 เป็น tick แยกบนแกน X เพราะพื้นที่กราฟย่อยไม่พอ
+if(
+/^\+\d+\s*นาที/.test(text)
+){
 return"";
 }
 
@@ -3382,12 +3379,16 @@ window.innerWidth||
 0
 );
 
-let actualLabelCount=3;
-if(width<520)actualLabelCount=2;
+const labelCount=
+width<520
+?2
+:3;
 
-const wanted=new Set();
+const wanted=
+new Set();
 
 if(actualCount>0){
+
 wanted.add(0);
 
 const lastIndex=
@@ -3399,7 +3400,7 @@ actualCount-1
 wanted.add(lastIndex);
 
 if(
-actualLabelCount>2&&
+labelCount>2&&
 lastIndex>1
 ){
 wanted.add(
@@ -3436,8 +3437,8 @@ base.layout={
 padding:{
 right:
 window.innerWidth<=640
-?18
-:26
+?16
+:22
 }
 };
 
@@ -3446,7 +3447,7 @@ offset:true,
 grid:{display:false},
 title:{
 display:true,
-text:"เวลา • ด้านขวาเป็น +10 / +20 / +30 นาที",
+text:"เวลา • จุดเส้นประด้านขวา = อีก 10 / 20 / 30 นาที",
 font:{
 size:Math.max(10,chartFontSize()-2),
 weight:"500"
@@ -3903,7 +3904,16 @@ n
 
 }
 
+function hideForecastTechnicalMessage(){
+const el=$("forecastMessage");
+if(!el)return;
+el.innerHTML="";
+el.style.display="none";
+}
+
 function updateForecastToggle(){
+
+hideForecastTechnicalMessage();
 
 const b=
 $("forecastToggle");
@@ -4317,6 +4327,8 @@ datasets
 
 function drawForecast(arr){
 
+hideForecastTechnicalMessage();
+
 forecastGroupCharts=
 destroyChartList(
 forecastGroupCharts
@@ -4381,6 +4393,22 @@ if(metric==="all"){
 if(compareMode){
 
 area.innerHTML=
+`<div style="
+display:flex;
+align-items:center;
+gap:10px 18px;
+flex-wrap:wrap;
+padding:9px 12px;
+margin:0 0 12px;
+border:1px solid rgba(56,189,248,.14);
+border-radius:12px;
+background:rgba(2,132,199,.045);
+font-size:12px;
+color:#94a3b8">
+<span><b style="color:#e2e8f0">เส้นทึบ</b> ข้อมูลจริง</span>
+<span><b style="color:#e2e8f0">เส้นประ</b> คาดการณ์</span>
+<span><b style="color:#e2e8f0">จุดที่ 1 / 2 / 3</b> = อีก 10 / 20 / 30 นาที</span>
+</div>`+
 `<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
 groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
@@ -4465,13 +4493,8 @@ createCompare(
 );
 
 if($("forecastMessage")){
-
-$("forecastMessage").innerHTML=
-resultReady
-?`<b class="text-cyan-300">คาดการณ์ 30 นาที • เปรียบเทียบ 3 จุด • ทุกตัวแปร</b>
-<div class="mt-2">${esc(providerText)} • แต่ละจุดคำนวณจากข้อมูลของจุดนั้นแยกกัน</div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที • ค่าเฉลี่ยพื้นที่ไม่ได้ถูกนำไปแทนค่าของแต่ละจุด</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
+$("forecastMessage").innerHTML="";
+$("forecastMessage").style.display="none";
 }
 
 updateForecastToggle();
@@ -4848,18 +4871,8 @@ graphTooltipLabel
 );
 
 if($("forecastMessage")){
-
-const p30=
-pts
-?pts[2]
-:null;
-
-$("forecastMessage").innerHTML=
-pts
-?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • ${esc(scopeLabel)} • ${metricLabel()}</b>
-<div class="mt-2">${esc(providerText)} • ค่าประมาณ +30 นาที <b>${fmt(p30)} ${metricUnit()}</b></div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">AI/ข้อมูลของมุมมองนี้ยังไม่มีค่าคาดการณ์ที่ใช้ได้</div></div>';
+$("forecastMessage").innerHTML="";
+$("forecastMessage").style.display="none";
 }
 
 updateForecastToggle();
@@ -6447,8 +6460,7 @@ return s;
 function renderAIForecast(payload){
 
 const box=
-$("aiForecastDetails")||
-$("forecastMessage");
+$("aiForecastDetails");
 
 const badge=
 $("aiForecastStatusBadge");
@@ -6487,14 +6499,6 @@ box.innerHTML=
 '<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
 }
 
-// V16: หน้าสถิติและกราฟต้องบอกผู้ใช้ชัดเจนว่า Forecast ยังประมวลผลอยู่
-const chartMessage=
-$("forecastMessage");
-
-if(chartMessage){
-chartMessage.innerHTML=
-'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
-}
 
 if(badge){
 badge.textContent=
