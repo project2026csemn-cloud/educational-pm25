@@ -6060,6 +6060,81 @@ v||""
 
 }
 
+
+function cleanAIObservationList(items){
+
+const source=
+Array.isArray(items)
+?items
+:[];
+
+const seen=
+new Set();
+
+return source
+.map(x=>normalizeProjectWording(x))
+.map(x=>String(x||"").trim())
+.filter(Boolean)
+
+// ตัดข้อความที่เป็นเพียงรายงานสถานะอุปกรณ์/โครงสร้างระบบ
+// เพราะหน้า "จุดตรวจวัด" มีหน้าที่แสดงข้อมูลเหล่านี้อยู่แล้ว
+.filter(x=>
+!/\b(?:Node|Number)\s*[123]\b/i.test(x)&&
+!/Gateway/i.test(x)&&
+!/ออนไลน์|ออฟไลน์|Sleep|OFFLINE|ONLINE/i.test(x)
+)
+
+// ตัดข้อความซ้ำ
+.filter(x=>{
+const key=x
+.toLowerCase()
+.replace(/\s+/g," ");
+if(seen.has(key))return false;
+seen.add(key);
+return true;
+})
+
+// หน้านี้ควรเป็นบทวิเคราะห์สั้น ๆ ไม่ใช่รายการข้อมูลดิบ
+.slice(0,3);
+
+}
+
+function aiSituationHeadline(data){
+
+const headline=
+normalizeProjectWording(
+data?.headline
+);
+
+if(
+headline&&
+String(headline).trim()
+){
+return String(headline).trim();
+}
+
+return"กำลังประเมินสถานการณ์จากข้อมูลล่าสุด";
+
+}
+
+function aiSituationSummary(data){
+
+const summary=
+normalizeProjectWording(
+data?.summary
+);
+
+if(
+summary&&
+String(summary).trim()
+){
+return String(summary).trim();
+}
+
+return"ยังไม่มีข้อสรุปเพิ่มเติมในขณะนี้";
+
+}
+
 function renderAI(payload){
 
 const badge=
@@ -6086,33 +6161,26 @@ aiStatusText(
 payload
 );
 
-if(
-aiLoading
-){
+if(aiLoading){
 
 details.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์ข้อมูลล่าสุด...</div>';
+'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังตีความสถานการณ์จากข้อมูลล่าสุด...</div>';
 
 return;
-
 }
 
-if(
-!payload
-){
+if(!payload){
 
 details.innerHTML=
-'<div class="ai-result-headline">ยังไม่สามารถสร้างบทวิเคราะห์เพิ่มเติมได้</div><div class="ai-result-summary">ข้อมูลปัจจุบันและสรุปสถานการณ์ยังทำงานได้ตามปกติ</div>';
+`<div class="ai-result-headline">ยังไม่มีบทวิเคราะห์ในขณะนี้</div>
+<div class="ai-result-summary">ดูค่าตรวจวัดล่าสุดได้จากหน้า “ภาพรวม” และ “จุดตรวจวัด”</div>`;
 
 if(generated){
-
 generated.textContent=
 "อัปเดตการวิเคราะห์: --";
-
 }
 
 return;
-
 }
 
 const data=
@@ -6120,11 +6188,9 @@ payload.data||
 {};
 
 const observations=
-Array.isArray(
+cleanAIObservationList(
 data.observations
-)
-?data.observations
-:[];
+);
 
 const generatedDate=
 parseDate(
@@ -6138,21 +6204,34 @@ generatedDate
 ?`อัปเดตการวิเคราะห์: ${generatedDate.toLocaleString(
 "th-TH",
 {
-timeZone:
-"Asia/Bangkok"
+timeZone:"Asia/Bangkok"
 }
 )}`
 :"อัปเดตการวิเคราะห์: --";
-
 }
 
+const recommendation=
+normalizeProjectWording(
+data.recommendation
+)||
+"ติดตามการเปลี่ยนแปลงของข้อมูลในรอบถัดไป";
+
 details.innerHTML=
-`<div class="ai-result-headline">
-${esc(normalizeProjectWording(data.headline)||"รอผลการวิเคราะห์")}
+`
+<div class="ai-result-section">
+
+<div class="ai-result-label">
+ภาพรวมที่ AI ตีความ
+</div>
+
+<div class="ai-result-headline">
+${esc(aiSituationHeadline(data))}
 </div>
 
 <div class="ai-result-summary">
-${esc(normalizeProjectWording(data.summary)||"ยังไม่มีรายละเอียดจาก AI")}
+${esc(aiSituationSummary(data))}
+</div>
+
 </div>
 
 ${observations.length
@@ -6160,7 +6239,7 @@ ${observations.length
 <div class="ai-result-section">
 
 <div class="ai-result-label">
-สิ่งที่ระบบพบ
+สิ่งที่ควรสนใจ
 </div>
 
 <div class="ai-observation-list">
@@ -6169,7 +6248,7 @@ ${observations
 .map(
 x=>
 `<div class="ai-observation">
-• ${esc(normalizeProjectWording(x))}
+• ${esc(x)}
 </div>`
 )
 .join("")}
@@ -6178,22 +6257,36 @@ x=>
 
 </div>
 `
-:""
+:`
+<div class="ai-result-section">
+
+<div class="ai-result-label">
+สิ่งที่ควรสนใจ
+</div>
+
+<div class="ai-result-summary">
+ยังไม่พบประเด็นเพิ่มเติมที่จำเป็นต้องเน้นจากข้อมูลชุดนี้
+</div>
+
+</div>
+`
 }
 
 <div class="ai-result-section">
 
 <div class="ai-result-label">
-คำแนะนำ
+คำแนะนำสำหรับตอนนี้
 </div>
 
 <div class="ai-recommendation">
-${esc(normalizeProjectWording(data.recommendation)||"ติดตามข้อมูลจากระบบต่อเนื่อง")}
+${esc(recommendation)}
 </div>
 
 </div>
 
-<div class="ai-meta-row"><span>วิเคราะห์จากข้อมูลล่าสุดและข้อมูลย้อนหลังของพื้นที่</span></div>`;
+<div class="ai-meta-row">
+<span>AI ทำหน้าที่ตีความข้อมูล ไม่ได้แสดงรายการค่าตรวจวัดซ้ำจากหน้าอื่น</span>
+</div>`;
 
 }
 
@@ -7039,24 +7132,40 @@ html:`
 ai:{
 title:"🤖 วิเคราะห์และคาดการณ์",
 html:`
-<div class="help-intro-card"><b>หัวข้อนี้อธิบายเฉพาะหน้า “วิเคราะห์และคาดการณ์”</b><span>หน้านี้สรุปสถานการณ์ปัจจุบัน วิเคราะห์สิ่งที่น่าสนใจ และแสดงแนวโน้มระยะสั้นในรูปแบบข้อความ</span></div>
+<div class="help-intro-card">
+<b>หน้านี้แบ่งหน้าที่ออกเป็น 2 ส่วน</b>
+<span>ฝั่งวิเคราะห์ช่วยตีความว่า “ข้อมูลตอนนี้กำลังบอกอะไร” ส่วนแนวโน้ม 30 นาทีช่วยดูว่า “ค่ามีโอกาสเปลี่ยนไปทางใดในระยะสั้น”</span>
+</div>
+
 <section class="help-section">
-<h4>สถานการณ์ปัจจุบัน</h4>
-<p>ใช้ข้อมูลล่าสุดที่มีเพื่อสรุปว่าขณะนี้มีสิ่งใดเด่นหรือควรให้ความสนใจ</p>
+<h4>AI สรุปสถานการณ์</h4>
+<p>AI จะไม่เน้นทวนค่าของทุกจุด เพราะข้อมูลดิบและสถานะของแต่ละจุดมีอยู่ในหน้าอื่นแล้ว หน้าที่หลักคือสรุปความหมายของข้อมูลล่าสุดให้อ่านง่ายขึ้น</p>
 </section>
+
 <section class="help-section">
-<h4>สิ่งที่ระบบพบ</h4>
-<p>เป็นประเด็นที่ได้จากการวิเคราะห์ข้อมูล เช่น ตัวแปรที่เปลี่ยนแปลงหรือความแตกต่างที่ควรติดตาม</p>
+<h4>ภาพรวมที่ AI ตีความ</h4>
+<p>ตอบสั้น ๆ ว่าขณะนี้สถานการณ์โดยรวมเป็นอย่างไร โดยอาศัยข้อมูลที่ระบบมีอยู่ในขณะนั้น</p>
 </section>
+
 <section class="help-section">
-<h4>คำแนะนำ</h4>
-<p>เป็นข้อเสนอแนะประกอบจากสถานการณ์ที่วิเคราะห์ได้ ไม่ใช่คำสั่งหรือคำวินิจฉัยทางการแพทย์</p>
+<h4>สิ่งที่ควรสนใจ</h4>
+<p>แสดงเฉพาะประเด็นที่มีประโยชน์ต่อการตีความ เช่น การเปลี่ยนแปลงของฝุ่น ความร้อน หรือสภาพแวดล้อม โดยไม่ทวนรายการสถานะอุปกรณ์ที่ดูได้จากหน้าจุดตรวจวัด</p>
 </section>
+
 <section class="help-section">
-<h4>แนวโน้ม +10 / +20 / +30 นาที</h4>
-<p>เป็นค่าประมาณระยะสั้นสำหรับช่วยดูทิศทางในอนาคต ไม่ใช่ค่าที่ตรวจวัดได้ล่วงหน้า</p>
+<h4>คำแนะนำสำหรับตอนนี้</h4>
+<p>เป็นข้อเสนอแนะประกอบสถานการณ์ปัจจุบัน เพื่อช่วยให้ผู้ใช้ตัดสินใจได้ง่ายขึ้น</p>
 </section>
-<div class="help-tip"><b>ลำดับการอ่าน</b><span>สถานการณ์ปัจจุบัน → สิ่งที่พบ → คำแนะนำ → แนวโน้มระยะสั้น</span></div>`
+
+<section class="help-section">
+<h4>แนวโน้ม 30 นาที</h4>
+<p>ใช้ดูค่าประมาณ +10, +20 และ +30 นาที เพื่อประกอบการมองทิศทางระยะสั้น ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p>
+</section>
+
+<div class="help-tip">
+<b>จำง่าย ๆ</b>
+<span>ฝั่งซ้าย = ตอนนี้ข้อมูลกำลังบอกอะไร • ฝั่งขวา = อีก 30 นาทีมีแนวโน้มอย่างไร</span>
+</div>`
 }
 
 }
