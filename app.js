@@ -3328,54 +3328,169 @@ grid:{color:"rgba(148,163,184,.08)"}
 };
 }
 function forecastTickText(scale,value,index,ticks){
-const raw=scale?.getLabelForValue?scale.getLabelForValue(value):String(value??"");
-if(raw==="+10 นาที"||raw==="+20 นาที"||raw==="+30 นาที"){
-return raw.replace(" นาที","");
+
+const raw=
+scale.getLabelForValue(value);
+
+const text=
+String(raw??"");
+
+const labels=
+scale?.chart?.data?.labels||
+[];
+
+const forecastStart=
+labels.findIndex(
+v=>
+/^\+\d+\s*นาที/
+.test(
+String(v??"")
+)
+);
+
+const actualCount=
+forecastStart>=0
+?forecastStart
+:labels.length;
+
+// Forecast label แสดงสั้นเสมอ เพื่อลดการซ้อนกัน
+if(
+/^\+\d+\s*นาที/
+.test(text)
+){
+return text.replace(
+" นาที",
+""
+);
 }
-const d=parseDate(raw);
-if(!d)return"";
-const all=Array.isArray(ticks)?ticks:[];
-const realCount=Math.max(0,all.length-3);
-if(realCount<=0)return"";
-const wanted=new Set([
+
+const d=
+parseDate(raw);
+
+if(!d){
+return"";
+}
+
+if(actualCount<=0){
+return"";
+}
+
+// เวลาในอดีตแสดงเฉพาะ ต้น / กลาง / ล่าสุด
+// ข้อมูลจริงทุกจุดยังคงอยู่ในเส้นและ Tooltip
+const wanted=
+new Set([
 0,
-Math.max(0,Math.floor((realCount-1)/2)),
-Math.max(0,realCount-1)
+Math.max(
+0,
+Math.floor(
+(actualCount-1)/2
+)
+),
+Math.max(
+0,
+actualCount-1
+)
 ]);
-if(!wanted.has(index))return"";
-return d.toLocaleTimeString("th-TH",{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
+
+if(
+!wanted.has(
+Number(value)
+)
+){
+return"";
+}
+
+return d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok",
+hour:
+"2-digit",
+minute:
+"2-digit",
+hour12:
+false
+}
+);
 }
 
 function forecastChartOptions(yTitle){
-const base=groupedChartOptions(yTitle);
-base.layout={padding:{right:window.innerWidth<=640?18:34}};
+
+const base=
+groupedChartOptions(
+yTitle
+);
+
+// เผื่อพื้นที่ขอบขวาให้ +10/+20/+30
+base.layout={
+padding:{
+right:
+window.innerWidth<=640
+?18
+:34
+}
+};
+
 base.scales.x={
 offset:true,
-grid:{display:false},
+grid:{
+display:false
+},
 title:{
 display:true,
-text:"เวลา • ด้านขวาเป็นค่าคาดการณ์ล่วงหน้า",
-font:{size:Math.max(10,chartFontSize()-2),weight:"500"},
-padding:{top:8}
+text:
+"เวลา • +10 / +20 / +30 = นาทีข้างหน้า",
+font:{
+size:
+Math.max(
+10,
+chartFontSize()-2
+),
+weight:
+"500"
+},
+padding:{
+top:8
+}
 },
 ticks:{
 autoSkip:false,
 maxRotation:0,
 minRotation:0,
 padding:10,
-font:{size:Math.max(10,chartFontSize()-1)},
-callback:function(value,index,ticks){
-return forecastTickText(this,value,index,ticks);
+font:{
+size:
+Math.max(
+10,
+chartFontSize()-1
+)
+},
+callback:
+function(
+value,
+index,
+ticks
+){
+return forecastTickText(
+this,
+value,
+index,
+ticks
+);
 }
 }
 };
+
 return base;
 }
+
+const HISTORY_NODES=["Number 1","Number 2","Number 3"];
+const HISTORY_NODE_COLORS={
+"Number 1":"#22d3ee",
+"Number 2":"#a78bfa",
+"Number 3":"#f59e0b"
+};
 
 function historyNodeLabel(id){
 const key=String(id??"").trim();
@@ -4254,17 +4369,6 @@ aiForecastPayload?.reason
 )
 );
 
-const providerText=
-aiForecastPayload?.ai===true
-?(
-aiForecastPayload?.provider==="gemini"
-?"AI • Gemini"
-:aiForecastPayload?.provider==="cloudflare"
-?"AI • Workers AI"
-:"AI"
-)
-:"ระบบสำรองเชิงคำนวณ";
-
 if(metric==="all"){
 
 if(compareMode){
@@ -4275,10 +4379,21 @@ const compareLegend=
 `<span><i style="background:${HISTORY_NODE_COLORS["Number 3"]}"></i>จุด 3</span>`;
 
 area.innerHTML=
-`<div class="forecast-reading-guide">
-<span><b>เส้นทึบ</b> ข้อมูลจริง</span>
-<span><b>เส้นประ</b> คาดการณ์</span>
-<span><b>+10 / +20 / +30</b> นาทีข้างหน้า</span>
+`<div style="
+display:flex;
+gap:10px 18px;
+flex-wrap:wrap;
+align-items:center;
+padding:10px 12px;
+margin:0 0 12px;
+border:1px solid rgba(56,189,248,.14);
+border-radius:12px;
+background:rgba(2,132,199,.045);
+font-size:12px;
+color:#94a3b8">
+<span><b style="color:#e2e8f0">เส้นทึบ</b> ข้อมูลจริง</span>
+<span><b style="color:#e2e8f0">เส้นประ</b> คาดการณ์</span>
+<span><b style="color:#e2e8f0">+10 / +20 / +30</b> นาทีข้างหน้า</span>
 </div>`+
 `<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","forecastPm1",compareLegend)+
@@ -4309,7 +4424,9 @@ options:{
 yTitle
 ),
 plugins:{
-legend:{display:false},
+legend:{
+display:false
+},
 tooltip:{
 callbacks:{
 title:
@@ -4366,9 +4483,9 @@ if($("forecastMessage")){
 
 $("forecastMessage").innerHTML=
 resultReady
-?`<b class="text-cyan-300">สรุปกราฟ: เปรียบเทียบ 3 จุด</b>
-<div class="mt-2">เส้นประด้านขวาแสดงค่าประมาณของแต่ละจุดในอีก 10, 20 และ 30 นาที</div>
-<div class="text-[12px] text-slate-500 mt-2">เลื่อนเมาส์เหนือจุดบนกราฟเพื่อดูค่าและช่วงเวลาที่ต้องการ</div>`
+?`<b class="text-cyan-300">สรุปกราฟ • เปรียบเทียบ 3 จุด</b>
+<div class="mt-2">ด้านขวาของกราฟเป็นค่าประมาณของแต่ละจุดในอีก 10, 20 และ 30 นาที</div>
+<div class="text-[12px] text-slate-500 mt-2">เลื่อนเมาส์เหนือจุดบนกราฟเพื่อดูค่าและช่วงเวลา</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
 }
 
@@ -4556,9 +4673,9 @@ create(
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
-?`<b class="text-cyan-300">สรุปกราฟ: ${esc(scopeLabel)} • ทุกตัวแปร</b>
-<div class="mt-2">เส้นประด้านขวาแสดงค่าประมาณในอีก 10, 20 และ 30 นาที</div>
-<div class="text-[12px] text-slate-500 mt-2">ค่าคาดการณ์เป็นค่าประมาณระยะสั้น ไม่ใช่ค่าที่ตรวจวัดได้จริงล่วงหน้า</div>`
+?`<b class="text-cyan-300">สรุปกราฟ • ${esc(scopeLabel)} • ทุกตัวแปร</b>
+<div class="mt-2">ด้านขวาของกราฟเป็นค่าประมาณในอีก 10, 20 และ 30 นาที</div>
+<div class="text-[12px] text-slate-500 mt-2">ค่าคาดการณ์เป็นค่าประมาณระยะสั้น ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
 }
 
@@ -4617,8 +4734,8 @@ graphTooltipLabel
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
-?`<b style="color:${metricColor(metric)}">สรุปกราฟ: เปรียบเทียบ 3 จุด • ${metricLabel()}</b>
-<div class="mt-2">เส้นประด้านขวาแสดงค่าประมาณของแต่ละจุดในอีก 10, 20 และ 30 นาที</div>
+?`<b style="color:${metricColor(metric)}">สรุปกราฟ • เปรียบเทียบ 3 จุด • ${metricLabel()}</b>
+<div class="mt-2">ด้านขวาของกราฟเป็นค่าประมาณของแต่ละจุดในอีก 10, 20 และ 30 นาที</div>
 <div class="text-[12px] text-slate-500 mt-2">เลื่อนเมาส์เหนือจุดบนกราฟเพื่อดูค่ารายละเอียด</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
 }
@@ -4754,9 +4871,9 @@ pts
 
 $("forecastMessage").innerHTML=
 pts
-?`<b style="color:${metricColor(metric)}">สรุปกราฟ: ${esc(scopeLabel)} • ${metricLabel()}</b>
+?`<b style="color:${metricColor(metric)}">สรุปกราฟ • ${esc(scopeLabel)} • ${metricLabel()}</b>
 <div class="mt-2">ค่าประมาณอีก 30 นาที <b>${fmt(p30)} ${metricUnit()}</b></div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นประแสดง +10, +20 และ +30 นาที • ค่าคาดการณ์ไม่ใช่ค่าที่ตรวจวัดได้จริงล่วงหน้า</div>`
+<div class="text-[12px] text-slate-500 mt-2">เส้นประแสดง +10, +20 และ +30 นาที • ค่าคาดการณ์ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">AI/ข้อมูลของมุมมองนี้ยังไม่มีค่าคาดการณ์ที่ใช้ได้</div></div>';
 }
 
@@ -6750,31 +6867,6 @@ drawCharts();
 // HELP
 // =====================================================
 
-
-// =====================================================
-// FORECAST READABILITY PATCH V22
-// =====================================================
-(function installForecastReadabilityStyles(){
-if(document.getElementById("forecastReadabilityStylesV22"))return;
-const style=document.createElement("style");
-style.id="forecastReadabilityStylesV22";
-style.textContent=`
-.forecast-reading-guide{
-display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;
-margin:2px 0 12px;padding:10px 12px;
-border:1px solid rgba(56,189,248,.14);border-radius:12px;
-background:rgba(2,132,199,.045);font-size:12px;color:#94a3b8
-}
-.forecast-reading-guide b{color:#e2e8f0;font-weight:800}
-.metric-chart-panel .metric-chart-legend{display:flex;flex-wrap:wrap;gap:6px 12px}
-.metric-chart-panel .metric-chart-legend span{white-space:nowrap}
-@media(max-width:640px){
-.forecast-reading-guide{gap:7px 12px;padding:9px 10px;font-size:11px}
-}
-`;
-document.head.appendChild(style);
-})();
-
 const HELP_CONTENT={
 
 systemGuide:{
@@ -7071,21 +7163,2767 @@ html:`
 ai:{
 title:"🔮 วิเคราะห์และคาดการณ์",
 html:`
-<div class="help-intro-card"><b>ส่วนนี้ใช้ดูอะไร?</b><span>ใช้ดูสถานการณ์ปัจจุบัน แนวโน้ม และค่าประมาณในอีก 10, 20 และ 30 นาที เพื่อช่วยตีความข้อมูลระยะสั้น</span></div>
+<div class="help-intro-card">
+<b>ส่วนนี้ใช้ดูอะไร?</b>
+<span>ใช้ดูสถานการณ์ปัจจุบัน แนวโน้ม และค่าประมาณในอีก 10, 20 และ 30 นาที เพื่อช่วยติดตามการเปลี่ยนแปลงระยะสั้น</span>
+</div>
+
 <section class="help-section">
 <h4>ค่าคาดการณ์หมายถึงอะไร?</h4>
 <p>เป็นค่าประมาณจากข้อมูลล่าสุดและข้อมูลย้อนหลัง ไม่ใช่ค่าที่ตรวจวัดได้จริงล่วงหน้า จึงควรใช้เพื่อดูทิศทางประกอบการตัดสินใจ</p>
 </section>
+
 <section class="help-section">
 <h4>ควรอ่านผลอย่างไร?</h4>
 <div class="help-simple-grid">
 <div><b>สถานการณ์ปัจจุบัน</b><span>สรุปว่าข้อมูลล่าสุดกำลังอยู่ในภาวะใด</span></div>
-<div><b>แนวโน้มระยะสั้น</b><span>ดูว่าค่ามีแนวโน้มเพิ่ม ลด หรือทรงตัว</span></div>
+<div><b>แนวโน้ม</b><span>ดูว่าค่ามีแนวโน้มเพิ่ม ลด หรือค่อนข้างคงที่</span></div>
 <div><b>+10 / +20 / +30 นาที</b><span>ค่าประมาณของช่วงเวลาข้างหน้า</span></div>
 <div><b>ความเชื่อมั่น</b><span>บอกความพร้อมและความต่อเนื่องของข้อมูลที่ใช้วิเคราะห์ ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</span></div>
 </div>
 </section>
-<div class="help-warning">ใช้ผลคาดการณ์เป็นข้อมูลประกอบ และให้ความสำคัญกับค่าตรวจวัดจริงล่าสุดเมื่อประเมินสถานการณ์ปัจจุบัน</div>`
+
+<section class="help-section">
+<h4>ถ้าข้อมูลยังไม่พร้อม?</h4>
+<p>ระบบอาจแสดงว่าไม่สามารถวิเคราะห์หรือคาดการณ์ได้ในขณะนั้น แทนการสร้างค่าขึ้นมาเมื่อข้อมูลที่จำเป็นไม่เพียงพอ</p>
+</section>
+
+<div class="help-warning">
+ใช้ผลคาดการณ์เป็นข้อมูลประกอบ และให้ความสำคัญกับค่าตรวจวัดจริงล่าสุดเมื่อต้องการทราบสถานการณ์ปัจจุบัน
+</div>`
+}
+
+}
+
+function closeHelp(){
+
+const p=$("helpPopover");
+
+if(p){
+p.classList.remove("active");
+p.setAttribute("aria-hidden","true");
+}
+
+if(activeHelpButton){
+activeHelpButton.classList.remove("is-active");
+activeHelpButton.setAttribute("aria-expanded","false");
+}
+
+activeHelpButton=null;
+
+}
+
+function bindHelp(){
+
+document
+.querySelectorAll(".help-button")
+.forEach(b=>{
+
+b.addEventListener("click",e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+const x=HELP_CONTENT[b.dataset.help];
+
+if(!x){
+return;
+}
+
+if(activeHelpButton&&activeHelpButton!==b){
+activeHelpButton.classList.remove("is-active");
+activeHelpButton.setAttribute("aria-expanded","false");
+}
+
+activeHelpButton=b;
+b.classList.add("is-active");
+b.setAttribute("aria-expanded","true");
+
+const title=$("helpPopoverTitle");
+const body=$("helpPopoverBody");
+const p=$("helpPopover");
+
+if(title){
+title.textContent=x.title;
+}
+
+if(body){
+body.innerHTML=x.html;
+}
+
+if(!p){
+return;
+}
+
+p.classList.add("active");
+p.setAttribute("aria-hidden","false");
+p.setAttribute("tabindex","-1");
+
+requestAnimationFrame(()=>{
+try{p.focus({preventScroll:true});}catch{}
+});
+
+});
+
+});
+
+$("helpPopoverClose")
+?.addEventListener("click",e=>{
+e.preventDefault();
+e.stopPropagation();
+closeHelp();
+});
+
+document.addEventListener("click",e=>{
+
+const p=$("helpPopover");
+
+if(
+p?.classList.contains("active")&&
+!p.contains(e.target)&&
+!e.target.closest?.(".help-button")
+){
+closeHelp();
+}
+
+});
+
+}
+
+
+// =====================================================
+// CREDIT IMAGE VIEWER
+// =====================================================
+
+function openCreditImage(src,caption=""){
+
+const modal=
+$("creditImageModal");
+
+const img=
+$("creditFullImage");
+
+const text=
+$("creditImageCaption");
+
+if(
+!modal||
+!img
+){
+return;
+}
+
+img.src=
+src||"";
+
+img.alt=
+caption||"รูปภาพเครดิต";
+
+if(text){
+text.textContent=
+caption||"";
+}
+
+modal.classList.add(
+"active"
+);
+
+modal.setAttribute(
+"aria-hidden",
+"false"
+);
+
+document.body.classList.add(
+"credit-modal-open"
+);
+
+}
+
+function closeCreditImage(){
+
+const modal=
+$("creditImageModal");
+
+const img=
+$("creditFullImage");
+
+if(!modal){
+return;
+}
+
+modal.classList.remove(
+"active"
+);
+
+modal.setAttribute(
+"aria-hidden",
+"true"
+);
+
+document.body.classList.remove(
+"credit-modal-open"
+);
+
+if(img){
+setTimeout(()=>{
+if(
+!modal.classList.contains(
+"active"
+)
+){
+img.src="";
+}
+},180);
+}
+
+}
+
+window.openCreditImage=
+openCreditImage;
+
+window.closeCreditImage=
+closeCreditImage;
+
+document.addEventListener(
+"keydown",
+e=>{
+if(
+e.key==="Escape"&&
+$("creditImageModal")
+?.classList.contains(
+"active"
+)
+){
+closeCreditImage();
+}
+}
+);
+
+// =====================================================
+// EVENTS
+// =====================================================
+
+function bindEvents(){
+
+const currentSelect=
+$("currentMetric");
+
+if(currentSelect){
+
+currentSelect.value=
+currentMetric;
+
+currentSelect.addEventListener(
+"change",
+()=>{
+
+currentMetric=
+currentSelect.value;
+
+updateCurrent();
+
+}
+);
+
+}
+
+const historyNodeSelect=
+$("historyNode");
+
+if(historyNodeSelect){
+historyNodeSelect.value=historyNode;
+historyNodeSelect.addEventListener(
+"change",
+e=>{
+historyNode=e.target.value;
+drawCharts();
+}
+);
+}
+
+const metricSelect=
+$("metric");
+
+if(metricSelect){
+
+metricSelect.value=
+metric;
+
+metricSelect.addEventListener(
+"change",
+e=>{
+
+metric=
+e.target.value;
+
+drawCharts();
+
+}
+);
+
+}
+
+$("historyRangeButton")
+?.addEventListener(
+"click",
+e=>{
+
+e.stopPropagation();
+
+const panel=
+$("historyRangeModal");
+
+if(!panel){
+return;
+}
+
+if(
+!panel.classList.contains(
+"active"
+)
+){
+
+openHistoryRangePicker();
+
+}else{
+
+closeHistoryRangePicker();
+
+}
+
+}
+);
+
+document
+.querySelectorAll(
+".quick-range-option"
+)
+.forEach(
+button=>{
+
+button.addEventListener(
+"click",
+()=>{
+
+setRange(
+button.dataset.range
+);
+
+}
+);
+
+}
+);
+
+$("calendarPrev")
+?.addEventListener(
+"click",
+()=>{
+
+calendarDisplayDate=
+new Date(
+calendarDisplayDate.getFullYear(),
+calendarDisplayDate.getMonth()-1,
+1
+);
+
+renderRangeCalendar();
+
+}
+);
+
+$("calendarNext")
+?.addEventListener(
+"click",
+()=>{
+
+calendarDisplayDate=
+new Date(
+calendarDisplayDate.getFullYear(),
+calendarDisplayDate.getMonth()+1,
+1
+);
+
+renderRangeCalendar();
+
+}
+);
+
+$("customRangeStart")
+?.addEventListener(
+"change",
+()=>{
+
+updateQuickRangeUI(
+null
+);
+
+const d=
+dateFromRangeInput(
+"customRangeStart"
+);
+
+if(d){
+
+calendarDisplayDate=
+new Date(
+d.getFullYear(),
+d.getMonth(),
+1
+);
+
+}
+
+renderRangeCalendar();
+
+}
+);
+
+$("customRangeEnd")
+?.addEventListener(
+"change",
+()=>{
+
+updateQuickRangeUI(
+null
+);
+
+renderRangeCalendar();
+
+}
+);
+
+$("historyRangeApply")
+?.addEventListener(
+"click",
+applyCustomRange
+);
+
+$("historyRangeCancel")
+?.addEventListener(
+"click",
+closeHistoryRangePicker
+);
+
+$("historyRangeModalClose")
+?.addEventListener(
+"click",
+closeHistoryRangePicker
+);
+
+$("historyRangeModal")
+?.addEventListener(
+"click",
+e=>{
+
+const modal=
+$("historyRangeModal");
+
+if(
+e.target===modal||
+e.target?.dataset?.historyRangeClose==="true"||
+e.target?.classList?.contains(
+"history-range-modal-backdrop"
+)
+){
+
+closeHistoryRangePicker();
+
+}
+
+}
+);
+
+$("forecastToggle")
+?.addEventListener(
+"click",
+()=>{
+
+forecastVisible=
+!forecastVisible;
+
+updateForecastToggle();
+
+}
+);
+
+$("aiRefreshButton")
+?.addEventListener(
+"click",
+()=>{
+
+loadAI(
+true
+);
+
+}
+);
+
+$("aiForecastRefreshButton")
+?.addEventListener(
+"click",
+()=>{
+
+loadAIForecast(
+true
+);
+
+}
+);
+
+$("exportButton")
+?.addEventListener(
+"click",
+openExport
+);
+
+$("exportModalClose")
+?.addEventListener(
+"click",
+closeExport
+);
+
+$("exportCancelButton")
+?.addEventListener(
+"click",
+closeExport
+);
+
+/*
+  ปิดหน้าต่างส่งออกได้เหมือนตัวเลือกช่วงเวลา:
+  - คลิกพื้นที่ว่าง / ฉากหลัง
+  - ปุ่ม X
+  - ปุ่มยกเลิก
+  - ปุ่ม Esc (มี listener ด้านล่าง)
+*/
+$("exportModal")
+?.addEventListener(
+"click",
+e=>{
+
+const modal=
+$("exportModal");
+
+if(
+e.target===modal||
+e.target?.dataset?.exportClose==="true"||
+e.target?.classList?.contains(
+"export-modal-backdrop"
+)
+){
+
+closeExport();
+
+}
+
+}
+);
+
+$("exportStartDate")
+?.addEventListener(
+"change",
+refreshExport
+);
+
+$("exportEndDate")
+?.addEventListener(
+"change",
+refreshExport
+);
+
+$("exportExcelButton")
+?.addEventListener(
+"click",
+downloadExcel
+);
+
+document
+.addEventListener(
+"keydown",
+e=>{
+
+if(
+e.key==="Escape"
+){
+
+closeExport();
+
+closeHelp();
+
+closeCreditImage();
+
+closeHistoryRangePicker();
+
+}
+
+}
+);
+
+}
+
+
+// =====================================================
+// INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
+//
+// Uses Chart.js only.
+// Desktop:
+// - Mouse wheel zoom
+// - Drag horizontally to pan
+// - Hover tooltip
+//
+// Mobile / Tablet:
+// - Pinch zoom
+// - Drag horizontally to pan
+// - Tap tooltip
+// =====================================================
+
+let chartInteractiveViewerReady=false;
+let chartInteractiveInstance=null;
+
+function cloneChartDatasetForViewer(ds){
+
+const copy={
+label:ds.label||"ข้อมูล",
+metricField:ds.metricField,
+rawValues:Array.isArray(ds.rawValues)?[...ds.rawValues]:null,
+
+data:Array.isArray(ds.data)
+?ds.data.map(
+v=>(
+v&&typeof v==="object"
+?{...v}
+:v
+)
+)
+:[],
+
+borderColor:ds.borderColor,
+backgroundColor:ds.backgroundColor,
+
+borderWidth:Math.max(
+Number(ds.borderWidth||2),
+2
+),
+
+pointRadius:Math.max(
+Number(ds.pointRadius||0),
+3
+),
+
+pointHoverRadius:Math.max(
+Number(ds.pointHoverRadius||4),
+6
+),
+
+pointHitRadius:14,
+tension:ds.tension??0.25,
+fill:ds.fill??false,
+spanGaps:ds.spanGaps??true,
+hidden:ds.hidden===true
+};
+
+if(Array.isArray(ds.borderDash)){
+copy.borderDash=[...ds.borderDash];
+}
+
+if(ds.pointBackgroundColor){
+copy.pointBackgroundColor=ds.pointBackgroundColor;
+}
+
+if(ds.pointBorderColor){
+copy.pointBorderColor=ds.pointBorderColor;
+}
+
+return copy;
+
+}
+
+function chartViewerTitleForCanvas(canvas){
+
+const metricPanel=
+canvas.closest(".metric-chart-panel");
+
+if(metricPanel){
+
+return(
+metricPanel.querySelector(".metric-chart-title")
+?.textContent?.trim()||
+"กราฟข้อมูล"
+);
+
+}
+
+const card=
+canvas.closest(".dashboard-chart-card");
+
+return(
+card?.querySelector(".chart-zone-title")
+?.textContent?.trim()||
+"กราฟข้อมูล"
+);
+
+}
+
+function chartViewerUnitFromOriginal(original){
+
+const text=
+original?.options?.scales?.y?.title?.text;
+
+return typeof text==="string"
+?text
+:"";
+
+}
+
+function setupChartZoomViewer(){
+
+if(chartInteractiveViewerReady){
+return;
+}
+
+chartInteractiveViewerReady=true;
+
+const viewer=document.createElement("div");
+
+viewer.id="chartZoomViewer";
+viewer.className="chart-zoom-viewer";
+viewer.setAttribute("aria-hidden","true");
+
+viewer.innerHTML=`
+<div class="chart-zoom-backdrop" data-chart-zoom-close="true"></div>
+
+<div class="chart-zoom-dialog" role="dialog" aria-modal="true" aria-label="กราฟแบบโต้ตอบ">
+
+<div class="chart-zoom-toolbar">
+
+<div class="chart-zoom-heading">
+<div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
+<div class="chart-zoom-help" id="chartZoomHelp">
+ช่วงยาวแสดงเป็นรายวัน • ซูมเข้าเพื่อดูเวลา • มือถือใช้สองนิ้วซูม • ลากซ้าย–ขวา
+</div>
+</div>
+
+<div class="chart-zoom-actions">
+<button type="button" id="chartZoomOut" aria-label="ย่อกราฟ" title="ย่อ">−</button>
+<button type="button" id="chartZoomReset" aria-label="รีเซ็ตการซูม" title="รีเซ็ต">Reset</button>
+<button type="button" id="chartZoomIn" aria-label="ขยายกราฟ" title="ขยาย">+</button>
+<button type="button" id="chartZoomClose" class="chart-zoom-close" aria-label="ปิด" title="ปิด">×</button>
+</div>
+
+</div>
+
+<div class="chart-zoom-statusbar">
+<span>🔎 ซูมช่วงเวลา</span>
+<span>↔ ลากเพื่อเลื่อน</span>
+<span>● แตะ/ชี้จุดเพื่อดูค่า</span>
+</div>
+
+<div class="chart-series-controls" id="chartSeriesControls">
+<div class="chart-series-controls-head">
+<div>
+<div class="chart-series-controls-title">ข้อมูลที่แสดง</div>
+<div class="chart-series-controls-help">แตะชื่อข้อมูลเพื่อซ่อนหรือแสดงเส้นกราฟ</div>
+</div>
+<button type="button" class="chart-series-show-all" id="chartSeriesShowAll">แสดงทั้งหมด</button>
+</div>
+<div class="chart-series-buttons" id="chartSeriesButtons"></div>
+</div>
+
+<div class="chart-zoom-stage" id="chartZoomStage">
+<canvas id="chartZoomCanvas"></canvas>
+</div>
+
+</div>
+`;
+
+document.body.appendChild(viewer);
+
+const stage=$("chartZoomStage");
+
+let labels=[];
+let fullMin=0;
+let fullMax=0;
+let viewMin=0;
+let viewMax=0;
+
+let dragging=false;
+let dragStartX=0;
+let dragStartMin=0;
+let dragStartMax=0;
+
+let pinchStartDistance=0;
+let pinchStartSpan=0;
+let pinchCenterRatio=.5;
+
+function destroyInteractiveChart(){
+
+if(chartInteractiveInstance){
+
+try{
+chartInteractiveInstance.destroy();
+}catch{}
+
+chartInteractiveInstance=null;
+
+}
+
+}
+
+function clampWindow(){
+
+const total=
+fullMax-fullMin;
+
+let span=
+viewMax-viewMin;
+
+const minSpan=
+Math.min(
+60*1000,
+total
+);
+
+if(span<minSpan){
+span=minSpan;
+}
+
+if(span>total){
+span=total;
+}
+
+if(viewMin<fullMin){
+viewMin=fullMin;
+viewMax=viewMin+span;
+}
+
+if(viewMax>fullMax){
+viewMax=fullMax;
+viewMin=viewMax-span;
+}
+
+}
+
+function applyWindow(){
+
+if(!chartInteractiveInstance){
+return;
+}
+
+clampWindow();
+
+chartInteractiveInstance.options.scales.x.min=
+viewMin;
+
+chartInteractiveInstance.options.scales.x.max=
+viewMax;
+
+chartInteractiveInstance.update("none");
+
+const total=
+Math.max(
+1,
+fullMax-fullMin
+);
+
+const shown=
+Math.max(
+1,
+viewMax-viewMin
+);
+
+const percent=
+Math.round(
+(total/shown)*100
+);
+
+const reset=$("chartZoomReset");
+
+if(reset){
+reset.textContent=
+percent<=105
+?"Reset"
+:`${percent}%`;
+}
+
+}
+
+function zoomAt(factor,ratio=.5){
+
+if(!chartInteractiveInstance){
+return;
+}
+
+ratio=
+Math.min(
+1,
+Math.max(
+0,
+ratio
+)
+);
+
+const span=
+viewMax-viewMin;
+
+const newSpan=
+span/factor;
+
+const anchor=
+viewMin+
+span*ratio;
+
+viewMin=
+anchor-
+newSpan*ratio;
+
+viewMax=
+anchor+
+newSpan*(1-ratio);
+
+applyWindow();
+
+}
+
+function panBy(deltaIndex){
+
+viewMin+=deltaIndex;
+viewMax+=deltaIndex;
+
+applyWindow();
+
+}
+
+function resetZoom(){
+
+viewMin=fullMin;
+viewMax=fullMax;
+
+applyWindow();
+
+}
+
+function closeViewer(){
+
+destroyInteractiveChart();
+
+const seriesButtons=
+$("chartSeriesButtons");
+
+if(seriesButtons){
+seriesButtons.innerHTML="";
+}
+
+viewer.classList.remove("active");
+viewer.setAttribute("aria-hidden","true");
+document.body.classList.remove("chart-zoom-open");
+
+}
+
+function getOriginalChart(canvas){
+
+if(typeof Chart==="undefined"){
+return null;
+}
+
+if(typeof Chart.getChart==="function"){
+
+const c=
+Chart.getChart(canvas);
+
+if(c){
+return c;
+}
+
+}
+
+const all=[
+historyChart,
+forecastChart,
+...historyGroupCharts,
+...forecastGroupCharts
+].filter(Boolean);
+
+return all.find(
+c=>c.canvas===canvas
+)||null;
+
+}
+
+
+function updateSeriesControlUI(){
+
+const wrap=
+$("chartSeriesControls");
+
+const buttons=
+$("chartSeriesButtons");
+
+const showAll=
+$("chartSeriesShowAll");
+
+if(
+!wrap||
+!buttons||
+!showAll||
+!chartInteractiveInstance
+){
+return;
+}
+
+const datasets=
+chartInteractiveInstance.data.datasets||[];
+
+if(datasets.length<=1){
+
+wrap.classList.add(
+"is-single"
+);
+
+buttons.innerHTML="";
+
+showAll.classList.add(
+"hidden"
+);
+
+const one=
+datasets[0];
+
+if(one){
+
+const label=
+document.createElement(
+"div"
+);
+
+label.className=
+"chart-series-single-label";
+
+label.textContent=
+one.label||
+"ข้อมูล";
+
+buttons.appendChild(
+label
+);
+
+}
+
+return;
+}
+
+wrap.classList.remove(
+"is-single"
+);
+
+showAll.classList.remove(
+"hidden"
+);
+
+buttons.innerHTML="";
+
+datasets.forEach(
+(ds,index)=>{
+
+const button=
+document.createElement(
+"button"
+);
+
+button.type="button";
+button.className=
+"chart-series-button";
+
+const visible=
+chartInteractiveInstance.isDatasetVisible(
+index
+);
+
+button.classList.toggle(
+"is-active",
+visible
+);
+
+button.classList.toggle(
+"is-hidden",
+!visible
+);
+
+button.setAttribute(
+"aria-pressed",
+visible
+?"true"
+:"false"
+);
+
+button.dataset.index=
+String(
+index
+);
+
+const mark=
+visible
+?"✓"
+:"";
+
+button.innerHTML=
+`<span class="chart-series-check">${mark}</span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
+
+buttons.appendChild(
+button
+);
+
+}
+);
+
+const allVisible=
+datasets.every(
+(_,index)=>
+chartInteractiveInstance.isDatasetVisible(
+index
+)
+);
+
+showAll.disabled=
+allVisible;
+
+showAll.classList.toggle(
+"is-complete",
+allVisible
+);
+
+}
+
+function bindSeriesControlEvents(){
+
+const buttons=
+$("chartSeriesButtons");
+
+const showAll=
+$("chartSeriesShowAll");
+
+buttons?.addEventListener(
+"click",
+e=>{
+
+const button=
+e.target.closest(
+".chart-series-button"
+);
+
+if(
+!button||
+!chartInteractiveInstance
+){
+return;
+}
+
+const index=
+Number(
+button.dataset.index
+);
+
+if(
+!Number.isInteger(
+index
+)
+){
+return;
+}
+
+const visible=
+chartInteractiveInstance.isDatasetVisible(
+index
+);
+
+chartInteractiveInstance.setDatasetVisibility(
+index,
+!visible
+);
+
+chartInteractiveInstance.update(
+"none"
+);
+
+updateSeriesControlUI();
+
+}
+);
+
+showAll?.addEventListener(
+"click",
+()=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+chartInteractiveInstance.data.datasets.forEach(
+(_,index)=>{
+
+chartInteractiveInstance.setDatasetVisibility(
+index,
+true
+);
+
+}
+);
+
+chartInteractiveInstance.update(
+"none"
+);
+
+updateSeriesControlUI();
+
+}
+);
+
+}
+
+async function openInteractiveChart(canvas){
+
+if(typeof Chart==="undefined"){
+
+try{
+await ensureChartLibrary();
+}catch{
+return;
+}
+
+}
+
+const original=
+getOriginalChart(canvas);
+
+if(!original){
+return;
+}
+
+labels=
+Array.isArray(original.data.labels)
+?[...original.data.labels]
+:[];
+
+const timeValues=
+labels.map(v=>{
+const d=parseDate(v);
+return d?d.getTime():null;
+});
+
+const validTimes=
+timeValues.filter(Number.isFinite);
+
+if(validTimes.length<2){
+return;
+}
+
+fullMin=Math.min(...validTimes);
+fullMax=Math.max(...validTimes);
+
+viewMin=fullMin;
+viewMax=fullMax;
+
+$("chartZoomTitle").textContent=
+chartViewerTitleForCanvas(canvas);
+
+viewer.classList.add("active");
+viewer.setAttribute("aria-hidden","false");
+document.body.classList.add("chart-zoom-open");
+
+destroyInteractiveChart();
+
+const viewerCanvas=$("chartZoomCanvas");
+
+const datasets=
+original.data.datasets.map(ds=>{
+const copy=cloneChartDatasetForViewer(ds);
+const source=Array.isArray(ds.data)?ds.data:[];
+copy.data=labels.map((label,index)=>{
+const x=timeValues[index];
+const raw=source[index];
+const y=
+raw&&typeof raw==="object"
+?finiteNumberOrNull(raw.y)
+:finiteNumberOrNull(raw);
+
+return Number.isFinite(x)&&y!==null
+?{x,y}
+:null;
+}).filter(Boolean);
+return copy;
+});
+
+const unit=
+chartViewerUnitFromOriginal(original);
+
+const isTouch=
+(navigator.maxTouchPoints||0)>0;
+
+chartInteractiveInstance=
+new Chart(
+viewerCanvas,
+{
+
+type:"line",
+
+data:{
+labels,
+datasets
+},
+
+options:{
+
+responsive:true,
+maintainAspectRatio:false,
+animation:false,
+normalized:true,
+
+interaction:{
+mode:"nearest",
+intersect:false,
+axis:"x"
+},
+
+layout:{
+padding:{
+top:8,
+right:12,
+bottom:8,
+left:8
+}
+},
+
+plugins:{
+
+legend:{
+display:false
+},
+
+tooltip:{
+enabled:true,
+mode:"index",
+intersect:false,
+callbacks:{
+title:graphTooltipTitle,
+label:graphTooltipLabel
+},
+backgroundColor:"rgba(2,6,23,.94)",
+titleColor:"#f8fafc",
+bodyColor:"#e2e8f0",
+borderColor:"rgba(103,232,249,.25)",
+borderWidth:1,
+padding:11,
+displayColors:true,
+titleFont:{
+size:13,
+weight:"800"
+},
+bodyFont:{
+size:12
+}
+}
+
+},
+
+scales:{
+
+x:{
+type:"linear",
+min:fullMin,
+max:fullMax,
+
+grid:{
+color:"rgba(148,163,184,.09)"
+},
+
+ticks:{
+color:"#94a3b8",
+maxRotation:0,
+autoSkip:true,
+maxTicksLimit:isTouch?7:14,
+font:{
+size:isTouch?12:12
+},
+callback:function(value){
+const span=Math.max(0,Number(this.max)-Number(this.min));
+const d=new Date(Number(value));
+if(!Number.isFinite(d.getTime()))return"";
+
+const DAY=24*60*60*1000;
+if(span>=3*DAY){
+return d.toLocaleDateString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short"
+});
+}
+
+if(span>=DAY){
+return d.toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+});
+}
+
+return d.toLocaleTimeString("th-TH",{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+second:span<=10*60*1000?"2-digit":undefined,
+hour12:false
+});
+}
+},
+
+border:{
+color:"rgba(148,163,184,.16)"
+}
+
+},
+
+y:{
+beginAtZero:false,
+
+grid:{
+color:"rgba(148,163,184,.10)"
+},
+
+ticks:{
+color:"#94a3b8",
+font:{
+size:isTouch?12:12
+}
+},
+
+title:{
+display:Boolean(unit),
+text:unit,
+color:"#94a3b8",
+font:{
+size:12,
+weight:"700"
+}
+},
+
+border:{
+color:"rgba(148,163,184,.16)"
+}
+
+}
+
+}
+
+}
+
+}
+);
+
+updateSeriesControlUI();
+
+}
+
+document.addEventListener("click",e=>{
+
+const canvas=
+e.target?.closest?.(
+"#historyChartArea canvas, #forecastChartArea canvas"
+);
+
+if(!canvas){
+return;
+}
+
+openInteractiveChart(canvas);
+
+});
+
+viewer.addEventListener("click",e=>{
+
+if(e.target?.dataset?.chartZoomClose==="true"){
+closeViewer();
+}
+
+});
+
+$("chartZoomClose")
+?.addEventListener("click",closeViewer);
+
+$("chartZoomReset")
+?.addEventListener("click",resetZoom);
+
+$("chartZoomIn")
+?.addEventListener("click",()=>{
+zoomAt(1.5,.5);
+});
+
+$("chartZoomOut")
+?.addEventListener("click",()=>{
+zoomAt(1/1.5,.5);
+});
+
+bindSeriesControlEvents();
+
+stage.addEventListener("wheel",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+e.preventDefault();
+
+const rect=
+stage.getBoundingClientRect();
+
+const ratio=
+(e.clientX-rect.left)/
+Math.max(
+1,
+rect.width
+);
+
+zoomAt(
+e.deltaY<0
+?1.25
+:0.8,
+ratio
+);
+
+},{
+passive:false
+});
+
+stage.addEventListener("mousedown",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+dragging=true;
+dragStartX=e.clientX;
+dragStartMin=viewMin;
+dragStartMax=viewMax;
+
+stage.classList.add("is-panning");
+
+});
+
+window.addEventListener("mousemove",e=>{
+
+if(!dragging||!chartInteractiveInstance){
+return;
+}
+
+const rect=
+stage.getBoundingClientRect();
+
+const dx=
+e.clientX-dragStartX;
+
+const span=
+dragStartMax-dragStartMin;
+
+const shift=
+-(dx/Math.max(1,rect.width))*span;
+
+viewMin=
+dragStartMin+
+shift;
+
+viewMax=
+dragStartMax+
+shift;
+
+applyWindow();
+
+});
+
+window.addEventListener("mouseup",()=>{
+
+dragging=false;
+stage.classList.remove("is-panning");
+
+});
+
+function touchDistance(a,b){
+
+return Math.hypot(
+b.clientX-a.clientX,
+b.clientY-a.clientY
+);
+
+}
+
+stage.addEventListener("touchstart",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+if(e.touches.length===2){
+
+pinchStartDistance=
+touchDistance(
+e.touches[0],
+e.touches[1]
+);
+
+pinchStartSpan=
+viewMax-viewMin;
+
+const rect=
+stage.getBoundingClientRect();
+
+const centerX=
+(
+e.touches[0].clientX+
+e.touches[1].clientX
+)/2;
+
+pinchCenterRatio=
+Math.min(
+1,
+Math.max(
+0,
+(centerX-rect.left)/
+Math.max(1,rect.width)
+)
+);
+
+dragging=false;
+return;
+
+}
+
+if(e.touches.length===1){
+
+dragging=true;
+dragStartX=
+e.touches[0].clientX;
+
+dragStartMin=
+viewMin;
+
+dragStartMax=
+viewMax;
+
+}
+
+},{
+passive:true
+});
+
+stage.addEventListener("touchmove",e=>{
+
+if(!chartInteractiveInstance){
+return;
+}
+
+if(e.touches.length===2){
+
+e.preventDefault();
+
+const d=
+touchDistance(
+e.touches[0],
+e.touches[1]
+);
+
+if(
+pinchStartDistance>0&&
+d>0
+){
+
+const factor=
+d/
+pinchStartDistance;
+
+const newSpan=
+pinchStartSpan/
+factor;
+
+const anchor=
+viewMin+
+(viewMax-viewMin)*
+pinchCenterRatio;
+
+viewMin=
+anchor-
+newSpan*
+pinchCenterRatio;
+
+viewMax=
+anchor+
+newSpan*
+(1-pinchCenterRatio);
+
+applyWindow();
+
+}
+
+return;
+
+}
+
+if(
+e.touches.length===1&&
+dragging
+){
+
+e.preventDefault();
+
+const rect=
+stage.getBoundingClientRect();
+
+const dx=
+e.touches[0].clientX-
+dragStartX;
+
+const span=
+dragStartMax-
+dragStartMin;
+
+const shift=
+-(dx/Math.max(1,rect.width))*span;
+
+viewMin=
+dragStartMin+
+shift;
+
+viewMax=
+dragStartMax+
+shift;
+
+applyWindow();
+
+}
+
+},{
+passive:false
+});
+
+stage.addEventListener("touchend",e=>{
+
+if(e.touches.length<2){
+pinchStartDistance=0;
+}
+
+if(e.touches.length===0){
+dragging=false;
+}
+
+});
+
+document.addEventListener("keydown",e=>{
+
+if(
+e.key==="Escape"&&
+viewer.classList.contains("active")
+){
+closeViewer();
+}
+
+});
+
+}
+
+
+// =====================================================
+// PERFORMANCE — DEFER BELOW-THE-FOLD WORK
+// =====================================================
+
+function ensureChartLibrary(){
+
+if(
+chartLibraryReady&&
+typeof Chart!=="undefined"
+){
+return Promise.resolve();
+}
+
+if(chartLibraryPromise){
+return chartLibraryPromise;
+}
+
+chartLibraryPromise=
+new Promise((resolve,reject)=>{
+
+if(typeof Chart!=="undefined"){
+chartLibraryReady=true;
+resolve();
+return;
+}
+
+const s=
+document.createElement("script");
+
+s.src=
+"https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js";
+
+s.async=true;
+
+s.onload=()=>{
+chartLibraryReady=true;
+resolve();
+};
+
+s.onerror=()=>{
+chartLibraryPromise=null;
+reject(
+new Error("Chart.js load failed")
+);
+};
+
+document.head.appendChild(s);
+
+});
+
+return chartLibraryPromise;
+
+}
+
+function setHistoryChartMessage(title,detail="",isError=false){
+
+const area=
+$("historyChartArea");
+
+if(!area){
+return;
+}
+
+area.innerHTML=
+`<div class="chart-loading-state ${isError?"is-error":""}">
+<b>${esc(title)}</b>
+${detail?`<span>${esc(detail)}</span>`:""}
+${isError?`<button type="button" class="chart-state-retry" id="historyRetryButton">ลองใหม่</button>`:""}
+</div>`;
+
+if(isError){
+
+$("historyRetryButton")?.addEventListener(
+"click",
+()=>{
+activateHistorySection(true);
+},
+{once:true}
+);
+
+}
+
+}
+
+async function activateHistorySection(force=false){
+
+if(historyLoading&&!force){
+return;
+}
+
+historyActivated=true;
+historyLoading=true;
+
+setHistoryChartMessage(
+"กำลังโหลดข้อมูลย้อนหลัง",
+"กรุณารอสักครู่"
+);
+
+try{
+
+records=
+await loadHistory();
+
+renderAverages();
+
+await ensureChartLibrary();
+
+drawCharts();
+
+}catch(e){
+
+console.error(
+"Deferred history/chart load error:",
+e
+);
+
+setHistoryChartMessage(
+"โหลดข้อมูลย้อนหลังไม่สำเร็จ",
+e?.name==="AbortError"
+?"การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่"
+:"ไม่สามารถโหลดข้อมูลได้ในขณะนี้ กรุณาลองใหม่",
+true
+);
+
+}finally{
+
+historyLoading=false;
+
+}
+
+}
+
+function activateAISection(){
+
+if(aiSectionActivated){
+return;
+}
+
+aiSectionActivated=true;
+
+loadAI(false);
+loadAIForecast(false);
+
+}
+
+function setupDeferredSections(){
+
+// Historical data is useful immediately after opening the dashboard.
+// Start preparing it in the background without waiting for the user to scroll.
+activateHistorySection();
+
+const aiTarget=
+document.querySelector(".ai-intelligence-section");
+
+if(
+"IntersectionObserver" in window &&
+aiTarget
+){
+
+const aiObserver=
+new IntersectionObserver(
+entries=>{
+
+if(
+entries.some(x=>x.isIntersecting)
+){
+aiObserver.disconnect();
+activateAISection();
+}
+
+},
+{
+rootMargin:"500px 0px"
+}
+);
+
+aiObserver.observe(aiTarget);
+
+}else{
+
+setTimeout(
+()=>{
+activateAISection();
+},
+1200
+);
+
+}
+
+}
+
+// =====================================================
+// INITIAL LOAD
+// =====================================================
+
+async function loadInitial(){
+
+try{
+
+const[
+latest,
+mother,
+alerts,
+standards
+]=
+await Promise.all([
+
+loadLatest(),
+
+loadMother(),
+
+loadAlerts()
+.catch(
+()=>[]
+),
+
+loadStandards()
+.catch(
+()=>null
+)
+
+]);
+
+apiConnectionOnline=
+true;
+
+latestNodes=
+latest;
+
+motherStatus=
+mother;
+
+alertStates=
+alerts;
+
+standardsData=
+standards;
+
+latestRecord=
+latestNodes.at(-1)||
+null;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+// V15: warm Forecast cache/request หลังข้อมูลหลักพร้อม
+// เพื่อให้เมื่อเปิด "สถิติและกราฟ" กราฟคาดการณ์พร้อมเร็วขึ้น
+if(typeof loadAIForecast==="function"){
+  loadAIForecast(false);
+}
+
+}catch(e){
+
+console.error(
+"Initial load error:",
+e
+);
+
+apiConnectionOnline=
+false;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}
+
+}
+
+// =====================================================
+// REALTIME
+// =====================================================
+
+async function loadRealtime(){
+
+try{
+
+const[
+latest,
+mother,
+alerts
+]=
+await Promise.all([
+
+loadLatest(),
+
+loadMother(),
+
+loadAlerts()
+.catch(
+()=>alertStates
+)
+
+]);
+
+apiConnectionOnline=
+true;
+
+latestNodes=
+latest;
+
+motherStatus=
+mother;
+
+alertStates=
+alerts;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}catch(e){
+
+console.error(
+"Realtime error:",
+e
+);
+
+apiConnectionOnline=
+false;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}
+
+}
+
+// =====================================================
+// HISTORY
+// =====================================================
+
+async function loadHistorical(){
+
+if(!historyActivated){
+return;
+}
+
+try{
+
+records=
+await loadHistory();
+
+renderAverages();
+
+if(typeof Chart!=="undefined"){
+drawCharts();
+}
+
+}catch(e){
+
+console.error(
+"History error:",
+e
+);
+
+setHistoryChartMessage(
+"โหลดกราฟข้อมูลย้อนหลังไม่สำเร็จ",
+"กรุณาลองใหม่อีกครั้ง",
+true
+);
+
+}
+
+}
+
+// =====================================================
+// STANDARDS
+// =====================================================
+
+async function loadStandardsOnly(){
+
+try{
+
+standardsData=
+await loadStandards();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}catch(e){
+
+console.error(
+"Standards error:",
+e
+);
+
+}
+
+}
+
+// =====================================================
+// CLOCK
+// =====================================================
+
+function updateClock(){
+
+if(
+$("clock")
+){
+
+$("clock").textContent=
+new Date()
+.toLocaleString(
+"th-TH",
+{
+timeZone:
+"Asia/Bangkok",
+dateStyle:
+"medium",
+timeStyle:
+"medium"
+}
+);
+
+}
+
+}
+
+// =====================================================
+// START
+// =====================================================
+
+if(
+$("historyRangeButtonLabel")
+){
+
+$("historyRangeButtonLabel").textContent=
+rangeLabel();
+
+}
+
+updateQuickRangeUI(
+averageRange
+);
+
+updateForecastToggle();
+
+renderAI(
+null
+);
+
+renderAIForecast(
+null
+);
+
+bindEvents();
+
+bindHelp();
+setupChartZoomViewer();
+
+setupDeferredSections();
+
+updateClock();
+
+loadInitial();
+
+// =====================================================
+// CLOCK
+// =====================================================
+
+setInterval(
+updateClock,
+1000
+);
+
+// =====================================================
+// REALTIME
+// =====================================================
+
+setInterval(
+loadRealtime,
+10000
+);
+
+// =====================================================
+// HISTORICAL
+// =====================================================
+
+setInterval(
+loadHistorical,
+60000
+);
+
+// =====================================================
+// STANDARDS
+// =====================================================
+
+setInterval(
+loadStandardsOnly,
+300000
+);
+
+// =====================================================
+// LOCAL STATUS REFRESH
+// =====================================================
+
+setInterval(
+()=>{
+
+renderMonitoring();
+updateCurrent();
+updateSmart();
+
+},
+5000
+);
+
+// =====================================================
+// NAVIGATION REDESIGN 2026-08-28
+// UI-only layer. Existing API, status, history, AI and export logic stay unchanged.
+// =====================================================
+const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
+let currentDashboardPage="overview";
+
+function getDashboardPageFromHash(){
+  const raw=String(location.hash||"").replace(/^#/,"").trim().toLowerCase();
+  return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
+}
+
+function openDashboardPage(page,{updateHash=true}={}){
+  page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
+  currentDashboardPage=page;
+  document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
+    panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
+  });
+  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>{
+    const active=btn.dataset.dashboardPage===page;
+    btn.classList.toggle("active",active);
+    btn.setAttribute("aria-current",active?"page":"false");
+  });
+  const links=$("dashboardNavLinks");
+  const toggle=$("dashboardMobileToggle");
+  if(links) links.classList.remove("open");
+  if(toggle) toggle.setAttribute("aria-expanded","false");
+  if(updateHash){
+    const next="#"+page;
+    if(location.hash!==next) history.replaceState(null,"",next);
+  }
+  if(page==="history"){
+    if(typeof activateHistorySection==="function") activateHistorySection();
+
+    // V15:
+    // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
+    // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
+    if(typeof loadAIForecast==="function"){
+      loadAIForecast(false);
+    }
+  }
+
+  if(page==="analysis" && typeof activateAISection==="function") activateAISection();
+  if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
+    setTimeout(()=>{
+      try{
+        if(historyChart) historyChart.resize();
+        if(forecastChart) forecastChart.resize();
+        historyGroupCharts.forEach(c=>c?.resize?.());
+        forecastGroupCharts.forEach(c=>c?.resize?.());
+      }catch(e){}
+    },120);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function dashboardAlertCount(){
+  const box=$("alerts");
+  if(!box) return 0;
+  const text=(box.textContent||"").trim();
+  if(!text || /กำลังตรวจสอบ|ไม่พบ|ปกติ|ไม่มี.*เตือน/i.test(text)) return 0;
+  const explicit=box.querySelectorAll(".alert-item,.alert-row,[data-alert]").length;
+  return explicit||1;
+}
+
+function latestActiveNodes(){
+  return [1,2,3].map(getNode).filter(n=>n && ["online","sleep"].includes(getNodeStatus(n)));
+}
+
+function averageLatestField(field){
+  const values=latestActiveNodes().map(n=>finiteNumberOrNull(n[field])).filter(v=>v!==null);
+  if(!values.length) return null;
+  return values.reduce((a,b)=>a+b,0)/values.length;
+}
+
+function newestNodeTime(){
+  // "ข้อมูลล่าสุด" ต้องอ้างเวลา Sensor reading จริง
+  // ไม่ใช่เวลา ONLINE/SLEEP เพราะ status ใหม่อาจใช้ค่าการวัดเดิมแสดงอยู่
+  const dates=latestNodes
+    .map(n=>parseDate(n?.reading_recorded_at))
+    .filter(Boolean);
+
+  if(!dates.length) return null;
+  return new Date(Math.max(...dates.map(d=>d.getTime())));
+}
+
+function overviewAdvice(pm25){
+  const g=pm25Guidance(pm25);
+  if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคุณภาพอากาศ";
+  if(g.level==="critical") return "คุณภาพอากาศอยู่ในระดับที่ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
+  if(g.level==="warning") return "ควรเฝ้าระวังฝุ่น PM2.5 โดยเฉพาะผู้ที่ไวต่อมลพิษทางอากาศ";
+  if(g.label==="ปานกลาง") return "คุณภาพอากาศโดยรวมอยู่ในระดับปานกลาง สามารถติดตามกิจกรรมได้ตามความเหมาะสม";
+  return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
+}
+
+function updateNavigationDashboard(){
+  const pm25=averageLatestField("pm25");
+  const temp=averageLatestField("temperature");
+  const hum=averageLatestField("humidity");
+  const guide=pm25Guidance(pm25);
+  const active=activeCount();
+
+  if($("overviewPM25")) $("overviewPM25").textContent=pm25===null?"--":fmt(pm25);
+  if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
+  if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
+  if($("overviewActiveNodes")) $("overviewActiveNodes").textContent=`${active} / ${TOTAL_NODES}`;
+  if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
+
+  const qb=$("overviewQualityBadge");
+  if(qb){
+    qb.textContent=guide.label||"รอข้อมูล";
+    qb.className="overview-quality-badge "+(guide.level==="critical"?"is-critical":guide.level==="warning"?"is-warning":guide.level==="normal"?"is-normal":"is-waiting");
+  }
+
+  const newest=newestNodeTime();
+  if($("overviewLastUpdated")){
+    $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${newest.toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})} น.`:"อัปเดตล่าสุด: --";
+  }
+
+  for(let i=1;i<=3;i++){
+    const node=getNode(i);
+    const st=getNodeDisplayStatus(node);
+    const dot=$("overviewNodeDot"+i);
+    const label=$("overviewNodeStatus"+i);
+    if(dot) dot.className=`overview-node-dot ${st}`;
+    if(label){
+      const t=node?.timestamp?thaiTime(node.timestamp):"--";
+      label.textContent=st==="online"?`ONLINE • ${t}`:"OFFLINE";
+    }
+  }
+
+  const systemOnline=apiConnectionOnline && motherOnline();
+  const navDot=$("navSystemDot");
+  const navText=$("navSystemStatus");
+  let navState="is-offline";
+  let navLabel="กำลังตรวจสอบสถานะ";
+
+  if(!apiConnectionOnline){
+    navState="is-offline";
+    navLabel="ระบบข้อมูล OFFLINE";
+  }else if(!motherOnline()){
+    navState="is-offline";
+    navLabel="ระบบข้อมูล OFFLINE";
+  }else if(active===TOTAL_NODES){
+    navState="is-online";
+    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+  }else if(active>0){
+    navState="is-warning";
+    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+  }else{
+    navState="is-offline";
+    navLabel=`จุดตรวจวัด ONLINE 0/${TOTAL_NODES}`;
+  }
+
+  if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
+  if(navText) navText.textContent=navLabel;
+
+  const sourceAlerts=$("alerts");
+  const overviewAlerts=$("overviewAlerts");
+  if(sourceAlerts&&overviewAlerts) overviewAlerts.innerHTML=sourceAlerts.innerHTML;
+}
+
+function bindDashboardNavigation(){
+  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.dashboardPage)));
+  document.querySelectorAll("[data-go-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.goPage)));
+  document.querySelectorAll("[data-node-jump]").forEach(btn=>btn.addEventListener("click",()=>{
+    const n=btn.dataset.nodeJump;
+    openDashboardPage("monitoring");
+    setTimeout(()=>{
+      const card=$("nodeCard"+n);
+      if(!card) return;
+      card.scrollIntoView({behavior:"smooth",block:"center"});
+      card.classList.remove("navigation-highlight");
+      void card.offsetWidth;
+      card.classList.add("navigation-highlight");
+      setTimeout(()=>card.classList.remove("navigation-highlight"),1700);
+    },180);
+  }));
+  const toggle=$("dashboardMobileToggle");
+  const links=$("dashboardNavLinks");
+  if(toggle&&links) toggle.addEventListener("click",()=>{
+    const open=links.classList.toggle("open");
+    toggle.setAttribute("aria-expanded",open?"true":"false");
+  });
+  window.addEventListener("hashchange",()=>openDashboardPage(getDashboardPageFromHash(),{updateHash:false}));
+  openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
+}
+
+bindDashboardNavigation();
+updateNavigationDashboard();
+setInterval(updateNavigationDashboard,2000);
+
+
+// =========================================================
+// V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
+// =========================================================
+(function(){
+  function fitHelpToViewport(){
+    const popover=document.getElementById("helpPopover");
+    if(!popover || !popover.classList.contains("active")) return;
+
+    if(window.matchMedia("(max-width: 1023px)").matches){
+      popover.style.setProperty("position","fixed","important");
+      popover.style.setProperty("top","max(8px, env(safe-area-inset-top))","important");
+      popover.style.setProperty("right","8px","important");
+      popover.style.setProperty("bottom","max(8px, env(safe-area-inset-bottom))","important");
+      popover.style.setProperty("left","8px","important");
+      popover.style.setProperty("width","auto","important");
+      popover.style.setProperty("max-width","none","important");
+      popover.style.setProperty("max-height","none","important");
+      popover.style.setProperty("transform","none","important");
+      popover.style.setProperty("margin","0","important");
+    }else{
+      // Let the desktop CSS own positioning.
+      ["position","top","right","bottom","left","width","max-width","max-height","transform","margin"]
+        .forEach(function(prop){ popover.style.removeProperty(prop); });
+    }
+  }
+
+  // Run after the existing .help-button click handler has inserted content.
+  document.addEventListener("click",function(e){
+    if(!e.target.closest(".help-button")) return;
+    requestAnimationFrame(fitHelpToViewport);
+  });
+
+  window.addEventListener("resize",fitHelpToViewport,{passive:true});
+  window.addEventListener("orientationchange",function(){
+    setTimeout(fitHelpToViewport,80);
+  });
+})();
+
+// =========================================================
+// PUBLIC DISPLAY CONFIG
+// =========================================================
+function configDevice(deviceId){
+return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
+}
+
+function applyPublicDisplayConfig(){
+for(let i=1;i<=3;i++){
+const d=configDevice(`Number ${i}`)||{};
+const name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`;
+const loc=String(d.location_name||"").trim();
+const desc=String(d.description||"").trim();
+
+const ot=$(`overviewNodeTitle${i}`);
+const ol=$(`overviewNodeLocation${i}`);
+const nt=$(`nodeTitle${i}`);
+const nl=$(`nodeLocation${i}`);
+const nd=$(`nodeDescription${i}`);
+const ho=$(`historyNodeOption${i}`);
+
+if(ot)ot.textContent=name;
+if(ol){ol.textContent=loc;ol.classList.toggle("hidden",!loc);}
+if(nt)nt.textContent=name;
+if(nl){nl.textContent=loc;nl.classList.toggle("hidden",!loc);}
+if(nd){nd.textContent=desc;nd.classList.toggle("hidden",!desc);}
+if(ho)ho.textContent=loc?`${name} • ${loc}`:name;
+}
+
+const h=$("publicAboutHeading");
+const intro=$("publicAboutIntro");
+const heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";
+const about=String(publicDisplayConfig?.content?.about_intro||"").trim();
+
+if(h)h.textContent=heading;
+if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about);}
+
+const ann=publicDisplayConfig?.content||{};
+const aw=$("siteAnnouncementWrap");
+const ab=$("siteAnnouncement");
+const at=$("siteAnnouncementTitle");
+const am=$("siteAnnouncementMessage");
+const ai=$("siteAnnouncementIcon");
+const enabled=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
+
+if(aw){
+aw.classList.toggle("hidden",!enabled);
+if(enabled){
+const sev=["info","warning","maintenance"].includes(String(ann.announcement_severity))
+?String(ann.announcement_severity):"info";
+ab.className=`site-announcement is-${sev}`;
+at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";
+am.textContent=String(ann.announcement_message||"").trim();
+ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
+}
+}
+
+if(historyActivated&&typeof Chart!=="undefined"){
+try{drawCharts();}catch(e){console.warn("Chart label refresh failed",e);}
+}
+}
+
+async function loadPublicDisplayConfig(){
+try{
+const r=await fetch(API.publicConfig,{cache:"no-store",headers:{Accept:"application/json"}});
+if(!r.ok)throw new Error(`HTTP ${r.status}`);
+const j=await r.json();
+if(!j?.success||!j?.data)throw new Error("Public config unavailable");
+publicDisplayConfig=j.data;
+applyPublicDisplayConfig();
+return j.data;
+}catch(e){
+console.warn("Public display config unavailable; using defaults.");
+applyPublicDisplayConfig();
+return publicDisplayConfig;
+}
+}
+
+(function startPublicDisplayConfig(){
+const run=()=>loadPublicDisplayConfig();
+if(document.readyState==="loading"){
+document.addEventListener("DOMContentLoaded",run,{once:true});
+}else{
+run();
+}
+})();
+
+// =========================================================
+// V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
+// Some mobile browsers use a visual viewport smaller or
+// offset from the CSS layout viewport. This keeps modal-like
+// UI inside the actually visible screen.
+// =========================================================
+(function setupVisualViewportFloatingUI(){
+
+  const MOBILE_MAX = 760;
+  const GAP = 8;
+
+  function isMobileViewport(){
+    return window.matchMedia(`(max-width:${MOBILE_MAX}px)`).matches;
+  }
+
+  function visibleViewport(){
+    const vv = window.visualViewport;
+    return {
+      left: vv ? vv.offsetLeft : 0,
+      top: vv ? vv.offsetTop : 0,
+      width: vv ? vv.width : window.innerWidth,
+      height: vv ? vv.height : window.innerHeight
+    };
+  }
+
+  function clearFit(el){
+    if(!el) return;
+    [
+      "position","left","right","top","bottom",
+      "width","height","minWidth","maxWidth",
+      "minHeight","maxHeight","margin","transform"
+    ].forEach(prop=>el.style.removeProperty(prop));
+  }
+
+  function fitFloating(el){
+    if(!el || !isMobileViewport()) return;
+
+    // Portal to BODY. This avoids transformed/content-visibility ancestors
+    // becoming a fixed-position containing block on some browsers.
+    if(el.parentElement !== document.body){
+      document.body.appendChild(el);
+    }
+
+    const v = visibleViewport();
+    const gap = Math.min(GAP, Math.max(4, v.width * 0.02));
+    const width = Math.max(240, v.width - gap * 2);
+    const height = Math.max(240, v.height - gap * 2);
+
+    el.style.setProperty("position","fixed","important");
+    el.style.setProperty("left",`${v.left + gap}px`,"important");
+    el.style.setProperty("top",`${v.top + gap}px`,"important");
+    el.style.setProperty("right","auto","important");
+    el.style.setProperty("bottom","auto","important");
+    el.style.setProperty("width",`${width}px`,"important");
+    el.style.setProperty("max-width",`${width}px`,"important");
+    el.style.setProperty("height","auto","important");
+    el.style.setProperty("max-height",`${height}px`,"important");
+    el.style.setProperty("margin","0","important");
+    el.style.setProperty("transform","none","important");
+  }
+
+  function fitOpenFloatingUI(){
+    // V10: History Range ใช้ CSS full-screen mobile modal โดยตรง
+    // ห้ามคำนวณ width/left/top จาก VisualViewport เพราะบาง browser
+    // รายงานค่าชั่วคราวแคบมาก ทำให้ panel ไปกองมุมซ้าย
+    const help = document.getElementById("helpPopover");
+    if(help && help.classList.contains("active")){
+      fitFloating(help);
+    }
+  }
+
+  function restoreDesktop(){
+    if(isMobileViewport()) return;
+    clearFit(document.getElementById("helpPopover"));
+  }
+
+  function refresh(){
+    if(isMobileViewport()) fitOpenFloatingUI();
+    else restoreDesktop();
+  }
+
+  // Watch both dialogs so opening them from any existing code path is safe.
+  ["helpPopover"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+
+    const observer=new MutationObserver(()=>{
+      requestAnimationFrame(refresh);
+    });
+
+    observer.observe(el,{
+      attributes:true,
+      attributeFilter:["class","aria-hidden"]
+    });
+  });
+
+  window.addEventListener("resize",refresh,{passive:true});
+  window.addEventListener("orientationchange",()=>{
+    setTimeout(refresh,80);
+    setTimeout(refresh,260);
+  },{passive:true});
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize",refresh,{passive:true});
+    window.visualViewport.addEventListener("scroll",refresh,{passive:true});
+  }
+
+  document.addEventListener("click",e=>{
+    if(
+      e.target.closest?.("#historyRangeButton") ||
+      e.target.closest?.(".help-button")
+    ){
+      requestAnimationFrame(refresh);
+      setTimeout(refresh,80);
+    }
+  });
+})();
+
+
+// =====================================================
+// V18 — CONTEXTUAL EXPLANATIONS
+// =====================================================
+const V18_INFO={
+monitoring:{
+title:"สถานะจุดตรวจวัด",
+html:`<p><b>ONLINE</b> — จุดตรวจวัดพร้อมใช้งานและระบบยังยืนยันการทำงานได้ตามปกติ</p>
+<p><b>OFFLINE</b> — ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</p>
+<p><b>ข้อมูลล่าสุด</b> — เวลาของข้อมูลตรวจวัดชุดที่กำลังแสดง ซึ่งอาจต่างจากเวลาที่สถานะเปลี่ยนแปลง</p>`
+},
+history:{
+title:"กราฟย้อนหลังและค่าเฉลี่ยพื้นที่",
+html:`<p>กราฟย้อนหลังใช้ดูข้อมูลตามช่วงเวลาที่เลือกและเปรียบเทียบแต่ละจุดได้</p>
+<p><b>ค่าเฉลี่ยพื้นที่</b> ใช้ช่วยมองสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
+<p>ช่วงเวลาที่ยาวอาจแสดงข้อมูลในระดับรายละเอียดที่เหมาะสมเพื่อให้อ่านแนวโน้มได้ชัดเจน</p>`
+},
+forecast:{
+title:"แนวโน้มล่วงหน้า 30 นาที",
+html:`<p>แสดงค่าประมาณที่อาจเกิดขึ้นในอีก <b>10, 20 และ 30 นาที</b> เพื่อช่วยดูทิศทางระยะสั้น</p>
+<p>ผลลัพธ์ <b>ไม่ใช่ค่ารับประกัน</b> และไม่ใช่การพยากรณ์อากาศอย่างเป็นทางการ</p>
+<p><b>ความเชื่อมั่น</b> ใช้บอกระดับความพร้อมของข้อมูลประกอบการคาดการณ์ ไม่ใช่เปอร์เซ็นต์ Accuracy</p>`
+},
+systemGuide:{
+title:"วิธีอ่านข้อมูลจากระบบ",
+html:`<p><b>PM2.5</b> เป็นตัวหลักสำหรับสื่อสถานการณ์คุณภาพอากาศ</p>
+<p><b>Heat Index</b> ใช้ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้น</p>
+<p><b>Lux</b> ใช้บอกระดับความสว่าง และไม่ใช่ UV Index</p>
+<p>หน้า Dashboard เน้นให้เข้าใจว่า <b>สถานการณ์เป็นอย่างไร → ค่าหมายถึงอะไร → ควรปฏิบัติตัวอย่างไร</b></p>`
 }
 };
 function v18OpenInfo(key){const t=V18_INFO[key],m=$("v18InfoModal");if(!t||!m)return;$("v18InfoTitle").textContent=t.title;$("v18InfoBody").innerHTML=t.html;m.classList.add("active");m.setAttribute("aria-hidden","false");document.body.classList.add("v18-modal-open");}
