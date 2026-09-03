@@ -276,6 +276,47 @@ false
 }
 
 // =====================================================
+// NODE READING DATE / TIME
+// แสดงวันให้ชัดเมื่อข้อมูลไม่ได้มาจากวันนี้
+// วันนี้ -> วันนี้ 15:49:57
+// เมื่อวาน -> เมื่อวาน 18:09:19
+// เก่ากว่านั้น -> 1 ก.ย. 2569 18:09:19
+// =====================================================
+function thaiNodeReadingDateTime(v){
+  const d=parseDate(v);
+  if(!d) return "--";
+
+  const now=new Date();
+  const dayKey=x=>x.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
+  const todayKey=dayKey(now);
+  const valueKey=dayKey(d);
+
+  const yesterday=new Date(now.getTime()-24*60*60*1000);
+  const yesterdayKey=dayKey(yesterday);
+
+  const time=d.toLocaleTimeString("th-TH",{
+    timeZone:"Asia/Bangkok",
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit",
+    hour12:false
+  });
+
+  if(valueKey===todayKey) return `วันนี้ ${time}`;
+  if(valueKey===yesterdayKey) return `เมื่อวาน ${time}`;
+
+  const date=d.toLocaleDateString("th-TH",{
+    timeZone:"Asia/Bangkok",
+    day:"numeric",
+    month:"short",
+    year:"numeric"
+  });
+
+  return `${date} ${time}`;
+}
+
+
+// =====================================================
 // CHART DATE / TIME LABELS
 // แก้ปัญหากราฟช่วงยาวที่เห็นเฉพาะเวลาแต่ไม่รู้ว่าเป็นวันไหน
 // =====================================================
@@ -1409,7 +1450,7 @@ n
 
 t.textContent=
 valueTime
-?thaiTime(
+?thaiNodeReadingDateTime(
 valueTime
 )
 :"--";
@@ -9668,7 +9709,7 @@ function updateNavigationDashboard(){
 
   const newest=newestNodeTime();
   if($("overviewLastUpdated")){
-    $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${newest.toLocaleTimeString("th-TH",{timeZone:"Asia/Bangkok",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})} น.`:"อัปเดตล่าสุด: --";
+    $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${thaiNodeReadingDateTime(newest)}`:"ข้อมูลล่าสุด: --";
   }
 
   for(let i=1;i<=3;i++){
@@ -9685,7 +9726,7 @@ node
 
 const t=
 readingTime
-?thaiTime(
+?thaiNodeReadingDateTime(
 readingTime
 )
 :"--";
