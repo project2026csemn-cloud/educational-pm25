@@ -177,6 +177,7 @@ function esc(v){
 return String(
 v??""
 )
+.replace(/\bGateway\b/gi,"สถานีรับข้อมูลหลัก")
 .replace(
 /&/g,
 "&amp;"
@@ -9617,6 +9618,26 @@ function overviewAdvice(pm25){
   return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
 }
 
+let overviewParticleMetric="pm25";
+
+function updateOverviewParticleDisplay(){
+  const field=overviewParticleMetric;
+  const value=averageLatestField(field);
+  const label=field==="pm10"?"PM10 เฉลี่ยปัจจุบัน":"PM2.5 เฉลี่ยปัจจุบัน";
+  const box=document.querySelector(".overview-main-value");
+  if(box) box.classList.add("is-switching");
+  window.setTimeout(()=>{
+    if($("overviewParticleLabel")) $("overviewParticleLabel").textContent=label;
+    if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
+    if(box) box.classList.remove("is-switching");
+  },180);
+}
+
+function toggleOverviewParticleMetric(){
+  overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
+  updateOverviewParticleDisplay();
+}
+
 function updateNavigationDashboard(){
   const pm25=averageLatestField("pm25");
   const temp=averageLatestField("temperature");
@@ -9624,7 +9645,7 @@ function updateNavigationDashboard(){
   const guide=pm25Guidance(pm25);
   const active=activeCount();
 
-  if($("overviewPM25")) $("overviewPM25").textContent=pm25===null?"--":fmt(pm25);
+  updateOverviewParticleDisplay();
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
   if($("overviewTempStatus")){const t=temperatureLevel(temp);$("overviewTempStatus").textContent=t.label;$("overviewTempStatus").className=`overview-metric-status ${t.severity}`;}
@@ -9729,6 +9750,7 @@ function bindDashboardNavigation(){
 bindDashboardNavigation();
 updateNavigationDashboard();
 setInterval(updateNavigationDashboard,2000);
+setInterval(toggleOverviewParticleMetric,5000);
 
 
 // =========================================================
