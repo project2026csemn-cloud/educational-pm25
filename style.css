@@ -12393,3 +12393,29 @@ body.history-range-modal-open{
         grid-template-columns: 1fr;
     }
 }
+
+
+/* =========================================================
+   V29 — balanced layouts + PM2.5/PM10 rotating overview
+   ========================================================= */
+.smart-summary-grid.smart-summary-grid-six{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+.about-standard-supporting{grid-column:1 / -1!important;}
+.about-supporting-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+.about-reference-links{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+.overview-main-value{transition:opacity .28s ease,transform .28s ease,border-color .28s ease;}
+.overview-main-value.is-switching{opacity:.32;transform:translateY(2px);}
+.overview-particle-value{transition:opacity .28s ease;}
+.about-credit-note p{display:none!important;}
+@media(max-width:980px){
+  .smart-summary-grid.smart-summary-grid-six,
+  .about-supporting-grid,
+  .about-reference-links{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media(max-width:640px){
+  .smart-summary-grid.smart-summary-grid-six,
+  .about-supporting-grid,
+  .about-reference-links{grid-template-columns:1fr!important;}
+}
