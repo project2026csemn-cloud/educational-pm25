@@ -12419,3 +12419,12 @@ body.history-range-modal-open{
   .about-supporting-grid,
   .about-reference-links{grid-template-columns:1fr!important;}
 }
+
+/* =========================================================
+   V30 — PM2.5 / PM10 synchronized air-quality summary
+   ========================================================= */
+.smart-summary-air-switch .smart-summary-stat-label,
+.smart-summary-air-switch .smart-summary-stat-value,
+.smart-summary-air-switch .smart-summary-stat-sub{
+  transition:opacity .28s ease, transform .28s ease;
+}
