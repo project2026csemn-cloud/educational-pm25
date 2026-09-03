@@ -1569,8 +1569,10 @@ return n>120
 
 }
 
-// PM1.0 / Temperature / Humidity / Light
-// ไม่มี Health Threshold เดี่ยวที่ Dashboard ใช้ตัดสิน
+if(field==="temperature") return temperatureLevel(n).severity;
+if(field==="humidity") return humidityLevel(n).severity;
+
+// PM1.0 / Light เป็นข้อมูลประกอบ
 return"info";
 
 }
@@ -1661,6 +1663,48 @@ return{level:"warning",label:"เริ่มมีผลกระทบต่�
 
 return{level:"critical",label:"มีผลกระทบต่อสุขภาพ"};
 
+}
+
+// =====================================================
+// TEMPERATURE / HUMIDITY INTERPRETATION
+// =====================================================
+
+function temperatureLevel(value){
+const n=finiteNumberOrNull(value);
+if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
+const apiLevels=standardsData?.temperature?.levels;
+if(Array.isArray(apiLevels)&&apiLevels.length){
+const row=apiLevels.find(x=>x?.max==null||n<=Number(x.max));
+if(row){const level=String(row.level||"normal");return{level,label:String(row.label||"ปกติ"),severity:["very_cold","very_hot"].includes(level)?"critical":level==="normal"?"normal":"warning"};}
+}
+if(n<8)return{level:"very_cold",label:"หนาวจัด",severity:"critical"};
+if(n<16)return{level:"cold",label:"หนาว",severity:"warning"};
+if(n<23)return{level:"cool",label:"เย็น",severity:"warning"};
+if(n<35)return{level:"normal",label:"ปกติ",severity:"normal"};
+if(n<40)return{level:"hot",label:"ร้อน",severity:"warning"};
+return{level:"very_hot",label:"ร้อนจัด",severity:"critical"};
+}
+
+function humidityLevel(value){
+const n=finiteNumberOrNull(value);
+if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
+const apiLevels=standardsData?.humidity?.levels;
+if(Array.isArray(apiLevels)&&apiLevels.length){
+const row=apiLevels.find(x=>x?.max==null||n<=Number(x.max));
+if(row){const level=String(row.level||"normal");return{level,label:String(row.label||"ปกติ"),severity:level==="very_high"?"critical":level==="normal"?"normal":"warning"};}
+}
+if(n<30)return{level:"low",label:"ต่ำ",severity:"warning"};
+if(n<85)return{level:"normal",label:"ปกติ",severity:"normal"};
+if(n<95)return{level:"high",label:"สูง",severity:"warning"};
+return{level:"very_high",label:"สูงมาก",severity:"critical"};
+}
+
+function metricStatus(field,value){
+if(field==="pm25"){const g=pm25Guidance(value);return{severity:g.level,label:g.label};}
+if(field==="pm10"){const n=finiteNumberOrNull(value);return n===null?{severity:"no_data",label:"ไม่มีข้อมูล"}:n>120?{severity:"warning",label:"เฝ้าระวัง"}:{severity:"info",label:"ข้อมูลประกอบ"};}
+if(field==="temperature"){const x=temperatureLevel(value);return{severity:x.severity,label:x.label};}
+if(field==="humidity"){const x=humidityLevel(value);return{severity:x.severity,label:x.label};}
+return{severity:finiteNumberOrNull(value)===null?"no_data":"info",label:finiteNumberOrNull(value)===null?"ไม่มีข้อมูล":"ข้อมูลประกอบ"};
 }
 
 // =====================================================
@@ -2278,7 +2322,7 @@ return(
 
 }
 
-function qualityBadge(l){
+function qualityBadge(l,customLabel=null){
 
 const b=
 $("qualityBadge");
@@ -2324,7 +2368,7 @@ m[l]||
 m.no_data;
 
 b.textContent=
-x[0];
+customLabel||x[0];
 
 b.classList.add(
 x[1]
@@ -2491,42 +2535,13 @@ a[currentMetric]
 
 const watch=
 usable
-.map(
-n=>({
-
-n,
-
-v:
-Number(
-n[currentMetric]
-),
-
-l:
-threshold(
-currentMetric,
-n[currentMetric]
-)
-
+.map(n=>{
+const v=Number(n[currentMetric]);
+const status=metricStatus(currentMetric,v);
+return{n,v,l:status.severity,label:status.label,score:status.severity==="critical"?2:status.severity==="warning"?1:0};
 })
-)
-.filter(
-x=>
-[
-"warning",
-"critical"
-]
-.includes(
-x.l
-)
-)
-.sort(
-(
-a,
-b
-)=>
-b.v-a.v
-)
-[0];
+.filter(x=>x.score>0)
+.sort((a,b)=>b.score-a.score || (currentMetric==="temperature"?Math.abs(b.v-29)-Math.abs(a.v-29):b.v-a.v))[0];
 
 $("currentOverallValue").textContent=
 currentValue(
@@ -2544,12 +2559,8 @@ high[currentMetric]
 $("currentHighestNode").textContent=
 `จุดตรวจวัด ${nodeNo(high.device_id)}`;
 
-qualityBadge(
-threshold(
-currentMetric,
-avg
-)
-);
+const avgStatus=metricStatus(currentMetric,avg);
+qualityBadge(avgStatus.severity,avgStatus.label);
 
 $("currentWatchNode").textContent=
 watch
@@ -2558,12 +2569,16 @@ watch
 
 $("currentWatchDetail").textContent=
 watch
-?`${c.label} ${currentValue(watch.v)} • ${levelText(watch.l)}`
+?`${c.label} ${currentValue(watch.v)} • ${watch.label}`
 :currentMetric==="pm25"
 ?"ยังไม่พบจุดที่ PM2.5 เข้าเกณฑ์เฝ้าระวัง"
 :currentMetric==="pm10"
 ?"ยังไม่พบค่ารอบล่าสุดของ PM10 สูงกว่า 120 µg/m³ • การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง"
-:`${c.label} ใช้เป็นข้อมูลประกอบและการเปรียบเทียบ ไม่ใช้เกณฑ์แจ้งเตือนเดี่ยวในโครงการ`;
+:currentMetric==="temperature"
+?"อุณหภูมิของจุดที่มีข้อมูลอยู่ในระดับปกติ"
+:currentMetric==="humidity"
+?"ความชื้นของจุดที่มีข้อมูลอยู่ในระดับปกติ"
+:`${c.label} ใช้เป็นข้อมูลประกอบและการเปรียบเทียบ`;
 
 if(
 $("currentEnvironmentFooter")
@@ -2614,7 +2629,7 @@ e.innerHTML=
 </div>
 
 <div class="smart-summary-stat">
-<div class="smart-summary-stat-label">🌡 สภาพความร้อน</div>
+<div class="smart-summary-stat-label">🌡 อุณหภูมิ • ความชื้น • Heat Index</div>
 <div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
 <div class="smart-summary-stat-sub">รอการเชื่อมต่อกลับมา</div>
 </div>
@@ -2652,6 +2667,9 @@ heatLevel(
 snap.heatIndex
 );
 
+const tempInfo=temperatureLevel(snap.temperature);
+const humidityInfo=humidityLevel(snap.humidity);
+
 const dust=
 dustProfileSummary(
 snap
@@ -2681,6 +2699,10 @@ headline="🔴 มีสถานการณ์ที่ควรให้ค�
 air.level==="warning"||
 heat.level==="warning"||
 heat.level==="watch"||
+tempInfo.severity==="warning"||
+tempInfo.severity==="critical"||
+humidityInfo.severity==="warning"||
+humidityInfo.severity==="critical"||
 off>0
 ){
 severity="watch";
@@ -2699,7 +2721,7 @@ heat.level==="normal"
 const heatSub=
 snap.heatIndex==null
 ?"ยังไม่มีข้อมูลอุณหภูมิและความชื้น"
-:`ความรู้สึกร้อน ${fmt(snap.heatIndex)} °C`;
+:`อุณหภูมิ ${fmt(snap.temperature)} °C (${tempInfo.label}) • ความชื้น ${fmt(snap.humidity)}% (${humidityInfo.label}) • Heat Index ${fmt(snap.heatIndex)} °C`;
 
 const systemMain=
 off===0
@@ -2876,11 +2898,19 @@ detail:
 
 }
 
-const heatState=
-String(
-state.temperature_level||
-"normal"
-);
+const tempState=String(state.temperature_level||"normal");
+const humState=String(state.humidity_level||"normal");
+const heatState=String(state.heat_index_level??state.temperature_level??"normal");
+
+if(tempState!=="normal"){
+const t=temperatureLevel(n?.temperature);
+list.push({icon:t.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • อุณหภูมิ ${t.label}`,detail:`${fmt(n?.temperature)} °C • เทียบเกณฑ์ลักษณะอากาศเพื่อเฝ้าระวังเบื้องต้น`});
+}
+
+if(humState!=="normal"){
+const hu=humidityLevel(n?.humidity);
+list.push({icon:hu.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • ความชื้น ${hu.label}`,detail:`${fmt(n?.humidity)} % • เกณฑ์เฝ้าระวังของโครงการ ควรดูร่วมกับอุณหภูมิและ Heat Index`});
+}
 
 if(
 heatState!=="normal"
@@ -7116,7 +7146,8 @@ html:`
 </section>
 <section class="help-section">
 <h4>อุณหภูมิ / ความชื้นเฉลี่ย</h4>
-<p>เป็นค่าภาพรวมล่าสุดของตัวแปรนั้นจากจุดที่มีข้อมูลใช้ได้ในขณะนั้น</p>
+<p>เป็นค่าภาพรวมล่าสุดจากจุดที่มีข้อมูลใช้ได้ พร้อมแปลระดับให้เข้าใจง่าย อุณหภูมิใช้คำว่า หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด ส่วนความชื้นใช้ ต่ำ / ปกติ / สูง / สูงมาก</p>
+<p class="help-muted">อุณหภูมิเป็นการเทียบเกณฑ์ลักษณะอากาศเพื่อเฝ้าระวังเบื้องต้น ส่วนระดับความชื้นเป็นเกณฑ์เฝ้าระวังของโครงการ ไม่ใช่มาตรฐานสุขภาพ</p>
 </section>
 <section class="help-section">
 <h4>ONLINE 3/3</h4>
@@ -7182,8 +7213,16 @@ title:"⚠ สิ่งที่ควรระวัง",
 html:`
 <div class="help-intro-card"><b>หัวข้อนี้รวบรวมเหตุการณ์ที่ควรให้ความสนใจ</b><span>ช่วยให้เห็นสถานะผิดปกติหรือค่าที่ควรติดตามโดยไม่ต้องไล่อ่านทุกช่อง</span></div>
 <section class="help-section">
+<h4>ระบบเตือนเรื่องอะไรบ้าง?</h4>
+<p>ระบบสามารถแสดงสิ่งที่ควรระวังจาก PM2.5, อุณหภูมิ, ความชื้น, Heat Index, PM10 แบบเฝ้าระวังเบื้องต้น และสถานะการเชื่อมต่อของจุดตรวจวัด</p>
+</section>
+<section class="help-section">
+<h4>อุณหภูมิกับ Heat Index ต่างกันอย่างไร?</h4>
+<p><b>อุณหภูมิ</b> คือค่าความร้อนหรือเย็นของอากาศ ส่วน <b>Heat Index</b> คือค่าที่ใช้ประเมินความร้อนที่ร่างกายรู้สึกเมื่อพิจารณาอุณหภูมิและความชื้นร่วมกัน ทั้งสองจึงแสดงและแจ้งเตือนแยกกัน</p>
+</section>
+<section class="help-section">
 <h4>เมื่อมีข้อความเตือน</h4>
-<p>ให้อ่านว่าข้อความเกี่ยวกับจุดใดหรือตัวแปรใด แล้วเปิดข้อมูลรายจุดเพื่อตรวจค่าล่าสุดประกอบ</p>
+<p>ให้อ่านว่าข้อความเกี่ยวกับจุดใดหรือตัวแปรใด แล้วเปิดข้อมูลรายจุดเพื่อตรวจค่าล่าสุดประกอบ คำว่า <b>ปกติ</b> หมายถึงยังไม่เข้าเกณฑ์ที่ระบบกำหนดให้เฝ้าระวังในตัวแปรนั้น</p>
 </section>
 <section class="help-section">
 <h4>ถ้าไม่มีรายการเตือน</h4>
@@ -9698,6 +9737,8 @@ function updateNavigationDashboard(){
   if($("overviewPM25")) $("overviewPM25").textContent=pm25===null?"--":fmt(pm25);
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
+  if($("overviewTempStatus")){const t=temperatureLevel(temp);$("overviewTempStatus").textContent=t.label;$("overviewTempStatus").className=`overview-metric-status ${t.severity}`;}
+  if($("overviewHumidityStatus")){const hu=humidityLevel(hum);$("overviewHumidityStatus").textContent=hu.label;$("overviewHumidityStatus").className=`overview-metric-status ${hu.severity}`;}
   if($("overviewActiveNodes")) $("overviewActiveNodes").textContent=`${active} / ${TOTAL_NODES}`;
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
 
@@ -10069,7 +10110,9 @@ html:`<p>แสดงค่าประมาณที่อาจเกิด�
 systemGuide:{
 title:"วิธีอ่านข้อมูลจากระบบ",
 html:`<p><b>PM2.5</b> เป็นตัวหลักสำหรับสื่อสถานการณ์คุณภาพอากาศ</p>
-<p><b>Heat Index</b> ใช้ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้น</p>
+<p><b>อุณหภูมิ</b> แสดงระดับตั้งแต่หนาวจัดถึงร้อนจัด โดยใช้เพื่อเฝ้าระวังเบื้องต้น</p>
+<p><b>ความชื้น</b> แสดง ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ</p>
+<p><b>Heat Index</b> ยังคงแสดงแยก ใช้ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้นร่วมกัน</p>
 <p><b>Lux</b> ใช้บอกระดับความสว่าง และไม่ใช่ UV Index</p>
 <p>หน้า Dashboard เน้นให้เข้าใจว่า <b>สถานการณ์เป็นอย่างไร → ค่าหมายถึงอะไร → ควรปฏิบัติตัวอย่างไร</b></p>`
 }
