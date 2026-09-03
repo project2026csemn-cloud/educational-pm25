@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260902-historyfix-v23" rel="stylesheet"/>
+<link href="style.css?v=20260903-temp-humidity-v27" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -155,8 +155,8 @@ DASHBOARD NAVIGATION
   </div>
 
   <div class="overview-metrics-grid">
-    <div class="overview-metric-card glass card"><span>อุณหภูมิเฉลี่ย</span><b id="overviewTemp">--</b><small>°C</small></div>
-    <div class="overview-metric-card glass card"><span>ความชื้นเฉลี่ย</span><b id="overviewHumidity">--</b><small>%</small></div>
+    <div class="overview-metric-card glass card"><span>อุณหภูมิเฉลี่ย</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em></div>
+    <div class="overview-metric-card glass card"><span>ความชื้นเฉลี่ย</span><b id="overviewHumidity">--</b><small>%</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em></div>
     <div class="overview-metric-card glass card"><span>จุดตรวจวัด ONLINE</span><b id="overviewActiveNodes">0 / 3</b><small>จุดตรวจวัด</small></div>
   </div>
 
@@ -786,6 +786,30 @@ DASHBOARD NAVIGATION
       </article>
 
       <article class="about-standard-card">
+        <div class="about-standard-head"><span>อุณหภูมิ</span><b>เย็นถึงร้อน</b></div>
+        <div class="about-threshold-list compact">
+          <div><span>&lt; 8.0°C</span><b>หนาวจัด</b></div>
+          <div><span>8.0–15.9°C</span><b>หนาว</b></div>
+          <div><span>16.0–22.9°C</span><b>เย็น</b></div>
+          <div><span>23.0–34.9°C</span><b>ปกติ</b></div>
+          <div><span>35.0–39.9°C</span><b>ร้อน</b></div>
+          <div><span>≥ 40.0°C</span><b>ร้อนจัด</b></div>
+        </div>
+        <p class="about-standard-note">อ้างอิงเกณฑ์อากาศร้อนและอากาศหนาวของกรมอุตุนิยมวิทยา แต่ Dashboard นำมาเทียบค่าปัจจุบันเพื่อเฝ้าระวังเบื้องต้นเท่านั้น เพราะเกณฑ์ต้นฉบับใช้กับอุณหภูมิสูงสุด/ต่ำสุดประจำวันตามฤดูกาล</p>
+      </article>
+
+      <article class="about-standard-card">
+        <div class="about-standard-head"><span>ความชื้นสัมพัทธ์</span><b>เกณฑ์เฝ้าระวังของโครงการ</b></div>
+        <div class="about-threshold-list compact">
+          <div><span>&lt; 30%</span><b>ต่ำ</b></div>
+          <div><span>30.0–84.9%</span><b>ปกติ</b></div>
+          <div><span>85.0–94.9%</span><b>สูง</b></div>
+          <div><span>≥ 95.0%</span><b>สูงมาก</b></div>
+        </div>
+        <p class="about-standard-note">ระดับนี้เป็นเกณฑ์เฝ้าระวังของโครงการเพื่อช่วยสื่อสารค่าที่แห้งหรือชื้นมาก ไม่ใช่มาตรฐานสุขภาพหรือเกณฑ์ทางอุตุนิยมวิทยาอย่างเป็นทางการ ควรพิจารณาร่วมกับอุณหภูมิและ Heat Index</p>
+      </article>
+
+      <article class="about-standard-card">
         <div class="about-standard-head"><span>Heat Index</span><b>อุณหภูมิ + ความชื้น</b></div>
         <div class="about-threshold-list compact">
           <div><span>&lt; 27°C</span><b>ปกติ</b></div>
@@ -806,9 +830,9 @@ DASHBOARD NAVIGATION
             <small>ไม่ใช้ตัดสิน AQI หรือระดับสุขภาพเพียงค่าเดียว</small>
           </div>
           <div class="about-supporting-item">
-            <strong>อุณหภูมิ + ความชื้น</strong>
-            <span>ใช้ร่วมกันเพื่อคำนวณ Heat Index และอธิบายความร้อนที่ร่างกายรู้สึกได้</span>
-            <small>ไม่กำหนดความเสี่ยงจากอุณหภูมิหรือความชื้นค่าใดค่าหนึ่งแยกเดี่ยว</small>
+            <strong>Heat Index</strong>
+            <span>คำนวณจากอุณหภูมิและความชื้นเพื่อประเมินความร้อนที่ร่างกายรู้สึก</span>
+            <small>แสดงแยกจากระดับอุณหภูมิและความชื้น และไม่ใช่ WBGT</small>
           </div>
           <div class="about-supporting-item">
             <strong>แสง (lux)</strong>
@@ -824,6 +848,8 @@ DASHBOARD NAVIGATION
       <div class="about-reference-links">
         <a href="https://www.pcd.go.th/wp-content/uploads/2025/08/pcdnew-2025-08-01_07-12-19_226372.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>AQI / PM2.5 ↗</b></a>
         <a href="https://www.pcd.go.th/wp-content/uploads/2024/06/pcdnew-2024-06-21_06-42-54_474054.pdf" target="_blank" rel="noopener noreferrer"><span>กรมควบคุมมลพิษ</span><b>มาตรฐาน PM10 ↗</b></a>
+        <a href="https://www.tmd.go.th/info/%E0%B9%80%E0%B8%81%E0%B8%93%E0%B8%91%E0%B8%AD%E0%B8%B2%E0%B8%81%E0%B8%B2%E0%B8%A8" target="_blank" rel="noopener noreferrer"><span>กรมอุตุนิยมวิทยา</span><b>เกณฑ์อุณหภูมิ ↗</b></a>
+        <a href="https://tmd.go.th/info/%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%8A%E0%B8%99%E0%B8%AA%E0%B8%A1%E0%B8%9E%E0%B8%97%E0%B8%98" target="_blank" rel="noopener noreferrer"><span>กรมอุตุนิยมวิทยา</span><b>ความชื้นสัมพัทธ์ ↗</b></a>
         <a href="https://www.rnd.tmd.go.th/heatindexanalysis/" target="_blank" rel="noopener noreferrer"><span>กรมอุตุนิยมวิทยา</span><b>Heat Index ↗</b></a>
         <a href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener noreferrer"><span>WHO</span><b>Air Quality Guidelines 2021 ↗</b></a>
       </div>
@@ -1150,7 +1176,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260902-historyfix-v23"></script>
+<script defer src="app.js?v=20260903-temp-humidity-v27"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
