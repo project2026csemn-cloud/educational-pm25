@@ -2462,7 +2462,7 @@ if(
 ){
 
 return resetCurrent(
-"ไม่สามารถเชื่อมต่อ API ได้"
+"ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้"
 );
 
 }
@@ -2597,191 +2597,160 @@ $("currentEnvironmentFooter").textContent=
 
 function updateSmart(){
 
-const e=
-$("aiSummary");
+const e=$("aiSummary");
+if(!e)return;
 
-if(!e){
-return;
-}
-
-if(
-!apiConnectionOnline
-){
-e.innerHTML=
-'<div class="smart-summary-headline offline">🔴 ไม่สามารถเชื่อมต่อระบบข้อมูลได้</div><div class="smart-summary-note danger">ยังไม่สามารถยืนยันสถานการณ์ปัจจุบันได้</div>';
-return;
-}
-
-if(
-!motherOnline()
-){
-e.innerHTML=
-`<div class="smart-summary-headline offline">
-🔴 สถานีหลักขาดการเชื่อมต่อ
-</div>
-
-<div class="smart-summary-grid">
-
+const waitingCard=(icon,title,sub="รอข้อมูลล่าสุด")=>`
 <div class="smart-summary-stat">
-<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
+<div class="smart-summary-stat-label">${icon} ${title}</div>
 <div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">รอการเชื่อมต่อกลับมา</div>
-</div>
-
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">🌡 อุณหภูมิ • ความชื้น • Heat Index</div>
-<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">รอการเชื่อมต่อกลับมา</div>
-</div>
-
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">🌫 ลักษณะฝุ่นในพื้นที่</div>
-<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">รอข้อมูลฝุ่นจากจุดตรวจวัด</div>
-</div>
-
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">📡 สถานีตรวจวัด</div>
-<div class="smart-summary-stat-value">ขาดการเชื่อมต่อ</div>
-<div class="smart-summary-stat-sub">ไม่สามารถยืนยันข้อมูลล่าสุดได้</div>
-</div>
-
-</div>
-
-<div class="smart-summary-note danger">
-ระบบจะไม่ใช้ค่าที่ค้างในฐานข้อมูลเป็นสถานการณ์ปัจจุบันจนกว่าการเชื่อมต่อจะกลับมา
+<div class="smart-summary-stat-sub">${sub}</div>
 </div>`;
+
+if(!apiConnectionOnline){
+e.innerHTML=`
+<div class="smart-summary-headline offline">🔴 ยังไม่สามารถตรวจสอบสถานการณ์ปัจจุบันได้</div>
+<div class="smart-summary-grid smart-summary-grid-six">
+${waitingCard("🌿","คุณภาพอากาศ")}
+${waitingCard("☀️","ดัชนีความร้อน")}
+${waitingCard("🌡️","อุณหภูมิ")}
+${waitingCard("💧","ความชื้น")}
+${waitingCard("📍","จุดตรวจวัด","ยังยืนยันความพร้อมของจุดตรวจวัดไม่ได้")}
+${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
+</div>
+<div class="smart-summary-note danger">กรุณารอให้ข้อมูลปัจจุบันพร้อมก่อนใช้ประกอบการตัดสินใจ</div>`;
 return;
 }
 
-const snap=
-currentEnvironmentSnapshot();
+if(!motherOnline()){
+e.innerHTML=`
+<div class="smart-summary-headline offline">🔴 ยังไม่สามารถยืนยันข้อมูลปัจจุบันได้</div>
+<div class="smart-summary-grid smart-summary-grid-six">
+${waitingCard("🌿","คุณภาพอากาศ")}
+${waitingCard("☀️","ดัชนีความร้อน")}
+${waitingCard("🌡️","อุณหภูมิ")}
+${waitingCard("💧","ความชื้น")}
+${waitingCard("📍","จุดตรวจวัด","ขณะนี้ยังยืนยันความพร้อมไม่ได้")}
+${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
+</div>
+<div class="smart-summary-note danger">ข้อมูลเดิมจะไม่ถูกนำมาแสดงเป็นสถานการณ์ปัจจุบันเมื่อยังยืนยันข้อมูลใหม่ไม่ได้</div>`;
+return;
+}
 
-const air=
-combinedAirQualitySummary(
-snap
-);
-
-const heat=
-heatLevel(
-snap.heatIndex
-);
-
+const snap=currentEnvironmentSnapshot();
+const air=combinedAirQualitySummary(snap);
+const heat=heatLevel(snap.heatIndex);
 const tempInfo=temperatureLevel(snap.temperature);
 const humidityInfo=humidityLevel(snap.humidity);
 
-const dust=
-dustProfileSummary(
-snap
-);
-
-const on=
-latestNodes
-.filter(
-n=>
-getNodeDisplayStatus(n)==="online"
-)
-.length;
-
-const off=
-TOTAL_NODES-on;
+const on=latestNodes.filter(n=>getNodeDisplayStatus(n)==="online").length;
+const off=TOTAL_NODES-on;
 
 let severity="normal";
 let headline="🟢 ภาพรวมปกติ";
 
 if(
 air.level==="critical"||
-heat.level==="critical"
+heat.level==="critical"||
+tempInfo.severity==="critical"||
+humidityInfo.severity==="critical"
 ){
 severity="critical";
-headline="🔴 มีสถานการณ์ที่ควรให้ความสำคัญ";
+headline="🔴 มีข้อมูลที่ควรให้ความสำคัญ";
 }else if(
 air.level==="warning"||
 heat.level==="warning"||
 heat.level==="watch"||
 tempInfo.severity==="warning"||
-tempInfo.severity==="critical"||
 humidityInfo.severity==="warning"||
-humidityInfo.severity==="critical"||
 off>0
 ){
 severity="watch";
 headline="🟡 มีข้อมูลที่ควรติดตาม";
 }
 
-const heatMain=
-snap.heatIndex==null
+const heatLabel=snap.heatIndex==null
 ?"รอข้อมูล"
-:(
-heat.level==="normal"
-?"อากาศสบาย"
-:heat.label
-);
+:(heat.level==="normal"?"ปกติ":heat.label);
+const heatValue=snap.heatIndex==null
+?"--"
+:`${fmt(snap.heatIndex)} °C`;
+const heatSub=snap.heatIndex==null
+?"ต้องมีอุณหภูมิและความชื้นจึงจะประเมินได้"
+:`${heatLabel} • ใช้ดูความร้อนที่ร่างกายอาจรู้สึก`;
 
-const heatSub=
-snap.heatIndex==null
-?"ยังไม่มีข้อมูลอุณหภูมิและความชื้น"
-:`อุณหภูมิ ${fmt(snap.temperature)} °C (${tempInfo.label}) • ความชื้น ${fmt(snap.humidity)}% (${humidityInfo.label}) • Heat Index ${fmt(snap.heatIndex)} °C`;
+const tempValue=snap.temperature==null
+?"--"
+:`${fmt(snap.temperature)} °C`;
+const tempSub=snap.temperature==null
+?"รอข้อมูลล่าสุด"
+:`${tempInfo.label} • เทียบเพื่อเฝ้าระวังเบื้องต้น`;
 
-const systemMain=
-off===0
-?`ทำงานปกติ ${on} / ${TOTAL_NODES} จุด`
-:`ONLINE ${on} / ${TOTAL_NODES} จุด`;
+const humidityValue=snap.humidity==null
+?"--"
+:`${fmt(snap.humidity)}%`;
+const humiditySub=snap.humidity==null
+?"รอข้อมูลล่าสุด"
+:`${humidityInfo.label} • ควรดูร่วมกับอุณหภูมิ`;
 
-const systemSub=
-off===0
-?"จุดตรวจวัดทั้ง 3 จุด ONLINE"
-:`มี ${off} จุด OFFLINE`;
+const systemMain=off===0
+?`พร้อม ${on} / ${TOTAL_NODES} จุด`
+:`พร้อม ${on} / ${TOTAL_NODES} จุด`;
+const systemSub=off===0
+?"จุดตรวจวัดทั้งหมดพร้อมแสดงข้อมูลปัจจุบัน"
+:`มี ${off} จุดที่ยังไม่พร้อม`;
 
-const activity=
-activityRecommendation(
-snap.pm25,
-snap.pm10,
-snap.heatIndex
-);
-
+const activity=activityRecommendation(snap.pm25,snap.pm10,snap.heatIndex);
 const activityGood=
 !["critical","warning"].includes(air.level)&&
-!["critical","warning"].includes(heat.level);
+!["critical","warning"].includes(heat.level)&&
+tempInfo.severity!=="critical"&&
+humidityInfo.severity!=="critical";
+const activityMain=activityGood?"ทำกิจกรรมได้ตามปกติ":"ควรเพิ่มความระมัดระวัง";
 
-e.innerHTML=
-`<div class="smart-summary-headline ${severity}">
-${headline}
-</div>
+const airValue=air.label||"รอข้อมูล";
+const airSub=air.detail||"รอข้อมูลฝุ่นล่าสุด";
 
-<div class="smart-summary-grid">
+e.innerHTML=`
+<div class="smart-summary-headline ${severity}">${headline}</div>
 
+<div class="smart-summary-grid smart-summary-grid-six">
 <div class="smart-summary-stat smart-summary-air">
 <div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
-<div class="smart-summary-stat-value">${esc(air.label)}</div>
-<div class="smart-summary-stat-sub">${esc(air.detail)}</div>
+<div class="smart-summary-stat-value">${esc(airValue)}</div>
+<div class="smart-summary-stat-sub">${esc(airSub)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-heat">
-<div class="smart-summary-stat-label">🌡 สภาพความร้อน</div>
-<div class="smart-summary-stat-value">${esc(heatMain)}</div>
+<div class="smart-summary-stat-label">☀️ ดัชนีความร้อน</div>
+<div class="smart-summary-stat-value">${esc(heatValue)}</div>
 <div class="smart-summary-stat-sub">${esc(heatSub)}</div>
 </div>
 
-<div class="smart-summary-stat smart-summary-environment">
-<div class="smart-summary-stat-label">🌫 ลักษณะฝุ่นในพื้นที่</div>
-<div class="smart-summary-stat-value">${esc(dust.label)}</div>
-<div class="smart-summary-stat-sub">${esc(dust.detail)}</div>
+<div class="smart-summary-stat smart-summary-temperature">
+<div class="smart-summary-stat-label">🌡️ อุณหภูมิ</div>
+<div class="smart-summary-stat-value">${esc(tempValue)}</div>
+<div class="smart-summary-stat-sub">${esc(tempSub)}</div>
+</div>
+
+<div class="smart-summary-stat smart-summary-humidity">
+<div class="smart-summary-stat-label">💧 ความชื้น</div>
+<div class="smart-summary-stat-value">${esc(humidityValue)}</div>
+<div class="smart-summary-stat-sub">${esc(humiditySub)}</div>
 </div>
 
 <div class="smart-summary-stat smart-summary-system">
-<div class="smart-summary-stat-label">📡 สถานีตรวจวัด</div>
+<div class="smart-summary-stat-label">📍 จุดตรวจวัด</div>
 <div class="smart-summary-stat-value">${esc(systemMain)}</div>
 <div class="smart-summary-stat-sub">${esc(systemSub)}</div>
 </div>
 
+<div class="smart-summary-stat smart-summary-activity-card ${activityGood?"":"is-watch"}">
+<div class="smart-summary-stat-label">🏃 กิจกรรมกลางแจ้ง</div>
+<div class="smart-summary-stat-value">${esc(activityMain)}</div>
+<div class="smart-summary-stat-sub">${esc(activity)}</div>
 </div>
-
-<div class="smart-summary-activity ${activityGood?"":"is-watch"}">
-<div class="smart-summary-activity-label">🏃 กิจกรรมกลางแจ้ง</div>
-<div>${esc(activity)}</div>
 </div>`;
-
 }
 
 // =====================================================
@@ -2802,7 +2771,7 @@ if(
 ){
 
 e.innerHTML=
-'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 ไม่สามารถเชื่อมต่อ API</b></div>';
+'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้</b></div>';
 
 return;
 
@@ -4537,14 +4506,8 @@ aiForecastPayload?.reason
 
 const providerText=
 aiForecastPayload?.ai===true
-?(
-aiForecastPayload?.provider==="gemini"
-?"AI • Gemini"
-:aiForecastPayload?.provider==="cloudflare"
-?"AI • Workers AI"
-:"AI"
-)
-:"ระบบสำรองเชิงคำนวณ";
+?"ระบบวิเคราะห์"
+:"ระบบคาดการณ์";
 
 if(metric==="all"){
 
@@ -6180,7 +6143,7 @@ if(
 payload.reason===
 "gemini_secret_not_configured"
 ){
-return"NO API KEY";
+return"ยังไม่พร้อมใช้งาน";
 }
 
 if(
@@ -6739,7 +6702,7 @@ provider==="gemini"
 :provider==="cloudflare"
 ?"ระบบวิเคราะห์"
 :payload?.ai===false
-?"Rule / Statistical Engine"
+?"ระบบคาดการณ์"
 :"กำลังรอการวิเคราะห์...";
 
 }
@@ -7115,234 +7078,161 @@ drawCharts();
 const HELP_CONTENT={
 
 systemGuide:{
-title:"📘 วิธีอ่านระบบ",
-html:`
-<div class="help-intro-card"><b>คู่มือรวมสำหรับการอ่านข้อมูล</b><span>ใช้เมื่ออยากเข้าใจความหมายพื้นฐานของตัวเลข สถานะ และสัญลักษณ์ที่พบทั่ว Dashboard</span></div>
-<section class="help-section">
-<h4>ข้อมูลจริงกับข้อมูลคาดการณ์</h4>
-<div class="help-simple-grid">
-<div><b>ข้อมูลจริง</b><span>ค่าที่ระบบได้รับและบันทึกจากการตรวจวัดแล้ว</span></div>
-<div><b>ค่าคาดการณ์</b><span>ค่าประมาณของช่วงเวลาข้างหน้า ใช้ดูแนวโน้ม ไม่ใช่ค่าที่วัดได้ล่วงหน้า</span></div>
-</div>
-</section>
-<section class="help-section">
-<h4>ONLINE / OFFLINE</h4>
-<p><b>ONLINE</b> หมายถึงระบบยังยืนยันการทำงานของจุดตรวจวัดได้ ส่วน <b>OFFLINE</b> หมายถึงขณะนั้นไม่สามารถยืนยันการติดต่อได้</p>
-</section>
-<section class="help-section">
-<h4>-- หมายถึงอะไร?</h4>
-<p>หมายถึงยังไม่มีค่าที่เหมาะสำหรับแสดงในช่องนั้น ไม่ได้หมายถึงค่า 0</p>
-</section>
-<div class="help-tip"><b>หลักการอ่าน</b><span>ดูสถานการณ์ปัจจุบันจากข้อมูลจริงก่อน แล้วจึงใช้สถิติย้อนหลังหรือค่าคาดการณ์เพื่อดูแนวโน้มเพิ่มเติม</span></div>`
+title:"📘 วิธีอ่าน Dashboard",
+html:`<div class="help-intro-card"><b>คู่มือรวมสำหรับการอ่านข้อมูล</b><span>ช่วยแยกความหมายของข้อมูลปัจจุบัน ข้อมูลย้อนหลัง และค่าคาดการณ์</span></div>
+<section class="help-section"><h4>ข้อมูลปัจจุบัน</h4><p>ใช้ดูสถานการณ์ล่าสุดที่ระบบยืนยันได้ในขณะนั้น หากขึ้น <b>--</b> หมายถึงยังไม่มีค่าที่เหมาะสำหรับแสดง ไม่ได้หมายถึงค่า 0</p></section>
+<section class="help-section"><h4>ข้อมูลย้อนหลัง</h4><p>ใช้ดูสิ่งที่เกิดขึ้นแล้วในช่วงเวลาที่เลือก เพื่อเปรียบเทียบการเปลี่ยนแปลงตามเวลา</p></section>
+<section class="help-section"><h4>ค่าคาดการณ์</h4><p>เป็นค่าประมาณของช่วงเวลาข้างหน้าเพื่อช่วยดูแนวโน้ม ไม่ใช่ค่าที่วัดได้ล่วงหน้าและไม่รับประกันว่าจะเกิดขึ้นจริง</p></section>
+<div class="help-tip"><b>อ่านให้ง่าย</b><span>เริ่มจากภาพรวมปัจจุบัน → ดูจุดตรวจวัด → ดูย้อนหลัง → ใช้การคาดการณ์เป็นข้อมูลประกอบ</span></div>`
 },
 
 overviewQuality:{
 title:"🌿 ภาพรวมคุณภาพอากาศ",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้ตอบว่า “ตอนนี้ภาพรวมเป็นอย่างไร?”</b><span>สรุปค่าล่าสุดของพื้นที่จากจุดตรวจวัดที่มีข้อมูลใช้งานได้</span></div>
-<section class="help-section">
-<h4>PM2.5 เฉลี่ยปัจจุบัน</h4>
-<p>เป็นค่าเฉลี่ยจากจุดตรวจวัดที่มีข้อมูลล่าสุดใช้ได้ ช่วยดูภาพรวมของพื้นที่ แต่ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
-</section>
-<section class="help-section">
-<h4>อุณหภูมิ / ความชื้นเฉลี่ย</h4>
-<p>เป็นค่าภาพรวมล่าสุดจากจุดที่มีข้อมูลใช้ได้ พร้อมแปลระดับให้เข้าใจง่าย อุณหภูมิใช้คำว่า หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด ส่วนความชื้นใช้ ต่ำ / ปกติ / สูง / สูงมาก</p>
-<p class="help-muted">อุณหภูมิเป็นการเทียบเกณฑ์ลักษณะอากาศเพื่อเฝ้าระวังเบื้องต้น ส่วนระดับความชื้นเป็นเกณฑ์เฝ้าระวังของโครงการ ไม่ใช่มาตรฐานสุขภาพ</p>
-</section>
-<section class="help-section">
-<h4>ONLINE 3/3</h4>
-<p>บอกจำนวนจุดตรวจวัดที่ Dashboard แสดงเป็น ONLINE เทียบกับจำนวนทั้งหมด 3 จุด</p>
-</section>
-<div class="help-tip"><b>เหมาะสำหรับ</b><span>ดูสถานการณ์อย่างรวดเร็ว ก่อนเปิดดูรายละเอียดรายจุด</span></div>`
+html:`<div class="help-intro-card"><b>หัวข้อนี้ตอบว่า “ตอนนี้ภาพรวมของพื้นที่เป็นอย่างไร?”</b><span>สรุปข้อมูลล่าสุดจากจุดตรวจวัดที่พร้อมใช้งาน</span></div>
+<section class="help-section"><h4>PM2.5 เฉลี่ยปัจจุบัน</h4><p>เป็นค่าเฉลี่ยจากจุดที่มีข้อมูลปัจจุบัน ใช้ดูภาพรวมของพื้นที่ ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง และไม่ใช่ค่าเฉลี่ย 24 ชั่วโมง</p></section>
+<section class="help-section"><h4>อุณหภูมิและความชื้นเฉลี่ย</h4><p>ช่วยให้เห็นสภาพแวดล้อมโดยรวม อุณหภูมิและความชื้นมีระดับของตัวเอง และยังใช้พิจารณาร่วมกันในดัชนีความร้อนด้วย</p></section>
+<section class="help-section"><h4>จุดตรวจวัดที่พร้อม</h4><p>บอกจำนวนจุดที่ระบบยังยืนยันข้อมูลปัจจุบันได้จากทั้งหมด 3 จุด</p></section>
+<div class="help-tip"><b>เหมาะสำหรับ</b><span>ดูสถานการณ์เร็ว ๆ ก่อนเปิดดูรายละเอียดรายจุด</span></div>`
 },
 
-monitoring:{
-title:"📍 จุดตรวจวัด",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้ใช้ดูข้อมูลของแต่ละจุดแยกกัน</b><span>ใช้ตรวจสถานะ ค่าล่าสุด และเวลาของข้อมูลจากจุดตรวจวัด 1, 2 และ 3</span></div>
-<section class="help-section">
-<h4>ค่าบนการ์ดแต่ละจุด</h4>
-<p>PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และแสงเป็นค่าล่าสุดที่มีสำหรับจุดนั้น จึงไม่ควรนำค่าของอีกจุดมาแทนกัน</p>
-</section>
-<section class="help-section">
-<h4>เวลาอัปเดตล่าสุด</h4>
-<p>หมายถึงเวลาของข้อมูลตรวจวัดชุดล่าสุดของจุดนั้น ไม่จำเป็นต้องตรงกับเวลาที่สถานะ ONLINE/OFFLINE เปลี่ยน</p>
-</section>
-<section class="help-section">
-<h4>ONLINE / OFFLINE</h4>
-<p>ONLINE คือระบบยังยืนยันจุดนั้นได้ ส่วน OFFLINE คือไม่สามารถยืนยันการติดต่อได้ในขณะนั้น</p>
-</section>
-<div class="help-tip"><b>เหมาะสำหรับ</b><span>ตรวจว่าความแตกต่างของภาพรวมมาจากจุดใด</span></div>`
+overviewNodes:{
+title:"📍 สถานะจุดตรวจวัด",
+html:`<div class="help-intro-card"><b>ดูว่าจุดใดพร้อมแสดงข้อมูลปัจจุบัน</b><span>แต่ละจุดอาจมีสถานะแตกต่างกัน จึงควรดูร่วมกับเวลาของข้อมูลล่าสุด</span></div>
+<section class="help-section"><h4>ONLINE</h4><p>หมายถึงขณะนี้ระบบยังยืนยันความพร้อมของจุดนั้นได้</p></section>
+<section class="help-section"><h4>OFFLINE</h4><p>หมายถึงขณะนี้ยังไม่สามารถยืนยันความพร้อมของจุดนั้นได้ จึงไม่ควรตีความค่าที่เก่ากว่าเป็นสถานการณ์ปัจจุบัน</p></section>`
 },
 
 smartSummary:{
 title:"✦ สรุปสถานการณ์",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้สรุปข้อมูลปัจจุบันให้อ่านง่าย</b><span>รวมสิ่งสำคัญจากค่าล่าสุด เช่น คุณภาพอากาศ สภาพความร้อน ลักษณะฝุ่น และสถานะจุดตรวจวัด</span></div>
-<section class="help-section">
-<h4>ควรอ่านอย่างไร?</h4>
-<ol class="help-steps">
-<li><span>1</span><div><b>ดูข้อความสรุปหลัก</b><small>บอกว่ามีประเด็นที่ควรติดตามหรือไม่</small></div></li>
-<li><span>2</span><div><b>ดูการ์ดย่อย</b><small>แยกว่าเรื่องที่พบเกี่ยวกับฝุ่น ความร้อน หรือสถานะระบบ</small></div></li>
-<li><span>3</span><div><b>ดูคำแนะนำกิจกรรม</b><small>ใช้ประกอบการตัดสินใจจากข้อมูลปัจจุบัน</small></div></li>
-</ol>
-</section>
-<div class="help-warning">ส่วนนี้เป็น “สรุปข้อมูลปัจจุบัน” ไม่ใช่กราฟย้อนหลังและไม่ใช่ค่าคาดการณ์อนาคต</div>`
+html:`<div class="help-intro-card"><b>สรุปสถานการณ์ปัจจุบันเป็น 6 เรื่อง</b><span>แต่ละช่องตอบคนละคำถาม และเชื่อมกันเฉพาะส่วนที่ควรอ่านร่วมกัน</span></div>
+<section class="help-section"><h4>🌿 คุณภาพอากาศ</h4><p>สรุปจากข้อมูลฝุ่น โดย PM2.5 เป็นตัวหลักในการสื่อสารระดับคุณภาพอากาศปัจจุบัน</p></section>
+<section class="help-section"><h4>☀️ ดัชนีความร้อน (Heat Index)</h4><p>บอกความร้อนที่ร่างกายอาจรู้สึกเมื่อพิจารณา <b>อุณหภูมิและความชื้นร่วมกัน</b> จึงไม่ใช่ค่าเดียวกับอุณหภูมิอากาศ</p></section>
+<section class="help-section"><h4>🌡️ อุณหภูมิ</h4><p>แปลผลเป็น หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด เพื่อช่วยเฝ้าระวังเบื้องต้น การเทียบระดับนี้ไม่ใช่ผลตัดสินมาตรฐานสุขภาพ</p></section>
+<section class="help-section"><h4>💧 ความชื้น</h4><p>แปลผลเป็น ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ ควรอ่านร่วมกับอุณหภูมิและดัชนีความร้อนเมื่อประเมินความรู้สึกร้อน</p></section>
+<section class="help-section"><h4>📍 จุดตรวจวัด</h4><p>บอกจำนวนจุดที่พร้อมแสดงข้อมูลปัจจุบัน เพื่อให้รู้ว่าภาพรวมในขณะนั้นมีข้อมูลจากกี่จุด</p></section>
+<section class="help-section"><h4>🏃 กิจกรรมกลางแจ้ง</h4><p>เป็นคำแนะนำเบื้องต้นจากสถานการณ์ฝุ่นและสภาพความร้อน ใช้ประกอบการตัดสินใจ ไม่ใช่คำแนะนำทางการแพทย์</p></section>
+<div class="help-warning">ส่วนนี้สรุป “สถานการณ์ปัจจุบัน” ไม่ใช่ข้อมูลย้อนหลังและไม่ใช่ค่าคาดการณ์อนาคต</div>`
+},
+
+monitoringPage:{
+title:"📍 หน้าจุดตรวจวัด",
+html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูแต่ละจุดแยกกัน</b><span>เหมาะเมื่ออยากรู้ว่าตำแหน่งใดมีค่าแตกต่างจากภาพรวม</span></div>
+<section class="help-section"><h4>ควรดูอะไรบ้าง?</h4><p>ดูสถานะของจุด เวลาของข้อมูลล่าสุด และค่าของตัวแปรแต่ละชนิด โดยไม่ควรนำค่าจากอีกจุดมาแทนกัน</p></section>
+<section class="help-section"><h4>ทำไมแต่ละจุดไม่เท่ากัน?</h4><p>สภาพแวดล้อมในแต่ละตำแหน่งอาจต่างกัน จึงเป็นเรื่องปกติที่ค่าบางช่วงจะไม่เท่ากัน</p></section>`
+},
+
+monitoring:{
+title:"📍 รายละเอียดจุดตรวจวัด",
+html:`<div class="help-intro-card"><b>การ์ดแต่ละใบเป็นข้อมูลของจุดนั้น</b><span>ใช้ดูค่าปัจจุบันและเวลาของข้อมูลล่าสุดแบบแยกจุด</span></div>
+<section class="help-section"><h4>ค่าที่แสดง</h4><p>PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และความสว่างเป็นข้อมูลล่าสุดที่มีสำหรับจุดนั้น</p></section>
+<section class="help-section"><h4>เวลาของข้อมูลล่าสุด</h4><p>บอกว่าค่าที่เห็นมาจากเมื่อใด หากเป็นข้อมูลของเมื่อวานหรือวันก่อน ระบบจะแสดงวันให้ชัดเจน</p></section>
+<section class="help-section"><h4>สถานะกับเวลาเป็นคนละเรื่อง</h4><p>สถานะบอกความพร้อมในขณะนี้ ส่วนเวลาของข้อมูลบอกว่าค่าตรวจวัดล่าสุดเกิดขึ้นเมื่อใด จึงไม่ควรตีความว่าเป็นเวลาเดียวกันเสมอ</p></section>`
 },
 
 currentAir:{
-title:"📍 เปรียบเทียบจุดตรวจวัด",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้ใช้เปรียบเทียบค่าล่าสุดระหว่าง 3 จุด</b><span>เลือกตัวแปรหนึ่งค่า แล้วดูค่าเฉลี่ยพื้นที่ จุดที่ค่าสูงที่สุด และจุดที่ควรสนใจ</span></div>
-<section class="help-section">
-<h4>ค่าเฉลี่ยพื้นที่</h4>
-<p>เป็นค่าเฉลี่ยของจุดที่มีข้อมูลใช้ได้ในขณะนั้น ใช้ดูภาพรวม ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p>
-</section>
-<section class="help-section">
-<h4>จุดที่ค่าสูงที่สุด</h4>
-<p>หมายถึงจุดที่มีตัวเลขสูงที่สุดสำหรับตัวแปรที่เลือก ไม่ได้แปลว่าอันตรายที่สุดโดยอัตโนมัติ</p>
-</section>
-<section class="help-section">
-<h4>จุดที่ควรสนใจ</h4>
-<p>ใช้ช่วยชี้จุดที่เข้าเงื่อนไขเฝ้าระวังของตัวแปรที่ระบบรองรับ หากไม่พบจะแสดงว่าไม่มีจุดที่ต้องเน้นในขณะนั้น</p>
-</section>`
+title:"📊 เปรียบเทียบจุดตรวจวัด",
+html:`<div class="help-intro-card"><b>ใช้เปรียบเทียบตัวแปรเดียวกันระหว่างจุด</b><span>เลือก PM2.5, อุณหภูมิ, ความชื้น หรือค่าที่ต้องการ แล้วดูความแตกต่างของแต่ละจุด</span></div>
+<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>เป็นค่าเฉลี่ยจากจุดที่มีข้อมูลพร้อมในขณะนั้น ใช้ดูภาพรวม ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
+<section class="help-section"><h4>จุดที่ค่าสูงที่สุด</h4><p>ช่วยชี้ว่าจุดใดมีค่ามากที่สุดในรอบล่าสุด แต่คำว่า “สูงที่สุด” ไม่ได้แปลว่า “อันตราย” เสมอไป ต้องดูเกณฑ์ของตัวแปรนั้นด้วย</p></section>
+<section class="help-section"><h4>จุดที่ควรสนใจ</h4><p>จะแสดงเมื่อค่าที่เลือกเข้าเงื่อนไขเฝ้าระวังของตัวแปรนั้น หากไม่เข้าเงื่อนไขจะระบุว่าอยู่ในระดับปกติหรือเป็นข้อมูลประกอบ</p></section>`
 },
 
 alerts:{
 title:"⚠ สิ่งที่ควรระวัง",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้รวบรวมเหตุการณ์ที่ควรให้ความสนใจ</b><span>ช่วยให้เห็นสถานะผิดปกติหรือค่าที่ควรติดตามโดยไม่ต้องไล่อ่านทุกช่อง</span></div>
-<section class="help-section">
-<h4>ระบบเตือนเรื่องอะไรบ้าง?</h4>
-<p>ระบบสามารถแสดงสิ่งที่ควรระวังจาก PM2.5, อุณหภูมิ, ความชื้น, Heat Index, PM10 แบบเฝ้าระวังเบื้องต้น และสถานะการเชื่อมต่อของจุดตรวจวัด</p>
-</section>
-<section class="help-section">
-<h4>อุณหภูมิกับ Heat Index ต่างกันอย่างไร?</h4>
-<p><b>อุณหภูมิ</b> คือค่าความร้อนหรือเย็นของอากาศ ส่วน <b>Heat Index</b> คือค่าที่ใช้ประเมินความร้อนที่ร่างกายรู้สึกเมื่อพิจารณาอุณหภูมิและความชื้นร่วมกัน ทั้งสองจึงแสดงและแจ้งเตือนแยกกัน</p>
-</section>
-<section class="help-section">
-<h4>เมื่อมีข้อความเตือน</h4>
-<p>ให้อ่านว่าข้อความเกี่ยวกับจุดใดหรือตัวแปรใด แล้วเปิดข้อมูลรายจุดเพื่อตรวจค่าล่าสุดประกอบ คำว่า <b>ปกติ</b> หมายถึงยังไม่เข้าเกณฑ์ที่ระบบกำหนดให้เฝ้าระวังในตัวแปรนั้น</p>
-</section>
-<section class="help-section">
-<h4>ถ้าไม่มีรายการเตือน</h4>
-<p>หมายถึงระบบยังไม่พบเหตุการณ์ที่เข้าเงื่อนไขแจ้งเตือนในขณะนั้น ไม่ได้หมายความว่าค่าทุกตัวต้องเป็นศูนย์</p>
-</section>
-<div class="help-warning">การแจ้งเตือนจากค่าปัจจุบันเป็นการเฝ้าระวังเบื้องต้น ไม่ใช่ผลตัดสินมาตรฐานเฉลี่ยตามช่วงเวลาโดยอัตโนมัติ</div>`
+html:`<div class="help-intro-card"><b>รวมเฉพาะเรื่องที่ควรให้ความสนใจในข้อมูลปัจจุบัน</b><span>ช่วยให้เห็นประเด็นสำคัญโดยไม่ต้องไล่อ่านทุกช่อง</span></div>
+<section class="help-section"><h4>ฝุ่น PM2.5</h4><p>ใช้ระดับคุณภาพอากาศปัจจุบันเพื่อช่วยบอกว่าควรติดตามหรือเพิ่มความระมัดระวังหรือไม่</p></section>
+<section class="help-section"><h4>อุณหภูมิ</h4><p>เตือนได้ทั้งด้านอากาศเย็นและอากาศร้อน โดยแปลเป็นระดับที่อ่านง่าย เช่น เย็น หนาว ร้อน หรือร้อนจัด</p></section>
+<section class="help-section"><h4>ความชื้น</h4><p>แสดงเมื่ออยู่ในช่วงที่โครงการกำหนดให้ควรเฝ้าระวัง และควรพิจารณาร่วมกับอุณหภูมิ ไม่ใช้ความชื้นเพียงค่าเดียวตัดสินผลต่อสุขภาพ</p></section>
+<section class="help-section"><h4>ดัชนีความร้อน</h4><p>พิจารณาอุณหภูมิและความชื้นร่วมกัน เพื่อช่วยบอกระดับความร้อนที่ร่างกายอาจรู้สึก</p></section>
+<section class="help-section"><h4>สถานะจุดตรวจวัด</h4><p>หากมีจุดที่ยังไม่พร้อม ระบบจะแจ้งให้ทราบเพื่อไม่ให้เข้าใจว่าภาพรวมมาจากครบทุกจุด</p></section>
+<div class="help-warning">การเตือนจากค่าปัจจุบันเป็นการเฝ้าระวังเบื้องต้น ไม่ใช่ผลตัดสินมาตรฐานเฉลี่ยตามช่วงเวลาหรือคำวินิจฉัยทางสุขภาพ</div>`
+},
+
+historyPage:{
+title:"📈 หน้าสถิติและกราฟ",
+html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูสิ่งที่เกิดขึ้นแล้วตามเวลา</b><span>เลือกจุด ตัวแปร และช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม</span></div>
+<section class="help-section"><h4>อย่าเทียบคนละช่วงเวลา</h4><p>ก่อนเปรียบเทียบตัวเลข ควรตรวจว่ากำลังดูช่วงเวลาเดียวกัน เพราะช่วงเวลาที่ต่างกันอาจให้ภาพรวมต่างกัน</p></section>
+<section class="help-section"><h4>กราฟย้อนหลังกับคาดการณ์ต่างกันอย่างไร?</h4><p>กราฟย้อนหลังแสดงสิ่งที่เกิดขึ้นแล้ว ส่วนกราฟคาดการณ์เป็นค่าประมาณของช่วงเวลาข้างหน้า</p></section>`
 },
 
 historical:{
 title:"📊 ตัวเลือกสถิติย้อนหลัง",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้อธิบาย “ตัวเลือก” ของหน้าสถิติและกราฟ</b><span>ใช้เลือกว่าจะดูจุดไหน ตัวแปรอะไร และช่วงเวลาเท่าไร</span></div>
-<section class="help-section">
-<h4>มุมมองจุดตรวจวัด</h4>
-<div class="help-choice-list">
-<div><b>เปรียบเทียบ 3 จุด</b><span>แสดงข้อมูลของแต่ละจุดแยกกัน</span></div>
-<div><b>ค่าเฉลี่ยพื้นที่</b><span>แสดงภาพรวมพื้นที่เป็นเส้นเดียว</span></div>
-<div><b>จุด 1 / 2 / 3</b><span>ดูเฉพาะจุดที่เลือก</span></div>
-</div>
-</section>
-<section class="help-section">
-<h4>ALL / ตัวแปรเดียว</h4>
-<p>ALL แสดงทุกตัวแปรโดยแยกกราฟตามหน่วย ส่วนการเลือกตัวแปรเดียวจะเน้นรายละเอียดของค่านั้น</p>
-</section>
-<section class="help-section">
-<h4>ช่วงเวลา</h4>
-<p>กำหนดขอบเขตข้อมูลย้อนหลังที่ต้องการดู เช่น 30 นาที, 24 ชั่วโมง หรือ 7 วัน</p>
-</section>`
+html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูลที่ต้องการดู</b><span>เลือกจุดตรวจวัด ตัวแปร และช่วงเวลาให้ตรงกับคำถามที่ต้องการตอบ</span></div>
+<section class="help-section"><h4>เลือกจุด</h4><p>“เปรียบเทียบ 3 จุด” ใช้ดูความแตกต่างระหว่างจุด ส่วน “ค่าเฉลี่ยพื้นที่” ใช้ดูภาพรวมของจุดที่มีข้อมูลในช่วงนั้น</p></section>
+<section class="help-section"><h4>เลือกตัวแปร</h4><p>แต่ละตัวแปรมีหน่วยและความหมายต่างกัน จึงควรอ่านเกณฑ์ของตัวแปรนั้นก่อนสรุปว่า “สูง” หรือ “ต่ำ” หมายถึงอะไร</p></section>
+<section class="help-section"><h4>เลือกช่วงเวลา</h4><p>ช่วงสั้นเหมาะกับการดูการเปลี่ยนแปลงล่าสุด ส่วนช่วงยาวเหมาะกับการดูแนวโน้มโดยรวม</p></section>`
 },
 
 historyChart:{
 title:"📈 กราฟข้อมูลย้อนหลัง",
-html:`
-<div class="help-intro-card"><b>กราฟนี้แสดงข้อมูลที่เกิดขึ้นแล้ว</b><span>ใช้ดูการเปลี่ยนแปลงตามเวลา ไม่ใช่การคาดการณ์อนาคต</span></div>
-<section class="help-section">
-<h4>เส้นบนกราฟ</h4>
-<p>ถ้าเลือกเปรียบเทียบ 3 จุด แต่ละจุดจะเป็นคนละเส้น ถ้าเลือกค่าเฉลี่ยพื้นที่จะเหลือเส้นภาพรวม และถ้าเลือกจุดเดียวจะแสดงเฉพาะจุดนั้น</p>
-</section>
-<section class="help-section">
-<h4>ค่าเฉลี่ย / สูงสุด / ต่ำสุด / ล่าสุด</h4>
-<p>เป็นสถิติจากข้อมูลย้อนหลังในช่วงที่เลือกและมุมมองที่กำลังแสดงอยู่เท่านั้น</p>
-</section>
-<section class="help-section">
-<h4>ซูมและ Tooltip</h4>
-<p>การซูมเปลี่ยนเฉพาะมุมมองของกราฟ ไม่เปลี่ยนข้อมูลจริง ส่วน Tooltip ใช้ดูค่ากับวันเวลาของจุดข้อมูลนั้น</p>
-</section>
-<section class="help-section">
-<h4>เส้นขาดหรือไม่มีค่า</h4>
-<p>หมายถึงช่วงนั้นไม่มีข้อมูลที่ใช้แสดง กราฟจะไม่แทนค่าที่หายด้วย 0</p>
-</section>`
+html:`<div class="help-intro-card"><b>กราฟนี้แสดงข้อมูลที่เกิดขึ้นแล้ว</b><span>ตำแหน่งตามแนวนอนคือเวลา ส่วนแนวตั้งคือค่าของตัวแปรที่เลือก</span></div>
+<section class="help-section"><h4>เส้นของแต่ละจุด</h4><p>เมื่อเปรียบเทียบหลายจุด แต่ละเส้นแทนจุดของตัวเอง ค่าที่เกิดคนละเวลาไม่จำเป็นต้องอยู่ตำแหน่งเวลาเดียวกัน</p></section>
+<section class="help-section"><h4>ซูมกราฟ</h4><p>ใช้ดูช่วงเวลาที่สนใจให้ละเอียดขึ้น โดยรายละเอียดเมื่อชี้จุดจะแสดงวันและเวลาของค่านั้น</p></section>
+<section class="help-section"><h4>ช่วงที่ไม่มีจุดข้อมูล</h4><p>ไม่ควรตีความว่าเป็นค่า 0 เพราะอาจหมายถึงไม่มีข้อมูลสำหรับช่วงนั้น</p></section>`
 },
 
 forecastChart:{
 title:"🔮 กราฟคาดการณ์ 30 นาที",
-html:`
-<div class="help-intro-card"><b>หัวข้อนี้อธิบายเฉพาะกราฟคาดการณ์ในหน้าสถิติและกราฟ</b><span>เส้นทึบคือข้อมูลจริง ส่วนเส้นประคือค่าประมาณ +10, +20 และ +30 นาที</span></div>
-<section class="help-section">
-<h4>คาดการณ์ของอะไร?</h4>
-<div class="help-choice-list">
-<div><b>เปรียบเทียบ 3 จุด</b><span>แสดงค่าคาดการณ์ของจุด 1, 2 และ 3 แยกกันตามข้อมูลของแต่ละจุด</span></div>
-<div><b>ค่าเฉลี่ยพื้นที่</b><span>แสดงค่าคาดการณ์ของภาพรวมพื้นที่</span></div>
-<div><b>จุด 1 / 2 / 3</b><span>แสดงค่าคาดการณ์ของจุดที่เลือก</span></div>
-</div>
-</section>
-<section class="help-section">
-<h4>ALL กับตัวแปรเดียว</h4>
-<p>ALL แสดง Forecast ของทุกตัวแปรโดยแยกกราฟ ส่วนตัวแปรเดียวจะแสดงเฉพาะตัวแปรนั้น</p>
-</section>
-<section class="help-section">
-<h4>ปุ่ม ON / OFF</h4>
-<p>ON แสดงเส้นคาดการณ์ และ OFF ซ่อนเส้นคาดการณ์เพื่อให้ดูเฉพาะข้อมูลจริงได้ง่ายขึ้น</p>
-</section>
-<section class="help-section">
-<h4>+10 / +20 / +30</h4>
-<p>หมายถึงค่าประมาณในอีก 10, 20 และ 30 นาทีจากเวลาของข้อมูลล่าสุด ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p>
-</section>
-<div class="help-warning">ค่าคาดการณ์เป็นค่าประมาณระยะสั้นเพื่อช่วยดูแนวโน้ม ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</div>`
+html:`<div class="help-intro-card"><b>ใช้ดูแนวโน้มที่อาจเกิดขึ้นในอีก 30 นาที</b><span>ข้อมูลจริงและค่าคาดการณ์ถูกแยกให้เห็นชัดเจน</span></div>
+<section class="help-section"><h4>ข้อมูลจริง</h4><p>คือค่าที่เกิดขึ้นแล้ว ใช้เป็นจุดอ้างอิงก่อนเข้าสู่ช่วงคาดการณ์</p></section>
+<section class="help-section"><h4>ค่าคาดการณ์ +10 / +20 / +30 นาที</h4><p>เป็นค่าประมาณของอนาคตเพื่อช่วยดูทิศทาง ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p></section>
+<section class="help-section"><h4>ควรใช้อย่างไร?</h4><p>ใช้ประกอบกับสถานการณ์ปัจจุบันและกราฟย้อนหลัง หากสถานการณ์เปลี่ยนเร็ว ผลคาดการณ์ก็อาจเปลี่ยนตามข้อมูลใหม่</p></section>`
+},
+
+currentSituation:{
+title:"🧭 สถานการณ์ปัจจุบัน",
+html:`<div class="help-intro-card"><b>อธิบายเฉพาะสิ่งที่เกิดขึ้นในข้อมูลปัจจุบัน</b><span>ช่วยสรุปว่าตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรระวังเรื่องใด</span></div>
+<section class="help-section"><h4>อ่านร่วมกับอะไร?</h4><p>ควรดูตัวเลขจริงในหน้าภาพรวมหรือหน้าจุดตรวจวัดร่วมด้วย โดยเฉพาะเมื่อจำเป็นต้องรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p></section>
+<div class="help-warning">ส่วนนี้ไม่ใช่การคาดการณ์อนาคต</div>`
+},
+
+forecast30:{
+title:"🔮 แนวโน้ม 30 นาที",
+html:`<div class="help-intro-card"><b>อธิบายสิ่งที่อาจเกิดขึ้นในช่วง 30 นาทีข้างหน้า</b><span>ใช้ดูทิศทางโดยประมาณ เช่น มีแนวโน้มเพิ่ม ลด หรือทรงตัว</span></div>
+<section class="help-section"><h4>ต่างจากสถานการณ์ปัจจุบันอย่างไร?</h4><p>สถานการณ์ปัจจุบันมาจากข้อมูลที่เกิดขึ้นแล้ว ส่วนแนวโน้ม 30 นาทีเป็นค่าประมาณของอนาคต จึงมีความไม่แน่นอน</p></section>
+<div class="help-warning">ใช้เป็นข้อมูลประกอบ ไม่ใช่คำยืนยันว่าจะเกิดค่าตามนั้นจริง</div>`
+},
+
+analysisPage:{
+title:"✦ หน้าวิเคราะห์และคาดการณ์",
+html:`<div class="help-intro-card"><b>หน้านี้แยก “ตอนนี้” ออกจาก “ข้างหน้า”</b><span>ฝั่งสถานการณ์ปัจจุบันช่วยสรุปสิ่งที่ควรสนใจ ส่วนฝั่งคาดการณ์ช่วยดูแนวโน้ม 30 นาที</span></div>
+<section class="help-section"><h4>สถานการณ์ปัจจุบัน</h4><p>อธิบายความหมายของข้อมูลล่าสุดโดยเน้นประเด็นสำคัญ ไม่ควรใช้แทนตัวเลขจริงเมื่อจำเป็นต้องดูค่ารายละเอียด</p></section>
+<section class="help-section"><h4>แนวโน้ม 30 นาที</h4><p>ใช้ดูทิศทางที่อาจเกิดขึ้นและควรอ่านเป็น “แนวโน้ม” ไม่ใช่คำยืนยันเหตุการณ์ในอนาคต</p></section>`
 },
 
 ai:{
-title:"🤖 วิเคราะห์และคาดการณ์",
-html:`
-<div class="help-intro-card">
-<b>หน้านี้แบ่งหน้าที่ออกเป็น 2 ส่วน</b>
-<span>ฝั่งวิเคราะห์ช่วยตีความว่า “ข้อมูลตอนนี้กำลังบอกอะไร” ส่วนแนวโน้ม 30 นาทีช่วยดูว่า “ค่ามีโอกาสเปลี่ยนไปทางใดในระยะสั้น”</span>
-</div>
+title:"✦ วิเคราะห์สถานการณ์",
+html:`<div class="help-intro-card"><b>ช่วยแปลข้อมูลให้เป็นภาษาที่อ่านง่าย</b><span>เน้นตอบว่า ตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรทำอะไรต่อ</span></div>
+<section class="help-section"><h4>ข้อมูลที่นำมาพิจารณา</h4><p>พิจารณาฝุ่น อุณหภูมิ ความชื้น ดัชนีความร้อน และแนวโน้มของข้อมูลที่เกี่ยวข้อง โดยไม่ควรใช้ตัวแปรใดเพียงค่าเดียวสรุปทุกสถานการณ์</p></section>
+<section class="help-section"><h4>เหตุใดอุณหภูมิ ความชื้น และดัชนีความร้อนจึงเชื่อมกัน?</h4><p>อุณหภูมิและความชื้นมีความหมายของตัวเอง แต่เมื่อประเมินความร้อนที่ร่างกายอาจรู้สึก จะต้องพิจารณาทั้งสองร่วมกันผ่านดัชนีความร้อน</p></section>
+<div class="help-warning">ข้อความวิเคราะห์เป็นข้อมูลประกอบการติดตาม ไม่ใช่คำวินิจฉัยทางการแพทย์หรือประกาศจากหน่วยงานทางการ</div>`
+},
 
-<section class="help-section">
-<h4>AI สรุปสถานการณ์</h4>
-<p>AI จะไม่เน้นทวนค่าของทุกจุด เพราะข้อมูลดิบและสถานะของแต่ละจุดมีอยู่ในหน้าอื่นแล้ว หน้าที่หลักคือสรุปความหมายของข้อมูลล่าสุดให้อ่านง่ายขึ้น</p>
-</section>
+aboutPage:{
+title:"ℹ️ เกี่ยวกับโครงการ",
+html:`<div class="help-intro-card"><b>หน้านี้อธิบายสิ่งที่ผู้ใช้ควรรู้เพื่ออ่าน Dashboard ให้ถูกต้อง</b><span>เน้นความหมายของข้อมูล เกณฑ์อ้างอิง ข้อจำกัด และผู้เกี่ยวข้องกับโครงการ โดยไม่แสดงรายละเอียดการทำงานภายใน</span></div>
+<section class="help-section"><h4>ทำไมต้องมีหน้านี้?</h4><p>เพราะตัวเลขแต่ละชนิดมีความหมายและเกณฑ์ต่างกัน หน้านี้ช่วยป้องกันการตีความค่าปัจจุบันผิดจากค่าเฉลี่ยตามช่วงเวลา</p></section>`
+},
 
-<section class="help-section">
-<h4>ภาพรวมที่ AI ตีความ</h4>
-<p>ตอบสั้น ๆ ว่าขณะนี้สถานการณ์โดยรวมเป็นอย่างไร โดยอาศัยข้อมูลที่ระบบมีอยู่ในขณะนั้น</p>
-</section>
+aboutReadGuide:{
+title:"📖 อ่านข้อมูลบน Dashboard อย่างไร",
+html:`<div class="help-intro-card"><b>คำแนะนำสำหรับผู้ใช้ทั่วไป</b><span>เริ่มจากภาพรวม แล้วค่อยลงรายละเอียดรายจุดและข้อมูลย้อนหลัง</span></div>
+<section class="help-section"><h4>ข้อมูลรายจุด</h4><p>ใช้เมื่อต้องการรู้สถานการณ์ของตำแหน่งใดตำแหน่งหนึ่ง เพราะแต่ละจุดอาจมีสภาพแวดล้อมต่างกัน</p></section>
+<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>ช่วยสรุปภาพรวมของจุดที่มีข้อมูลในช่วงนั้น แต่ไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
+},
 
-<section class="help-section">
-<h4>สิ่งที่ควรสนใจ</h4>
-<p>แสดงเฉพาะประเด็นที่มีประโยชน์ต่อการตีความ เช่น การเปลี่ยนแปลงของฝุ่น ความร้อน หรือสภาพแวดล้อม โดยไม่ทวนรายการสถานะอุปกรณ์ที่ดูได้จากหน้าจุดตรวจวัด</p>
-</section>
+aboutStandards:{
+title:"📚 เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ",
+html:`<div class="help-intro-card"><b>ใช้ตรวจว่าคำว่า “ดี”, “ปกติ”, “ร้อน” หรือ “เฝ้าระวัง” มาจากอะไร</b><span>แต่ละตัวแปรอาจใช้เกณฑ์คนละประเภท จึงต้องอ่านหมายเหตุของตัวแปรนั้น</span></div>
+<section class="help-section"><h4>เกณฑ์จากแหล่งอ้างอิง</h4><p>จะแสดงชื่อแหล่งอ้างอิงและช่วงค่าที่เกี่ยวข้อง พร้อมบอกข้อจำกัดเมื่อเกณฑ์นั้นไม่ได้ออกแบบมาสำหรับค่าปัจจุบันแบบทันที</p></section>
+<section class="help-section"><h4>เกณฑ์ของโครงการ</h4><p>หากเป็นช่วงค่าที่โครงการกำหนดเพื่อช่วยเฝ้าระวัง จะระบุไว้ชัดเจนว่าไม่ใช่มาตรฐานสุขภาพหรือข้อกำหนดทางกฎหมาย</p></section>`
+},
 
-<section class="help-section">
-<h4>คำแนะนำสำหรับตอนนี้</h4>
-<p>เป็นข้อเสนอแนะประกอบสถานการณ์ปัจจุบัน เพื่อช่วยให้ผู้ใช้ตัดสินใจได้ง่ายขึ้น</p>
-</section>
-
-<section class="help-section">
-<h4>แนวโน้ม 30 นาที</h4>
-<p>ใช้ดูค่าประมาณ +10, +20 และ +30 นาที เพื่อประกอบการมองทิศทางระยะสั้น ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p>
-</section>
-
-<div class="help-tip">
-<b>จำง่าย ๆ</b>
-<span>ฝั่งซ้าย = ตอนนี้ข้อมูลกำลังบอกอะไร • ฝั่งขวา = อีก 30 นาทีมีแนวโน้มอย่างไร</span>
-</div>`
+aboutPeople:{
+title:"👥 ผู้เกี่ยวข้องกับโครงการ",
+html:`<div class="help-intro-card"><b>แสดงหน่วยงาน ผู้จัดทำ และครูที่ปรึกษาที่เกี่ยวข้องกับโครงการ</b><span>ส่วนนี้เป็นข้อมูลเครดิตและการติดต่อสาธารณะเท่านั้น</span></div>`
 }
-
-}
-
+};
 
 function closeHelp(){
 
