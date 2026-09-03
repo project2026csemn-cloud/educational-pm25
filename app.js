@@ -23,6 +23,8 @@ document.getElementById(id);
 
 let latestNodes=[];
 let records=[];
+let pm10History24h=[];
+let pm10History24hLoadedAt=null;
 let motherStatus=null;
 let alertStates=[];
 let standardsData=null;
@@ -2593,6 +2595,66 @@ $("currentEnvironmentFooter").textContent=
 }
 
 // =====================================================
+// PM10 — ค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงสำหรับการสื่อสารในสรุปสถานการณ์
+// ใช้ข้อมูลย้อนหลังแยกตามจุด แล้วเฉลี่ยพื้นที่เป็นช่วงเวลา 5 นาที
+// ก่อนนำช่วงเวลาเหล่านั้นมาเฉลี่ยอีกครั้ง เพื่อลดการให้น้ำหนักจุดที่ส่งข้อมูลถี่กว่า
+// 120 µg/m³ = ค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของประเทศไทย
+// =====================================================
+
+function pm10AreaAverage24h(){
+  const rows=(pm10History24h||[]).filter(r=>finiteNumberOrNull(r?.pm10)!==null);
+  if(!rows.length) return {value:null,buckets:0,nodes:0};
+
+  const areaRows=spatialAverageRows(rows,["pm10"],5*60*1000)
+    .filter(r=>finiteNumberOrNull(r?.pm10)!==null);
+  const values=areaRows.map(r=>finiteNumberOrNull(r.pm10)).filter(v=>v!==null);
+  const nodes=new Set(rows.map(r=>String(r?.device_id||"").trim()).filter(Boolean));
+
+  return {
+    value:values.length?values.reduce((a,b)=>a+b,0)/values.length:null,
+    buckets:values.length,
+    nodes:nodes.size
+  };
+}
+
+async function refreshPM10History24h(){
+  try{
+    const j=await fetchJson(`${API.history}?range=24h`,25000);
+    pm10History24h=(Array.isArray(j?.data)?j.data:[]).map(normalize).filter(Boolean);
+    pm10History24hLoadedAt=new Date();
+    updateSmart();
+  }catch(e){
+    console.warn("PM10 24h summary unavailable:",e);
+  }
+}
+
+function pm10Summary24h(){
+  const result=pm10AreaAverage24h();
+  const value=result.value;
+  if(value===null){
+    return {
+      value:"--",
+      level:"no_data",
+      sub:"ยังไม่มีข้อมูลย้อนหลังเพียงพอสำหรับค่าเฉลี่ย 24 ชั่วโมง"
+    };
+  }
+
+  if(value>120){
+    return {
+      value:`${fmt(value)} µg/m³`,
+      level:"warning",
+      sub:"เฉลี่ยย้อนหลัง 24 ชม. • สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
+    };
+  }
+
+  return {
+    value:`${fmt(value)} µg/m³`,
+    level:"normal",
+    sub:"เฉลี่ยย้อนหลัง 24 ชม. • ไม่สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
+  };
+}
+
+// =====================================================
 // SMART SUMMARY
 // =====================================================
 
@@ -2709,15 +2771,27 @@ tempInfo.severity!=="critical"&&
 humidityInfo.severity!=="critical";
 const activityMain=activityGood?"ทำกิจกรรมได้ตามปกติ":"ควรเพิ่มความระมัดระวัง";
 
-const airValue=air.label||"รอข้อมูล";
-const airSub=air.detail||"รอข้อมูลฝุ่นล่าสุด";
+const summaryParticle=(typeof overviewParticleMetric!=="undefined"?overviewParticleMetric:"pm25");
+const pm25Now=finiteNumberOrNull(snap.pm25);
+const pm25Info=pm25Guidance(pm25Now);
+const pm10Day=pm10Summary24h();
+
+const airMetricLabel=summaryParticle==="pm10"?"PM10":"PM2.5";
+const airValue=summaryParticle==="pm10"
+?pm10Day.value
+:(pm25Now===null?"รอข้อมูล":`${pm25Info.label} • ${fmt(pm25Now)} µg/m³`);
+const airSub=summaryParticle==="pm10"
+?pm10Day.sub
+:(pm25Now===null
+?"ยังไม่มีข้อมูล PM2.5 ปัจจุบัน"
+:"ใช้ PM2.5 เพื่อสื่อสารระดับคุณภาพอากาศปัจจุบัน");
 
 e.innerHTML=`
 <div class="smart-summary-headline ${severity}">${headline}</div>
 
 <div class="smart-summary-grid smart-summary-grid-six">
-<div class="smart-summary-stat smart-summary-air">
-<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ</div>
+<div class="smart-summary-stat smart-summary-air smart-summary-air-switch">
+<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ • ${airMetricLabel}</div>
 <div class="smart-summary-stat-value">${esc(airValue)}</div>
 <div class="smart-summary-stat-sub">${esc(airSub)}</div>
 </div>
@@ -7090,7 +7164,7 @@ html:`<div class="help-intro-card"><b>คู่มือรวมสำหรั
 overviewQuality:{
 title:"🌿 ภาพรวมคุณภาพอากาศ",
 html:`<div class="help-intro-card"><b>หัวข้อนี้ตอบว่า “ตอนนี้ภาพรวมของพื้นที่เป็นอย่างไร?”</b><span>สรุปข้อมูลล่าสุดจากจุดตรวจวัดที่พร้อมใช้งาน</span></div>
-<section class="help-section"><h4>PM2.5 เฉลี่ยปัจจุบัน</h4><p>เป็นค่าเฉลี่ยจากจุดที่มีข้อมูลปัจจุบัน ใช้ดูภาพรวมของพื้นที่ ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง และไม่ใช่ค่าเฉลี่ย 24 ชั่วโมง</p></section>
+<section class="help-section"><h4>PM2.5 และ PM10</h4><p>ช่องค่าฝุ่นด้านบนสลับ PM2.5 และ PM10 ทุกประมาณ 5 วินาที โดยเป็นค่าเฉลี่ยปัจจุบันจากจุดที่พร้อมใช้งาน ค่านี้ไม่ใช่ค่าเฉลี่ย 24 ชั่วโมง</p></section>
 <section class="help-section"><h4>อุณหภูมิและความชื้นเฉลี่ย</h4><p>ช่วยให้เห็นสภาพแวดล้อมโดยรวม อุณหภูมิและความชื้นมีระดับของตัวเอง และยังใช้พิจารณาร่วมกันในดัชนีความร้อนด้วย</p></section>
 <section class="help-section"><h4>จุดตรวจวัดที่พร้อม</h4><p>บอกจำนวนจุดที่ระบบยังยืนยันข้อมูลปัจจุบันได้จากทั้งหมด 3 จุด</p></section>
 <div class="help-tip"><b>เหมาะสำหรับ</b><span>ดูสถานการณ์เร็ว ๆ ก่อนเปิดดูรายละเอียดรายจุด</span></div>`
@@ -7106,7 +7180,7 @@ html:`<div class="help-intro-card"><b>ดูว่าจุดใดพร้อ
 smartSummary:{
 title:"✦ สรุปสถานการณ์",
 html:`<div class="help-intro-card"><b>สรุปสถานการณ์ปัจจุบันเป็น 6 เรื่อง</b><span>แต่ละช่องตอบคนละคำถาม และเชื่อมกันเฉพาะส่วนที่ควรอ่านร่วมกัน</span></div>
-<section class="help-section"><h4>🌿 คุณภาพอากาศ</h4><p>สรุปจากข้อมูลฝุ่น โดย PM2.5 เป็นตัวหลักในการสื่อสารระดับคุณภาพอากาศปัจจุบัน</p></section>
+<section class="help-section"><h4>🌿 คุณภาพอากาศ</h4><p>สลับแสดง PM2.5 และ PM10 ทุกประมาณ 5 วินาทีให้ตรงกับค่าฝุ่นด้านบน โดย PM2.5 ใช้สื่อสารระดับคุณภาพอากาศปัจจุบัน ส่วน PM10 แสดงค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงเพื่อเทียบกับค่าอ้างอิงของประเทศไทย 120 µg/m³ จึงไม่เอาค่า PM10 ที่วัดเพียงครั้งเดียวไปตัดสินว่าเกินมาตรฐาน 24 ชั่วโมง</p></section>
 <section class="help-section"><h4>☀️ ดัชนีความร้อน (Heat Index)</h4><p>บอกความร้อนที่ร่างกายอาจรู้สึกเมื่อพิจารณา <b>อุณหภูมิและความชื้นร่วมกัน</b> จึงไม่ใช่ค่าเดียวกับอุณหภูมิอากาศ</p></section>
 <section class="help-section"><h4>🌡️ อุณหภูมิ</h4><p>แปลผลเป็น หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด เพื่อช่วยเฝ้าระวังเบื้องต้น การเทียบระดับนี้ไม่ใช่ผลตัดสินมาตรฐานสุขภาพ</p></section>
 <section class="help-section"><h4>💧 ความชื้น</h4><p>แปลผลเป็น ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ ควรอ่านร่วมกับอุณหภูมิและดัชนีความร้อนเมื่อประเมินความรู้สึกร้อน</p></section>
@@ -9636,6 +9710,7 @@ function updateOverviewParticleDisplay(){
 function toggleOverviewParticleMetric(){
   overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
   updateOverviewParticleDisplay();
+  updateSmart();
 }
 
 function updateNavigationDashboard(){
@@ -9749,8 +9824,10 @@ function bindDashboardNavigation(){
 
 bindDashboardNavigation();
 updateNavigationDashboard();
+refreshPM10History24h();
 setInterval(updateNavigationDashboard,2000);
 setInterval(toggleOverviewParticleMetric,5000);
+setInterval(refreshPM10History24h,60000);
 
 
 // =========================================================
