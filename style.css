@@ -12346,3 +12346,13 @@ body.history-range-modal-open{
 .chart-state-retry{
   touch-action:manipulation;
 }
+
+/* =========================================================
+   V27 — Temperature / Humidity status badges
+   ========================================================= */
+.overview-metric-status{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:3px 9px;border-radius:999px;font-size:11px;font-style:normal;font-weight:800;line-height:1.4;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.45);color:#cbd5e1}
+.overview-metric-status.normal{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.09)}
+.overview-metric-status.warning{color:#fde68a;border-color:rgba(245,158,11,.32);background:rgba(245,158,11,.09)}
+.overview-metric-status.critical{color:#fca5a5;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
+.overview-metric-status.info,.overview-metric-status.no_data{color:#94a3b8}
+@media(max-width:640px){.overview-metric-status{font-size:10.5px;padding:3px 8px}}
