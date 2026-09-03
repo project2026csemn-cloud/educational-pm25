@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260903-temp-humidity-v27" rel="stylesheet"/>
+<link href="style.css?v=20260903-summary6-help-v28" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -49,10 +49,6 @@
     {
       "@type": "Thing",
       "name": "ระบบตรวจสอบคุณภาพอากาศ"
-    },
-    {
-      "@type": "Thing",
-      "name": "IoT"
     },
     {
       "@type": "Thing",
@@ -161,7 +157,7 @@ DASHBOARD NAVIGATION
   </div>
 
   <div class="overview-section-head">
-    <div><div class="overview-eyebrow">MONITORING STATUS</div><h2>สถานะจุดตรวจวัด</h2></div>
+    <div><div class="overview-eyebrow">MONITORING STATUS</div><div class="section-title-with-help"><h2>สถานะจุดตรวจวัด</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสถานะจุดตรวจวัด" class="help-button" data-help="overviewNodes" type="button">?</button></div></div>
     <button class="overview-link-button" type="button" data-go-page="monitoring">ดูรายละเอียดทั้งหมด →</button>
   </div>
   <div class="overview-node-grid">
@@ -189,13 +185,13 @@ DASHBOARD NAVIGATION
 </div></section>
 
   <section class="glass card p-5 overview-alert-card">
-    <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><h2>⚠ สิ่งที่ควรระวัง</h2></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
+    <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><div class="section-title-with-help"><h2>⚠ สิ่งที่ควรระวัง</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button></div></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
     <div class="text-sm text-slate-300" id="overviewAlerts">กำลังตรวจสอบ...</div>
   </section>
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><h1>จุดตรวจวัด</h1><p>ดูความพร้อมของระบบและข้อมูลล่าสุดจากทั้ง 3 จุด พร้อมเปรียบเทียบสถานการณ์ปัจจุบัน</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">MONITORING NODES</div><div class="section-title-with-help"><h1>จุดตรวจวัด</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าจุดตรวจวัด" class="help-button" data-help="monitoringPage" type="button">?</button></div><p>ดูข้อมูลล่าสุดจากทั้ง 3 จุดและเปรียบเทียบสถานการณ์ปัจจุบัน</p></div>
   <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
 <div class="flex justify-between items-center mb-3">
 <div>
@@ -215,7 +211,7 @@ DASHBOARD NAVIGATION
 <span class="text-slate-500" id="dataStateDotTop">●</span>
 <span id="dataStateStatusTop">กำลังตรวจสอบ</span>
 </div>
-<div class="monitoring-status-hint">รับข้อมูลจากจุดตรวจวัดและส่งขึ้นระบบ</div>
+<div class="monitoring-status-hint">แสดงความพร้อมของข้อมูลปัจจุบัน</div>
 </div>
 <div class="monitoring-status-card monitoring-node-count">
 <div class="monitoring-status-label">จุดตรวจวัด ONLINE</div>
@@ -417,7 +413,7 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-history" data-dashboard-page-panel="history">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">HISTORICAL DATA</div><h1>สถิติและกราฟ</h1><p>เลือกตัวแปร ช่วงเวลา ดูสถิติย้อนหลัง กราฟแนวโน้ม และส่งออกข้อมูลได้จากหน้านี้</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">HISTORICAL DATA</div><div class="section-title-with-help"><h1>สถิติและกราฟ</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าสถิติและกราฟ" class="help-button" data-help="historyPage" type="button">?</button></div><p>เลือกตัวแปร ช่วงเวลา ดูสถิติย้อนหลัง กราฟแนวโน้ม และส่งออกข้อมูลได้จากหน้านี้</p></div>
   <section class="glass card p-5 mb-4 historical-section">
 <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
 <div>
@@ -643,7 +639,7 @@ DASHBOARD NAVIGATION
                             ข้อมูลจริง
                         </div>
 <div class="forecast-actual-note">
-                            ค่าที่วัดจากอุปกรณ์
+                            ค่าที่เกิดขึ้นแล้ว
                         </div>
 </div>
 </div>
@@ -668,11 +664,11 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 
-</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมแนวโน้มล่วงหน้า</b><span>กรุณารอสักครู่ ระบบต้องใช้ข้อมูลล่าสุดร่วมกับข้อมูลย้อนหลังเพื่อสร้างกราฟคาดการณ์</span></div></div></div></div></section>
+</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมแนวโน้มล่วงหน้า</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลที่พร้อมใช้งานเพื่อแสดงแนวโน้ม</span></div></div></div></div></section>
 </section>
 
 <section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div><h1>วิเคราะห์และคาดการณ์</h1><p>สรุปสถานการณ์ปัจจุบันและแสดงค่าประมาณแนวโน้มในอีก 30 นาที เพื่อใช้ประกอบการติดตาม ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div><div class="section-title-with-help"><h1>วิเคราะห์และคาดการณ์</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าวิเคราะห์และคาดการณ์" class="help-button" data-help="analysisPage" type="button">?</button></div><p>สรุปสถานการณ์ปัจจุบันและแสดงค่าประมาณแนวโน้มในอีก 30 นาที เพื่อใช้ประกอบการติดตาม ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p></div>
   <section class="glass card p-5 mb-4 ai-intelligence-section">
 <div class="ai-intelligence-header">
 <div>
@@ -686,12 +682,12 @@ DASHBOARD NAVIGATION
 </div>
 <div class="ai-intelligence-grid">
 <div class="ai-intelligence-panel ai-situation-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">สถานการณ์ปัจจุบัน</div><h3>ตอนนี้เป็นอย่างไร</h3></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">สถานการณ์ปัจจุบัน</div><div class="section-title-with-help"><h3>ตอนนี้เป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายสถานการณ์ปัจจุบัน" class="help-button" data-help="currentSituation" type="button">?</button></div></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
 <div class="ai-details-panel" id="aiDetails"><div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังเชื่อมต่อ AI...</div></div>
 <div class="ai-analysis-footer"><span id="aiGeneratedAt">อัปเดต AI: --</span></div>
 </div>
 <div class="ai-intelligence-panel ai-forecast-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">แนวโน้ม 30 นาที</div><h3>อีก 30 นาทีเป็นอย่างไร</h3></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
+<div class="ai-panel-head"><div><div class="ai-panel-kicker">แนวโน้ม 30 นาที</div><div class="section-title-with-help"><h3>อีก 30 นาทีเป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายแนวโน้ม 30 นาที" class="help-button" data-help="forecast30" type="button">?</button></div></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
 <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
 <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
 </div>
@@ -701,13 +697,13 @@ DASHBOARD NAVIGATION
 </section>
 
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
-  <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><h1 id="publicAboutHeading">เกี่ยวกับโครงการ</h1><p class="public-about-intro hidden" id="publicAboutIntro"></p></div>
+  <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><div class="section-title-with-help"><h1 id="publicAboutHeading">เกี่ยวกับโครงการ</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าเกี่ยวกับโครงการ" class="help-button" data-help="aboutPage" type="button">?</button></div><p class="public-about-intro hidden" id="publicAboutIntro"></p></div>
 
   <section class="glass card about-detail-section about-interpretation-section about-reader-guide">
     <div class="about-detail-head">
       <div>
         <div class="overview-eyebrow">HOW TO READ THE DASHBOARD</div>
-        <h2>อ่านข้อมูลบน Dashboard อย่างไร</h2>
+        <div class="section-title-with-help"><h2>อ่านข้อมูลบน Dashboard อย่างไร</h2><button aria-expanded="false" aria-label="ดูคำอธิบายการอ่าน Dashboard" class="help-button" data-help="aboutReadGuide" type="button">?</button></div>
         <p class="about-section-lead">หน้านี้สรุปเฉพาะสิ่งที่ผู้ใช้งานควรรู้ เพื่อช่วยให้ดูข้อมูลได้ถูกความหมาย โดยไม่ลงรายละเอียดการทำงานภายในของระบบ</p>
       </div>
     </div>
@@ -756,7 +752,7 @@ DASHBOARD NAVIGATION
     <div class="about-standards-header">
       <div>
         <div class="overview-eyebrow">MEASUREMENT CRITERIA & REFERENCES</div>
-        <h2>เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ</h2>
+        <div class="section-title-with-help"><h2>เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ</h2><button aria-expanded="false" aria-label="ดูคำอธิบายเกณฑ์อ้างอิง" class="help-button" data-help="aboutStandards" type="button">?</button></div>
         <p>ใช้ส่วนนี้เมื่อต้องการรู้ว่าแต่ละระดับหมายถึงอะไร และเกณฑ์ใดเป็นค่าอ้างอิงตามช่วงเวลา โปรดอ่านหมายเหตุของแต่ละหัวข้อก่อนนำไปตีความ</p>
       </div>
       <span class="about-standard-badge">อ่านเกณฑ์ก่อนตีความ</span>
@@ -857,7 +853,7 @@ DASHBOARD NAVIGATION
   </section>
 
   <section class="about-credit-section">
-  <div class="about-credit-note"><div><div class="overview-eyebrow">PROJECT CREDIT</div><h2>ผู้เกี่ยวข้องกับโครงการ</h2><p>วิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำโครงการ รวมอยู่ในส่วนเดียวเพื่อให้ดูข้อมูลผู้เกี่ยวข้องได้ครบในจุดเดียว</p></div></div>
+  <div class="about-credit-note"><div><div class="overview-eyebrow">PROJECT CREDIT</div><div class="section-title-with-help"><h2>ผู้เกี่ยวข้องกับโครงการ</h2><button aria-expanded="false" aria-label="ดูคำอธิบายผู้เกี่ยวข้องกับโครงการ" class="help-button" data-help="aboutPeople" type="button">?</button></div><p>วิทยาลัย แผนก ครูที่ปรึกษา และผู้จัดทำโครงการ รวมอยู่ในส่วนเดียวเพื่อให้ดูข้อมูลผู้เกี่ยวข้องได้ครบในจุดเดียว</p></div></div>
 
   <!-- =========================================================
 CREDIT
@@ -1176,7 +1172,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260903-temp-humidity-v27"></script>
+<script defer src="app.js?v=20260903-summary6-help-v28"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
