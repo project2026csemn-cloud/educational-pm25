@@ -13411,3 +13411,41 @@ button.member-locked::after{
     .about-telegram-text{font-size:14px;line-height:1.45}
     .about-telegram-arrow{width:34px;height:34px;border-radius:11px}
 }
+
+
+/* =====================================================
+   V34.5 — TELEGRAM STRIP POSITION / FULL WIDTH
+   ===================================================== */
+.about-telegram-section{
+    width:100%;
+    margin:24px 0 18px;
+}
+
+.about-telegram-section .about-telegram-link{
+    box-sizing:border-box;
+    width:100%;
+    max-width:none;
+    min-height:76px;
+    margin:0;
+    padding:14px 18px;
+    border-radius:18px;
+    border:1px solid rgba(56,189,248,.28);
+    background:
+        radial-gradient(circle at 7% 50%,rgba(42,171,238,.16),transparent 20%),
+        linear-gradient(135deg,rgba(8,31,47,.98),rgba(7,21,35,.98));
+    box-shadow:0 14px 36px rgba(2,8,23,.22),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.about-telegram-section .about-telegram-text{
+    font-size:16px;
+    font-weight:800;
+}
+
+.about-telegram-section + .about-credit-section{
+    margin-top:0;
+}
+
+@media(max-width:640px){
+    .about-telegram-section{margin:18px 0 14px}
+    .about-telegram-section .about-telegram-link{min-height:68px;padding:12px 14px;border-radius:16px}
+}
