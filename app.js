@@ -10892,14 +10892,13 @@ function renderAdminUsers(){
         <div class="admin-user-action">${action}</div>
       </div>
 
-      ${(!self&&isOwner&&!adminAddMode)?`
+      ${(!self&&isOwner&&!adminAddMode&&u.role!=="owner")?`
       <div class="admin-user-editor admin-user-editor-v35 hidden">
         <div class="admin-user-editor-top">
           <label>Role หลัก
             <select class="admin-user-role">
               <option value="user" ${u.role==="user"?"selected":""}>User</option>
               <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
-              <option value="owner" ${u.role==="owner"?"selected":""}>Owner</option>
             </select>
           </label>
           <button class="admin-permission-reset" type="button">↺ ใช้ค่าเริ่มต้นตาม Role</button>
@@ -11034,18 +11033,31 @@ function hasAnyManagementPermission(){
 }
 
 function openAdminCenter(targetTab=null){
-  if(!hasAnyManagementPermission())return;const m=$("adminCenter");if(!m)return;m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
-  document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",!hasPermission("manage_help"));
-  document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",!hasPermission("manage_devices"));
-  document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",!hasPermission("manage_announcement"));
-  document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!hasPermission("manage_users_view"));
-  if(hasPermission("manage_help"))populateHelpKeySelect();
-  if(hasPermission("manage_devices"))renderAdminDevices();
-  if(hasPermission("manage_announcement"))loadAnnouncementEditor();
-  if(hasPermission("manage_users_view"))loadAdminUsers();
-  const allowedContent=["help","devices","announcement"].find(tab=>({help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"})[tab]&&hasPermission(({help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"})[tab]));
-  const chosen=targetTab==="users"&&hasPermission("manage_users_view")?"users":targetTab==="content"?allowedContent:null;
-  if(chosen)switchAdminTab(chosen);
+  if(!hasAnyManagementPermission())return;
+  const m=$("adminCenter");if(!m)return;
+  const userMode=targetTab==="users";
+  if(userMode&&!hasPermission("manage_users_view"))return;
+  const contentTabs=["help","devices","announcement"];
+  const permissionMap={help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"};
+  const allowedContent=contentTabs.find(tab=>hasPermission(permissionMap[tab]));
+  if(!userMode&&!allowedContent)return;
+
+  m.classList.toggle("admin-users-page",userMode);
+  m.classList.toggle("admin-content-page",!userMode);
+  m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
+  $("accountDropdown")?.classList.add("hidden");
+  if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
+  if($("adminCenterEyebrow"))$("adminCenterEyebrow").textContent=userMode?"USER MANAGEMENT":"CONTENT MANAGEMENT";
+  if($("adminCenterTitle"))$("adminCenterTitle").textContent=userMode?"จัดการผู้ใช้งาน":"จัดการเนื้อหา";
+  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"จัดการ Role, Permission และบัญชีผู้ใช้งาน":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
+
+  document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
+  document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_devices"));
+  document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
+  document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!userMode);
+
+  if(userMode){loadAdminUsers();switchAdminTab("users");}
+  else{if(hasPermission("manage_help"))populateHelpKeySelect();if(hasPermission("manage_devices"))renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
 }
 function closeAdminCenter(){const m=$("adminCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
 function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
@@ -11292,3 +11304,19 @@ function openNotificationDetailFromUrl(){
   if(resetTokenFromUrl()){const oldRun=run;run=()=>{oldRun();setTimeout(openResetPassword,0);};}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run();
 })();
+
+// =====================================================
+// V34.4 — TELEGRAM LINK
+// =====================================================
+
+const TELEGRAM_GROUP_URL="https://t.me/project2026PM";
+const TELEGRAM_ANDROID_INTENT="intent://resolve?domain=project2026PM#Intent;scheme=tg;package=org.telegram.messenger;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.telegram.messenger;end";
+
+document.getElementById("telegramSituationLink")?.addEventListener("click",event=>{
+    if(!/Android/i.test(navigator.userAgent))return;
+    event.preventDefault();
+    window.location.href=TELEGRAM_ANDROID_INTENT;
+    setTimeout(()=>{
+        if(document.visibilityState==="visible")window.location.href=TELEGRAM_GROUP_URL;
+    },1400);
+});
