@@ -12504,3 +12504,60 @@ body.history-range-modal-open{
 .admin-center.hidden{
     display:none!important;
 }
+
+
+/* =========================================================
+   V31 UI FIX 3 — AUTH VIEW CLEANUP
+   Only the selected auth view is allowed to render.
+   ========================================================= */
+
+/* Hidden sub-views were being overridden by .auth-form{display:grid}. */
+.auth-form.hidden,
+.auth-bootstrap.hidden,
+.auth-tabs.hidden,
+.auth-owner-form.hidden{
+    display:none!important;
+}
+
+/* Keep the login/register dialog compact and easy to scan. */
+.auth-dialog{
+    width:min(460px,100%)!important;
+    padding:24px!important;
+}
+
+.auth-brand h2{
+    margin-bottom:4px!important;
+}
+
+.auth-brand p{
+    margin:0 34px 14px 0!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+}
+
+.auth-tabs{
+    margin:14px 0!important;
+}
+
+.auth-form{
+    gap:12px!important;
+}
+
+.auth-form label{
+    gap:6px!important;
+}
+
+.auth-form input{
+    min-height:44px!important;
+}
+
+.auth-primary-button{
+    min-height:46px!important;
+    margin-top:2px!important;
+}
+
+/* Owner bootstrap is a recovery/setup path only, never part of normal login UI. */
+.auth-bootstrap{
+    margin-top:16px!important;
+    padding-top:14px!important;
+}
