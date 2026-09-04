@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260903-pm10-summary-v30" rel="stylesheet"/>
+<link href="style.css?v=20260904-login-cms-v31-ui-fix1" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -90,13 +90,23 @@ HEADER
             </div>
 </div>
 </div>
-<div class="flex flex-wrap items-center justify-end gap-3">
-<div class="text-right hidden md:block">
-<div class="font-bold" id="clock">
-                --
-            </div>
-
-</div>
+<div class="header-account-zone">
+  <button class="header-account-button" id="accountButton" type="button" aria-haspopup="true" aria-expanded="false">
+    <span class="header-account-icon">👤</span>
+    <span id="accountButtonText">เข้าสู่ระบบ</span>
+    <span class="header-account-chevron hidden" id="accountChevron">▾</span>
+  </button>
+  <div class="header-account-role hidden" id="accountRoleBadge"></div>
+  <div class="header-clock" id="clock">--</div>
+  <div class="account-dropdown hidden" id="accountDropdown">
+    <div class="account-dropdown-profile">
+      <strong id="accountMenuName">ผู้ใช้งาน</strong>
+      <span id="accountMenuRole">USER</span>
+    </div>
+    <button type="button" id="openAdminCenterButton" class="account-menu-item hidden">🛡️ ศูนย์จัดการระบบ</button>
+    <button type="button" id="changePasswordButton" class="account-menu-item">🔑 เปลี่ยนรหัสผ่าน</button>
+    <button type="button" id="logoutButton" class="account-menu-item account-menu-danger">↪ ออกจากระบบ</button>
+  </div>
 </div>
 </header>
 <!-- =========================================================
@@ -185,7 +195,7 @@ DASHBOARD NAVIGATION
 </div></section>
 
   <section class="glass card p-5 overview-alert-card">
-    <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><div class="section-title-with-help"><h2>⚠ สิ่งที่ควรระวัง</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button></div></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
+    <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><div class="section-title-with-help"><h2><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button></div></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
     <div class="text-sm text-slate-300" id="overviewAlerts">กำลังตรวจสอบ...</div>
   </section>
 </section>
@@ -403,7 +413,7 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 <div class="current-alerts-strip"><div class="section-title-with-help">
-<h2 class="text-xl font-black">⚠ สิ่งที่ควรระวัง</h2>
+<h2 class="text-xl font-black"><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2>
 <button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button>
 </div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
 <span class="current-environment-footer-dot"></span>
@@ -1144,6 +1154,114 @@ EXPORT MODAL
 </div>
 
 <!-- =========================================================
+LOGIN / ACCOUNT
+========================================================= -->
+<div class="auth-modal hidden" id="authModal" aria-hidden="true">
+  <div class="auth-modal-backdrop" data-auth-close></div>
+  <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button class="auth-close" type="button" data-auth-close aria-label="ปิด">×</button>
+    <div class="auth-brand">
+      <div class="auth-brand-badge">ACCOUNT</div>
+      <h2 id="authTitle">เข้าสู่ระบบ</h2>
+      <p>เข้าสู่ระบบเพื่อใช้ความสามารถตามสิทธิ์ของบัญชี โดยข้อมูล Dashboard สาธารณะยังดูได้ตามปกติ</p>
+    </div>
+    <div class="auth-tabs" id="authTabs">
+      <button type="button" class="auth-tab active" data-auth-mode="login">เข้าสู่ระบบ</button>
+      <button type="button" class="auth-tab" data-auth-mode="register">สมัครสมาชิก</button>
+    </div>
+    <form class="auth-form" id="loginForm">
+      <label>อีเมล<input id="loginEmail" type="email" autocomplete="email" required></label>
+      <label>รหัสผ่าน<div class="auth-password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" required><button type="button" class="auth-eye" data-toggle-password="loginPassword">👁</button></div></label>
+      <button class="auth-primary-button" type="submit">เข้าสู่ระบบ</button>
+      <div class="auth-message" id="loginMessage"></div>
+    </form>
+    <form class="auth-form hidden" id="registerForm">
+      <label>ชื่อที่แสดง<input id="registerName" type="text" maxlength="80" autocomplete="name" required></label>
+      <label>อีเมล<input id="registerEmail" type="email" autocomplete="email" required></label>
+      <label>รหัสผ่าน<div class="auth-password-wrap"><input id="registerPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" required><button type="button" class="auth-eye" data-toggle-password="registerPassword">👁</button></div></label>
+      <small class="auth-hint">อย่างน้อย 10 ตัวอักษร</small>
+      <button class="auth-primary-button" type="submit">สร้างบัญชี</button>
+      <div class="auth-message" id="registerMessage"></div>
+    </form>
+    <div class="auth-bootstrap hidden" id="ownerBootstrapBox">
+      <div class="auth-bootstrap-head"><b>ตั้งค่าผู้สร้างระบบครั้งแรก</b><span>ใช้ได้เฉพาะก่อนมี Owner บัญชีแรก</span></div>
+      <button type="button" class="auth-secondary-button" id="openOwnerSetupButton">สร้าง Owner คนแรก</button>
+    </div>
+    <form class="auth-form hidden auth-owner-form" id="ownerSetupForm">
+      <label>ชื่อที่แสดง<input id="ownerName" type="text" maxlength="80" required></label>
+      <label>อีเมล<input id="ownerEmail" type="email" required></label>
+      <label>รหัสผ่าน Owner<div class="auth-password-wrap"><input id="ownerPassword" type="password" minlength="10" maxlength="128" required><button type="button" class="auth-eye" data-toggle-password="ownerPassword">👁</button></div></label>
+      <label>รหัสยืนยันการตั้งค่าครั้งแรก<div class="auth-password-wrap"><input id="ownerBootstrapPassword" type="password" required><button type="button" class="auth-eye" data-toggle-password="ownerBootstrapPassword">👁</button></div></label>
+      <button class="auth-primary-button" type="submit">สร้างบัญชี Owner</button>
+      <button class="auth-link-button" type="button" id="cancelOwnerSetupButton">← กลับ</button>
+      <div class="auth-message" id="ownerSetupMessage"></div>
+    </form>
+  </section>
+</div>
+
+<!-- =========================================================
+ADMIN / OWNER CENTER
+========================================================= -->
+<div class="admin-center hidden" id="adminCenter" aria-hidden="true">
+  <div class="admin-center-backdrop" data-admin-close></div>
+  <section class="admin-center-shell" role="dialog" aria-modal="true" aria-labelledby="adminCenterTitle">
+    <header class="admin-center-header">
+      <div><span class="admin-eyebrow">MANAGEMENT CENTER</span><h2 id="adminCenterTitle">ศูนย์จัดการระบบ</h2><p>แก้ข้อมูลที่อนุญาตได้โดยไม่ต้องแก้โค้ด Dashboard</p></div>
+      <button type="button" class="admin-close" data-admin-close aria-label="ปิด">×</button>
+    </header>
+    <div class="admin-center-layout">
+      <aside class="admin-sidebar">
+        <button class="admin-nav active" type="button" data-admin-tab="help">❔ คำอธิบาย (?)</button>
+        <button class="admin-nav" type="button" data-admin-tab="devices">📍 จุดตรวจวัด</button>
+        <button class="admin-nav" type="button" data-admin-tab="announcement">📢 ประกาศ</button>
+        <button class="admin-nav" type="button" data-admin-tab="users">👥 ผู้ใช้งาน</button>
+      </aside>
+      <div class="admin-main">
+        <section class="admin-panel active" data-admin-panel="help">
+          <div class="admin-panel-head"><div><h3>จัดการคำอธิบายปุ่ม ?</h3><p>เลือกหัวข้อ เพิ่มช่องคำอธิบาย และดูตัวอย่างก่อนบันทึก</p></div><span class="admin-role-pill" id="adminRolePill">ADMIN</span></div>
+          <div class="admin-help-layout">
+            <div class="admin-editor-card">
+              <label class="admin-field">เลือกปุ่ม ?<select id="helpKeySelect"></select></label>
+              <label class="admin-field">ชื่อหน้าต่างคำอธิบาย<input id="helpEditorTitle" type="text" maxlength="160"></label>
+              <div class="admin-block-list" id="helpBlockList"></div>
+              <button class="admin-add-block" id="addHelpBlockButton" type="button">＋ เพิ่มหัวข้อ</button>
+              <div class="admin-actions"><button class="admin-save-button" id="saveHelpButton" type="button">บันทึก</button></div>
+              <div class="admin-inline-message" id="helpSaveMessage"></div>
+            </div>
+            <div class="admin-preview-card"><div class="admin-preview-label">PREVIEW ก่อนบันทึก</div><div class="help-popover admin-live-preview" id="helpLivePreview"></div></div>
+          </div>
+        </section>
+        <section class="admin-panel" data-admin-panel="devices">
+          <div class="admin-panel-head"><div><h3>ชื่อจุดตรวจวัด</h3><p>เปลี่ยนเฉพาะชื่อที่แสดงต่อผู้ใช้ รหัสภายในของข้อมูลจะไม่เปลี่ยน</p></div></div>
+          <div class="admin-device-list" id="adminDeviceList"></div>
+          <div class="admin-actions"><button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกชื่อจุดตรวจวัด</button></div>
+          <div class="admin-inline-message" id="deviceSaveMessage"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="announcement">
+          <div class="admin-panel-head"><div><h3>ประกาศบน Dashboard</h3><p>ข้อความนี้จะแสดงให้ผู้ใช้ทั่วไปเห็นด้านบนของหน้า Dashboard</p></div></div>
+          <div class="admin-help-layout">
+            <div class="admin-editor-card">
+              <label class="admin-switch-row"><input id="announcementEnabled" type="checkbox"><span>เปิดแสดงประกาศ</span></label>
+              <label class="admin-field">รูปแบบ<select id="announcementSeverity"><option value="info">ข้อมูลทั่วไป</option><option value="warning">ควรสนใจ</option><option value="maintenance">แจ้งการดูแลระบบ</option></select></label>
+              <label class="admin-field">หัวข้อ<input id="announcementTitle" maxlength="120" type="text"></label>
+              <label class="admin-field">ข้อความ<textarea id="announcementMessage" maxlength="1200" rows="6"></textarea></label>
+              <div class="admin-actions"><button class="admin-save-button" id="saveAnnouncementButton" type="button">บันทึกประกาศ</button></div>
+              <div class="admin-inline-message" id="announcementSaveMessage"></div>
+            </div>
+            <div class="admin-preview-card"><div class="admin-preview-label">PREVIEW ก่อนบันทึก</div><div id="announcementPreview"></div></div>
+          </div>
+        </section>
+        <section class="admin-panel" data-admin-panel="users">
+          <div class="admin-panel-head"><div><h3>ผู้ใช้งานและสิทธิ์</h3><p>Admin ดูรายชื่อได้ ส่วนการเปลี่ยน Role หรือระงับบัญชีทำได้เฉพาะ Owner</p></div></div>
+          <div class="admin-user-list" id="adminUserList"><div class="admin-empty">กำลังโหลด...</div></div>
+          <div class="admin-inline-message" id="userSaveMessage"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- =========================================================
 CREDIT IMAGE VIEWER
 ========================================================= -->
 <div aria-hidden="true" class="credit-image-modal" id="creditImageModal">
@@ -1172,7 +1290,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260903-pm10-summary-v30"></script>
+<script defer src="app.js?v=20260904-login-cms-v31-ui-fix1"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
