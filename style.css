@@ -12493,3 +12493,14 @@ body.history-range-modal-open{
         margin-left:8px;
     }
 }
+
+
+/* =========================================================
+   V31 UI FIX 2 — modal visibility
+   .admin-center/.auth-modal are declared after the generic
+   .hidden rule, so explicitly make hidden modals display:none.
+   ========================================================= */
+.auth-modal.hidden,
+.admin-center.hidden{
+    display:none!important;
+}
