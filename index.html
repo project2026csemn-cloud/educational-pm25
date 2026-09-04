@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260904-v348safe" rel="stylesheet"/>
+<link href="style.css?v=20260904-v349" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -553,10 +553,10 @@ DASHBOARD NAVIGATION
 <button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="24h" type="button">
                                     24 ชั่วโมง
                                 </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" data-member-only="true" type="button">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" type="button">
                                     7 วัน
                                 </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" data-member-only="true" type="button">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" type="button">
                                     30 วัน
                                 </button>
 </div>
@@ -569,7 +569,7 @@ DASHBOARD NAVIGATION
                                 เริ่มต้น
                             </span>
 <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" data-member-only="true" type="datetime-local"/>
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" type="datetime-local"/>
 </div>
 </label>
 <label class="block">
@@ -577,24 +577,22 @@ DASHBOARD NAVIGATION
                                 สิ้นสุด
                             </span>
 <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" data-member-only="true" type="datetime-local"/>
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" type="datetime-local"/>
 </div>
 </label>
 </div>
 <!-- FOOTER -->
-<div class="border-t border-slate-800 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-<div class="text-xs text-slate-400">
-                            🌏 เวลาไทย
-                            <span class="text-slate-500">
-                                (GMT+7)
-                            </span>
-<div class="text-red-400 mt-1 hidden" id="customRangeError"></div>
+<div class="history-range-footer border-t border-slate-800">
+<div class="history-timezone-note">
+  <span class="history-timezone-icon">🌏</span>
+  <div><b>เวลาไทย</b><span>GMT+7 • Asia/Bangkok</span></div>
+  <div class="text-red-400 hidden" id="customRangeError"></div>
 </div>
-<div class="flex justify-end gap-2">
+<div class="history-range-footer-actions flex justify-end gap-2">
 <button class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300" id="historyRangeCancel" type="button">
                                 ยกเลิก
                             </button>
-<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" data-member-only="true" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
+<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
                                 ใช้งาน
                             </button>
 </div>
@@ -707,14 +705,8 @@ DASHBOARD NAVIGATION
 <section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
   <div class="dashboard-page-heading"><div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div><div class="section-title-with-help"><h1>วิเคราะห์และคาดการณ์</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าวิเคราะห์และคาดการณ์" class="help-button" data-help="analysisPage" type="button">?</button></div><p>สรุปสถานการณ์ปัจจุบันและแสดงค่าประมาณแนวโน้มในอีก 30 นาที เพื่อใช้ประกอบการติดตาม ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p></div>
   <section class="glass card p-5 mb-4 ai-intelligence-section">
-<div class="ai-intelligence-header">
-<div>
-<div class="section-title-with-help">
-<h2 class="text-2xl font-black">🤖 วิเคราะห์และคาดการณ์</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย AI Environmental Intelligence" class="help-button" data-help="ai" type="button">?</button>
-</div>
+<div class="ai-intelligence-header ai-intelligence-header-compact">
 <div class="ai-intelligence-statusline">สรุปสถานการณ์ปัจจุบัน • แนวโน้ม • คาดการณ์ 30 นาที</div>
-</div>
 <div class="ai-intelligence-badges"><span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span><span class="ai-forecast-status" id="aiForecastStatusBadge">คาดการณ์ • รอข้อมูล</span></div>
 </div>
 <div class="ai-intelligence-grid">
@@ -1275,8 +1267,8 @@ PROFILE IMAGE EDITOR — V34
 <div class="profile-editor hidden" id="profileEditorModal" aria-hidden="true">
   <div class="profile-editor-backdrop" data-profile-editor-close></div>
   <section class="profile-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditorTitle">
-    <header class="profile-editor-header has-back-button">
-      <button type="button" class="modal-back-button" data-profile-editor-back aria-label="ย้อนกลับ">‹</button>
+    <header class="profile-editor-header">
+      
       <div class="modal-header-copy">
         <span class="profile-editor-eyebrow">PROFILE IMAGE</span>
         <h2 id="profileEditorTitle">ปรับรูปโปรไฟล์</h2>
@@ -1319,8 +1311,8 @@ V34.1 — MY ACCOUNT CENTER
 <div class="notification-center-modal hidden" id="notificationSettingsModal" aria-hidden="true">
   <div class="notification-modal-backdrop" data-notification-close></div>
   <section class="notification-settings-shell" role="dialog" aria-modal="true" aria-labelledby="notificationSettingsTitle">
-    <header class="notification-settings-header has-back-button">
-      <button type="button" class="modal-back-button" data-notification-back aria-label="ย้อนกลับ">‹</button>
+    <header class="notification-settings-header">
+      
       <div class="notification-title-wrap"><span class="notification-title-icon">🔔</span><div><span class="notification-eyebrow">NOTIFICATIONS</span><h2 id="notificationSettingsTitle">การแจ้งเตือน</h2><p>เลือกสถานการณ์ที่คุณต้องการให้ระบบแจ้งเตือน</p></div></div>
       <button type="button" class="notification-close" data-notification-close aria-label="ปิด">×</button>
     </header>
@@ -1355,7 +1347,7 @@ V34.1 — MY ACCOUNT CENTER
 <div class="notification-detail-modal hidden" id="notificationDetailModal" aria-hidden="true">
   <div class="notification-modal-backdrop" data-notification-detail-close></div>
   <section class="notification-detail-shell" role="dialog" aria-modal="true" aria-labelledby="notificationDetailTitle">
-    <button type="button" class="modal-back-button notification-detail-back" data-notification-detail-back aria-label="ย้อนกลับ">‹</button>
+    
     <button type="button" class="notification-close" data-notification-detail-close aria-label="ปิด">×</button>
     <div class="notification-detail-icon" id="notificationDetailIcon">🔔</div>
     <span class="notification-detail-kicker">สถานการณ์ล่าสุด</span><h2 id="notificationDetailTitle">การแจ้งเตือน</h2><p id="notificationDetailMessage"></p>
@@ -1368,7 +1360,7 @@ V34.1 — MY ACCOUNT CENTER
   <div class="my-account-backdrop" data-my-account-close></div>
   <section class="my-account-shell" role="dialog" aria-modal="true" aria-labelledby="myAccountTitle">
     <header class="my-account-header">
-      <button type="button" class="my-account-back" data-account-back aria-label="ย้อนกลับ">‹</button>
+      
       <div class="my-account-header-copy"><span class="my-account-eyebrow">MY ACCOUNT</span><h2 id="myAccountTitle">บัญชีของฉัน</h2><p>จัดการข้อมูลส่วนตัว รูปโปรไฟล์ และความปลอดภัยของบัญชี</p></div>
       <button type="button" class="my-account-close" data-my-account-close aria-label="ปิด">×</button>
     </header>
@@ -1406,7 +1398,7 @@ V34.1 — CHANGE PASSWORD DIALOG
 <div class="account-security-modal hidden" id="accountSecurityModal" aria-hidden="true">
   <div class="my-account-backdrop" data-security-close></div>
   <section class="account-security-shell" role="dialog" aria-modal="true" aria-labelledby="accountSecurityTitle">
-    <header class="account-security-header has-back-button"><button type="button" class="modal-back-button" data-security-back aria-label="ย้อนกลับ">‹</button><div class="modal-header-copy"><span class="my-account-eyebrow">SECURITY</span><h2 id="accountSecurityTitle">เปลี่ยนรหัสผ่าน</h2><p>ตั้งรหัสผ่านใหม่สำหรับบัญชีนี้</p></div><button type="button" class="my-account-close" data-security-close aria-label="ปิด">×</button></header>
+    <header class="account-security-header"><div class="modal-header-copy"><span class="my-account-eyebrow">SECURITY</span><h2 id="accountSecurityTitle">เปลี่ยนรหัสผ่าน</h2><p>ตั้งรหัสผ่านใหม่สำหรับบัญชีนี้</p></div><button type="button" class="my-account-close" data-security-close aria-label="ปิด">×</button></header>
     <form class="account-security-form" id="accountSecurityForm">
       <label>รหัสผ่านปัจจุบัน<input id="accountCurrentPassword" type="password" autocomplete="current-password" required></label>
       <label>รหัสผ่านใหม่<input id="accountNewPassword" type="password" autocomplete="new-password" minlength="10" required><small>อย่างน้อย 10 ตัวอักษร</small></label>
@@ -1424,7 +1416,7 @@ ADMIN / OWNER CENTER
   <div class="admin-center-backdrop" data-admin-close></div>
   <section class="admin-center-shell" role="dialog" aria-modal="true" aria-labelledby="adminCenterTitle">
     <header class="admin-center-header">
-      <button type="button" class="admin-back" data-admin-back aria-label="ย้อนกลับ">‹</button>
+      
       <div class="admin-center-header-copy"><span class="admin-eyebrow" id="adminCenterEyebrow">CONTENT MANAGEMENT</span><h2 id="adminCenterTitle">จัดการเนื้อหา</h2><p id="adminCenterSubtitle">จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard</p></div>
       <button type="button" class="admin-close" data-admin-close aria-label="ปิด">×</button>
     </header>
@@ -1539,7 +1531,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260904-v348safe"></script>
+<script defer src="app.js?v=20260904-v349"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
