@@ -10688,12 +10688,13 @@ async function initGoogleIdentity(){
   const target=$("googleSignInButton");
   if(target){
     target.innerHTML="";
+    const googleButtonWidth=Math.max(240,Math.min(360,Math.floor(target.getBoundingClientRect().width||360)));
     google.accounts.id.renderButton(target,{
-      theme:"outline",
+      theme:"filled_black",
       size:"large",
-      shape:"rectangular",
+      shape:"pill",
       text:"continue_with",
-      width:400,
+      width:googleButtonWidth,
       locale:"th"
     });
   }
@@ -11129,6 +11130,21 @@ function openMyAccount(){
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");
 }
 function closeMyAccount(){const m=$("myAccountCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+
+function reopenAccountMenu(){
+  if(!authUser)return;
+  const menu=$("accountDropdown");
+  if(menu){
+    menu.classList.remove("hidden");
+    $("accountButton")?.setAttribute("aria-expanded","true");
+  }
+}
+
+function backFromMyAccount(){
+  closeMyAccount();
+  reopenAccountMenu();
+}
+
 function openAccountSecurity(){
   if(!authUser)return;
   const m=$("accountSecurityModal");if(!m)return;
@@ -11191,6 +11207,20 @@ async function openNotificationSettings(){
 }
 function closeNotificationSettings(){const m=$("notificationSettingsModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
 function closeNotificationDetail(){const m=$("notificationDetailModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+
+function backFromNotificationSettings(){
+  closeNotificationSettings();
+  reopenAccountMenu();
+}
+
+function backFromAdminCenter(){
+  closeAdminCenter();
+  reopenAccountMenu();
+}
+
+function backFromNotificationDetail(){
+  closeNotificationDetail();
+}
 
 function updateNotificationPermissionUI(){
   const card=$("notificationPermissionCard"),title=$("notificationPermissionTitle"),text=$("notificationPermissionText"),icon=$("notificationPermissionIcon"),btn=$("requestNotificationPermission");
@@ -11300,8 +11330,17 @@ function openNotificationDetailFromUrl(){
     $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
     document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
+    document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromAdminCenter));
     document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
-    document.querySelectorAll("[data-toggle-password]").forEach(x=>x.addEventListener("click",()=>{const input=$(x.dataset.togglePassword);if(input)input.type=input.type==="password"?"text":"password";}));
+    document.querySelectorAll("[data-toggle-password]").forEach(button=>button.addEventListener("click",()=>{
+      const input=$(button.dataset.togglePassword);
+      if(!input)return;
+      const show=input.type==="password";
+      input.type=show?"text":"password";
+      button.classList.toggle("is-visible",show);
+      button.setAttribute("aria-pressed",String(show));
+      button.setAttribute("aria-label",show?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
+    }));
     $("openForgotPasswordButton")?.addEventListener("click",openForgotPassword);
     $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
@@ -11319,6 +11358,7 @@ function openNotificationDetailFromUrl(){
       try{await openProfileEditorFromFile(file);}catch(err){alert(err.message);}finally{e.target.value="";}
     });
     document.querySelectorAll("[data-profile-editor-close]").forEach(x=>x.addEventListener("click",closeProfileEditor));
+    document.querySelectorAll("[data-profile-editor-back]").forEach(x=>x.addEventListener("click",closeProfileEditor));
     $("profileEditorCancel")?.addEventListener("click",closeProfileEditor);
     $("profileEditorSave")?.addEventListener("click",saveProfileEditor);
     $("myAccountUseGooglePhoto")?.addEventListener("click",async()=>{
@@ -11337,7 +11377,9 @@ function openNotificationDetailFromUrl(){
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
     $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
     document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
+    document.querySelectorAll("[data-notification-back]").forEach(x=>x.addEventListener("click",backFromNotificationSettings));
     document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
+    document.querySelectorAll("[data-notification-detail-back]").forEach(x=>x.addEventListener("click",backFromNotificationDetail));
     $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
     $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
@@ -11347,7 +11389,9 @@ function openNotificationDetailFromUrl(){
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
     document.querySelectorAll("[data-my-account-close]").forEach(x=>x.addEventListener("click",closeMyAccount));
+    document.querySelectorAll("[data-account-back]").forEach(x=>x.addEventListener("click",backFromMyAccount));
     document.querySelectorAll("[data-security-close]").forEach(x=>x.addEventListener("click",closeAccountSecurity));
+    document.querySelectorAll("[data-security-back]").forEach(x=>x.addEventListener("click",closeAccountSecurity));
     $("myAccountChangePassword")?.addEventListener("click",openAccountSecurity);
     $("adminUserSearch")?.addEventListener("input",renderAdminUsers);
     $("adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
