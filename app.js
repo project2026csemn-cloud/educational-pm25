@@ -10535,9 +10535,9 @@ function updateMemberPermissionUI(){
 
   const aiAllowed=Boolean(authUser&&authToken);
   document.querySelectorAll('[data-dashboard-page="analysis"]').forEach(el=>{
-    el.classList.toggle("member-locked",!aiAllowed);
-    el.setAttribute("aria-disabled",aiAllowed?"false":"true");
-    el.title=aiAllowed?"":"เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์และคาดการณ์";
+    el.classList.remove("member-locked");
+    el.setAttribute("aria-disabled","false");
+    el.removeAttribute("title");
   });
   [$('aiRefreshButton'),$('aiForecastRefreshButton')].forEach(btn=>{
     if(!btn)return;
@@ -11123,7 +11123,7 @@ function syncMyAccountUI(){
   setAvatar("myAccountAvatarImage","myAccountAvatarFallback",authUser);
   const name=authUser.display_name||authUser.email||"ผู้ใช้งาน";
   const email=authUser.email||"--";
-  const role=`${authRoleLabel(authUser.role)} • ${authRoleThai(authUser.role)}`;
+  const role=authRoleLabel(authUser.role);
   const provider=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
   [["myAccountName",name],["myAccountEmail",email],["myAccountDisplayName",name],["myAccountEmailDetail",email],["myAccountRole",role],["myAccountRoleDetail",role],["myAccountProvider",authProviderLabel(authUser)],["myAccountProviderDetail",provider]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value;});
   $("myAccountChangePassword")?.classList.toggle("hidden",authUser.auth_provider==="google");
