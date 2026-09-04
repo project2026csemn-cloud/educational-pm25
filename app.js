@@ -10266,8 +10266,27 @@ function setAuthMessage(id,text,type=""){
 function authAvatarUrl(user){return String(user?.profile_image_url||user?.google_picture_url||"").trim();}
 function setAvatar(imgId,fallbackId,user){
   const img=$(imgId),fallback=$(fallbackId),url=authAvatarUrl(user);if(!img||!fallback)return;
-  if(url){img.src=url;img.classList.remove("hidden");fallback.classList.add("hidden");img.onerror=()=>{img.classList.add("hidden");fallback.classList.remove("hidden");};}
-  else{img.removeAttribute("src");img.classList.add("hidden");fallback.classList.remove("hidden");}
+
+  if(!url){
+    img.removeAttribute("src");
+    img.classList.add("hidden");
+    fallback.classList.remove("hidden");
+    return;
+  }
+
+  const preload=new Image();
+  preload.referrerPolicy="no-referrer";
+  preload.onload=()=>{
+    img.src=url;
+    img.classList.remove("hidden");
+    fallback.classList.add("hidden");
+  };
+  preload.onerror=()=>{
+    img.removeAttribute("src");
+    img.classList.add("hidden");
+    fallback.classList.remove("hidden");
+  };
+  preload.src=url;
 }
 // =========================================================
 // V34 — PROFILE IMAGE EDITOR
@@ -10566,8 +10585,14 @@ function updateAccountUI(){
   if(authUser&&aiSectionActivated)activateAISection();
 }
 
+function clearAuthModalMessages(){
+  ["loginMessage","registerMessage","forgotPasswordMessage","resetPasswordMessage","ownerSetupMessage"]
+    .forEach(id=>setAuthMessage(id,""));
+}
+
 function openAuthModal(mode="login"){
   const modal=$("authModal"); if(!modal)return;
+  clearAuthModalMessages();
   modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
   setAuthMode(mode);
   loadAuthStatus();
@@ -10575,6 +10600,7 @@ function openAuthModal(mode="login"){
 }
 function closeAuthModal(){const m=$("authModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
 function setAuthMode(mode){
+  clearAuthModalMessages();
   document.querySelectorAll("[data-auth-mode]").forEach(b=>b.classList.toggle("active",b.dataset.authMode===mode));
   $("loginForm")?.classList.toggle("hidden",mode!=="login");
   $("registerForm")?.classList.toggle("hidden",mode!=="register");
@@ -11142,7 +11168,18 @@ async function ensureNotificationPreferences(){
 function syncNotificationSettingsUI(){
   const map={notificationMaster:"enabled",notifyDust:"dust",notifyTemperature:"temperature",notifyHumidity:"humidity",notifyHeatIndex:"heat_index",notifyDevice:"device"};
   Object.entries(map).forEach(([id,key])=>{if($(id))$(id).checked=notificationPrefs[key]!==false;});
+  updateNotificationMasterUI();
   updateNotificationPermissionUI();
+}
+
+function updateNotificationMasterUI(){
+  const enabled=!!$("notificationMaster")?.checked;
+  const body=$("notificationSettingsModal");
+  body?.classList.toggle("notifications-paused",!enabled);
+  ["notifyDust","notifyTemperature","notifyHumidity","notifyHeatIndex","notifyDevice"].forEach(id=>{
+    const input=$(id);
+    if(input)input.disabled=!enabled;
+  });
 }
 
 async function openNotificationSettings(){
@@ -11161,8 +11198,22 @@ function updateNotificationPermissionUI(){
   card.classList.remove("is-granted","is-denied");
   if(!("Notification" in window)){title.textContent="เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน";text.textContent="ยังสามารถใช้ Dashboard ได้ตามปกติ";icon.textContent="ℹ️";btn.hidden=true;return;}
   btn.hidden=false;
-  if(Notification.permission==="granted"){card.classList.add("is-granted");title.textContent="อนุญาตการแจ้งเตือนแล้ว";text.textContent="ระบบพร้อมแจ้งเมื่อสถานการณ์ที่คุณเลือกมีการเปลี่ยนแปลง";icon.textContent="🔔";btn.textContent="อนุญาตแล้ว";btn.disabled=true;}
-  else if(Notification.permission==="denied"){card.classList.add("is-denied");title.textContent="การแจ้งเตือนถูกบล็อก";text.textContent="กรุณาอนุญาต Notification จากการตั้งค่าเว็บไซต์ของเบราว์เซอร์";icon.textContent="🔕";btn.textContent="ถูกบล็อก";btn.disabled=true;}
+  if(Notification.permission==="granted"){
+    card.classList.add("is-granted");
+    title.textContent="สิทธิ์เบราว์เซอร์: อนุญาตแล้ว";
+    text.textContent="เบราว์เซอร์อนุญาตให้เว็บไซต์ส่งการแจ้งเตือนได้";
+    icon.textContent="✓";
+    btn.hidden=true;
+    btn.disabled=true;
+  }
+  else if(Notification.permission==="denied"){
+    card.classList.add("is-denied");
+    title.textContent="สิทธิ์เบราว์เซอร์: ถูกบล็อก";
+    text.textContent="หากต้องการใช้งาน กรุณาอนุญาต Notification จากการตั้งค่าเว็บไซต์ของเบราว์เซอร์";
+    icon.textContent="!";
+    btn.hidden=true;
+    btn.disabled=true;
+  }
   else{title.textContent="ยังไม่ได้อนุญาตการแจ้งเตือน";text.textContent="กดอนุญาตเพื่อรับข้อความแจ้งเตือนจากเบราว์เซอร์";icon.textContent="🔕";btn.textContent="อนุญาต";btn.disabled=false;}
 }
 
@@ -11288,6 +11339,7 @@ function openNotificationDetailFromUrl(){
     document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
     document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
     $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
+    $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
     $("notificationDetailGo")?.addEventListener("click",()=>{closeNotificationDetail();document.querySelector('[data-go-page="monitoring"]')?.click();});
     $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
