@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260904-account-v33" rel="stylesheet"/>
+<link href="style.css?v=20260904-account-hub-v341" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -98,19 +98,30 @@ HEADER
   </button>
   <div class="header-account-role hidden" id="accountRoleBadge"></div>
   <div class="header-clock" id="clock">--</div>
-  <div class="account-dropdown hidden" id="accountDropdown">
-    <div class="account-dropdown-profile">
+  <div class="account-dropdown account-dropdown-v34 hidden" id="accountDropdown">
+    <!-- =========================================================
+         V34.1 — ACCOUNT HUB MENU
+         เมนูหลักแสดงเฉพาะปลายทางสำคัญ ส่วนรายละเอียดบัญชี
+         จะถูกรวมไว้ในหน้าต่าง "บัญชีของฉัน" เพื่อใช้งานง่ายขึ้น
+         ========================================================= -->
+    <div class="account-dropdown-profile account-profile-v34">
       <span class="account-menu-avatar"><img id="accountMenuAvatarImage" alt="" class="hidden"><span id="accountMenuAvatarFallback">👤</span></span>
-      <strong id="accountMenuName">ผู้ใช้งาน</strong>
-      <span id="accountMenuRole">USER</span>
-      <small id="accountMenuProvider">Email</small>
+      <div class="account-profile-copy">
+        <strong id="accountMenuName">ผู้ใช้งาน</strong>
+        <small id="accountMenuEmail">--</small>
+        <div class="account-profile-meta"><span id="accountMenuRole">USER</span><span id="accountMenuProvider">Email</span></div>
+      </div>
     </div>
-    <button type="button" id="changeProfileImageButton" class="account-menu-item">🖼️ เปลี่ยนรูปโปรไฟล์</button>
-    <button type="button" id="useGoogleProfileImageButton" class="account-menu-item hidden">↩️ กลับไปใช้รูป Google</button>
-    <input id="profileImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-    <button type="button" id="openAdminCenterButton" class="account-menu-item hidden">🛡️ ศูนย์จัดการระบบ</button>
-    <button type="button" id="changePasswordButton" class="account-menu-item">🔑 เปลี่ยนรหัสผ่าน</button>
-    <button type="button" id="logoutButton" class="account-menu-item account-menu-danger">↪ ออกจากระบบ</button>
+    <div class="account-menu-section">
+      <button type="button" id="openMyAccountButton" class="account-menu-item"><span class="account-menu-icon">👤</span><span><b>บัญชีของฉัน</b><small>โปรไฟล์ รูปภาพ และความปลอดภัยของบัญชี</small></span><i>›</i></button>
+    </div>
+    <div class="account-menu-section account-management-section">
+      <button type="button" id="openContentManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">✎</span><span><b>จัดการเนื้อหา</b><small>คำอธิบาย จุดตรวจวัด และประกาศ</small></span><i>›</i></button>
+      <button type="button" id="openUserManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">👥</span><span><b>จัดการผู้ใช้งาน</b><small>Role, Permission และลบบัญชีผู้ใช้</small></span><i>›</i></button>
+    </div>
+    <div class="account-menu-section account-menu-section-last">
+      <button type="button" id="logoutButton" class="account-menu-item account-menu-danger"><span class="account-menu-icon">↪</span><span><b>ออกจากระบบ</b><small>สิ้นสุดการใช้งานบัญชีบนอุปกรณ์นี้</small></span></button>
+    </div>
   </div>
 </div>
 </header>
@@ -531,10 +542,10 @@ DASHBOARD NAVIGATION
 <button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="24h" type="button">
                                     24 ชั่วโมง
                                 </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" type="button">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" data-member-only="true" type="button">
                                     7 วัน
                                 </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" type="button">
+<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" data-member-only="true" type="button">
                                     30 วัน
                                 </button>
 </div>
@@ -547,7 +558,7 @@ DASHBOARD NAVIGATION
                                 เริ่มต้น
                             </span>
 <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" type="datetime-local"/>
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" data-member-only="true" type="datetime-local"/>
 </div>
 </label>
 <label class="block">
@@ -555,7 +566,7 @@ DASHBOARD NAVIGATION
                                 สิ้นสุด
                             </span>
 <div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" type="datetime-local"/>
+<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" data-member-only="true" type="datetime-local"/>
 </div>
 </label>
 </div>
@@ -572,7 +583,7 @@ DASHBOARD NAVIGATION
 <button class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300" id="historyRangeCancel" type="button">
                                 ยกเลิก
                             </button>
-<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
+<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" data-member-only="true" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
                                 ใช้งาน
                             </button>
 </div>
@@ -581,7 +592,7 @@ DASHBOARD NAVIGATION
 </div>
 </div>
 </div>
-<button class="history-toolbar-button history-export-button" id="exportButton" type="button">
+<button class="history-toolbar-button history-export-button" id="exportButton" data-member-only="true" type="button">
 <span class="history-control-icon">⇩</span>
 <span>ส่งออก</span>
 </button>
@@ -1225,6 +1236,106 @@ LOGIN / ACCOUNT
 </div>
 
 <!-- =========================================================
+PROFILE IMAGE EDITOR — V34
+========================================================= -->
+<div class="profile-editor hidden" id="profileEditorModal" aria-hidden="true">
+  <div class="profile-editor-backdrop" data-profile-editor-close></div>
+  <section class="profile-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditorTitle">
+    <header class="profile-editor-header">
+      <div>
+        <span class="profile-editor-eyebrow">PROFILE IMAGE</span>
+        <h2 id="profileEditorTitle">ปรับรูปโปรไฟล์</h2>
+        <p>ลากรูปเพื่อจัดตำแหน่ง และปรับการซูมก่อนบันทึก</p>
+      </div>
+      <button type="button" class="profile-editor-close" data-profile-editor-close aria-label="ปิด">×</button>
+    </header>
+
+    <div class="profile-editor-body">
+      <div class="profile-crop-stage" id="profileCropStage">
+        <img id="profileCropImage" alt="ตัวอย่างรูปโปรไฟล์">
+        <div class="profile-crop-ring" aria-hidden="true"></div>
+      </div>
+
+      <div class="profile-zoom-row">
+        <span aria-hidden="true">−</span>
+        <input id="profileZoomRange" type="range" min="1" max="3" step="0.01" value="1" aria-label="ซูมรูปโปรไฟล์">
+        <span aria-hidden="true">＋</span>
+      </div>
+
+      <div class="profile-editor-help">ลากรูปภายในกรอบเพื่อเลือกส่วนที่จะใช้เป็นรูปโปรไฟล์</div>
+      <div class="profile-editor-message" id="profileEditorMessage"></div>
+    </div>
+
+    <footer class="profile-editor-footer">
+      <button type="button" class="profile-editor-secondary" id="profileEditorCancel">ยกเลิก</button>
+      <button type="button" class="profile-editor-primary" id="profileEditorSave">บันทึกรูปโปรไฟล์</button>
+    </footer>
+  </section>
+</div>
+
+<!-- =========================================================
+V34.1 — MY ACCOUNT CENTER
+รวมข้อมูลส่วนตัว รูปโปรไฟล์ และความปลอดภัยไว้ในหน้าต่างเดียว
+เพื่อไม่ให้เมนูโปรไฟล์ด้านบนมีตัวเลือกมากเกินไป
+========================================================= -->
+<div class="my-account-center hidden" id="myAccountCenter" aria-hidden="true">
+  <div class="my-account-backdrop" data-my-account-close></div>
+  <section class="my-account-shell" role="dialog" aria-modal="true" aria-labelledby="myAccountTitle">
+    <header class="my-account-header">
+      <div><span class="my-account-eyebrow">MY ACCOUNT</span><h2 id="myAccountTitle">บัญชีของฉัน</h2><p>จัดการข้อมูลส่วนตัว รูปโปรไฟล์ และความปลอดภัยของบัญชี</p></div>
+      <button type="button" class="my-account-close" data-my-account-close aria-label="ปิด">×</button>
+    </header>
+    <div class="my-account-body">
+      <section class="my-account-hero">
+        <span class="my-account-avatar"><img id="myAccountAvatarImage" alt="" class="hidden"><span id="myAccountAvatarFallback">👤</span></span>
+        <div class="my-account-identity"><h3 id="myAccountName">ผู้ใช้งาน</h3><p id="myAccountEmail">--</p><div class="my-account-badges"><span id="myAccountRole">USER</span><span id="myAccountProvider">Email</span></div></div>
+        <button type="button" class="my-account-primary" id="myAccountChangePhoto">เปลี่ยนรูปโปรไฟล์</button><input id="profileImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      </section>
+
+      <div class="my-account-grid">
+        <section class="my-account-card">
+          <div class="my-account-card-icon">👤</div>
+          <div class="my-account-card-copy"><h3>ข้อมูลบัญชี</h3><p>ข้อมูลที่ใช้ระบุตัวตนในระบบ Dashboard</p></div>
+          <dl class="my-account-details"><div><dt>ชื่อที่แสดง</dt><dd id="myAccountDisplayName">--</dd></div><div><dt>อีเมล</dt><dd id="myAccountEmailDetail">--</dd></div><div><dt>ระดับบัญชี</dt><dd id="myAccountRoleDetail">--</dd></div></dl>
+        </section>
+
+        <section class="my-account-card">
+          <div class="my-account-card-icon">🔐</div>
+          <div class="my-account-card-copy"><h3>การเข้าสู่ระบบและความปลอดภัย</h3><p>ตรวจสอบวิธีเข้าสู่ระบบและจัดการรหัสผ่าน</p></div>
+          <div class="my-account-action-row"><div><b>วิธีเข้าสู่ระบบ</b><span id="myAccountProviderDetail">--</span></div></div>
+          <button type="button" class="my-account-secondary" id="myAccountChangePassword">เปลี่ยนรหัสผ่าน</button>
+        </section>
+
+        <section class="my-account-card my-account-card-wide">
+          <div class="my-account-card-icon">🖼</div>
+          <div class="my-account-card-copy"><h3>รูปโปรไฟล์</h3><p>รูปนี้จะแสดงบริเวณเมนูบัญชีของคุณ สามารถครอป เลื่อน และซูมก่อนบันทึกได้</p></div>
+          <div class="my-account-photo-actions"><button type="button" class="my-account-secondary" id="myAccountChangePhotoSecondary">เลือกรูปใหม่</button><button type="button" class="my-account-secondary hidden" id="myAccountUseGooglePhoto">กลับไปใช้รูป Google</button></div>
+        </section>
+      </div>
+      <div class="my-account-note">ข้อมูลสิทธิ์การใช้งานถูกกำหนดโดยผู้ดูแลระบบ หากต้องการสิทธิ์เพิ่มเติมให้ติดต่อผู้ดูแลโครงการ</div>
+    </div>
+  </section>
+</div>
+
+<!-- =========================================================
+V34.1 — CHANGE PASSWORD DIALOG
+ใช้ฟอร์มจริงแทน prompt() เพื่อให้ใช้งานสะดวกและปลอดภัยกว่า
+========================================================= -->
+<div class="account-security-modal hidden" id="accountSecurityModal" aria-hidden="true">
+  <div class="my-account-backdrop" data-security-close></div>
+  <section class="account-security-shell" role="dialog" aria-modal="true" aria-labelledby="accountSecurityTitle">
+    <header class="account-security-header"><div><span class="my-account-eyebrow">SECURITY</span><h2 id="accountSecurityTitle">เปลี่ยนรหัสผ่าน</h2><p>ตั้งรหัสผ่านใหม่สำหรับบัญชีนี้</p></div><button type="button" class="my-account-close" data-security-close aria-label="ปิด">×</button></header>
+    <form class="account-security-form" id="accountSecurityForm">
+      <label>รหัสผ่านปัจจุบัน<input id="accountCurrentPassword" type="password" autocomplete="current-password" required></label>
+      <label>รหัสผ่านใหม่<input id="accountNewPassword" type="password" autocomplete="new-password" minlength="10" required><small>อย่างน้อย 10 ตัวอักษร</small></label>
+      <label>ยืนยันรหัสผ่านใหม่<input id="accountConfirmPassword" type="password" autocomplete="new-password" minlength="10" required></label>
+      <div class="account-security-message" id="accountSecurityMessage"></div>
+      <footer><button type="button" class="my-account-secondary" data-security-close>ยกเลิก</button><button type="submit" class="my-account-primary">บันทึกรหัสผ่านใหม่</button></footer>
+    </form>
+  </section>
+</div>
+
+<!-- =========================================================
 ADMIN / OWNER CENTER
 ========================================================= -->
 <div class="admin-center hidden" id="adminCenter" aria-hidden="true">
@@ -1280,7 +1391,7 @@ ADMIN / OWNER CENTER
           <div class="admin-panel-head admin-users-head">
             <div>
               <h3>ผู้ใช้งานและสิทธิ์</h3>
-              <p>ค้นหาด้วยชื่อหรืออีเมล แล้วจัดการสิทธิ์เฉพาะบัญชีที่ต้องการ</p>
+              <p>ค้นหาบัญชี กำหนด Role และเปิด/ปิด Permission รายข้อได้ละเอียดคล้าย Discord</p>
             </div>
             <button class="admin-add-admin-button hidden" id="addAdminModeButton" type="button">＋ เพิ่ม Admin</button>
           </div>
@@ -1297,15 +1408,6 @@ ADMIN / OWNER CENTER
                 <option value="owner">Owner</option>
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
-              </select>
-            </label>
-            <label class="admin-user-filter">
-              <span>สถานะ</span>
-              <select id="adminUserStatusFilter">
-                <option value="all">ทั้งหมด</option>
-                <option value="active">ใช้งาน</option>
-                <option value="disabled">ระงับ</option>
-                <option value="pending">รอยืนยัน</option>
               </select>
             </label>
           </div>
@@ -1354,7 +1456,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260904-account-v33"></script>
+<script defer src="app.js?v=20260904-account-hub-v341"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
