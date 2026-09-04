@@ -12880,3 +12880,432 @@ body.history-range-modal-open{
 .auth-forgot-link{justify-self:end;padding:2px 0;margin-top:-5px}
 .auth-form-note{font-size:13px;line-height:1.6;color:#94a3b8;background:rgba(15,23,42,.45);border:1px solid rgba(148,163,184,.12);padding:10px 12px;border-radius:11px}
 #forgotPasswordForm.hidden,#resetPasswordForm.hidden{display:none!important}
+
+/* =========================================================
+   V34 — ACCOUNT AVATAR / PROFILE EDITOR / MEMBER PERMISSIONS
+   ========================================================= */
+
+/* ป้องกัน selector ของรูป Avatar ด้านบนไป override utility .hidden
+   กรณียังไม่เข้าสู่ระบบ <img> จะไม่มี src จึงต้องซ่อนจริง ๆ */
+.header-account-avatar img.hidden,
+.account-menu-avatar img.hidden{
+    display:none!important;
+}
+
+/* -------------------------
+   PROFILE IMAGE EDITOR
+   ------------------------- */
+.profile-editor{
+    position:fixed;
+    inset:0;
+    z-index:10080;
+    display:grid;
+    place-items:center;
+    padding:20px;
+}
+.profile-editor.hidden{display:none!important}
+.profile-editor-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(2,8,23,.82);
+    backdrop-filter:blur(8px);
+}
+.profile-editor-dialog{
+    position:relative;
+    z-index:1;
+    width:min(94vw,520px);
+    max-height:92vh;
+    overflow:auto;
+    border:1px solid rgba(125,211,252,.22);
+    border-radius:22px;
+    background:#081827;
+    box-shadow:0 28px 80px rgba(0,0,0,.48);
+}
+.profile-editor-header{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    padding:20px 22px 16px;
+    border-bottom:1px solid rgba(148,163,184,.12);
+}
+.profile-editor-header h2{margin:3px 0 3px;font-size:20px}
+.profile-editor-header p{margin:0;color:#94a3b8;font-size:12px;line-height:1.55}
+.profile-editor-eyebrow{color:#67e8f9;font-size:10px;font-weight:900;letter-spacing:.13em}
+.profile-editor-close{
+    width:38px;height:38px;flex:0 0 auto;border-radius:11px;
+    border:1px solid rgba(148,163,184,.16);background:#102338;color:#e2e8f0;
+    font-size:22px;cursor:pointer;
+}
+.profile-editor-body{padding:22px}
+.profile-crop-stage{
+    position:relative;
+    width:min(72vw,320px);
+    aspect-ratio:1;
+    margin:0 auto;
+    overflow:hidden;
+    border-radius:18px;
+    background:#020a13;
+    touch-action:none;
+    cursor:grab;
+    user-select:none;
+}
+.profile-crop-stage.is-dragging{cursor:grabbing}
+.profile-crop-stage img{
+    position:absolute;
+    left:50%;top:50%;
+    max-width:none;
+    pointer-events:none;
+    user-select:none;
+    transform-origin:center center;
+}
+.profile-crop-ring{
+    position:absolute;
+    inset:8%;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.92);
+    box-shadow:0 0 0 999px rgba(0,0,0,.30),0 0 0 1px rgba(34,211,238,.22) inset;
+    pointer-events:none;
+}
+.profile-zoom-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin-top:18px;color:#94a3b8}
+.profile-zoom-row input{width:100%;accent-color:#22d3ee}
+.profile-editor-help{margin-top:10px;text-align:center;color:#94a3b8;font-size:12px}
+.profile-editor-message{min-height:20px;margin-top:8px;text-align:center;font-size:12px;color:#fca5a5}
+.profile-editor-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px 20px;border-top:1px solid rgba(148,163,184,.12)}
+.profile-editor-secondary,.profile-editor-primary{min-height:42px;padding:0 16px;border-radius:11px;font:inherit;font-weight:900;cursor:pointer}
+.profile-editor-secondary{border:1px solid rgba(148,163,184,.18);background:#102338;color:#cbd5e1}
+.profile-editor-primary{border:1px solid rgba(34,211,238,.28);background:#0e7490;color:white}
+.profile-editor-primary:disabled{opacity:.55;cursor:wait}
+
+/* -------------------------
+   GUEST / MEMBER PERMISSIONS
+   Guest ยังคงดู Dashboard สาธารณะได้ แต่ฟังก์ชันสมาชิก
+   จะแสดงสัญลักษณ์ล็อกและพาไปหน้าเข้าสู่ระบบเมื่อกด
+   ------------------------- */
+.member-locked{
+    opacity:.58!important;
+    position:relative;
+}
+button.member-locked::after{
+    content:" 🔒";
+    font-size:.82em;
+}
+
+@media(max-width:560px){
+    .profile-editor{padding:12px}
+    .profile-editor-dialog{width:100%}
+    .profile-editor-header,.profile-editor-body{padding-left:16px;padding-right:16px}
+    .profile-editor-footer{padding-left:16px;padding-right:16px}
+    .profile-crop-stage{width:min(82vw,300px)}
+}
+
+
+/* =========================================================
+   V35 — GRANULAR PERMISSIONS / DISCORD-LIKE ACCESS EDITOR
+   Owner สามารถเปิด/ปิด Permission รายบัญชีได้ละเอียด
+   โดย Role ยังคงเป็นค่าเริ่มต้นของสิทธิ์
+   ========================================================= */
+
+.admin-user-editor-v35{
+    display:block;
+    padding:0;
+}
+
+.admin-user-editor-v35.hidden{
+    display:none!important;
+}
+
+.admin-user-editor-top{
+    display:grid;
+    grid-template-columns:minmax(180px,1fr) minmax(180px,1fr) auto;
+    gap:12px;
+    align-items:end;
+    padding:16px;
+    border-bottom:1px solid rgba(148,163,184,.10);
+}
+
+.admin-user-editor-top label{
+    display:grid;
+    gap:6px;
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:800;
+}
+
+.admin-user-editor-top select{
+    min-height:42px;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:11px;
+    background:#071624;
+    color:#f8fafc;
+    padding:0 11px;
+}
+
+.admin-permission-reset{
+    min-height:42px;
+    padding:0 14px;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:11px;
+    background:#102338;
+    color:#cbd5e1;
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.admin-permission-role-note{
+    margin:14px 16px 0;
+    padding:10px 12px;
+    border:1px solid rgba(34,211,238,.14);
+    border-radius:11px;
+    background:rgba(34,211,238,.045);
+    color:#94a3b8;
+    font-size:12px;
+    line-height:1.55;
+}
+
+.admin-permission-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    padding:16px;
+}
+
+.admin-permission-group{
+    min-width:0;
+    overflow:hidden;
+    border:1px solid rgba(148,163,184,.12);
+    border-radius:14px;
+    background:rgba(2,12,23,.26);
+}
+
+.admin-permission-group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 13px;
+    border-bottom:1px solid rgba(148,163,184,.10);
+    background:rgba(15,35,56,.55);
+}
+
+.admin-permission-group-head b{
+    color:#e2e8f0;
+    font-size:12px;
+}
+
+.admin-permission-group-head span{
+    color:#67e8f9;
+    font-size:10px;
+    font-weight:900;
+}
+
+.admin-permission-list{
+    display:grid;
+}
+
+.admin-permission-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:12px 13px;
+    cursor:pointer;
+    border-bottom:1px solid rgba(148,163,184,.07);
+}
+
+.admin-permission-item:last-child{
+    border-bottom:0;
+}
+
+.admin-permission-item:hover{
+    background:rgba(34,211,238,.035);
+}
+
+.admin-permission-copy{
+    min-width:0;
+    display:grid;
+    gap:3px;
+}
+
+.admin-permission-copy b{
+    color:#e2e8f0;
+    font-size:12px;
+    line-height:1.35;
+}
+
+.admin-permission-copy small{
+    color:#64748b;
+    font-size:10px;
+    line-height:1.45;
+}
+
+.admin-permission-switch{
+    position:relative;
+    flex:0 0 auto;
+    width:42px;
+    height:24px;
+}
+
+.admin-permission-switch input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+
+.admin-permission-switch i{
+    position:absolute;
+    inset:0;
+    border-radius:999px;
+    background:#1e293b;
+    border:1px solid rgba(148,163,184,.20);
+    transition:.18s ease;
+}
+
+.admin-permission-switch i::after{
+    content:"";
+    position:absolute;
+    top:3px;
+    left:3px;
+    width:16px;
+    height:16px;
+    border-radius:999px;
+    background:#94a3b8;
+    transition:.18s ease;
+}
+
+.admin-permission-switch input:checked+i{
+    background:rgba(6,182,212,.25);
+    border-color:rgba(34,211,238,.42);
+}
+
+.admin-permission-switch input:checked+i::after{
+    left:21px;
+    background:#67e8f9;
+}
+
+.admin-permission-switch input:disabled+i{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+.admin-user-editor-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:14px 16px 16px;
+    border-top:1px solid rgba(148,163,184,.10);
+}
+
+.admin-user-editor-footer span{
+    color:#64748b;
+    font-size:10px;
+    line-height:1.5;
+}
+
+.admin-user-editor-footer .admin-user-save{
+    flex:0 0 auto;
+}
+
+.member-feature-lock{
+    display:grid;
+    place-items:center;
+    gap:8px;
+    min-height:150px;
+    padding:24px;
+    border:1px dashed rgba(148,163,184,.18);
+    border-radius:14px;
+    background:rgba(2,12,23,.32);
+    text-align:center;
+}
+
+.member-feature-lock b{
+    color:#e2e8f0;
+    font-size:14px;
+}
+
+.member-feature-lock span{
+    max-width:420px;
+    color:#94a3b8;
+    font-size:12px;
+    line-height:1.6;
+}
+
+.member-feature-lock button{
+    margin-top:3px;
+    min-height:38px;
+    padding:0 14px;
+    border:1px solid rgba(34,211,238,.25);
+    border-radius:10px;
+    background:#0e7490;
+    color:white;
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+}
+
+@media(max-width:900px){
+    .admin-user-editor-top{
+        grid-template-columns:1fr 1fr;
+    }
+    .admin-permission-reset{
+        grid-column:1/-1;
+    }
+    .admin-permission-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:620px){
+    .admin-user-editor-top{
+        grid-template-columns:1fr;
+    }
+    .admin-permission-reset{
+        grid-column:auto;
+    }
+    .admin-user-editor-footer{
+        align-items:stretch;
+        flex-direction:column;
+    }
+    .admin-user-editor-footer .admin-user-save{
+        width:100%;
+    }
+}
+
+
+/* =========================================================
+   V34 — ACCOUNT MENU / USER MANAGEMENT FINAL
+   เมนูบัญชีแบ่งเป็นส่วนแบบอ่านง่าย คล้ายแนวคิด YouTube
+   ========================================================= */
+.header-account-avatar img.hidden,.account-menu-avatar img.hidden{display:none!important}
+.account-dropdown-v34{width:min(390px,calc(100vw - 24px));padding:0;overflow:hidden;border-radius:20px;background:#081725;border:1px solid rgba(148,163,184,.18);box-shadow:0 26px 80px rgba(0,0,0,.52)}
+.account-profile-v34{display:flex!important;gap:13px;align-items:center;padding:17px 18px!important;margin:0!important;border-bottom:1px solid rgba(148,163,184,.13)!important;background:rgba(15,34,53,.72)}
+.account-profile-v34 .account-menu-avatar{width:52px;height:52px;flex:0 0 52px}.account-profile-copy{min-width:0;flex:1}.account-profile-copy strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.account-profile-copy>small{display:block!important;margin-top:3px;color:#94a3b8!important;font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-profile-meta{display:flex;gap:7px;align-items:center;margin-top:8px}.account-profile-meta span{display:inline-flex!important;margin:0!important;padding:3px 7px;border-radius:999px;border:1px solid rgba(34,211,238,.18);background:rgba(8,145,178,.09);color:#67e8f9!important;font-size:10px!important;font-weight:900;letter-spacing:.04em!important}
+.account-menu-section{padding:7px;border-bottom:1px solid rgba(148,163,184,.12)}.account-menu-section-last{border-bottom:0}.account-menu-section-label{padding:6px 10px 4px;color:#64748b;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.account-dropdown-v34 .account-menu-item{display:grid;grid-template-columns:34px minmax(0,1fr) 18px;gap:10px;align-items:center;padding:10px 11px;border-radius:12px}.account-dropdown-v34 .account-menu-item>span:nth-child(2){min-width:0}.account-dropdown-v34 .account-menu-item b{display:block;color:#eaf2f8;font-size:13px}.account-dropdown-v34 .account-menu-item small{display:block;margin-top:2px;color:#64748b;font-size:10px;font-weight:600;line-height:1.35}.account-dropdown-v34 .account-menu-item>i{font-style:normal;font-size:22px;color:#64748b}.account-menu-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(30,58,82,.62);border:1px solid rgba(125,211,252,.12);font-size:15px;color:#cbd5e1}.account-dropdown-v34 .account-menu-item:hover{background:rgba(30,58,82,.52)}.account-dropdown-v34 .account-menu-danger b{color:#fda4af}.account-dropdown-v34 .account-menu-danger .account-menu-icon{color:#fda4af;background:rgba(190,24,93,.08);border-color:rgba(244,63,94,.15)}
+.admin-user-toolbar{grid-template-columns:minmax(240px,1fr) minmax(150px,220px)!important}.admin-user-editor-top{grid-template-columns:minmax(180px,260px) auto!important}.admin-user-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:16px 0 0;padding:14px 16px;border:1px solid rgba(248,113,113,.20);border-radius:14px;background:rgba(127,29,29,.08)}.admin-user-danger-zone>div{display:grid;gap:3px}.admin-user-danger-zone b{color:#fecaca;font-size:13px}.admin-user-danger-zone span{color:#94a3b8;font-size:11px;line-height:1.45}.admin-user-delete{min-height:38px;padding:0 14px;border-radius:10px;border:1px solid rgba(248,113,113,.3);background:rgba(190,24,93,.13);color:#fecdd3;font-weight:900;cursor:pointer;white-space:nowrap}.admin-user-delete:hover{background:rgba(190,24,93,.23)}
+@media(max-width:640px){.account-dropdown-v34{width:min(360px,calc(100vw - 20px))}.admin-user-toolbar,.admin-user-editor-top{grid-template-columns:1fr!important}.admin-user-danger-zone{align-items:stretch;flex-direction:column}.admin-user-delete{width:100%}}
+
+
+/* =========================================================
+   V34.1 — MY ACCOUNT / CLEAN ACCOUNT HUB
+   หน้าต่างบัญชีแยกข้อมูลเป็นส่วนเพื่อให้ผู้ใช้ทุกระดับหาเมนูง่าย
+   ========================================================= */
+.my-account-center,.account-security-modal{position:fixed;inset:0;z-index:180;display:grid;place-items:center;padding:20px}.my-account-center.hidden,.account-security-modal.hidden{display:none!important}.my-account-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.76);backdrop-filter:blur(9px)}
+.my-account-shell{position:relative;width:min(920px,96vw);max-height:min(820px,92vh);overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(180deg,#0b1b2c 0%,#071522 100%);box-shadow:0 32px 100px rgba(0,0,0,.58)}
+.my-account-header,.account-security-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:22px 24px;border-bottom:1px solid rgba(148,163,184,.12);background:rgba(8,23,37,.94);backdrop-filter:blur(14px)}
+.my-account-header h2,.account-security-header h2{margin:3px 0 4px;font-size:22px;color:#f8fafc}.my-account-header p,.account-security-header p{margin:0;color:#94a3b8;font-size:12px}.my-account-eyebrow{font-size:9px;font-weight:900;letter-spacing:.16em;color:#22d3ee}.my-account-close{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(30,41,59,.45);color:#cbd5e1;font-size:24px;cursor:pointer}.my-account-close:hover{background:rgba(51,65,85,.65);color:#fff}
+.my-account-body{padding:22px}.my-account-hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:20px;border:1px solid rgba(34,211,238,.15);border-radius:20px;background:linear-gradient(135deg,rgba(8,145,178,.10),rgba(15,23,42,.34))}.my-account-avatar{display:grid;place-items:center;width:82px;height:82px;overflow:hidden;border-radius:999px;border:2px solid rgba(103,232,249,.32);background:#102338;font-size:32px}.my-account-avatar img{width:100%;height:100%;object-fit:cover}.my-account-avatar img.hidden{display:none!important}.my-account-identity{min-width:0}.my-account-identity h3{margin:0;color:#f8fafc;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.my-account-identity p{margin:4px 0 0;color:#94a3b8;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.my-account-badges{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.my-account-badges span{padding:4px 8px;border:1px solid rgba(34,211,238,.18);border-radius:999px;background:rgba(8,145,178,.09);color:#67e8f9;font-size:10px;font-weight:900}
+.my-account-primary,.my-account-secondary{min-height:40px;padding:0 15px;border-radius:11px;font-weight:900;cursor:pointer}.my-account-primary{border:1px solid rgba(34,211,238,.28);background:#0e7490;color:#fff}.my-account-primary:hover{background:#0891b2}.my-account-secondary{border:1px solid rgba(148,163,184,.18);background:#102338;color:#e2e8f0}.my-account-secondary:hover{background:#17314b}.my-account-secondary.hidden{display:none!important}
+.my-account-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.my-account-card{position:relative;padding:18px;border:1px solid rgba(148,163,184,.13);border-radius:18px;background:rgba(9,24,39,.72)}.my-account-card-wide{grid-column:1/-1}.my-account-card-icon{display:grid;place-items:center;width:38px;height:38px;margin-bottom:12px;border:1px solid rgba(125,211,252,.14);border-radius:11px;background:rgba(30,58,82,.52);font-size:17px}.my-account-card-copy h3{margin:0;color:#f1f5f9;font-size:15px}.my-account-card-copy p{margin:4px 0 14px;color:#64748b;font-size:11px;line-height:1.55}.my-account-details{display:grid;margin:0}.my-account-details>div,.my-account-action-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-top:1px solid rgba(148,163,184,.09)}.my-account-details dt,.my-account-action-row b{color:#94a3b8;font-size:11px;font-weight:700}.my-account-details dd,.my-account-action-row span{margin:0;color:#e2e8f0;font-size:12px;font-weight:800;text-align:right;overflow-wrap:anywhere}.my-account-photo-actions{display:flex;flex-wrap:wrap;gap:9px}.my-account-note{margin-top:14px;padding:12px 14px;border:1px solid rgba(148,163,184,.10);border-radius:13px;background:rgba(15,23,42,.38);color:#64748b;font-size:10px;line-height:1.55}
+.account-security-shell{position:relative;width:min(520px,95vw);overflow:hidden;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:#081725;box-shadow:0 28px 90px rgba(0,0,0,.56)}.account-security-header{position:relative}.account-security-form{display:grid;gap:14px;padding:22px}.account-security-form label{display:grid;gap:6px;color:#cbd5e1;font-size:11px;font-weight:800}.account-security-form input{width:100%;min-height:44px;padding:0 12px;border:1px solid rgba(148,163,184,.18);border-radius:11px;background:#07131f;color:#f8fafc;outline:none}.account-security-form input:focus{border-color:rgba(34,211,238,.5);box-shadow:0 0 0 3px rgba(34,211,238,.08)}.account-security-form small{color:#64748b;font-size:10px}.account-security-message{min-height:18px;color:#fbbf24;font-size:11px}.account-security-form footer{display:flex;justify-content:flex-end;gap:9px;margin-top:2px}
+@media(max-width:700px){.my-account-center{padding:10px}.my-account-shell{max-height:94vh;border-radius:20px}.my-account-header{padding:18px}.my-account-body{padding:14px}.my-account-hero{grid-template-columns:auto 1fr;padding:16px}.my-account-hero>.my-account-primary{grid-column:1/-1;width:100%}.my-account-avatar{width:66px;height:66px}.my-account-grid{grid-template-columns:1fr}.my-account-card-wide{grid-column:auto}.my-account-details>div{align-items:flex-start;flex-direction:column;gap:4px}.my-account-details dd{text-align:left}.account-security-form footer{flex-direction:column-reverse}.account-security-form footer button{width:100%}}
+
+/* =====================================================
+   V34.2 — NOTIFICATION CENTER
+   ===================================================== */
+.notification-center-modal,.notification-detail-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:22px}.notification-center-modal.hidden,.notification-detail-modal.hidden{display:none!important}.notification-modal-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.76);backdrop-filter:blur(12px)}.notification-settings-shell{position:relative;width:min(760px,96vw);max-height:90vh;overflow:auto;border:1px solid rgba(125,211,252,.18);border-radius:28px;background:linear-gradient(145deg,rgba(11,25,45,.99),rgba(5,15,30,.99));box-shadow:0 32px 90px rgba(0,0,0,.48)}.notification-settings-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:24px 26px 20px;border-bottom:1px solid rgba(148,163,184,.12);background:rgba(8,20,38,.94);backdrop-filter:blur(16px)}.notification-title-wrap{display:flex;gap:15px;align-items:flex-start}.notification-title-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:rgba(14,165,233,.12);font-size:24px}.notification-eyebrow{font-size:10px;font-weight:800;letter-spacing:.18em;color:#38bdf8}.notification-settings-header h2{margin:2px 0 3px;font-size:23px;color:#f8fafc}.notification-settings-header p{margin:0;color:#94a3b8;font-size:13px}.notification-close{border:0;width:38px;height:38px;border-radius:12px;background:rgba(148,163,184,.09);color:#cbd5e1;font-size:25px;cursor:pointer}.notification-close:hover{background:rgba(148,163,184,.16);color:#fff}.notification-settings-body{padding:22px 26px 26px}.notification-master-card,.notification-permission-card{display:flex;align-items:center;gap:16px;padding:18px;border:1px solid rgba(148,163,184,.12);border-radius:20px;background:rgba(15,30,51,.72)}.notification-master-card{justify-content:space-between}.notification-master-card strong,.notification-permission-card strong{color:#f1f5f9;font-size:14px}.notification-master-card p,.notification-permission-card p{margin:4px 0 0;color:#94a3b8;font-size:12px;line-height:1.55}.notification-permission-card{margin-top:12px}.notification-permission-card.is-granted{border-color:rgba(34,197,94,.22);background:rgba(22,101,52,.09)}.notification-permission-card.is-denied{border-color:rgba(248,113,113,.22);background:rgba(127,29,29,.1)}.notification-permission-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:rgba(148,163,184,.09);font-size:20px}.notification-permission-card>div:nth-child(2){flex:1}.notification-permission-button,.notification-save-button,.notification-detail-action{border:0;border-radius:13px;padding:11px 16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#03111f}.notification-permission-button:disabled{opacity:.5;cursor:not-allowed}.notification-section-label{margin:24px 2px 11px}.notification-section-label span{display:block;color:#e2e8f0;font-size:13px;font-weight:800}.notification-section-label small{display:block;margin-top:3px;color:#64748b;font-size:11px}.notification-topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.notification-topic-card{display:flex;align-items:center;gap:13px;min-height:86px;padding:15px;border:1px solid rgba(148,163,184,.11);border-radius:18px;background:rgba(15,30,51,.5);cursor:pointer;transition:.18s ease}.notification-topic-card:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.25);background:rgba(15,35,60,.72)}.notification-topic-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:rgba(14,165,233,.08);font-size:20px}.notification-topic-copy{min-width:0;flex:1}.notification-topic-copy b{display:block;color:#eaf2ff;font-size:13px}.notification-topic-copy small{display:block;margin-top:4px;color:#8292a8;font-size:11px;line-height:1.45}.notification-system-label{margin-top:18px}.notification-topic-wide{width:100%}.notification-switch{position:relative;display:inline-flex;flex:0 0 auto}.notification-switch input{position:absolute;opacity:0;pointer-events:none}.notification-switch>span{display:block;width:44px;height:25px;border-radius:999px;background:#334155;position:relative;transition:.2s}.notification-switch>span:after{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 7px rgba(0,0,0,.3)}.notification-switch input:checked+span{background:#0ea5e9}.notification-switch input:checked+span:after{transform:translateX(19px)}.notification-footer-note{display:flex;gap:9px;margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(14,165,233,.06);color:#7f93aa;font-size:11px;line-height:1.55}.notification-footer-note p{margin:0}.notification-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:18px}.notification-actions>span{color:#86efac;font-size:12px}.notification-detail-shell{position:relative;width:min(460px,94vw);padding:30px;border:1px solid rgba(125,211,252,.18);border-radius:26px;background:linear-gradient(145deg,#0b1c31,#071426);box-shadow:0 30px 80px rgba(0,0,0,.5);text-align:center}.notification-detail-shell .notification-close{position:absolute;right:16px;top:16px}.notification-detail-icon{display:grid;place-items:center;width:62px;height:62px;margin:2px auto 14px;border-radius:20px;background:rgba(14,165,233,.1);font-size:29px}.notification-detail-kicker{font-size:10px;font-weight:900;letter-spacing:.15em;color:#38bdf8}.notification-detail-shell h2{margin:6px 0 8px;color:#f8fafc;font-size:21px}.notification-detail-shell p{margin:0 auto;color:#a8b7ca;font-size:13px;line-height:1.65;max-width:360px}.notification-detail-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:17px 0}.notification-detail-meta span{padding:6px 10px;border-radius:999px;background:rgba(148,163,184,.08);color:#94a3b8;font-size:11px}.notification-detail-action{margin-top:3px}.account-menu-icon{font-style:normal}
+@media(max-width:680px){.notification-center-modal{padding:10px}.notification-settings-shell{width:100%;max-height:94vh;border-radius:23px}.notification-settings-header{padding:20px 18px 16px}.notification-settings-body{padding:16px 18px 20px}.notification-topic-grid{grid-template-columns:1fr}.notification-permission-card{align-items:flex-start;flex-wrap:wrap}.notification-permission-button{width:100%}.notification-title-icon{width:43px;height:43px}.notification-master-card{gap:12px}}
