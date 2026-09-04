@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260904-account-hub-v341" rel="stylesheet"/>
+<link href="style.css?v=20260904-notifications-v342" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -114,6 +114,7 @@ HEADER
     </div>
     <div class="account-menu-section">
       <button type="button" id="openMyAccountButton" class="account-menu-item"><span class="account-menu-icon">👤</span><span><b>บัญชีของฉัน</b><small>โปรไฟล์ รูปภาพ และความปลอดภัยของบัญชี</small></span><i>›</i></button>
+      <button type="button" id="openNotificationSettingsButton" class="account-menu-item"><span class="account-menu-icon">🔔</span><span><b>การแจ้งเตือน</b><small>เลือกสถานการณ์ที่ต้องการรับแจ้งเตือน</small></span><i>›</i></button>
     </div>
     <div class="account-menu-section account-management-section">
       <button type="button" id="openContentManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">✎</span><span><b>จัดการเนื้อหา</b><small>คำอธิบาย จุดตรวจวัด และประกาศ</small></span><i>›</i></button>
@@ -1278,6 +1279,55 @@ V34.1 — MY ACCOUNT CENTER
 รวมข้อมูลส่วนตัว รูปโปรไฟล์ และความปลอดภัยไว้ในหน้าต่างเดียว
 เพื่อไม่ให้เมนูโปรไฟล์ด้านบนมีตัวเลือกมากเกินไป
 ========================================================= -->
+<!-- =====================================================
+     V34.2 — NOTIFICATION SETTINGS
+     ===================================================== -->
+<div class="notification-center-modal hidden" id="notificationSettingsModal" aria-hidden="true">
+  <div class="notification-modal-backdrop" data-notification-close></div>
+  <section class="notification-settings-shell" role="dialog" aria-modal="true" aria-labelledby="notificationSettingsTitle">
+    <header class="notification-settings-header">
+      <div class="notification-title-wrap"><span class="notification-title-icon">🔔</span><div><span class="notification-eyebrow">NOTIFICATIONS</span><h2 id="notificationSettingsTitle">การแจ้งเตือน</h2><p>เลือกสถานการณ์ที่คุณต้องการให้ระบบแจ้งเตือน</p></div></div>
+      <button type="button" class="notification-close" data-notification-close aria-label="ปิด">×</button>
+    </header>
+    <div class="notification-settings-body">
+      <section class="notification-master-card">
+        <div><strong>เปิดใช้งานการแจ้งเตือน</strong><p>ปิดได้ชั่วคราวโดยไม่ทำให้ตัวเลือกด้านล่างหาย</p></div>
+        <label class="notification-switch"><input type="checkbox" id="notificationMaster"><span></span></label>
+      </section>
+      <div class="notification-permission-card" id="notificationPermissionCard">
+        <div class="notification-permission-icon" id="notificationPermissionIcon">🔕</div>
+        <div><strong id="notificationPermissionTitle">ยังไม่ได้อนุญาตการแจ้งเตือน</strong><p id="notificationPermissionText">กดอนุญาตเพื่อรับข้อความแจ้งเตือนจากเบราว์เซอร์</p></div>
+        <button type="button" id="requestNotificationPermission" class="notification-permission-button">อนุญาต</button>
+      </div>
+      <div class="notification-section-label"><span>สถานการณ์สิ่งแวดล้อม</span><small>ระบบจะเตือนเมื่อสถานการณ์เปลี่ยนเข้าสู่ระดับที่ควรเฝ้าระวัง</small></div>
+      <div class="notification-topic-grid">
+        <label class="notification-topic-card"><span class="notification-topic-icon">🌫️</span><span class="notification-topic-copy"><b>ฝุ่นละออง</b><small>PM2.5 หรือ PM10 อยู่ในระดับที่ควรเฝ้าระวัง</small></span><span class="notification-switch"><input type="checkbox" id="notifyDust"><span></span></span></label>
+        <label class="notification-topic-card"><span class="notification-topic-icon">🌡️</span><span class="notification-topic-copy"><b>อุณหภูมิ</b><small>อุณหภูมิสูงหรือต่ำเข้าสู่ระดับที่ควรเฝ้าระวัง</small></span><span class="notification-switch"><input type="checkbox" id="notifyTemperature"><span></span></span></label>
+        <label class="notification-topic-card"><span class="notification-topic-icon">💧</span><span class="notification-topic-copy"><b>ความชื้น</b><small>ความชื้นสูงหรือต่ำผิดจากช่วงปกติของโครงการ</small></span><span class="notification-switch"><input type="checkbox" id="notifyHumidity"><span></span></span></label>
+        <label class="notification-topic-card"><span class="notification-topic-icon">☀️</span><span class="notification-topic-copy"><b>ดัชนีความร้อน (Heat Index)</b><small>ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้น</small></span><span class="notification-switch"><input type="checkbox" id="notifyHeatIndex"><span></span></span></label>
+      </div>
+      <div class="notification-section-label notification-system-label"><span>สถานะระบบ</span></div>
+      <label class="notification-topic-card notification-topic-wide"><span class="notification-topic-icon">📡</span><span class="notification-topic-copy"><b>สถานะอุปกรณ์</b><small>แจ้งเมื่อจุดตรวจวัด Offline และเมื่อกลับมา Online</small></span><span class="notification-switch"><input type="checkbox" id="notifyDevice"><span></span></span></label>
+      <div class="notification-footer-note"><span>ⓘ</span><p>ระบบจะไม่แจ้งทุกครั้งที่มีข้อมูลเข้า แต่จะแจ้งเมื่อสถานการณ์เปลี่ยน เพื่อป้องกันข้อความซ้ำ</p></div>
+      <div class="notification-actions"><span id="notificationSaveStatus"></span><button type="button" id="saveNotificationSettings" class="notification-save-button">บันทึกการตั้งค่า</button></div>
+    </div>
+  </section>
+</div>
+
+<!-- =====================================================
+     V34.2 — NOTIFICATION DETAIL
+     ===================================================== -->
+<div class="notification-detail-modal hidden" id="notificationDetailModal" aria-hidden="true">
+  <div class="notification-modal-backdrop" data-notification-detail-close></div>
+  <section class="notification-detail-shell" role="dialog" aria-modal="true" aria-labelledby="notificationDetailTitle">
+    <button type="button" class="notification-close" data-notification-detail-close aria-label="ปิด">×</button>
+    <div class="notification-detail-icon" id="notificationDetailIcon">🔔</div>
+    <span class="notification-detail-kicker">สถานการณ์ล่าสุด</span><h2 id="notificationDetailTitle">การแจ้งเตือน</h2><p id="notificationDetailMessage"></p>
+    <div class="notification-detail-meta"><span id="notificationDetailDevice">--</span><span id="notificationDetailTime">--</span></div>
+    <button type="button" class="notification-detail-action" id="notificationDetailGo">ดูข้อมูลจุดตรวจวัด</button>
+  </section>
+</div>
+
 <div class="my-account-center hidden" id="myAccountCenter" aria-hidden="true">
   <div class="my-account-backdrop" data-my-account-close></div>
   <section class="my-account-shell" role="dialog" aria-modal="true" aria-labelledby="myAccountTitle">
@@ -1456,7 +1506,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260904-account-hub-v341"></script>
+<script defer src="app.js?v=20260904-notifications-v342"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
