@@ -10535,9 +10535,9 @@ function updateMemberPermissionUI(){
 
   const aiAllowed=Boolean(authUser&&authToken);
   document.querySelectorAll('[data-dashboard-page="analysis"]').forEach(el=>{
-    el.classList.toggle("member-locked",!aiAllowed);
-    el.setAttribute("aria-disabled",aiAllowed?"false":"true");
-    el.title=aiAllowed?"":"เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์และคาดการณ์";
+    el.classList.remove("member-locked");
+    el.setAttribute("aria-disabled","false");
+    el.removeAttribute("title");
   });
   [$('aiRefreshButton'),$('aiForecastRefreshButton')].forEach(btn=>{
     if(!btn)return;
@@ -10556,11 +10556,12 @@ function updateAccountUI(){
     setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
     setAvatar("accountMenuAvatarImage","accountMenuAvatarFallback",authUser);
     chev?.classList.remove("hidden");
-    if(badge){badge.textContent=authRoleThai(authUser.role);badge.classList.remove("hidden");}
+    if(badge){badge.textContent=authRoleLabel(authUser.role);badge.classList.remove("hidden");}
+    $("headerNotificationButton")?.classList.remove("hidden");
     const mn=$("accountMenuName"),mr=$("accountMenuRole"),mp=$("accountMenuProvider");
     if(mn)mn.textContent=authUser.display_name||authUser.email;
     if($("accountMenuEmail"))$("accountMenuEmail").textContent=authUser.email||"";
-    if(mr)mr.textContent=`${authRoleLabel(authUser.role)} • ${authRoleThai(authUser.role)}`;
+    if(mr)mr.textContent=authRoleLabel(authUser.role);
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     contentBtn?.classList.toggle("hidden",!["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key)));
     usersBtn?.classList.toggle("hidden",!hasPermission("manage_users_view"));
@@ -10571,11 +10572,10 @@ function updateAccountUI(){
     chev?.classList.add("hidden");
     badge?.classList.add("hidden");
     menu?.classList.add("hidden");
+    $("headerNotificationButton")?.classList.add("hidden");
+    $("headerNotificationBadge")?.classList.add("hidden");
 
-    // Guest ต้องไม่เห็นผล AI ที่ค้างมาจาก session ก่อนหน้า
-    aiPayload=null;
-    aiForecastPayload=null;
-    if(typeof renderAIForecast==="function")renderAIForecast(null);
+    // Guest ดูผลวิเคราะห์ที่ระบบมีได้ แต่กด "วิเคราะห์ใหม่" ต้อง Login
     if(typeof loadAI==="function")loadAI(false);
     if(typeof loadAIForecast==="function")loadAIForecast(false);
   }
@@ -10688,7 +10688,7 @@ async function initGoogleIdentity(){
   const target=$("googleSignInButton");
   if(target){
     target.innerHTML="";
-    const googleButtonWidth=Math.max(240,Math.min(360,Math.floor(target.getBoundingClientRect().width||360)));
+    const googleButtonWidth=Math.max(220,Math.min(336,Math.floor((target.parentElement?.clientWidth||target.clientWidth||336)-12)));
     google.accounts.id.renderButton(target,{
       theme:"filled_black",
       size:"large",
@@ -11380,6 +11380,10 @@ function openNotificationDetailFromUrl(){
     document.querySelectorAll("[data-notification-back]").forEach(x=>x.addEventListener("click",backFromNotificationSettings));
     document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
     document.querySelectorAll("[data-notification-detail-back]").forEach(x=>x.addEventListener("click",backFromNotificationDetail));
+    $("headerNotificationButton")?.addEventListener("click",()=>{
+      if(!authUser)return;
+      openNotificationSettings();
+    });
     $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
     $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
