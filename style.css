@@ -14034,81 +14034,221 @@ button.member-locked::after{
 
 
 /* =====================================================
-   V34.8 — HEADER / ACCOUNT
+   V34.8 SAFE — HEADER
    ===================================================== */
+
 .header-account-zone{
-  display:flex!important;align-items:center!important;justify-content:flex-end!important;
-  gap:12px!important;min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:12px!important;
+    min-width:0!important;
 }
+
 .header-profile-stack{
-  display:grid;justify-items:center;align-items:center;gap:2px;min-width:128px;
+    display:grid;
+    justify-items:center;
+    align-items:center;
+    gap:2px;
+    min-width:128px;
 }
+
 .header-account-button{
-  display:flex!important;align-items:center!important;justify-content:flex-end!important;
-  gap:8px!important;width:auto!important;max-width:240px!important;min-width:0!important;
-  padding:5px 6px 5px 8px!important;background:transparent!important;
-  border-color:transparent!important;box-shadow:none!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:240px!important;
+    padding:5px 6px 5px 8px!important;
+    background:transparent!important;
+    border-color:transparent!important;
+    box-shadow:none!important;
 }
-.header-account-button:hover{background:rgba(15,38,57,.72)!important;border-color:rgba(103,232,249,.16)!important}
-.header-account-chevron{order:1;color:#94a3b8;font-size:12px}
+
+.header-account-button:hover{
+    background:rgba(15,38,57,.72)!important;
+    border-color:rgba(103,232,249,.16)!important;
+}
+
+.header-account-chevron{
+    order:1;
+    color:#94a3b8;
+    font-size:12px;
+}
+
 #accountButtonText{
-  order:2;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:#f8fafc;font-weight:800;
+    order:2;
+    max-width:145px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#f8fafc;
+    font-weight:800;
 }
-.header-account-avatar{order:3;width:38px!important;height:38px!important;flex:0 0 38px!important}
+
+.header-account-avatar{
+    order:3;
+    width:38px!important;
+    height:38px!important;
+    flex:0 0 38px!important;
+}
+
 .header-account-role{
-  margin:0!important;padding:0!important;border:0!important;background:transparent!important;
-  color:#67e8f9!important;font-size:10px!important;line-height:1.2!important;font-weight:900!important;
-  letter-spacing:.12em!important;text-align:center!important;white-space:nowrap;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    color:#67e8f9!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+    font-weight:900!important;
+    letter-spacing:.12em!important;
+    text-align:center!important;
+    white-space:nowrap;
 }
+
 .header-clock{
-  margin:0!important;padding:0!important;color:#94a3b8!important;font-size:11px!important;
-  line-height:1.3!important;text-align:center!important;white-space:nowrap;
+    margin:0!important;
+    padding:0!important;
+    color:#94a3b8!important;
+    font-size:11px!important;
+    line-height:1.3!important;
+    text-align:center!important;
+    white-space:nowrap;
 }
+
 .header-notification-button{
-  position:relative;display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;
-  border:1px solid rgba(148,163,184,.14);border-radius:999px;background:rgba(15,30,48,.54);
-  color:#cbd5e1;cursor:pointer;transition:.18s ease;
+    position:relative;
+    display:grid;
+    place-items:center;
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:999px;
+    background:rgba(15,30,48,.54);
+    color:#cbd5e1;
+    cursor:pointer;
+    transition:.18s ease;
 }
-.header-notification-button:hover{color:#67e8f9;border-color:rgba(34,211,238,.35);background:rgba(8,145,178,.13)}
+
+.header-notification-button:hover{
+    color:#67e8f9;
+    border-color:rgba(34,211,238,.35);
+    background:rgba(8,145,178,.13);
+}
+
 .header-notification-button svg{
-  width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round
+    width:20px;
+    height:20px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
 }
+
 .header-notification-badge{
-  position:absolute;top:-3px;right:-3px;display:grid;place-items:center;min-width:17px;height:17px;padding:0 4px;
-  border:2px solid #07111f;border-radius:999px;background:#ef4444;color:#fff;font-size:9px;font-weight:900
+    position:absolute;
+    top:-3px;
+    right:-3px;
+    display:grid;
+    place-items:center;
+    min-width:17px;
+    height:17px;
+    padding:0 4px;
+    border:2px solid #07111f;
+    border-radius:999px;
+    background:#ef4444;
+    color:#fff;
+    font-size:9px;
+    font-weight:900;
 }
-.header-notification-button.hidden,.header-notification-badge.hidden{display:none!important}
+
+.header-notification-button.hidden,
+.header-notification-badge.hidden{
+    display:none!important;
+}
 
 /* =====================================================
-   V34.8 — GOOGLE SIGN-IN
+   V34.8 SAFE — GOOGLE
    ===================================================== */
-.auth-google-button{width:100%!important;max-width:100%!important;padding:0 6px!important;overflow:visible!important}
-.auth-google-button>div{max-width:100%!important;margin:0 auto!important;overflow:visible!important}
-.auth-google-button iframe{display:block!important;max-width:100%!important;margin:0 auto!important}
+
+.auth-google-button{
+    width:100%!important;
+    max-width:100%!important;
+    padding:0 6px!important;
+    overflow:visible!important;
+}
+
+.auth-google-button>div{
+    max-width:100%!important;
+    margin:0 auto!important;
+    overflow:visible!important;
+}
+
+.auth-google-button iframe{
+    display:block!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+}
 
 /* =====================================================
-   V34.8 — HELP BUTTON ALIGNMENT
+   V34.8 SAFE — HELP BUTTONS
    ===================================================== */
-.section-heading-row,.section-title-row,.page-section-heading,.about-section-heading,
-.history-section-heading,.ai-section-heading{
-  justify-content:flex-start!important;align-items:center!important;column-gap:8px!important
+
+.section-title-with-help{
+    display:inline-flex!important;
+    width:auto!important;
+    max-width:100%!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
 }
-.section-heading-row .help-button,.section-title-row .help-button,.page-section-heading .help-button,
-.about-section-heading .help-button,.history-section-heading .help-button,.ai-section-heading .help-button,
-.section-heading-row [data-help],.section-title-row [data-help]{
-  margin-left:0!important;margin-right:0!important;flex:0 0 auto!important
+
+.section-title-with-help .help-button{
+    flex:0 0 auto!important;
+    margin:0!important;
 }
-.ai-title:empty{display:none!important}
+
+.ai-title:empty{
+    display:none!important;
+}
 
 /* =====================================================
-   V34.8 — MOBILE
+   V34.8 SAFE — MOBILE
    ===================================================== */
+
 @media(max-width:760px){
-  .header-account-zone{display:flex!important;width:100%!important;justify-content:flex-end!important}
-  .header-profile-stack{min-width:112px}
-  .header-account-button{max-width:205px!important}
-  #accountButtonText{max-width:112px;font-size:12px}
-  .header-account-avatar{width:35px!important;height:35px!important;flex-basis:35px!important}
-  .header-notification-button{width:38px;height:38px;flex-basis:38px}
+    .header-account-zone{
+        width:100%!important;
+        justify-content:flex-end!important;
+    }
+
+    .header-profile-stack{
+        min-width:112px;
+    }
+
+    .header-account-button{
+        max-width:205px!important;
+    }
+
+    #accountButtonText{
+        max-width:112px;
+        font-size:12px;
+    }
+
+    .header-account-avatar{
+        width:35px!important;
+        height:35px!important;
+        flex-basis:35px!important;
+    }
+
+    .header-notification-button{
+        width:38px;
+        height:38px;
+        flex-basis:38px;
+    }
 }
