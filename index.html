@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260904-login-cms-v31-ui-fix1" rel="stylesheet"/>
+<link href="style.css?v=20260904-account-v32" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -102,6 +102,7 @@ HEADER
     <div class="account-dropdown-profile">
       <strong id="accountMenuName">ผู้ใช้งาน</strong>
       <span id="accountMenuRole">USER</span>
+      <small id="accountMenuProvider">Email</small>
     </div>
     <button type="button" id="openAdminCenterButton" class="account-menu-item hidden">🛡️ ศูนย์จัดการระบบ</button>
     <button type="button" id="changePasswordButton" class="account-menu-item">🔑 เปลี่ยนรหัสผ่าน</button>
@@ -1169,6 +1170,10 @@ LOGIN / ACCOUNT
       <button type="button" class="auth-tab active" data-auth-mode="login">เข้าสู่ระบบ</button>
       <button type="button" class="auth-tab" data-auth-mode="register">สมัครสมาชิก</button>
     </div>
+    <div class="auth-social hidden" id="authSocialArea">
+      <div class="auth-google-button" id="googleSignInButton"></div>
+      <div class="auth-divider"><span>หรือใช้อีเมล</span></div>
+    </div>
     <form class="auth-form" id="loginForm">
       <label>อีเมล<input id="loginEmail" type="email" autocomplete="email" required></label>
       <label>รหัสผ่าน<div class="auth-password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" required><button type="button" class="auth-eye" data-toggle-password="loginPassword">👁</button></div></label>
@@ -1252,8 +1257,47 @@ ADMIN / OWNER CENTER
           </div>
         </section>
         <section class="admin-panel" data-admin-panel="users">
-          <div class="admin-panel-head"><div><h3>ผู้ใช้งานและสิทธิ์</h3><p>Admin ดูรายชื่อได้ ส่วนการเปลี่ยน Role หรือระงับบัญชีทำได้เฉพาะ Owner</p></div></div>
-          <div class="admin-user-list" id="adminUserList"><div class="admin-empty">กำลังโหลด...</div></div>
+          <div class="admin-panel-head admin-users-head">
+            <div>
+              <h3>ผู้ใช้งานและสิทธิ์</h3>
+              <p>ค้นหาด้วยชื่อหรืออีเมล แล้วจัดการสิทธิ์เฉพาะบัญชีที่ต้องการ</p>
+            </div>
+            <button class="admin-add-admin-button hidden" id="addAdminModeButton" type="button">＋ เพิ่ม Admin</button>
+          </div>
+
+          <div class="admin-user-toolbar">
+            <label class="admin-user-search">
+              <span>ค้นหาผู้ใช้</span>
+              <input id="adminUserSearch" type="search" autocomplete="off" placeholder="พิมพ์ชื่อหรืออีเมล...">
+            </label>
+            <label class="admin-user-filter">
+              <span>สิทธิ์</span>
+              <select id="adminUserRoleFilter">
+                <option value="all">ทั้งหมด</option>
+                <option value="owner">Owner</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
+            </label>
+            <label class="admin-user-filter">
+              <span>สถานะ</span>
+              <select id="adminUserStatusFilter">
+                <option value="all">ทั้งหมด</option>
+                <option value="active">ใช้งาน</option>
+                <option value="disabled">ระงับ</option>
+                <option value="pending">รอยืนยัน</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="admin-add-mode-banner hidden" id="adminAddModeBanner">
+            <div><b>เพิ่ม Admin</b><span>ค้นหาบัญชี แล้วกด “ตั้งเป็น Admin”</span></div>
+            <button type="button" id="cancelAddAdminMode">ยกเลิก</button>
+          </div>
+
+          <div class="admin-user-list admin-user-card-list" id="adminUserList">
+            <div class="admin-empty">กำลังโหลด...</div>
+          </div>
           <div class="admin-inline-message" id="userSaveMessage"></div>
         </section>
       </div>
@@ -1290,7 +1334,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260904-login-cms-v31-ui-fix1"></script>
+<script defer src="app.js?v=20260904-account-v32"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
