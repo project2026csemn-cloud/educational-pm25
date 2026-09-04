@@ -13449,3 +13449,216 @@ button.member-locked::after{
     .about-telegram-section{margin:18px 0 14px}
     .about-telegram-section .about-telegram-link{min-height:68px;padding:12px 14px;border-radius:16px}
 }
+
+
+/* =====================================================
+   V34.6 — TELEGRAM STRIP / MOBILE UX FIX
+   ===================================================== */
+
+#page-about .about-telegram-section{
+    display:block !important;
+    width:100% !important;
+    min-height:0 !important;
+    height:auto !important;
+    margin:20px 0 16px !important;
+    padding:0 !important;
+    overflow:visible !important;
+}
+
+#page-about #telegramSituationLink{
+    position:relative !important;
+    display:grid !important;
+    grid-template-columns:48px minmax(0,1fr) 38px !important;
+    align-items:center !important;
+    gap:14px !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    min-height:72px !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:12px 16px !important;
+    border:1px solid rgba(56,189,248,.28) !important;
+    border-radius:18px !important;
+    background:
+      radial-gradient(circle at 4% 50%,rgba(42,171,238,.18),transparent 19%),
+      linear-gradient(135deg,rgba(8,31,47,.98),rgba(7,21,35,.98)) !important;
+    box-shadow:0 14px 34px rgba(2,8,23,.24),inset 0 1px 0 rgba(255,255,255,.04) !important;
+    text-decoration:none !important;
+    overflow:hidden !important;
+}
+
+#page-about #telegramSituationLink,
+#page-about #telegramSituationLink *{
+    text-decoration:none !important;
+}
+
+#page-about #telegramSituationLink .about-telegram-logo{
+    display:grid !important;
+    place-items:center !important;
+    width:48px !important;
+    height:48px !important;
+    margin:0 !important;
+    padding:0 !important;
+    flex:none !important;
+}
+
+#page-about #telegramSituationLink .about-telegram-logo svg{
+    display:block !important;
+    width:48px !important;
+    height:48px !important;
+}
+
+#page-about #telegramSituationLink .about-telegram-text{
+    display:block !important;
+    width:auto !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    color:#e8f7ff !important;
+    font-size:16px !important;
+    font-weight:800 !important;
+    line-height:1.35 !important;
+    text-decoration:none !important;
+}
+
+#page-about #telegramSituationLink .about-telegram-text strong{
+    color:#67d5ff !important;
+    text-decoration:none !important;
+}
+
+#page-about #telegramSituationLink .about-telegram-arrow{
+    display:grid !important;
+    place-items:center !important;
+    width:38px !important;
+    height:38px !important;
+    margin:0 !important;
+    padding:0 !important;
+    border-radius:12px !important;
+    align-self:center !important;
+    justify-self:end !important;
+    line-height:1 !important;
+}
+
+#page-about .about-telegram-section + .about-credit-section{
+    margin-top:0 !important;
+}
+
+/* =====================================================
+   V34.6 — NOTIFICATION STATES
+   ===================================================== */
+
+.notification-permission-card.is-granted .notification-permission-icon{
+    color:#86efac;
+    font-weight:900;
+    background:rgba(34,197,94,.12);
+}
+
+.notification-permission-card.is-denied .notification-permission-icon{
+    color:#fca5a5;
+    font-weight:900;
+    background:rgba(239,68,68,.12);
+}
+
+.notification-center-modal.notifications-paused .notification-topic-card{
+    opacity:.48;
+    filter:saturate(.62);
+    cursor:not-allowed;
+}
+
+.notification-center-modal.notifications-paused .notification-topic-card:hover{
+    transform:none;
+    border-color:rgba(148,163,184,.11);
+    background:rgba(15,30,51,.5);
+}
+
+.notification-center-modal.notifications-paused .notification-topic-card .notification-switch{
+    pointer-events:none;
+}
+
+.notification-center-modal.notifications-paused .notification-section-label small::after{
+    content:" • การแจ้งเตือนทั้งหมดถูกปิดอยู่";
+    color:#fbbf24;
+}
+
+@media(max-width:680px){
+    .notification-settings-header{
+        gap:10px;
+        padding:16px 15px 14px;
+    }
+
+    .notification-settings-body{
+        padding:13px 14px 17px;
+    }
+
+    .notification-master-card,
+    .notification-permission-card{
+        padding:14px;
+        border-radius:16px;
+    }
+
+    .notification-topic-card{
+        min-height:72px;
+        padding:12px;
+        border-radius:15px;
+    }
+
+    .notification-topic-icon{
+        width:38px;
+        height:38px;
+        flex-basis:38px;
+        border-radius:12px;
+    }
+
+    .notification-section-label{
+        margin-top:18px;
+    }
+
+    #page-about .about-telegram-section{
+        margin:16px 0 13px !important;
+    }
+
+    #page-about #telegramSituationLink{
+        grid-template-columns:42px minmax(0,1fr) 34px !important;
+        min-height:64px !important;
+        padding:10px 12px !important;
+        gap:11px !important;
+        border-radius:16px !important;
+    }
+
+    #page-about #telegramSituationLink .about-telegram-logo,
+    #page-about #telegramSituationLink .about-telegram-logo svg{
+        width:42px !important;
+        height:42px !important;
+    }
+
+    #page-about #telegramSituationLink .about-telegram-text{
+        font-size:14px !important;
+        line-height:1.35 !important;
+    }
+
+    #page-about #telegramSituationLink .about-telegram-arrow{
+        width:34px !important;
+        height:34px !important;
+        border-radius:10px !important;
+    }
+}
+
+/* =====================================================
+   V34.6 — ACCOUNT MOBILE SPACING
+   ===================================================== */
+
+@media(max-width:680px){
+    .account-dropdown-v34{
+        max-width:calc(100vw - 18px);
+    }
+
+    .account-profile-meta{
+        gap:5px;
+        flex-wrap:wrap;
+    }
+
+    .my-account-profile-card{
+        padding:14px !important;
+    }
+}
