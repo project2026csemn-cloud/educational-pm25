@@ -12405,9 +12405,9 @@ body.history-range-modal-open{
 .about-standard-supporting{grid-column:1 / -1!important;}
 .about-supporting-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
 .about-reference-links{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
-.overview-main-value{transition:opacity .28s ease,transform .28s ease,border-color .28s ease;}
-.overview-main-value.is-switching{opacity:.32;transform:translateY(2px);}
-.overview-particle-value{transition:opacity .28s ease;}
+.overview-main-value{transition:opacity .26s ease,border-color .26s ease;}
+.overview-main-value.is-switching{opacity:.38;}
+.overview-particle-value{transition:opacity .26s ease;}
 .about-credit-note p{display:none!important;}
 @media(max-width:980px){
   .smart-summary-grid.smart-summary-grid-six,
@@ -12427,4 +12427,69 @@ body.history-range-modal-open{
 .smart-summary-air-switch .smart-summary-stat-value,
 .smart-summary-air-switch .smart-summary-stat-sub{
   transition:opacity .28s ease, transform .28s ease;
+}
+
+/* =========================================================
+   V31 — LOGIN / ROLE / CMS
+   ========================================================= */
+.header-account-zone{position:relative;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:220px;gap:4px}
+.header-account-button{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.22);background:rgba(8,47,73,.22);color:#e5f7ff;padding:9px 12px;border-radius:12px;font-weight:800;cursor:pointer;transition:.2s}
+.header-account-button:hover{border-color:rgba(34,211,238,.45);background:rgba(8,47,73,.38)}
+.header-account-icon{font-size:15px}.header-account-chevron{font-size:11px;color:#7dd3fc}.header-account-role{font-size:10px;letter-spacing:.08em;color:#67e8f9;text-transform:uppercase}.header-clock{font-size:13px;font-weight:800;color:#f8fafc}
+.account-dropdown{position:absolute;right:0;top:58px;z-index:120;width:260px;padding:8px;border:1px solid rgba(148,163,184,.2);border-radius:16px;background:#091827;box-shadow:0 22px 60px rgba(0,0,0,.42)}
+.account-dropdown-profile{padding:10px 12px 12px;border-bottom:1px solid rgba(148,163,184,.14);margin-bottom:6px}.account-dropdown-profile strong{display:block;color:#f8fafc}.account-dropdown-profile span{display:block;margin-top:3px;font-size:11px;color:#67e8f9;letter-spacing:.08em}
+.account-menu-item{width:100%;text-align:left;border:0;background:transparent;color:#cbd5e1;padding:10px 11px;border-radius:10px;font-weight:700;cursor:pointer}.account-menu-item:hover{background:rgba(51,65,85,.48);color:#fff}.account-menu-danger{color:#fda4af}
+.auth-modal,.admin-center{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:18px}.auth-modal-backdrop,.admin-center-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.76);backdrop-filter:blur(8px)}
+.auth-dialog{position:relative;z-index:1;width:min(520px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(180deg,#0b1d2f,#071421);box-shadow:0 30px 100px rgba(0,0,0,.55);padding:28px}
+.auth-close,.admin-close{position:absolute;right:18px;top:16px;width:38px;height:38px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(15,23,42,.65);color:#e2e8f0;font-size:25px;cursor:pointer}
+.auth-brand-badge,.admin-eyebrow{font-size:11px;font-weight:900;letter-spacing:.14em;color:#22d3ee}.auth-brand h2{font-size:27px;margin:5px 0 4px;color:#f8fafc}.auth-brand p{color:#94a3b8;font-size:14px;line-height:1.65;margin:0 35px 18px 0}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:rgba(15,23,42,.62);border:1px solid rgba(148,163,184,.12);border-radius:14px;margin:16px 0}.auth-tab{border:0;background:transparent;color:#94a3b8;padding:9px;border-radius:10px;font-weight:800;cursor:pointer}.auth-tab.active{background:#102b40;color:#67e8f9}
+.auth-form{display:grid;gap:13px}.auth-form label,.admin-field{display:grid;gap:7px;color:#cbd5e1;font-weight:700;font-size:13px}.auth-form input,.admin-field input,.admin-field textarea,.admin-field select{width:100%;border:1px solid rgba(148,163,184,.2);background:#071624;color:#f8fafc;border-radius:11px;padding:11px 12px;outline:none}.auth-form input:focus,.admin-field input:focus,.admin-field textarea:focus,.admin-field select:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
+.auth-password-wrap{position:relative}.auth-password-wrap input{padding-right:48px}.auth-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:34px;border:0;background:transparent;cursor:pointer}.auth-primary-button,.admin-save-button{border:1px solid rgba(34,211,238,.35);background:linear-gradient(135deg,#0891b2,#0e7490);color:white;border-radius:12px;padding:11px 15px;font-weight:900;cursor:pointer}.auth-primary-button:hover,.admin-save-button:hover{filter:brightness(1.08)}.auth-primary-button:disabled,.admin-save-button:disabled{opacity:.5;cursor:wait}
+.auth-secondary-button,.auth-link-button,.admin-add-block{border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.55);color:#cbd5e1;border-radius:11px;padding:9px 12px;font-weight:800;cursor:pointer}.auth-link-button{border:0;background:transparent;color:#67e8f9}.auth-hint{color:#64748b;margin-top:-7px}.auth-message,.admin-inline-message{min-height:20px;font-size:13px;color:#94a3b8}.auth-message.is-error,.admin-inline-message.is-error{color:#fda4af}.auth-message.is-success,.admin-inline-message.is-success{color:#86efac}
+.auth-bootstrap{margin-top:17px;border-top:1px solid rgba(148,163,184,.13);padding-top:15px;display:flex;align-items:center;justify-content:space-between;gap:14px}.auth-bootstrap-head b{display:block;color:#e2e8f0;font-size:13px}.auth-bootstrap-head span{display:block;color:#64748b;font-size:11px;margin-top:3px}.auth-owner-form{margin-top:18px;padding-top:16px;border-top:1px solid rgba(148,163,184,.13)}
+.admin-center{place-items:stretch}.admin-center-shell{position:relative;z-index:1;width:min(1500px,100%);height:min(900px,calc(100vh - 36px));margin:auto;overflow:hidden;border:1px solid rgba(148,163,184,.18);border-radius:25px;background:#071421;box-shadow:0 35px 120px rgba(0,0,0,.58);display:flex;flex-direction:column}.admin-center-header{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px;border-bottom:1px solid rgba(148,163,184,.13);background:linear-gradient(90deg,rgba(8,47,73,.28),rgba(15,23,42,.2))}.admin-center-header h2{font-size:26px;color:#f8fafc;margin:3px 0}.admin-center-header p{margin:0;color:#94a3b8}.admin-center-layout{min-height:0;flex:1;display:grid;grid-template-columns:240px 1fr}.admin-sidebar{padding:18px 14px;border-right:1px solid rgba(148,163,184,.13);background:rgba(3,12,22,.38)}.admin-nav{width:100%;text-align:left;border:0;background:transparent;color:#94a3b8;padding:11px 12px;border-radius:11px;font-weight:800;cursor:pointer;margin-bottom:5px}.admin-nav:hover,.admin-nav.active{background:rgba(8,145,178,.14);color:#67e8f9}.admin-main{overflow:auto;padding:22px}.admin-panel{display:none}.admin-panel.active{display:block}.admin-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.admin-panel-head h3{font-size:21px;color:#f8fafc;margin:0 0 3px}.admin-panel-head p{margin:0;color:#94a3b8;font-size:13px}.admin-role-pill{font-size:10px;letter-spacing:.12em;color:#67e8f9;border:1px solid rgba(34,211,238,.22);padding:5px 8px;border-radius:999px}
+.admin-help-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.9fr);gap:18px}.admin-editor-card,.admin-preview-card{border:1px solid rgba(148,163,184,.14);background:#091827;border-radius:18px;padding:16px}.admin-editor-card{display:grid;gap:14px}.admin-preview-label{font-size:10px;font-weight:900;letter-spacing:.13em;color:#22d3ee;margin-bottom:10px}.admin-live-preview{position:static!important;display:block!important;width:100%!important;max-width:none!important;transform:none!important;margin:0!important;opacity:1!important;visibility:visible!important;box-shadow:none!important}.admin-block-list{display:grid;gap:10px}.admin-help-block{border:1px solid rgba(148,163,184,.13);background:#071624;border-radius:13px;padding:12px;display:grid;gap:9px}.admin-help-block-head{display:flex;align-items:center;justify-content:space-between}.admin-help-block-head b{color:#cbd5e1;font-size:12px}.admin-remove-block{border:0;background:transparent;color:#fda4af;cursor:pointer;font-weight:900}.admin-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.admin-device-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.admin-device-card{border:1px solid rgba(148,163,184,.14);background:#091827;border-radius:16px;padding:15px}.admin-device-card h4{margin:0 0 11px;color:#67e8f9}.admin-device-id{font-size:10px;color:#64748b;margin-bottom:10px}.admin-device-card .admin-field{margin-bottom:10px}
+.admin-switch-row{display:flex;align-items:center;gap:9px;color:#cbd5e1;font-weight:800}.admin-switch-row input{width:18px;height:18px}.admin-user-list{display:grid;gap:8px}.admin-user-row{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(210px,1.5fr) 120px 130px auto;gap:10px;align-items:center;border:1px solid rgba(148,163,184,.13);background:#091827;border-radius:13px;padding:11px 12px}.admin-user-name b{display:block;color:#f8fafc}.admin-user-name small{color:#64748b}.admin-user-email{color:#cbd5e1;font-size:13px}.admin-user-row select{border:1px solid rgba(148,163,184,.18);background:#071624;color:#e2e8f0;border-radius:9px;padding:8px}.admin-user-save{border:1px solid rgba(34,211,238,.22);background:rgba(8,145,178,.12);color:#67e8f9;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer}.admin-user-save:disabled{opacity:.35;cursor:not-allowed}.admin-empty{color:#64748b;padding:20px;text-align:center}
+
+@media(max-width:900px){.header-account-zone{min-width:0;align-items:flex-start}.account-dropdown{left:0;right:auto}.admin-center-layout{grid-template-columns:1fr}.admin-sidebar{display:flex;gap:6px;overflow:auto;border-right:0;border-bottom:1px solid rgba(148,163,184,.13)}.admin-nav{width:auto;white-space:nowrap;margin:0}.admin-help-layout{grid-template-columns:1fr}.admin-device-list{grid-template-columns:1fr}.admin-user-row{grid-template-columns:1fr 1fr}.admin-main{padding:15px}}
+@media(max-width:640px){.auth-dialog{padding:22px 16px}.admin-center{padding:6px}.admin-center-shell{height:calc(100vh - 12px);border-radius:18px}.admin-center-header{padding:18px 16px}.admin-main{padding:12px}.admin-user-row{grid-template-columns:1fr}.header-account-button{padding:8px 10px}.header-clock{font-size:12px}}
+
+
+/* =========================================================
+   V31 UI FIX 1 — smooth particle fade / spacing / alert title
+   ========================================================= */
+
+/* Temp/Humidity status badge: give it breathing room after the unit. */
+.overview-metric-status{
+    margin-left:10px;
+}
+
+/* Keep the help button next to "สิ่งที่ควรระวัง", not at the far edge. */
+.current-alerts-strip .section-title-with-help,
+.overview-alert-head .section-title-with-help{
+    display:inline-flex!important;
+    width:auto!important;
+    max-width:100%!important;
+    justify-content:flex-start!important;
+    align-items:center!important;
+    gap:8px!important;
+}
+
+/* Make the warning mark visibly yellow instead of inheriting white text. */
+.overview-warning-icon{
+    display:inline-block;
+    color:#fbbf24;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;
+    font-style:normal;
+    line-height:1;
+    vertical-align:-0.05em;
+}
+
+/* On narrow screens keep badge spacing natural without forcing a new row. */
+@media(max-width:640px){
+    .overview-metric-status{
+        margin-left:8px;
+    }
 }
