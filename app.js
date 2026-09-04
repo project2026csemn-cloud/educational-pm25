@@ -1,10385 +1,12870 @@
-const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
-
-const API={
-latest:`${BASE}/api/get_latest.php`,
-history:`${BASE}/api/get_history.php`,
-export:`${BASE}/api/export.php`,
-mother:`${BASE}/api/mother_status`,
-alerts:`${BASE}/api/alert_states`,
-standards:`${BASE}/api/standards.php`,
-ai:`${BASE}/api/ai_analysis`,
-forecast:`${BASE}/api/ai_forecast`,
-publicConfig:`${BASE}/api/public_config`,
-authStatus:`${BASE}/api/auth/status`,
-authLogin:`${BASE}/api/auth/login`,
-authRegister:`${BASE}/api/auth/register`,
-authMe:`${BASE}/api/auth/me`,
-authLogout:`${BASE}/api/auth/logout`,
-authBootstrapOwner:`${BASE}/api/auth/bootstrap_owner`,
-authChangePassword:`${BASE}/api/auth/change_password`,
-manageHelp:`${BASE}/api/manage/help`,
-manageDevices:`${BASE}/api/manage/devices`,
-manageAnnouncement:`${BASE}/api/manage/announcement`,
-manageUsers:`${BASE}/api/manage/users`,
-manageUsersUpdate:`${BASE}/api/manage/users/update`
-};
-
-const TOTAL_NODES=3;
-const MOTHER_OFFLINE_MS=60*1000;
-// Node offline timing is decided by the Worker using the expected-wake rule.
-// Dashboard trusts the normalized status returned by the API.
-
-const $=
-id=>
-document.getElementById(id);
-
-let latestNodes=[];
-let records=[];
-let pm10History24h=[];
-let pm10History24hLoadedAt=null;
-let motherStatus=null;
-let alertStates=[];
-let standardsData=null;
-let latestRecord=null;
-let historyChart=null;
-let forecastChart=null;
-let historyGroupCharts=[];
-let forecastGroupCharts=[];
-let forecastVisible=true;
-
-let historyActivated=false;
-let historyLoading=false;
-let chartLibraryPromise=null;
-let chartLibraryReady=false;
-let aiSectionActivated=false;
-
-let metric="all";
-let historyNode="compare";
-let currentMetric="pm25";
-
-let averageRange="today";
-
-let customRangeStart=null;
-let customRangeEnd=null;
-
-let calendarDisplayDate=
-new Date();
-
-let calendarSelectionStep=
-"start";
-
-let apiConnectionOnline=false;
-let exportRows=[];
-let activeHelpButton=null;
-
-let aiPayload=null;
-let aiLoading=false;
-let aiLastLoadedAt=null;
-let aiForecastPayload=null;
-let aiForecastLoading=false;
-let aiForecastLastLoadedAt=null;
-
-let publicDisplayConfig={
-devices:[
-{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:""},
-{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:""},
-{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:""}
-],
-content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
-};
-
-
-// =====================================================
-// RANGE
-// =====================================================
-
-const RANGE_CONFIG={
-"today":{label:"วันนี้",minutes:null,apiRange:"today"},
-
-"30m":{
-label:"30 นาที",
-minutes:30,
-apiRange:"24h"
-},
-
-"1h":{
-label:"1 ชั่วโมง",
-minutes:60,
-apiRange:"24h"
-},
-
-"6h":{
-label:"6 ชั่วโมง",
-minutes:360,
-apiRange:"24h"
-},
-
-"12h":{
-label:"12 ชั่วโมง",
-minutes:720,
-apiRange:"24h"
-},
-
-"24h":{
-label:"24 ชั่วโมง",
-minutes:1440,
-apiRange:"24h"
-},
-
-"7d":{
-label:"7 วัน",
-minutes:10080,
-apiRange:"7d"
-},
-
-"30d":{
-label:"30 วัน",
-minutes:43200,
-apiRange:"30d"
-}
-
-};
-
-// =====================================================
-// METRIC
-// =====================================================
-
-const CURRENT_METRIC_CONFIG={
-all:{label:"ALL",unit:"",color:"#e2e8f0"},
-pm1:{label:"PM1.0",unit:"µg/m³",color:"#60a5fa"},
-pm25:{label:"PM2.5",unit:"µg/m³",color:"#f87171"},
-pm10:{label:"PM10",unit:"µg/m³",color:"#fbbf24"},
-temperature:{label:"อุณหภูมิ",unit:"°C",color:"#fb923c"},
-humidity:{label:"ความชื้น",unit:"%",color:"#34d399"},
-light:{label:"แสง",unit:"lux",color:"#c084fc"}
-};
-
-// =====================================================
-// FORMAT
-// =====================================================
-
-function fmt(v){
-
-return(
-v==null||
-v===""||
-!Number.isFinite(
-Number(v)
-)
-)
-?"--"
-:Number(v).toFixed(1);
+/* =========================================================
+   PM2.5 DASHBOARD - CUSTOM CSS
+   Tailwind utility classes used by the original dashboard
+   have been converted to local CSS. No Tailwind CDN required.
+   ========================================================= */
 
+* {
+    box-sizing: border-box;
 }
 
-// =====================================================
-// SAFE SENSOR NUMBER
-// Number(null) === 0 ใน JavaScript จึงต้องกัน null ก่อน
-// =====================================================
-function finiteNumberOrNull(value){
-if(value===null||value===undefined||value==="") return null;
-const n=Number(value);
-return Number.isFinite(n)?n:null;
-}
-
-function hasFiniteSensorValue(value){
-return finiteNumberOrNull(value)!==null;
-}
-
-function esc(v){
-
-return String(
-v??""
-)
-.replace(/\bGateway\b/gi,"สถานีรับข้อมูลหลัก")
-.replace(
-/&/g,
-"&amp;"
-)
-.replace(
-/</g,
-"&lt;"
-)
-.replace(
-/>/g,
-"&gt;"
-)
-.replace(
-/"/g,
-"&quot;"
-)
-.replace(
-/'/g,
-"&#039;"
-);
-
-}
-
-// =====================================================
-// DATE
-// =====================================================
-
-function parseDate(v){
-
-if(!v){
-return null;
-}
-
-if(
-v instanceof Date
-){
-
-return isNaN(v)
-?null
-:v;
-
-}
-
-const t=
-String(v)
-.trim();
-
-const d=
-new Date(
-
-/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
-.test(t)
-
-?t.replace(
-" ",
-"T"
-)+"Z"
-
-:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
-.test(t)
-
-?t+"Z"
-
-:t
-
-);
-
-return isNaN(d)
-?null
-:d;
-
-}
-
-function thaiTime(v){
-
-const d=
-parseDate(v);
-
-return d
-?d.toLocaleTimeString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok",
-hour:
-"2-digit",
-minute:
-"2-digit",
-second:
-"2-digit",
-hour12:
-false
-}
-)
-:"--";
-
-}
-
-// =====================================================
-// NODE READING DATE / TIME
-// แสดงวันให้ชัดเมื่อข้อมูลไม่ได้มาจากวันนี้
-// วันนี้ -> วันนี้ 15:49:57
-// เมื่อวาน -> เมื่อวาน 18:09:19
-// เก่ากว่านั้น -> 1 ก.ย. 2569 18:09:19
-// =====================================================
-function thaiNodeReadingDateTime(v){
-  const d=parseDate(v);
-  if(!d) return "--";
-
-  const now=new Date();
-  const dayKey=x=>x.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
-  const todayKey=dayKey(now);
-  const valueKey=dayKey(d);
-
-  const yesterday=new Date(now.getTime()-24*60*60*1000);
-  const yesterdayKey=dayKey(yesterday);
-
-  const time=d.toLocaleTimeString("th-TH",{
-    timeZone:"Asia/Bangkok",
-    hour:"2-digit",
-    minute:"2-digit",
-    second:"2-digit",
-    hour12:false
-  });
-
-  if(valueKey===todayKey) return `วันนี้ ${time}`;
-  if(valueKey===yesterdayKey) return `เมื่อวาน ${time}`;
-
-  const date=d.toLocaleDateString("th-TH",{
-    timeZone:"Asia/Bangkok",
-    day:"numeric",
-    month:"short",
-    year:"numeric"
-  });
-
-  return `${date} ${time}`;
-}
-
-
-// =====================================================
-// CHART DATE / TIME LABELS
-// แก้ปัญหากราฟช่วงยาวที่เห็นเฉพาะเวลาแต่ไม่รู้ว่าเป็นวันไหน
-// =====================================================
-
-function thaiChartDateTime(value, compact=false){
-const d=parseDate(value);
-if(!d){
-return String(value??"");
-}
-
-const opts=compact
-?{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-}
-:{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-year:"numeric",
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit",
-hour12:false
-};
-
-return d.toLocaleString("th-TH",opts);
-}
-
-// =====================================================
-// ADAPTIVE TIME AXIS
-// มองช่วงยาว = เน้น "วันที่"
-// ซูมเข้า = เพิ่ม "เวลา" อัตโนมัติตามช่วงที่กำลังมอง
-// Tooltip ยังคงแสดงวัน/เวลาเต็มเสมอ
-// =====================================================
-function chartDayKey(value){
-const d=parseDate(value);
-if(!d)return"";
-return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
-}
-
-function chartVisibleSpanMs(scale){
-const labels=scale?.chart?.data?.labels||[];
-if(!labels.length)return null;
-
-const rawMin=Number.isFinite(Number(scale?.min))?Number(scale.min):0;
-const rawMax=Number.isFinite(Number(scale?.max))?Number(scale.max):labels.length-1;
-const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(rawMin)));
-const maxIndex=Math.max(0,Math.min(labels.length-1,Math.ceil(rawMax)));
-
-const start=parseDate(labels[minIndex]);
-const end=parseDate(labels[maxIndex]);
-if(!start||!end)return null;
-return Math.abs(end.getTime()-start.getTime());
-}
-
-function chartAxisStepMs(spanMs){
-const MINUTE=60*1000;
-const HOUR=60*MINUTE;
-const DAY=24*HOUR;
-if(!Number.isFinite(spanMs))return HOUR;
-if(spanMs>=3*DAY)return DAY;
-if(spanMs>=6*HOUR)return HOUR;
-if(spanMs>=HOUR)return 30*MINUTE;
-if(spanMs>=30*MINUTE)return 15*MINUTE;
-if(spanMs>=10*MINUTE)return 5*MINUTE;
-return MINUTE;
-}
-
-function formatAxisInterval(value,spanMs=null){
-const d=parseDate(value);
-if(!d)return String(value??"");
-const DAY=24*60*60*1000;
-if(Number.isFinite(spanMs)&&spanMs>=3*DAY){
-return d.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
-}
-
-const step=chartAxisStepMs(spanMs);
-const BKK_OFFSET=7*60*60*1000;
-const localMs=d.getTime()+BKK_OFFSET;
-const startLocal=Math.floor(localMs/step)*step;
-const endLocal=startLocal+step;
-const fmtHM=(ms)=>{
-const x=new Date(ms);
-return `${String(x.getUTCHours()).padStart(2,"0")}:${String(x.getUTCMinutes()).padStart(2,"0")}`;
-};
-const timeRange=`${fmtHM(startLocal)}–${fmtHM(endLocal)}`;
-
-if(Number.isFinite(spanMs)&&spanMs>=24*60*60*1000){
-const startUtc=new Date(startLocal-BKK_OFFSET);
-const day=startUtc.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
-return `${day} ${timeRange}`;
-}
-return timeRange;
-}
-
-function chartTickText(value,spanMs=null){
-return formatAxisInterval(value,spanMs);
-}
-
-// =====================================================
-// ADAPTIVE INTERVAL TICKS
-// แกน X แสดงเป็น "ช่วงเวลา" ที่ลงตัว เช่น 01:00–02:00
-// ซูมเข้าแล้วลดช่วงเป็น 30 นาที / 15 นาที / 5 นาที / 1 นาที
-// =====================================================
-function chartBucketKey(date,stepMs){
-const d=parseDate(date);
-if(!d)return"";
-return String(Math.floor(d.getTime()/stepMs));
-}
-
-function chartDayBucketKey(date){
-const d=parseDate(date);
-if(!d)return"";
-return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
-}
-
-function buildAdaptiveTimeTicks(scale){
-const labels=scale?.chart?.data?.labels||[];
-if(!Array.isArray(labels)||labels.length<2)return;
-
-const minRaw=Number.isFinite(Number(scale.min))?Number(scale.min):0;
-const maxRaw=Number.isFinite(Number(scale.max))?Number(scale.max):labels.length-1;
-const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(minRaw)));
-const maxIndex=Math.max(minIndex,Math.min(labels.length-1,Math.ceil(maxRaw)));
-
-const start=parseDate(labels[minIndex]);
-const end=parseDate(labels[maxIndex]);
-if(!start||!end)return;
-
-const span=Math.max(0,end.getTime()-start.getTime());
-const DAY=24*60*60*1000;
-const stepMs=chartAxisStepMs(span);
-const mode=span>=3*DAY?"day":"bucket";
-
-const chosen=[];
-let lastKey=null;
-for(let i=minIndex;i<=maxIndex;i++){
-const d=parseDate(labels[i]);
-if(!d)continue;
-const key=mode==="day"?chartDayBucketKey(d):chartBucketKey(d,stepMs);
-if(!key||key===lastKey)continue;
-chosen.push({value:i});
-lastKey=key;
-}
-
-const scaleWidth=Math.max(1,Number(scale?.width||scale?.chart?.width||0));
-const minGapPx=mode==="day"?82:(span>=24*60*60*1000?112:92);
-const maxTicksByWidth=Math.max(2,Math.floor(scaleWidth/minGapPx));
-const hardMax=window.innerWidth<=640?5:mode==="day"?10:12;
-const maxTicks=Math.max(2,Math.min(hardMax,maxTicksByWidth));
-
-let reduced=chosen;
-if(chosen.length>maxTicks){
-const stride=Math.ceil(chosen.length/maxTicks);
-reduced=chosen.filter((_,i)=>i%stride===0);
-}
-
-const pixelSafe=[];
-let lastPx=-Infinity;
-const axisSpan=Math.max(1,maxIndex-minIndex);
-for(const tick of reduced){
-const px=((Number(tick.value)-minIndex)/axisSpan)*scaleWidth;
-if(px-lastPx>=minGapPx||pixelSafe.length===0){
-pixelSafe.push(tick);
-lastPx=px;
-}
-}
-scale.ticks=pixelSafe;
-}
-
-function adaptiveChartTickText(scale,value,index,ticks){
-const raw=scale.getLabelForValue(value);
-const span=chartVisibleSpanMs(scale);
-const text=chartTickText(raw,span);
-
-// ช่วงยาว: ถ้า autoSkip เลือก timestamp หลายจุดในวันเดียวกัน
-// ให้แสดงชื่อวันนั้นเพียงครั้งเดียว เพื่อลดข้อความซ้ำบนแกน X
-const DAY=24*60*60*1000;
-if(span!==null&&span>=3*DAY&&index>0&&Array.isArray(ticks)){
-const prevValue=ticks[index-1]?.value;
-const prevRaw=prevValue==null?null:scale.getLabelForValue(prevValue);
-if(prevRaw&&chartDayKey(prevRaw)===chartDayKey(raw))return"";
-}
-
-return text;
-}
-
-function graphTooltipTitle(items){
-const first=items?.[0];
-
-if(!first){
-return"";
-}
-
-const parsedX=
-finiteNumberOrNull(
-first?.parsed?.x
-);
-
-// Zoom/linear-time chart:
-// parsed.x is epoch milliseconds, so this is the exact timestamp
-// of the selected point for that dataset.
-if(
-parsedX!==null&&
-parsedX>100000000000
-){
-const d=
-new Date(parsedX);
-
-return Number.isFinite(
-d.getTime()
-)
-?thaiChartDateTime(
-d,
-false
-)
-:"";
-}
-
-const raw=
-first?.label;
-
-if(raw==null){
-return"";
-}
-
-// Forecast labels are not timestamps.
-if(
-/^\+\d+\s*นาที/
-.test(
-String(raw)
-)
-){
-return String(raw);
-}
-
-const d=
-parseDate(raw);
-
-return d
-?thaiChartDateTime(
-d,
-false
-)
-:String(raw);
-}
-
-function historyRangeCaption(baseRows=[]){
-const el=$("historyRangeCaption");
-if(!el){
-return;
-}
-
-const w=rangeWindow();
-
-if(!w){
-el.innerHTML="";
-return;
-}
-
-const sorted=(baseRows||[])
-.filter(r=>parseDate(r?.timestamp))
-.sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
-
-const firstData=sorted.length
-?parseDate(sorted[0].timestamp)
-:null;
-
-const lastData=sorted.length
-?parseDate(sorted.at(-1).timestamp)
-:null;
-
-// ถ้าระบบมีข้อมูลน้อยกว่าช่วงที่เลือก ให้เริ่มข้อความจากข้อมูลจริงชุดแรก
-const displayStart=
-firstData&&firstData>w.start
-?firstData
-:w.start;
-
-const displayEnd=w.end;
-
-const spanMs=Math.max(0,displayEnd.getTime()-displayStart.getTime());
-const DAY=24*60*60*1000;
-
-const edgeText=(d)=>{
-if(spanMs>=3*DAY){
-return d.toLocaleDateString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-year:"numeric"
-});
-}
-return d.toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
-};
-
-const latestText=lastData
-?lastData.toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-})
-:null;
-
-el.innerHTML=
-`<div class="history-range-edge history-range-edge-start">
-<span>เริ่ม</span>
-<b>${esc(edgeText(displayStart))}</b>
-</div>
-<div class="history-range-center">
-<span>${esc(rangeLabel())}</span>
-${latestText
-?`<small>ข้อมูลล่าสุด ${esc(latestText)}</small>`
-:`<small>ยังไม่มีข้อมูลในช่วงนี้</small>`}
-
-</div>
-<div class="history-range-edge history-range-edge-end">
-<span>${averageRange==="custom"?"สิ้นสุด":"ถึงปัจจุบัน"}</span>
-<b>${esc(edgeText(displayEnd))}</b>
-</div>`;
-}
-
-
-function historyLabelsToRangeEnd(rows=[]){
-const labels=(rows||[]).map(r=>r?.timestamp).filter(Boolean);
-const w=rangeWindow();
-
-if(!w){
-return labels;
-}
-
-const last=labels.length
-?parseDate(labels.at(-1))
-:null;
-
-// ให้แกน X แสดงปลายช่วงที่เลือกจริง แม้ข้อมูลล่าสุดจะหยุดก่อนเวลาปัจจุบัน
-if(!last||w.end.getTime()-last.getTime()>1000){
-labels.push(w.end.toISOString());
-}
-
-return labels;
+html {
+    scroll-behavior: smooth;
 }
 
-function padChartValuesToLabels(values=[],labels=[]){
-const out=[...values];
-while(out.length<labels.length){
-out.push(null);
-}
-return out;
+body {
+    margin: 0;
+    font-family: Inter, system-ui, "Noto Sans Thai", sans-serif;
+    background: radial-gradient(circle at 10% 0%, rgba(14,165,233,.13), transparent 30%),
+        radial-gradient(circle at 95% 8%, rgba(16,185,129,.10), transparent 28%),
+        #07111f;
+    color: #eaf2f8;
 }
 
-// =====================================================
-// SENSOR SANITIZER
-// =====================================================
+/* -------------------------
+   Original project components
+   ------------------------- */
 
-function cleanSensorNumber(field,value){
-
-if(
-value===null||
-value===undefined||
-value===""
-){
-return null;
+.glass {
+    background: rgba(13,27,45,.88);
+    border: 1px solid rgba(148,163,184,.16);
+    box-shadow: 0 14px 40px rgba(0,0,0,.22);
 }
-
-const n=
-Number(value);
 
-if(
-!Number.isFinite(n)
-){
-return null;
+.soft {
+    background: #091827;
 }
-
-if(
-[
-"pm1",
-"pm25",
-"pm10"
-]
-.includes(field)
-){
-
-return(
-n>=0&&
-n<=5000
-)
-?n
-:null;
 
+.card {
+    border-radius: 22px;
 }
-
-if(
-field==="temperature"
-){
-
-return(
-n>=-40&&
-n<=85
-)
-?n
-:null;
-
-}
-
-if(
-field==="humidity"
-){
-
-return(
-n>=0&&
-n<=100
-)
-?n
-:null;
-
-}
-
-if(
-field==="light"
-){
-
-return(
-n>=0&&
-n<=200000
-)
-?n
-:null;
-
-}
-
-return n;
-
-}
-
-// =====================================================
-// NORMALIZE API
-// =====================================================
-
-function normalize(d){
-
-if(!d){
-return null;
-}
-
-const out={
-
-id:
-d.id==null
-?null
-:Number(d.id),
-
-device_id:
-String(
-d.device_id??""
-)
-.trim(),
-
-status:
-String(
-d.status??"offline"
-)
-.toLowerCase(),
-
-pm1:
-cleanSensorNumber(
-"pm1",
-d.pm1
-),
-
-pm25:
-cleanSensorNumber(
-"pm25",
-d.pm25
-),
-
-pm10:
-cleanSensorNumber(
-"pm10",
-d.pm10
-),
-
-temperature:
-cleanSensorNumber(
-"temperature",
-d.temperature
-),
-
-humidity:
-cleanSensorNumber(
-"humidity",
-d.humidity
-),
-
-light:
-cleanSensorNumber(
-"light",
-d.light
-),
-
-// NOTE:
-// recorded_at/timestamp จาก get_latest คือ "เวลาสถานะล่าสุด"
-// เพราะ API object รวม latest status + latest reading ไว้ด้วยกัน
-// ห้ามใช้ field นี้เป็นเวลาของ Sensor reading ใน UI
-timestamp:
-d.recorded_at||
-d.timestamp||
-null,
-
-status_recorded_at:
-d.status_recorded_at||
-d.recorded_at||
-null,
 
-reading_recorded_at:
-d.reading_recorded_at||
-null,
-
-last_seen:
-d.last_seen||
-null,
-
-connection_status:
-d.connection_status||
-null,
-
-command_status:
-d.command_status||
-null,
-
-sensor_invalid:false
-
-};
-
-const values=[
-"pm1",
-"pm25",
-"pm10",
-"temperature",
-"humidity",
-"light"
-]
-.map(
-k=>out[k]
-);
-
-if(
-values.every(
-v=>v===0
-)
-){
-
-for(
-const k of[
-"pm1",
-"pm25",
-"pm10",
-"temperature",
-"humidity",
-"light"
-]
-){
-
-out[k]=null;
-
+.node {
+    position: relative;
+    overflow: hidden;
 }
 
-out.sensor_invalid=true;
-
+.node:before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #22c55e;
 }
-
-return out;
 
+.node.offline:before {
+    background: #64748b;
 }
-
-// =====================================================
-// NODE
-// =====================================================
-
-function nodeNo(id){
-
-const m=
-String(
-id||""
-)
-.match(
-/(\d+)/
-);
-
-return m
-?Number(m[1])
-:null;
 
+.metric {
+    position: relative;
+    overflow: hidden;
+    transition: .2s;
 }
 
-function getNode(n){
-
-return latestNodes
-.find(
-x=>
-nodeNo(
-x.device_id
-)===n
-)||
-null;
-
+.metric:hover {
+    transform: translateY(-2px);
+    border-color: rgba(34,211,238,.35);
 }
 
-function motherOnline(){
-
-if(
-!apiConnectionOnline||
-!motherStatus||
-String(
-motherStatus.status
-)
-.toLowerCase()!=="online"
-){
-return false;
+.metric:after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    right: -45px;
+    top: -50px;
+    background: rgba(34,211,238,.07);
 }
-
-const d=
-parseDate(
-motherStatus.last_seen||
-motherStatus.updated_at
-);
 
-if(!d){
-return false;
+.live {
+    font-size: 11px;
+    color: #67e8f9;
+    letter-spacing: .12em;
 }
 
-return(
-Date.now()-
-d.getTime()
-<=
-MOTHER_OFFLINE_MS
-);
-
+.badge {
+    border: 1px solid rgba(148,163,184,.18);
+    background: #102338;
 }
-
-// =====================================================
-// NODE STATUS RULE
-//
-// ระบบข้อมูล OFFLINE
-// -> Node ทุกตัว Offline
-//
-// ONLINE / SLEEP
-// -> Dashboard เชื่อสถานะที่ Worker คำนวณจาก Firmware timing
-//
-// Device state is normalized before display.
-// =====================================================
 
-function getNodeStatus(node){
-
-if(
-!motherOnline()||
-!node
-){
-return "offline";
+select,
+.range {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 0.75rem;
+    border-radius: 0.75rem;
+    background: #102338;
+    color: #eaf2f8;
+    border: 1px solid rgba(148,163,184,.2);
+    white-space: nowrap;
+    cursor: pointer;
 }
-
-const s=String(node.status||"offline").toLowerCase();
 
-// Offline/expected-wake decisions are made by the Worker.
-// Sleep is preserved internally and displayed as available by getNodeDisplayStatus().
-return s==="sleep"
-?"sleep"
-:s==="online"
-?"online"
-:"offline";
-
+.flex-wrap {
+    flex-wrap: wrap;
+    align-items: center;
 }
-
-function activeCount(){
 
-return latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)
-)
-.length;
-
+canvas {
+    max-height: 300px;
 }
-
-// =====================================================
-// DASHBOARD DISPLAY STATUS
-//
-// Backend ยังเก็บ online / sleep / offline ตามจริง
-// แต่ Dashboard แสดง sleep เป็น ONLINE
-// =====================================================
 
-function getNodeDisplayStatus(node){
-const st=getNodeStatus(node);
-return st==="offline"?"offline":"online";
+.status-online {
+    color: #34d399;
 }
-
-
-// =====================================================
-// FETCH
-// =====================================================
-
-async function fetchJson(url,timeoutMs=15000){
-
-const controller=
-new AbortController();
 
-const timer=
-setTimeout(
-()=>controller.abort(),
-timeoutMs
-);
-
-let r;
-
-try{
-
-r=
-await fetch(
-
-url+
-(
-url.includes("?")
-?"&"
-:"?"
-)+
-"t="+
-Date.now(),
-
-{
-cache:"no-store",
-headers:{
-Accept:"application/json"
-},
-signal:controller.signal
+.status-offline {
+    color: #64748b;
 }
-
-);
-
-}finally{
-
-clearTimeout(timer);
 
+.status-error {
+    color: #f87171;
 }
 
-if(!r.ok){
-
-throw new Error(
-`HTTP ${r.status}`
-);
-
+.status-sleep {
+    color: #b7df09;
 }
-
-const j=
-await r.json();
-
-if(!j?.success){
 
-throw new Error(
-j?.message||
-"API error"
-);
+/* -------------------------
+   Layout utilities converted from Tailwind
+   ------------------------- */
 
+.max-w-\[1800px\] {
+    max-width: 1800px;
 }
 
-return j;
-
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
 }
-
-// =====================================================
-// LOAD API
-// =====================================================
-
-async function loadLatest(){
-
-const j=
-await fetchJson(
-API.latest
-);
 
-return(
-Array.isArray(
-j.data
-)
-?j.data
-:j.data
-?[j.data]
-:[]
-)
-.map(
-normalize
-)
-.filter(
-Boolean
-);
-
+.flex {
+    display: flex;
 }
-
-async function loadMother(){
-
-const j=
-await fetchJson(
-API.mother
-);
-
-return j.data
-?{
 
-status:
-String(
-j.data.status||
-"offline"
-)
-.toLowerCase(),
-
-last_seen:
-j.data.last_seen||
-null,
-
-updated_at:
-j.data.updated_at||
-null
-
+.flex-col {
+    flex-direction: column;
 }
-:null;
 
+.grid {
+    display: grid;
 }
-
-async function loadAlerts(){
 
-const j=
-await fetchJson(
-API.alerts
-);
-
-return Array.isArray(
-j.data
-)
-?j.data
-:[];
-
+.block {
+    display: block;
 }
-
-async function loadStandards(){
-
-return fetchJson(
-API.standards
-);
 
+.hidden {
+    display: none;
 }
 
-function apiRange(){
-
-if(
-averageRange==="custom"
-){
-
-if(!customRangeStart){
-return"30d";
+.justify-between {
+    justify-content: space-between;
 }
 
-const ageMs=
-Math.max(
-0,
-Date.now()-
-customRangeStart.getTime()
-);
-
-if(ageMs<=24*60*60*1000){
-return"24h";
+.justify-end {
+    justify-content: flex-end;
 }
 
-if(ageMs<=7*24*60*60*1000){
-return"7d";
+.justify-center {
+    justify-content: center;
 }
-
-return"30d";
 
+.items-center {
+    align-items: center;
 }
 
-return RANGE_CONFIG[
-averageRange
-]?.apiRange||
-"today";
-
+.text-right {
+    text-align: right;
 }
-
-async function loadHistory(){
-
-const j=
-await fetchJson(
-`${API.history}?range=${encodeURIComponent(apiRange())}`,
-25000
-);
-
 
-return(
-Array.isArray(
-j.data
-)
-?j.data
-:[]
-)
-.map(
-normalize
-)
-.filter(
-Boolean
-);
-
+.overflow-hidden {
+    overflow: hidden;
 }
-
-// =====================================================
-// MONITORING NODES
-// =====================================================
-
-function setNodeValues(
-prefix,
-n
-){
-
-for(
-const k of[
-"pm1",
-"pm25",
-"pm10"
-]
-){
 
-const e=
-$(prefix+k);
-
-if(e){
-
-e.textContent=
-n
-?fmt(n[k])
-:"--";
-
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
-const map={
-
-temp:[
-"temperature",
-"°C"
-],
-
-hum:[
-"humidity",
-"%"
-],
-
-light:[
-"light",
-" lux"
-]
-
-};
 
-for(
-const[
-k,
-[
-field,
-unit
-]
-]
-of Object.entries(map)
-){
+/* =========================================================
+   เพิ่มเฉพาะส่วนนี้
+   สำหรับ Historical Data & Trend
+   ========================================================= */
 
-const e=
-$(prefix+k);
+.grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
 
-if(e){
+.grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
 
-e.textContent=
-n&&
-n[field]!=null
-?fmt(n[field])+unit
-:"--";
+/* gaps */
 
+.gap-2 {
+    gap: .5rem;
 }
 
+.gap-3 {
+    gap: .75rem;
 }
 
+.gap-4 {
+    gap: 1rem;
 }
-
-function renderNodeStatus(
-i,
-n
-){
-
-const s=
-$("n"+i+"status");
 
-const card=
-$("nodeCard"+i);
-
-if(
-!s||
-!card
-){
-return;
+.gap-5 {
+    gap: 1.25rem;
 }
-
-const st=
-getNodeDisplayStatus(n);
-
-const map={
-
-online:[
-"status-online",
-"status-online-dot",
-"ONLINE"
-],
 
-offline:[
-"status-offline",
-"status-offline-dot",
-"OFFLINE"
-]
-
-};
-
-const[
-cls,
-dot,
-label
-]=map[st];
-
-s.className=
-`${cls} text-xs font-bold`;
-
-s.innerHTML=
-`<span class="${dot}">●</span> ${label}`;
-
-card.classList.toggle(
-"offline",
-st==="offline"
-);
+.gap-x-4 {
+    column-gap: 1rem;
+}
 
+.gap-y-2 {
+    row-gap: .5rem;
 }
 
-function nodeReadingTime(node){
+/* spacing */
 
-if(!node){
-return null;
+.p-4 {
+    padding: 1rem;
 }
 
-// API ปัจจุบันแยกเวลาสถานะกับเวลาค่าตรวจวัดไว้แล้ว
-// เวลาที่อยู่ข้างค่าฝุ่น/อุณหภูมิ/ความชื้น/แสง
-// ต้องใช้ reading_recorded_at เท่านั้น
-if(node.reading_recorded_at){
-return node.reading_recorded_at;
+.p-5 {
+    padding: 1.25rem;
 }
 
-// Legacy fallback:
-// ใช้ timestamp ได้เฉพาะเมื่อ object นั้นมี Sensor data จริง
-// เพื่อไม่ให้เวลา ONLINE/SLEEP ถูกนำมาแสดงเป็น "เวลาอัปเดตค่า"
-const hasReading=
-[
-"pm1",
-"pm25",
-"pm10",
-"temperature",
-"humidity",
-"light"
-]
-.some(
-field=>
-hasFiniteSensorValue(
-node?.[field]
-)
-);
-
-return(
-hasReading&&
-node.timestamp
-)
-?node.timestamp
-:null;
+.px-3 {
+    padding-left: .75rem;
+    padding-right: .75rem;
 }
-
-function renderMonitoring(){
 
-for(
-let i=1;
-i<=3;
-i++
-){
-
-const n=
-getNode(i);
-
-setNodeValues(
-"n"+i,
-n
-);
-
-const t=
-$("lastUpdate"+i);
-
-if(t){
-
-const valueTime=
-nodeReadingTime(
-n
-);
-
-t.textContent=
-valueTime
-?thaiNodeReadingDateTime(
-valueTime
-)
-:"--";
-
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
-
-renderNodeStatus(
-i,
-n
-);
 
+.px-5 {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
 }
 
-const dot=
-$("dataStateDotTop");
-
-const st=
-$("dataStateStatusTop");
-
-const ac=
-$("nodesActiveTop");
-
-if(
-!dot||
-!st||
-!ac
-){
-return;
+.py-1 {
+    padding-top: .25rem;
+    padding-bottom: .25rem;
 }
-
-if(
-!apiConnectionOnline
-){
-
-dot.className=
-"text-red-400";
-
-st.textContent=
-"ไม่พร้อมใช้งาน";
-
-ac.textContent=
-"ตรวจสอบจำนวนจุดไม่ได้";
-
-}else if(
-motherOnline()
-){
 
-dot.className=
-"text-emerald-400";
-
-st.textContent=
-"ONLINE";
-
-ac.textContent=
-`${activeCount()} / ${TOTAL_NODES} จุด`;
-
-}else{
-
-dot.className=
-"text-red-400";
-
-st.textContent=
-"OFFLINE";
-
-ac.textContent=
-`0 / ${TOTAL_NODES} จุด`;
-
+.py-2 {
+    padding-top: .5rem;
+    padding-bottom: .5rem;
 }
 
+.py-3 {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
 }
-
-// =====================================================
-// THRESHOLD
-// =====================================================
 
-function threshold(field,value){
-
-const n=
-finiteNumberOrNull(value);
-
-if(
-n===null
-){
-return"no_data";
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
-if(
-field==="pm25"
-){
-
-if(
-n>75
-){
-return"critical";
+.m-0 {
+    margin: 0;
 }
 
-if(
-n>37.5
-){
-return"warning";
+.mt-1 {
+    margin-top: .25rem;
 }
-
-return"normal";
 
+.mt-4 {
+    margin-top: 1rem;
 }
 
-if(
-field==="pm10"
-){
-
-// 120 µg/m³ เป็นค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของไทย
-// การเทียบกับค่ารอบล่าสุดใช้เพื่อเฝ้าระวังเบื้องต้นเท่านั้น
-return n>120
-?"warning"
-:"info";
-
+.mt-5 {
+    margin-top: 1.25rem;
 }
-
-if(field==="temperature") return temperatureLevel(n).severity;
-if(field==="humidity") return humidityLevel(n).severity;
-
-// PM1.0 / Light เป็นข้อมูลประกอบ
-return"info";
 
+.mb-3 {
+    margin-bottom: .75rem;
 }
 
-function levelText(level){
-
-return{
-
-normal:
-"ปกติ",
-
-warning:
-"เฝ้าระวัง",
-
-critical:
-"มีผลกระทบต่อสุขภาพ",
-
-info:
-"ข้อมูลประกอบ",
-
-no_data:
-"รอข้อมูล"
-
-}[
-level
-]||
-"รอข้อมูล";
-
+.mb-4 {
+    margin-bottom: 1rem;
 }
 
-// =====================================================
-// PM2.5 GUIDANCE
-// =====================================================
-
-function pm25Guidance(value){
-
-const n=
-finiteNumberOrNull(value);
-
-if(
-n===null
-){
+.mb-5 {
+    margin-bottom: 1.25rem;
+}
 
-return{
-level:"no_data",
-label:"ไม่มีข้อมูล"
-};
+.my-4 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 
+.ml-1 {
+    margin-left: .25rem;
 }
 
-const apiLevels=
-standardsData?.realtime_guidance?.levels;
+/* sizing */
 
-if(Array.isArray(apiLevels)&&apiLevels.length){
-const row=apiLevels.find(x=>{
-const max=x?.max;
-return max===null||max===undefined||n<=Number(max);
-});
-if(row){
-const apiLevel=String(row.level||"good");
-return{
-level:
-apiLevel==="critical"
-?"critical"
-:apiLevel==="warning"
-?"warning"
-:"normal",
-label:String(row.label||"")
-};
-}
+.w-20 {
+    width: 5rem;
 }
 
-if(n<=15){
-return{level:"normal",label:"ดีมาก"};
+.h-20 {
+    height: 5rem;
 }
 
-if(n<=25){
-return{level:"normal",label:"ดี"};
+.w-10 {
+    width: 2.5rem;
 }
 
-if(n<=37.5){
-return{level:"normal",label:"ปานกลาง"};
+.h-10 {
+    height: 2.5rem;
 }
 
-if(n<=75){
-return{level:"warning",label:"เริ่มมีผลกระทบต่อสุขภาพ"};
+.w-2\.5 {
+    width: .625rem;
 }
 
-return{level:"critical",label:"มีผลกระทบต่อสุขภาพ"};
+.h-2\.5 {
+    height: .625rem;
+}
 
+.min-w-\[180px\] {
+    min-width: 180px;
 }
 
-// =====================================================
-// TEMPERATURE / HUMIDITY INTERPRETATION
-// =====================================================
+/* borders / radius */
 
-function temperatureLevel(value){
-const n=finiteNumberOrNull(value);
-if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
-const apiLevels=standardsData?.temperature?.levels;
-if(Array.isArray(apiLevels)&&apiLevels.length){
-const row=apiLevels.find(x=>x?.max==null||n<=Number(x.max));
-if(row){const level=String(row.level||"normal");return{level,label:String(row.label||"ปกติ"),severity:["very_cold","very_hot"].includes(level)?"critical":level==="normal"?"normal":"warning"};}
-}
-if(n<8)return{level:"very_cold",label:"หนาวจัด",severity:"critical"};
-if(n<16)return{level:"cold",label:"หนาว",severity:"warning"};
-if(n<23)return{level:"cool",label:"เย็น",severity:"warning"};
-if(n<35)return{level:"normal",label:"ปกติ",severity:"normal"};
-if(n<40)return{level:"hot",label:"ร้อน",severity:"warning"};
-return{level:"very_hot",label:"ร้อนจัด",severity:"critical"};
+.border {
+    border-width: 1px;
+    border-style: solid;
 }
 
-function humidityLevel(value){
-const n=finiteNumberOrNull(value);
-if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
-const apiLevels=standardsData?.humidity?.levels;
-if(Array.isArray(apiLevels)&&apiLevels.length){
-const row=apiLevels.find(x=>x?.max==null||n<=Number(x.max));
-if(row){const level=String(row.level||"normal");return{level,label:String(row.label||"ปกติ"),severity:level==="very_high"?"critical":level==="normal"?"normal":"warning"};}
+.border-slate-800 {
+    border-color: #1e293b;
 }
-if(n<30)return{level:"low",label:"ต่ำ",severity:"warning"};
-if(n<85)return{level:"normal",label:"ปกติ",severity:"normal"};
-if(n<95)return{level:"high",label:"สูง",severity:"warning"};
-return{level:"very_high",label:"สูงมาก",severity:"critical"};
-}
 
-function metricStatus(field,value){
-if(field==="pm25"){const g=pm25Guidance(value);return{severity:g.level,label:g.label};}
-if(field==="pm10"){const n=finiteNumberOrNull(value);return n===null?{severity:"no_data",label:"ไม่มีข้อมูล"}:n>120?{severity:"warning",label:"เฝ้าระวัง"}:{severity:"info",label:"ข้อมูลประกอบ"};}
-if(field==="temperature"){const x=temperatureLevel(value);return{severity:x.severity,label:x.label};}
-if(field==="humidity"){const x=humidityLevel(value);return{severity:x.severity,label:x.label};}
-return{severity:finiteNumberOrNull(value)===null?"no_data":"info",label:finiteNumberOrNull(value)===null?"ไม่มีข้อมูล":"ข้อมูลประกอบ"};
+.rounded-xl {
+    border-radius: .75rem;
 }
-
-// =====================================================
-// HEAT INDEX
-// =====================================================
-
-function heatIndexC(
-tempC,
-rh
-){
-
-tempC=
-finiteNumberOrNull(tempC);
 
-rh=
-finiteNumberOrNull(rh);
-
-if(
-tempC===null||
-rh===null
-){
-
-return null;
-
+.rounded-2xl {
+    border-radius: 1rem;
 }
-
-const f=
-tempC*
-9/
-5+
-32;
 
-if(
-f<80||
-rh<40
-){
-
-return tempC;
-
+.rounded-full {
+    border-radius: 9999px;
 }
-
-let hi=
-
--42.379+
-
-2.04901523*f+
-
-10.14333127*rh-
-
-0.22475541*f*rh-
-
-0.00683783*f*f-
 
-0.05481717*rh*rh+
+/* typography */
 
-0.00122874*f*f*rh+
-
-0.00085282*f*rh*rh-
-
-0.00000199*f*f*rh*rh;
-
-if(
-rh<13&&
-f>=80&&
-f<=112
-){
-
-hi-=
-
-(
-(13-rh)/4
-)*
-
-Math.sqrt(
-
-(
-17-
-Math.abs(
-f-95
-)
-)/
-17
-
-);
-
-}else if(
-rh>85&&
-f>=80&&
-f<=87
-){
-
-hi+=
-
-(
-(rh-85)/10
-)*
-
-(
-(87-f)/5
-);
-
+.text-xs {
+    font-size: .75rem;
+    line-height: 1rem;
 }
-
-return(
-hi-32
-)*
-5/
-9;
 
+.text-sm {
+    font-size: .875rem;
+    line-height: 1.25rem;
 }
-
-// =====================================================
-// HEAT LEVEL
-// =====================================================
-
-function heatLevel(value){
 
-const n=
-finiteNumberOrNull(value);
-
-if(n===null){
-return{level:"no_data",label:"ไม่มีข้อมูล"};
+.text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
 }
-
-// เกณฑ์เฝ้าระวัง Heat Index ของไทย:
-// <27, 27.0–32.9, 33.0–41.9, 42.0–51.9, >=52.0 °C
-const apiLevels=
-standardsData?.heat_index?.levels;
 
-if(Array.isArray(apiLevels)&&apiLevels.length){
-const row=apiLevels.find(x=>{
-const max=x?.max;
-return max===null||max===undefined||n<=Number(max);
-});
-if(row){
-return{
-level:String(row.level||"normal"),
-label:String(row.label||"")
-};
+.text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
 }
-}
 
-if(n<27){
-return{level:"normal",label:"ต่ำกว่าเกณฑ์เฝ้าระวัง"};
+.text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
 }
 
-if(n<33){
-return{level:"watch",label:"เฝ้าระวัง"};
+.text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
 }
 
-if(n<42){
-return{level:"warning",label:"เตือนภัย"};
+.text-\[11px\] {
+    font-size: 11px;
+    line-height: 1rem;
 }
 
-if(n<52){
-return{level:"critical",label:"อันตราย"};
+.font-bold {
+    font-weight: 700;
 }
-
-return{level:"critical",label:"อันตรายมาก"};
 
+.font-black {
+    font-weight: 900;
 }
-
-// =====================================================
-// ACTIVE NODE DATA
-// =====================================================
-
-function activeNodes(){
-
-if(
-!motherOnline()
-){
-
-return[];
 
+.uppercase {
+    text-transform: uppercase;
 }
 
-return latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)
-);
-
+.tracking-tight {
+    letter-spacing: -.025em;
 }
-
-function averageOf(
-nodes,
-field
-){
-
-const a=
-nodes
-.map(
-n=>finiteNumberOrNull(n[field])
-)
-.filter(v=>v!==null);
-
-return a.length
 
-?a.reduce(
-(
-x,
-y
-)=>
-x+y,
-0
-)/
-a.length
-
-:null;
-
+.tracking-wider {
+    letter-spacing: .05em;
 }
-
-function currentEnvironmentSnapshot(){
-
-const nodes=
-activeNodes();
 
-const temperature=
-averageOf(
-nodes,
-"temperature"
-);
-
-const humidity=
-averageOf(
-nodes,
-"humidity"
-);
-
-return{
-
-nodes,
-
-pm1:
-averageOf(
-nodes,
-"pm1"
-),
-
-pm25:
-averageOf(
-nodes,
-"pm25"
-),
-
-pm10:
-averageOf(
-nodes,
-"pm10"
-),
-
-temperature,
-
-humidity,
-
-light:
-averageOf(
-nodes,
-"light"
-),
-
-heatIndex:
-heatIndexC(
-temperature,
-humidity
-)
-
-};
-
+.leading-tight {
+    line-height: 1.25;
 }
 
-// =====================================================
-// สภาพแวดล้อมในพื้นที่ ANALYSIS
-// ใช้ Light เป็นตัวแปรสภาพแวดล้อมเฉพาะจุด
-// วิเคราะห์ความสัมพันธ์กับ Temperature / Humidity / PM2.5
-// ความสัมพันธ์ (correlation) ไม่ใช่หลักฐานของเหตุ–ผล
-// =====================================================
+.leading-6 {
+    line-height: 1.5rem;
+}
 
-function pearsonCorrelation(rows, xField, yField){
-const pairs=rows
-.map(r=>[finiteNumberOrNull(r[xField]),finiteNumberOrNull(r[yField])])
-.filter(([x,y])=>x!==null&&y!==null);
+.leading-7 {
+    line-height: 1.75rem;
+}
 
-if(pairs.length<6) return {r:null,n:pairs.length};
+/* colors */
 
-const xs=pairs.map(p=>p[0]);
-const ys=pairs.map(p=>p[1]);
-const mx=xs.reduce((a,b)=>a+b,0)/xs.length;
-const my=ys.reduce((a,b)=>a+b,0)/ys.length;
-let num=0,dx=0,dy=0;
-for(let i=0;i<pairs.length;i++){
-const a=xs[i]-mx;
-const b=ys[i]-my;
-num+=a*b;
-dx+=a*a;
-dy+=b*b;
+.text-white {
+    color: #fff;
 }
-const den=Math.sqrt(dx*dy);
-return {r:den>0?num/den:null,n:pairs.length};
-}
 
-function correlationText(result,label){
-if(result.r===null) return `${label}: ข้อมูลคู่ยังไม่เพียงพอ (${result.n} จุด)`;
-const a=Math.abs(result.r);
-const strength=a>=.7?"ค่อนข้างสูง":a>=.4?"ปานกลาง":a>=.2?"เล็กน้อย":"ยังไม่ชัดเจน";
-const direction=result.r>0?"ทิศทางเดียวกัน":result.r<0?"ทิศทางตรงข้าม":"ไม่พบแนวโน้ม";
-return `${label}: ${strength} • ${direction} (r=${result.r.toFixed(2)}, n=${result.n})`;
+.text-slate-300 {
+    color: #cbd5e1;
 }
-
-function localEnvironmentAnalysis(){
-const data=selectedRecords();
-const lightRows=data.filter(r=>hasFiniteSensorValue(r.light));
-const currentLight=lightRows.length?finiteNumberOrNull(lightRows.at(-1).light):null;
 
-let trend="ข้อมูลยังไม่พอ";
-let level="no_data";
-if(lightRows.length>=4){
-const recent=lightRows.slice(-Math.min(12,lightRows.length));
-const first=finiteNumberOrNull(recent[0].light);
-const last=finiteNumberOrNull(recent.at(-1).light);
-if(first!==null&&last!==null){
-const pct=first===0?0:((last-first)/Math.max(Math.abs(first),1))*100;
-trend=pct>20?"ความเข้มแสงเพิ่มขึ้น":pct<-20?"ความเข้มแสงลดลง":"ความเข้มแสงค่อนข้างคงที่";
-level="normal";
+.text-slate-400 {
+    color: #94a3b8;
 }
+
+.text-slate-500 {
+    color: #64748b;
 }
 
-const lightTemp=pearsonCorrelation(data,"light","temperature");
-const lightHumidity=pearsonCorrelation(data,"light","humidity");
-const lightPM25=pearsonCorrelation(data,"light","pm25");
+.text-cyan-300 {
+    color: #67e8f9;
+}
 
-const relationships=[
-correlationText(lightTemp,"แสง ↔ อุณหภูมิ"),
-correlationText(lightHumidity,"แสง ↔ ความชื้น"),
-correlationText(lightPM25,"แสง ↔ PM2.5")
-];
+.text-cyan-400 {
+    color: #22d3ee;
+}
 
-return {
-level,
-currentLight,
-trend,
-lightTemp,
-lightHumidity,
-lightPM25,
-relationships,
-label: currentLight==null?"รอข้อมูลแสง":`${fmt(currentLight)} lux`,
-detail:`${trend} • วิเคราะห์ความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง`
-};
+.text-emerald-400 {
+    color: #34d399;
 }
 
-// =====================================================
-// COMBINED AIR QUALITY + DUST PROFILE
-// =====================================================
+.text-amber-400 {
+    color: #fbbf24;
+}
 
-function pm10Guidance(value){
+.text-red-400 {
+    color: #f87171;
+}
 
-const n=
-finiteNumberOrNull(value);
+.text-lime-400 {
+    color: #a3e635;
+}
 
-if(n===null){
-return{
-level:"no_data",
-label:"ไม่มีข้อมูล"
-};
+.bg-slate-500 {
+    background-color: #64748b;
 }
 
-// 120 µg/m³ เป็นค่ามาตรฐาน PM10 เฉลี่ย 24 ชั่วโมงของไทย
-// การใช้กับค่ารอบล่าสุดเป็นเพียงการเฝ้าระวังเบื้องต้น
-if(n>120){
-return{
-level:"warning",
-label:"สูงกว่าค่าอ้างอิง 24 ชั่วโมง"
-};
+.bg-emerald-400 {
+    background-color: #34d399;
 }
 
-return{
-level:"normal",
-label:"ยังไม่สูงกว่าค่าอ้างอิง"
-};
+.bg-lime-400 {
+    background-color: #a3e635;
+}
 
+.bg-amber-400 {
+    background-color: #fbbf24;
 }
 
-function combinedAirQualitySummary(snap){
+.bg-red-500 {
+    background-color: #ef4444;
+}
 
-const pm1=
-finiteNumberOrNull(snap?.pm1);
+.bg-cyan-500\/10 {
+    background-color: rgba(6,182,212,.10);
+}
 
-const pm25=
-finiteNumberOrNull(snap?.pm25);
+/* -------------------------
+   Responsive utilities
+   ------------------------- */
 
-const pm10=
-finiteNumberOrNull(snap?.pm10);
+@media (min-width: 768px) {
 
-const p25=
-pm25Guidance(pm25);
+.md\:block {
+    display: block;
+}
 
-const p10=
-pm10Guidance(pm10);
+.md\:p-6 {
+    padding: 1.5rem;
+}
 
-if(
-pm1===null&&
-pm25===null&&
-pm10===null
-){
-return{
-level:"no_data",
-label:"รอข้อมูล",
-detail:"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
-};
+.md\:text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
 }
 
-let level="normal";
-let label="อากาศโดยรวมดี";
+.md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 
-if(
-["warning","critical"].includes(p25.level)&&
-p10.level==="warning"
-){
-level=
-p25.level==="critical"
-?"critical"
-:"warning";
-label="ควรเฝ้าระวังฝุ่นหลายขนาด";
-}else if(
-["warning","critical"].includes(p25.level)
-){
-level=p25.level;
-label="ควรเฝ้าระวังฝุ่นขนาดเล็ก";
-}else if(
-p10.level==="warning"
-){
-level="warning";
-label="ควรเฝ้าระวังฝุ่นขนาดใหญ่";
-}else if(
-pm25!==null&&
-p25.label==="ปานกลาง"
-){
-label="อากาศโดยรวมปานกลาง";
 }
 
-const values=[];
+@media (min-width: 1024px) {
 
-if(pm1!==null){
-values.push(`PM1 ${fmt(pm1)}`);
+.lg\:flex-row {
+    flex-direction: row;
 }
 
-if(pm25!==null){
-values.push(`PM2.5 ${fmt(pm25)}`);
+.lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-if(pm10!==null){
-values.push(`PM10 ${fmt(pm10)}`);
+.lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-return{
-level,
-label,
-detail:
-values.length
-?`${values.join(" • ")} µg/m³`
-:"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
-};
-
+.lg\:col-span-2 {
+    grid-column: span 2 / span 2;
 }
-
-function dustProfileSummary(snap){
 
-const pm1=
-finiteNumberOrNull(snap?.pm1);
-
-const pm25=
-finiteNumberOrNull(snap?.pm25);
+}
 
-const pm10=
-finiteNumberOrNull(snap?.pm10);
+@media (min-width: 1280px) {
 
-if(
-pm25===null||
-pm10===null||
-pm10<=0
-){
-return{
-label:"รอข้อมูล",
-detail:"ต้องมี PM2.5 และ PM10 เพื่อดูลักษณะฝุ่น"
-};
+.xl\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-const fineShare=
-Math.max(
-0,
-Math.min(
-1,
-pm25/pm10
-)
-);
+.xl\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
 
-let label;
+.xl\:col-span-3 {
+    grid-column: span 3 / span 3;
+}
 
-if(fineShare>=0.70){
-label="ฝุ่นขนาดเล็กเป็นสัดส่วนหลัก";
-}else if(fineShare>=0.40){
-label="พบฝุ่นหลายขนาดผสมกัน";
-}else{
-label="ฝุ่นขนาดใหญ่มีสัดส่วนมากขึ้น";
 }
 
-const details=[
-`PM2.5 คิดเป็น ${Math.round(fineShare*100)}% ของ PM10`
-];
+/* =========================================================
+   Small project-specific helpers for JS-generated content
+   ========================================================= */
 
-if(
-pm1!==null&&
-pm25>0
-){
-const pm1Share=
-Math.max(
-0,
-Math.min(
-1,
-pm1/pm25
-)
-);
+.status-text {
+    font-size: .75rem;
+    font-weight: 700;
+}
 
-details.push(
-`PM1 คิดเป็น ${Math.round(pm1Share*100)}% ของ PM2.5`
-);
+.dot {
+    width: .625rem;
+    height: .625rem;
+    border-radius: 9999px;
+    display: inline-block;
 }
 
-return{
-label,
-detail:details.join(" • ")
-};
+@media (max-width: 767px) {
 
+.text-right.hidden.md\:block {
+    display: none;
 }
-
-// =====================================================
-// ACTIVITY RECOMMENDATION
-// =====================================================
 
-function activityRecommendation(
-pm25,
-pm10,
-heatIndex
-){
+}
 
-const p=
-pm25Guidance(
-pm25
-);
+/* =========================
+   Forecast Status Badge
+   ========================= */
 
-const p10=
-pm10Guidance(
-pm10
-);
+#forecastBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 58px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
 
-const h=
-heatLevel(
-heatIndex
-);
+/* =====================================================
+   CREDIT BAR
+   ===================================================== */
 
-if(
-p.level==="critical"
-){
-return"ควรลดหรือหลีกเลี่ยงกิจกรรมกลางแจ้งที่ใช้แรงมาก และติดตามค่าฝุ่นอย่างใกล้ชิด";
+.credit-bar {
+    position: relative;
+    width: 100%;
+    margin-top: 38px;
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(
+            135deg,
+            #07111f 0%,
+            #0b1728 45%,
+            #082536 100%
+        );
+    border-top: 1px solid rgba(34, 211, 238, 0.38);
+    border-bottom: 1px solid rgba(34, 211, 238, 0.24);
+    box-shadow: 0 -10px 35px rgba(6, 182, 212, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
-if(
-h.level==="critical"
-){
-return"ควรลดกิจกรรมกลางแจ้งที่ใช้แรงมาก หลีกเลี่ยงช่วงร้อนจัด และพักในบริเวณที่เหมาะสม";
+.credit-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.18;
+    background-image: linear-gradient(
+            rgba(34, 211, 238, 0.08) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(34, 211, 238, 0.08) 1px,
+            transparent 1px
+        );
+    background-size: 32px 32px;
 }
 
-if(
-p.level==="warning"||
-p10.level==="warning"||
-h.level==="warning"||
-h.level==="watch"
-){
-return"ทำกิจกรรมได้โดยเพิ่มความระมัดระวัง ลดกิจกรรมที่ใช้แรงมาก และติดตามค่าฝุ่นกับสภาพความร้อนต่อเนื่อง";
+.credit-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 8%;
+    width: 84%;
+    height: 1px;
+    background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(34, 211, 238, 0.75),
+            transparent
+        );
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
 }
 
-return"ยังไม่พบข้อจำกัดเด่นจากฝุ่นและสภาพความร้อนสำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
+/* =====================================================
+   CREDIT GLOW
+   ===================================================== */
 
+.credit-glow {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(70px);
+    opacity: 0.10;
 }
-
-// =====================================================
-// CURRENT ENVIRONMENT
-// =====================================================
-
-function currentCfg(){
 
-return CURRENT_METRIC_CONFIG[
-currentMetric
-]||
-CURRENT_METRIC_CONFIG.pm25;
-
+.credit-glow-1 {
+    top: -170px;
+    left: 5%;
+    background: #06b6d4;
 }
-
-function currentValue(v){
-
-const c=
-currentCfg();
-
-return(
-!hasFiniteSensorValue(v)
-)
-?"--"
-:`${fmt(v)} ${c.unit}`;
 
+.credit-glow-2 {
+    right: 5%;
+    bottom: -190px;
+    background: #0ea5e9;
 }
 
-function qualityBadge(l,customLabel=null){
+/* =====================================================
+   CREDIT LAYOUT
+   ===================================================== */
 
-const b=
-$("qualityBadge");
-
-if(!b){
-return;
+.credit-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.35fr
+        1.25fr
+        1fr
+        1fr
+        1fr;
+    align-items: stretch;
 }
 
-b.className=
-"current-quality-badge";
+.credit-box {
+    position: relative;
+    min-width: 0;
+    min-height: 128px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-right: 1px solid rgba(148, 163, 184, 0.13);
+    transition: background 0.3s ease,
+        transform 0.3s ease;
+}
 
-const m={
+.credit-box:last-child {
+    border-right: none;
+}
 
-normal:[
-"ปกติ",
-"current-quality-normal"
-],
+/* =====================================================
+   ICON FRAME
+   ===================================================== */
 
-warning:[
-"เฝ้าระวัง",
-"current-quality-warning"
-],
+.credit-icon {
+    position: relative;
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(34, 211, 238, 0.25);
+    border-radius: 14px;
+    background: linear-gradient(
+            145deg,
+            rgba(34, 211, 238, 0.12),
+            rgba(14, 165, 233, 0.04)
+        );
+    box-shadow: inset 0 0 15px rgba(34, 211, 238, 0.04),
+        0 0 18px rgba(34, 211, 238, 0.04);
+    font-size: 21px;
+    transition: transform 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
 
-critical:[
-"สูง",
-"current-quality-critical"
-],
+/* =====================================================
+   CREDIT IMAGES
+   ===================================================== */
 
-info:[
-"ข้อมูลประกอบ",
-"current-quality-info"
-],
+.credit-icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 12px;
+    object-fit: contain;
+    padding: 4px;
+    box-sizing: border-box;
+    transition: transform 0.25s ease;
+}
 
-no_data:[
-"รอข้อมูล",
-"current-quality-unavailable"
-]
+/* =====================================================
+   IMAGE BUTTON
+   ===================================================== */
 
-};
-
-const x=
-m[l]||
-m.no_data;
-
-b.textContent=
-customLabel||x[0];
-
-b.classList.add(
-x[1]
-);
-
-}
-
-function resetCurrent(reason){
-
-const c=
-currentCfg();
-
-if(
-$("currentOverallLabel")
-){
-
-$("currentOverallLabel").textContent=
-c.label+
-" ภาพรวม";
-
-}
-
-for(
-const id of[
-"currentOverallValue",
-"currentHighestValue",
-"currentHighestNode",
-"currentWatchNode"
-]
-){
-
-if($(id)){
-
-$(id).textContent=
-"--";
-
-}
-
-}
-
-if(
-$("currentOverallDetail")
-){
-
-$("currentOverallDetail").textContent=
-"ค่าเฉลี่ยจากจุดที่ ONLINE";
-
-}
-
-if(
-$("currentWatchDetail")
-){
-
-$("currentWatchDetail").textContent=
-reason;
-
-}
-
-if(
-$("currentEnvironmentFooter")
-){
-
-$("currentEnvironmentFooter").textContent=
-reason;
-
-}
-
-qualityBadge(
-"no_data"
-);
-
-}
-
-function updateCurrent(){
-
-const c=
-currentCfg();
-
-if(
-$("currentOverallLabel")
-){
-
-$("currentOverallLabel").textContent=
-c.label+
-" ภาพรวม";
-
-}
-
-if(
-!apiConnectionOnline
-){
-
-return resetCurrent(
-"ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้"
-);
-
-}
-
-if(
-!motherOnline()
-){
-
-return resetCurrent(
-"ระบบข้อมูลขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
-);
-
-}
-
-const usable=
-latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)&&
-hasFiniteSensorValue(
-n[currentMetric]
-)
-);
-
-if(
-!usable.length
-){
-
-return resetCurrent(
-"ไม่มีอุปกรณ์ที่มีข้อมูลสำหรับตัวแปรนี้"
-);
-
-}
-
-const avg=
-usable.reduce(
-(
-sum,
-n
-)=>
-sum+
-Number(
-n[currentMetric]
-),
-0
-)/
-usable.length;
-
-const high=
-usable.reduce(
-(
-a,
-b
-)=>
-Number(
-b[currentMetric]
-)>
-Number(
-a[currentMetric]
-)
-?b
-:a
-);
-
-const watch=
-usable
-.map(n=>{
-const v=Number(n[currentMetric]);
-const status=metricStatus(currentMetric,v);
-return{n,v,l:status.severity,label:status.label,score:status.severity==="critical"?2:status.severity==="warning"?1:0};
-})
-.filter(x=>x.score>0)
-.sort((a,b)=>b.score-a.score || (currentMetric==="temperature"?Math.abs(b.v-29)-Math.abs(a.v-29):b.v-a.v))[0];
-
-$("currentOverallValue").textContent=
-currentValue(
-avg
-);
-
-$("currentOverallDetail").textContent=
-`ค่าเฉลี่ยจาก ${usable.length} จุดที่ ONLINE`;
-
-$("currentHighestValue").textContent=
-currentValue(
-high[currentMetric]
-);
-
-$("currentHighestNode").textContent=
-`จุดตรวจวัด ${nodeNo(high.device_id)}`;
-
-const avgStatus=metricStatus(currentMetric,avg);
-qualityBadge(avgStatus.severity,avgStatus.label);
-
-$("currentWatchNode").textContent=
-watch
-?`จุดตรวจวัด ${nodeNo(watch.n.device_id)}`
-:"ไม่มี";
-
-$("currentWatchDetail").textContent=
-watch
-?`${c.label} ${currentValue(watch.v)} • ${watch.label}`
-:currentMetric==="pm25"
-?"ยังไม่พบจุดที่ PM2.5 เข้าเกณฑ์เฝ้าระวัง"
-:currentMetric==="pm10"
-?"ยังไม่พบค่ารอบล่าสุดของ PM10 สูงกว่า 120 µg/m³ • การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง"
-:currentMetric==="temperature"
-?"อุณหภูมิของจุดที่มีข้อมูลอยู่ในระดับปกติ"
-:currentMetric==="humidity"
-?"ความชื้นของจุดที่มีข้อมูลอยู่ในระดับปกติ"
-:`${c.label} ใช้เป็นข้อมูลประกอบและการเปรียบเทียบ`;
-
-if(
-$("currentEnvironmentFooter")
-){
-
-$("currentEnvironmentFooter").textContent=
-`ใช้ข้อมูลล่าสุดจาก ${usable.length} / ${TOTAL_NODES} จุดตรวจวัด`;
-
-}
-
-}
-
-// =====================================================
-// PM10 — ค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงสำหรับการสื่อสารในสรุปสถานการณ์
-// ใช้ข้อมูลย้อนหลังแยกตามจุด แล้วเฉลี่ยพื้นที่เป็นช่วงเวลา 5 นาที
-// ก่อนนำช่วงเวลาเหล่านั้นมาเฉลี่ยอีกครั้ง เพื่อลดการให้น้ำหนักจุดที่ส่งข้อมูลถี่กว่า
-// 120 µg/m³ = ค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของประเทศไทย
-// =====================================================
-
-function pm10AreaAverage24h(){
-  const rows=(pm10History24h||[]).filter(r=>finiteNumberOrNull(r?.pm10)!==null);
-  if(!rows.length) return {value:null,buckets:0,nodes:0};
-
-  const areaRows=spatialAverageRows(rows,["pm10"],5*60*1000)
-    .filter(r=>finiteNumberOrNull(r?.pm10)!==null);
-  const values=areaRows.map(r=>finiteNumberOrNull(r.pm10)).filter(v=>v!==null);
-  const nodes=new Set(rows.map(r=>String(r?.device_id||"").trim()).filter(Boolean));
-
-  return {
-    value:values.length?values.reduce((a,b)=>a+b,0)/values.length:null,
-    buckets:values.length,
-    nodes:nodes.size
-  };
-}
-
-async function refreshPM10History24h(){
-  try{
-    const j=await fetchJson(`${API.history}?range=24h`,25000);
-    pm10History24h=(Array.isArray(j?.data)?j.data:[]).map(normalize).filter(Boolean);
-    pm10History24hLoadedAt=new Date();
-    updateSmart();
-  }catch(e){
-    console.warn("PM10 24h summary unavailable:",e);
-  }
-}
-
-function pm10Summary24h(){
-  const result=pm10AreaAverage24h();
-  const value=result.value;
-  if(value===null){
-    return {
-      value:"--",
-      level:"no_data",
-      sub:"ยังไม่มีข้อมูลย้อนหลังเพียงพอสำหรับค่าเฉลี่ย 24 ชั่วโมง"
-    };
-  }
-
-  if(value>120){
-    return {
-      value:`${fmt(value)} µg/m³`,
-      level:"warning",
-      sub:"เฉลี่ยย้อนหลัง 24 ชม. • สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
-    };
-  }
-
-  return {
-    value:`${fmt(value)} µg/m³`,
-    level:"normal",
-    sub:"เฉลี่ยย้อนหลัง 24 ชม. • ไม่สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
-  };
-}
-
-// =====================================================
-// SMART SUMMARY
-// =====================================================
-
-function updateSmart(){
-
-const e=$("aiSummary");
-if(!e)return;
-
-const waitingCard=(icon,title,sub="รอข้อมูลล่าสุด")=>`
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">${icon} ${title}</div>
-<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">${sub}</div>
-</div>`;
-
-if(!apiConnectionOnline){
-e.innerHTML=`
-<div class="smart-summary-headline offline">🔴 ยังไม่สามารถตรวจสอบสถานการณ์ปัจจุบันได้</div>
-<div class="smart-summary-grid smart-summary-grid-six">
-${waitingCard("🌿","คุณภาพอากาศ")}
-${waitingCard("☀️","ดัชนีความร้อน")}
-${waitingCard("🌡️","อุณหภูมิ")}
-${waitingCard("💧","ความชื้น")}
-${waitingCard("📍","จุดตรวจวัด","ยังยืนยันความพร้อมของจุดตรวจวัดไม่ได้")}
-${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
-</div>
-<div class="smart-summary-note danger">กรุณารอให้ข้อมูลปัจจุบันพร้อมก่อนใช้ประกอบการตัดสินใจ</div>`;
-return;
-}
-
-if(!motherOnline()){
-e.innerHTML=`
-<div class="smart-summary-headline offline">🔴 ยังไม่สามารถยืนยันข้อมูลปัจจุบันได้</div>
-<div class="smart-summary-grid smart-summary-grid-six">
-${waitingCard("🌿","คุณภาพอากาศ")}
-${waitingCard("☀️","ดัชนีความร้อน")}
-${waitingCard("🌡️","อุณหภูมิ")}
-${waitingCard("💧","ความชื้น")}
-${waitingCard("📍","จุดตรวจวัด","ขณะนี้ยังยืนยันความพร้อมไม่ได้")}
-${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
-</div>
-<div class="smart-summary-note danger">ข้อมูลเดิมจะไม่ถูกนำมาแสดงเป็นสถานการณ์ปัจจุบันเมื่อยังยืนยันข้อมูลใหม่ไม่ได้</div>`;
-return;
-}
-
-const snap=currentEnvironmentSnapshot();
-const air=combinedAirQualitySummary(snap);
-const heat=heatLevel(snap.heatIndex);
-const tempInfo=temperatureLevel(snap.temperature);
-const humidityInfo=humidityLevel(snap.humidity);
-
-const on=latestNodes.filter(n=>getNodeDisplayStatus(n)==="online").length;
-const off=TOTAL_NODES-on;
-
-let severity="normal";
-let headline="🟢 ภาพรวมปกติ";
-
-if(
-air.level==="critical"||
-heat.level==="critical"||
-tempInfo.severity==="critical"||
-humidityInfo.severity==="critical"
-){
-severity="critical";
-headline="🔴 มีข้อมูลที่ควรให้ความสำคัญ";
-}else if(
-air.level==="warning"||
-heat.level==="warning"||
-heat.level==="watch"||
-tempInfo.severity==="warning"||
-humidityInfo.severity==="warning"||
-off>0
-){
-severity="watch";
-headline="🟡 มีข้อมูลที่ควรติดตาม";
-}
-
-const heatLabel=snap.heatIndex==null
-?"รอข้อมูล"
-:(heat.level==="normal"?"ปกติ":heat.label);
-const heatValue=snap.heatIndex==null
-?"--"
-:`${fmt(snap.heatIndex)} °C`;
-const heatSub=snap.heatIndex==null
-?"ต้องมีอุณหภูมิและความชื้นจึงจะประเมินได้"
-:`${heatLabel} • ใช้ดูความร้อนที่ร่างกายอาจรู้สึก`;
-
-const tempValue=snap.temperature==null
-?"--"
-:`${fmt(snap.temperature)} °C`;
-const tempSub=snap.temperature==null
-?"รอข้อมูลล่าสุด"
-:`${tempInfo.label} • เทียบเพื่อเฝ้าระวังเบื้องต้น`;
-
-const humidityValue=snap.humidity==null
-?"--"
-:`${fmt(snap.humidity)}%`;
-const humiditySub=snap.humidity==null
-?"รอข้อมูลล่าสุด"
-:`${humidityInfo.label} • ควรดูร่วมกับอุณหภูมิ`;
-
-const systemMain=off===0
-?`พร้อม ${on} / ${TOTAL_NODES} จุด`
-:`พร้อม ${on} / ${TOTAL_NODES} จุด`;
-const systemSub=off===0
-?"จุดตรวจวัดทั้งหมดพร้อมแสดงข้อมูลปัจจุบัน"
-:`มี ${off} จุดที่ยังไม่พร้อม`;
-
-const activity=activityRecommendation(snap.pm25,snap.pm10,snap.heatIndex);
-const activityGood=
-!["critical","warning"].includes(air.level)&&
-!["critical","warning"].includes(heat.level)&&
-tempInfo.severity!=="critical"&&
-humidityInfo.severity!=="critical";
-const activityMain=activityGood?"ทำกิจกรรมได้ตามปกติ":"ควรเพิ่มความระมัดระวัง";
-
-const summaryParticle=(typeof overviewParticleMetric!=="undefined"?overviewParticleMetric:"pm25");
-const pm25Now=finiteNumberOrNull(snap.pm25);
-const pm25Info=pm25Guidance(pm25Now);
-const pm10Day=pm10Summary24h();
-
-const airMetricLabel=summaryParticle==="pm10"?"PM10":"PM2.5";
-const airValue=summaryParticle==="pm10"
-?pm10Day.value
-:(pm25Now===null?"รอข้อมูล":`${pm25Info.label} • ${fmt(pm25Now)} µg/m³`);
-const airSub=summaryParticle==="pm10"
-?pm10Day.sub
-:(pm25Now===null
-?"ยังไม่มีข้อมูล PM2.5 ปัจจุบัน"
-:"ใช้ PM2.5 เพื่อสื่อสารระดับคุณภาพอากาศปัจจุบัน");
-
-e.innerHTML=`
-<div class="smart-summary-headline ${severity}">${headline}</div>
-
-<div class="smart-summary-grid smart-summary-grid-six">
-<div class="smart-summary-stat smart-summary-air smart-summary-air-switch">
-<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ • ${airMetricLabel}</div>
-<div class="smart-summary-stat-value">${esc(airValue)}</div>
-<div class="smart-summary-stat-sub">${esc(airSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-heat">
-<div class="smart-summary-stat-label">☀️ ดัชนีความร้อน</div>
-<div class="smart-summary-stat-value">${esc(heatValue)}</div>
-<div class="smart-summary-stat-sub">${esc(heatSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-temperature">
-<div class="smart-summary-stat-label">🌡️ อุณหภูมิ</div>
-<div class="smart-summary-stat-value">${esc(tempValue)}</div>
-<div class="smart-summary-stat-sub">${esc(tempSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-humidity">
-<div class="smart-summary-stat-label">💧 ความชื้น</div>
-<div class="smart-summary-stat-value">${esc(humidityValue)}</div>
-<div class="smart-summary-stat-sub">${esc(humiditySub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-system">
-<div class="smart-summary-stat-label">📍 จุดตรวจวัด</div>
-<div class="smart-summary-stat-value">${esc(systemMain)}</div>
-<div class="smart-summary-stat-sub">${esc(systemSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-activity-card ${activityGood?"":"is-watch"}">
-<div class="smart-summary-stat-label">🏃 กิจกรรมกลางแจ้ง</div>
-<div class="smart-summary-stat-value">${esc(activityMain)}</div>
-<div class="smart-summary-stat-sub">${esc(activity)}</div>
-</div>
-</div>`;
-}
-
-// =====================================================
-// ALERT
-// =====================================================
-
-function updateAlertUI(){
-
-const e=
-$("alerts");
-
-if(!e){
-return;
-}
-
-if(
-!apiConnectionOnline
-){
-
-e.innerHTML=
-'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้</b></div>';
-
-return;
-
-}
-
-if(
-!motherOnline()
-){
-
-e.innerHTML=
-'<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 สถานีหลักขาดการเชื่อมต่อ</b><div class="text-xs text-slate-400 mt-1">ยังไม่สามารถยืนยันสถานะของจุดตรวจวัดได้</div></div>';
-
-return;
-
-}
-
-const list=[];
-
-for(
-let i=1;
-i<=TOTAL_NODES;
-i++
-){
-
-const n=
-getNode(i);
-
-const st=
-getNodeStatus(n);
-
-if(
-st==="offline"
-){
-
-list.push({
-
-icon:
-"🔴",
-
-title:
-`จุดตรวจวัด ${i} ขาดการเชื่อมต่อ`,
-
-detail:
-"ระบบไม่ได้รับข้อมูลจากจุดตรวจวัดภายในเวลาที่กำหนด"
-
-});
-
-continue;
-
-}
-
-const state=
-alertStates.find(
-a=>
-nodeNo(
-a.device_id
-)===i
-);
-
-if(!state){
-continue;
-}
-
-const pmLevel=
-String(
-state.pm25_level||
-"normal"
-);
-
-if(
-pmLevel!=="normal"
-){
-
-const g=
-pm25Guidance(
-n?.pm25
-);
-
-list.push({
-
-icon:
-pmLevel==="critical"
-?"🔴"
-:"🟡",
-
-title:
-`จุดตรวจวัด ${i} • PM2.5`,
-
-detail:
-`${fmt(n?.pm25)} µg/m³ • ${g.label}`
-
-});
-
-}
-
-const tempState=String(state.temperature_level||"normal");
-const humState=String(state.humidity_level||"normal");
-const heatState=String(state.heat_index_level??state.temperature_level??"normal");
-
-if(tempState!=="normal"){
-const t=temperatureLevel(n?.temperature);
-list.push({icon:t.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • อุณหภูมิ ${t.label}`,detail:`${fmt(n?.temperature)} °C • เทียบเกณฑ์ลักษณะอากาศเพื่อเฝ้าระวังเบื้องต้น`});
-}
-
-if(humState!=="normal"){
-const hu=humidityLevel(n?.humidity);
-list.push({icon:hu.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • ความชื้น ${hu.label}`,detail:`${fmt(n?.humidity)} % • เกณฑ์เฝ้าระวังของโครงการ ควรดูร่วมกับอุณหภูมิและ Heat Index`});
-}
-
-if(
-heatState!=="normal"
-){
-
-const hi=
-heatIndexC(
-n?.temperature,
-n?.humidity
-);
-
-const h=
-heatLevel(
-hi
-);
-
-list.push({
-
-icon:
-heatState==="critical"
-?"🔴"
-:"🟡",
-
-title:
-`จุดตรวจวัด ${i} • สภาพความร้อน`,
-
-detail:
-`${fmt(hi)} °C • ${h.label}`
-
-});
-
-}else{
-
-// ระดับ "เฝ้าระวัง" (27.0–32.9°C) ไม่จำเป็นต้อง Telegram
-// แต่ควรแสดงบน Dashboard เพื่อให้ผู้ใช้วางแผนกิจกรรมได้
-const hi=
-heatIndexC(
-n?.temperature,
-n?.humidity
-);
-
-const h=
-heatLevel(
-hi
-);
-
-if(h.level==="watch"){
-list.push({
-icon:"🟢",
-title:`จุดตรวจวัด ${i} • เฝ้าระวังความร้อน`,
-detail:`${fmt(hi)} °C • ${h.label}`
-});
-}
-
-}
-
-// PM10 > 120 รอบล่าสุด = สัญญาณเฝ้าระวังเบื้องต้นเท่านั้น
-// ไม่เรียกว่า "เกินมาตรฐาน 24 ชั่วโมง"
-const pm10=
-finiteNumberOrNull(
-n?.pm10
-);
-
-if(pm10!==null&&pm10>120){
-list.push({
-icon:"🟡",
-title:`จุดตรวจวัด ${i} • PM10 ควรเฝ้าระวัง`,
-detail:`${fmt(pm10)} µg/m³ • ค่ารอบล่าสุดสูงกว่า 120; การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง`
-});
-}
-
-}
-
-e.innerHTML=
-list.length
-
-?list
-.map(
-x=>
-`<div class="soft rounded-xl p-3 mb-2">
-<b>
-${x.icon} ${esc(x.title)}
-</b>
-<div class="text-xs text-slate-400 mt-1">
-${esc(x.detail)}
-</div>
-</div>`
-)
-.join("")
-
-:'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ยังไม่มีสิ่งที่ต้องเฝ้าระวัง</b></div>';
-
-}
-
-// =====================================================
-// HISTORY
-// =====================================================
-
-function rangeLabel(){
-
-if(
-averageRange==="custom"&&
-customRangeStart&&
-customRangeEnd
-){
-
-return`${customRangeStart.toLocaleString("th-TH")} – ${customRangeEnd.toLocaleString("th-TH")}`;
-
-}
-
-return RANGE_CONFIG[
-averageRange
-]?.label||
-"ช่วงเวลาที่เลือก";
-
-}
-
-function rangeWindow(){
-
-if(
-averageRange==="custom"
-){
-
-return(
-customRangeStart&&
-customRangeEnd
-)
-?{
-start:
-customRangeStart,
-
-end:
-customRangeEnd
-}
-:null;
-
-}
-
-const end=
-new Date();
-
-if(
-averageRange==="today"
-){
-
-const parts=
-new Intl.DateTimeFormat(
-"en-CA",
-{
-timeZone:
-"Asia/Bangkok",
-year:
-"numeric",
-month:
-"2-digit",
-day:
-"2-digit"
-}
-)
-.formatToParts(
-end
-);
-
-const get=
-t=>
-parts.find(
-p=>
-p.type===t
-)?.value;
-
-const start=
-new Date(
-`${get("year")}-${get("month")}-${get("day")}T00:00:00+07:00`
-);
-
-return{
-start,
-end
-};
-
-}
-
-const c=
-RANGE_CONFIG[
-averageRange
-];
-
-if(
-!c||
-!Number.isFinite(
-c.minutes
-)
-){
-
-return null;
-
-}
-
-return{
-
-start:
-new Date(
-end.getTime()-
-c.minutes*
-60000
-),
-
-end
-
-};
-
-}
-
-function hasAnySensorData(row){
-
-if(!row){
-return false;
-}
-
-return [
-"pm1",
-"pm25",
-"pm10",
-"temperature",
-"humidity",
-"light"
-].some(
-field=>
-hasFiniteSensorValue(
-row[field]
-)
-);
-
-}
-
-function selectedRecords(){
-
-const w=
-rangeWindow();
-
-return w
-?records.filter(
-r=>{
-
-const d=
-parseDate(
-r.timestamp
-);
-
-return(
-d&&
-d>=w.start&&
-d<=w.end&&
-hasAnySensorData(r)
-);
-
-}
-)
-:[];
-
-}
-
-function metricLabel(){
-
-return CURRENT_METRIC_CONFIG[
-metric
-]?.label||
-metric;
-
-}
-
-function metricUnit(){
-
-return CURRENT_METRIC_CONFIG[
-metric
-]?.unit||
-"";
-
-}
-
-function stats(
-data,
-field
-){
-
-const values=
-data
-.map(
-x=>finiteNumberOrNull(x[field])
-)
-.filter(v=>v!==null);
-
-return values.length
-?{
-
-avg:
-values.reduce(
-(
-a,
-b
-)=>
-a+b,
-0
-)/
-values.length,
-
-max:
-Math.max(
-...values
-),
-
-min:
-Math.min(
-...values
-),
-
-last:
-values.at(-1)
-
-}
-:{
-
-avg:null,
-max:null,
-min:null,
-last:null
-
-};
-
-}
-
-function renderAverages(){
-
-const d=
-selectedRecords();
-
-if(
-$("selectedRangeLabel")
-){
-
-$("selectedRangeLabel").textContent=
-rangeLabel();
-
-}
-
-const defs=[
-
-[
-"pm1",
-"averagePM1",
-"averagePM1Status"
-],
-
-[
-"pm25",
-"averagePM25",
-"averagePM25Status"
-],
-
-[
-"pm10",
-"averagePM10",
-"averagePM10Status"
-],
-
-[
-"temperature",
-"averageTemp",
-"averageTempStatus"
-],
-
-[
-"humidity",
-"averageHum",
-"averageHumStatus"
-],
-
-[
-"light",
-"averageLight",
-"averageLightStatus"
-]
-
-];
-
-for(
-const[
-field,
-id,
-statusId
-]
-of defs
-){
-
-const s=
-stats(
-d,
-field
-);
-
-if($(id)){
-
-$(id).textContent=
-s.avg==null
-?"--"
-:fmt(s.avg);
-
-}
-
-if($(statusId)){
-
-$(statusId).textContent=
-s.avg==null
-?"● ไม่มีข้อมูล"
-:`● เฉลี่ย ${rangeLabel()}`;
-
-}
-
-}
-
-}
-
-
-const GRAPH_FIELDS=["pm1","pm25","pm10","temperature","humidity","light"];
-
-function metricColor(field){
-return CURRENT_METRIC_CONFIG[field]?.color||"#22d3ee";
-}
-
-function metricLabelFor(field){
-return CURRENT_METRIC_CONFIG[field]?.label||field;
-}
-
-function metricUnitFor(field){
-return CURRENT_METRIC_CONFIG[field]?.unit||"";
-}
-
-function normalizeSeries(values, extra=[]){
-const nums=[...values,...extra]
-.map(finiteNumberOrNull)
-.filter(v=>v!==null);
-
-if(!nums.length)return values.map(()=>null);
-
-const min=Math.min(...nums);
-const max=Math.max(...nums);
-
-if(Math.abs(max-min)<1e-9){
-return values.map(v=>hasFiniteSensorValue(v)?50:null);
-}
-
-return values.map(v=>{
-const n=finiteNumberOrNull(v);
-return n!==null?((n-min)/(max-min))*100:null;
-});
-}
-
-function graphTooltipLabel(ctx){
-const ds=ctx.dataset||{};
-const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
-const field=ds.metricField;
-if(field&&hasFiniteSensorValue(raw)){
-return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
-}
-return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
-}
-
-function isMobileChart(){
-return window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
-}
-
-function graphLegendOptions(){
-return{
-display:true,
-position:"top",
-align:"start",
-labels:{
-boxWidth:18,
-boxHeight:2,
-padding:14,
-font:{
-size:Math.max(10,chartFontSize()-1)
-},
-sort:(a,b)=>{
-const af=String(a?.text||"").includes("คาดการณ์")||String(a?.text||"").includes("Forecast");
-const bf=String(b?.text||"").includes("คาดการณ์")||String(b?.text||"").includes("Forecast");
-if(af!==bf)return af?1:-1;
-return Number(a?.datasetIndex||0)-Number(b?.datasetIndex||0);
-}
-}
-};
-}
-
-function graphXAxisOptions(){
-const mobile=isMobileChart();
-return{
-grid:{display:false},
-ticks:{
-autoSkip:false,
-maxTicksLimit:mobile?5:10,
-maxRotation:mobile?0:45,
-minRotation:0,
-font:{size:mobile?12:12},
-callback:function(value,index,ticks){
-return adaptiveChartTickText(this,value,index,ticks);
-}
-}
-};
-}
-
-function graphYAxisTicks(){
-const mobile=isMobileChart();
-return{maxTicksLimit:mobile?5:8,font:{size:mobile?12:12}};
-}
-
-
-function destroyChartSafe(chart){
-try{chart?.destroy();}catch{}
-}
-function destroyChartList(list){
-for(const c of list||[])destroyChartSafe(c);
-return [];
-}
-function chartTickLimit(){
-return window.innerWidth<=640?5:10;
-}
-function chartFontSize(){
-return window.innerWidth<=640?12:13;
-}
-function groupedChartShell(title, subtitle, canvasId, legendHtml=""){
-return `<section class="metric-chart-panel">
-<div class="metric-chart-head">
-<div><div class="metric-chart-title">${title}</div><div class="metric-chart-subtitle">${subtitle}</div></div>
-${legendHtml?`<div class="metric-chart-legend">${legendHtml}</div>`:""}
-</div>
-<div class="metric-chart-canvas-wrap"><canvas id="${canvasId}"></canvas></div>
-</section>`;
-}
-function miniLegend(fields){
-return fields.map(field=>`<span><i style="background:${metricColor(field)}"></i>${metricLabelFor(field)}</span>`).join("");
-}
-function groupedChartOptions(yTitle){
-return{
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-interaction:{mode:"nearest",intersect:true},
-plugins:{
-legend:{display:false},
-tooltip:{
-mode:"nearest",
-intersect:true,
-callbacks:{
-title:graphTooltipTitle,
-label:graphTooltipLabel
-}
-}
-},
-scales:{
-x:{
-grid:{display:false},
-afterBuildTicks(scale){buildAdaptiveTimeTicks(scale);},
-ticks:{
-autoSkip:false,
-maxTicksLimit:chartTickLimit(),
-maxRotation:0,
-minRotation:0,
-font:{size:chartFontSize()},
-callback:function(value,index,ticks){
-return adaptiveChartTickText(this,value,index,ticks);
-}
-}
-},
-y:{
-title:{display:true,text:yTitle,font:{size:chartFontSize(),weight:"600"}},
-ticks:{font:{size:chartFontSize()}},
-grid:{color:"rgba(148,163,184,.08)"}
-}
-}
-};
-}
-function forecastTickText(scale,value,index,ticks){
-const raw=scale.getLabelForValue(value);
-const text=String(raw??"");
-const labels=scale?.chart?.data?.labels||[];
-
-const forecastStart=
-labels.findIndex(
-v=>
-/^\+\d+\s*นาที/.test(
-String(v??"")
-)
-);
-
-const actualCount=
-forecastStart>=0
-?forecastStart
-:labels.length;
-
-// Forecast ทั้ง 3 จุดยังอยู่บนกราฟและ Tooltip เหมือนเดิม
-// แต่ไม่แสดง +10/+20/+30 เป็น tick แยกบนแกน X เพราะพื้นที่กราฟย่อยไม่พอ
-if(
-/^\+\d+\s*นาที/.test(text)
-){
-return"";
-}
-
-const d=parseDate(raw);
-if(!d)return"";
-
-const width=
-Number(
-scale?.width||
-scale?.chart?.width||
-window.innerWidth||
-0
-);
-
-const labelCount=
-width<520
-?2
-:3;
-
-const wanted=
-new Set();
-
-if(actualCount>0){
-
-wanted.add(0);
-
-const lastIndex=
-Math.max(
-0,
-actualCount-1
-);
-
-wanted.add(lastIndex);
-
-if(
-labelCount>2&&
-lastIndex>1
-){
-wanted.add(
-Math.round(
-lastIndex/2
-)
-);
-}
-}
-
-if(
-!wanted.has(
-Number(value)
-)
-){
-return"";
-}
-
-return d.toLocaleTimeString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-}
-);
-}
-
-function forecastChartOptions(yTitle){
-const base=groupedChartOptions(yTitle);
-
-base.layout={
-padding:{
-right:
-window.innerWidth<=640
-?16
-:22
-}
-};
-
-base.scales.x={
-offset:true,
-grid:{display:false},
-title:{
-display:true,
-text:"เวลา • จุดเส้นประด้านขวา = อีก 10 / 20 / 30 นาที",
-font:{
-size:Math.max(10,chartFontSize()-2),
-weight:"500"
-},
-padding:{top:6}
-},
-ticks:{
-autoSkip:false,
-maxRotation:0,
-minRotation:0,
-padding:8,
-font:{
-size:Math.max(10,chartFontSize()-1)
-},
-callback:function(value,index,ticks){
-return forecastTickText(
-this,
-value,
-index,
-ticks
-);
-}
-}
-};
-
-return base;
-}
-
-const HISTORY_NODES=["Number 1","Number 2","Number 3"];
-const HISTORY_NODE_COLORS={
-"Number 1":"#22d3ee",
-"Number 2":"#a78bfa",
-"Number 3":"#f59e0b"
-};
-
-function historyNodeLabel(id){
-const key=String(id??"").trim();
-const configured=(publicDisplayConfig?.devices||[]).find(x=>x.device_id===key);
-if(configured?.display_name){
-const location=String(configured.location_name||"").trim();
-return location?`${configured.display_name} • ${location}`:configured.display_name;
-}
-const m=key.match(/(\d+)/);
-return m?`จุดตรวจวัด ${m[1]}`:key;
-}
-
-function historyRowsForNode(rows,nodeId){
-return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
-}
-
-// UX RULE:
-// - compare = หลายเส้น แต่ Tooltip แสดงเฉพาะเส้นที่ชี้
-// - Number 1/2/3 = กรองเหลือข้อมูลของจุดที่เลือกจริง
-// - Zoom viewer สามารถกดชื่อจุดเพื่อ isolate เส้นเดียว
-function historyDisplayRows(rows){
-// compare และ average ต้องเห็นข้อมูลดิบของทั้ง 3 จุดก่อน
-// แล้วค่อยแยกเส้นหรือคำนวณค่าเฉลี่ยพื้นที่ในขั้นสร้างกราฟ
-if(historyNode==="compare"||historyNode==="average")return rows||[];
-return historyRowsForNode(rows,historyNode);
-}
-
-function makeNodeDataset(nodeId,field,values){
-return{
-label:historyNodeLabel(nodeId),
-metricField:field,
-rawValues:values,
-data:values,
-borderColor:HISTORY_NODE_COLORS[nodeId]||metricColor(field),
-backgroundColor:"transparent",
-borderWidth:2,
-pointRadius:values.length>50?0:2,
-tension:.14,
-spanGaps:true,
-cubicInterpolationMode:"monotone"
-};
-}
-
-function buildNodeComparisonData(rows,field){
-const byNode={};
-const labelSet=new Set();
-for(const nodeId of HISTORY_NODES){
-const map=new Map();
-for(const r of historyRowsForNode(rows,nodeId)){
-const d=parseDate(r?.timestamp);
-const v=finiteNumberOrNull(r?.[field]);
-if(!d||v===null)continue;
-const key=d.toISOString();
-map.set(key,v);
-labelSet.add(key);
-}
-byNode[nodeId]=map;
-}
-const labels=[...labelSet].sort((a,b)=>parseDate(a)-parseDate(b));
-const w=rangeWindow();
-if(w&&labels.length){
-const last=parseDate(labels.at(-1));
-if(!last||w.end-last>1000)labels.push(w.end.toISOString());
-}
-const datasets=HISTORY_NODES.map(nodeId=>{
-const map=byNode[nodeId];
-const vals=labels.map(label=>map.has(label)?map.get(label):null);
-return makeNodeDataset(nodeId,field,vals);
-});
-return{labels,datasets};
-}
-
-function distinctMonitoringPoints(rows){
-return new Set(
-(rows||[])
-.map(r=>String(r?.device_id||""))
-.filter(id=>DEVICE_IDS.includes(id))
-).size;
-}
-
-function spatialAverageRows(rows,fields=GRAPH_FIELDS,bucketMs=5*60*1000){
-const buckets=new Map();
-const validNodes=new Set(HISTORY_NODES);
-
-for(const r of rows||[]){
-const d=parseDate(r?.timestamp);
-const nodeId=String(r?.device_id??"").trim();
-if(!d||!validNodes.has(nodeId))continue;
-
-const key=Math.floor(d.getTime()/bucketMs)*bucketMs;
-if(!buckets.has(key)){
-buckets.set(key,{timestamp:new Date(key).toISOString(),nodes:{}});
-}
-const bucket=buckets.get(key);
-if(!bucket.nodes[nodeId])bucket.nodes[nodeId]={};
-
-for(const field of fields){
-const v=finiteNumberOrNull(r?.[field]);
-if(v===null)continue;
-if(!bucket.nodes[nodeId][field])bucket.nodes[nodeId][field]=[];
-bucket.nodes[nodeId][field].push(v);
-}
-}
-
-return [...buckets.entries()]
-.sort((a,b)=>a[0]-b[0])
-.map(([,bucket])=>{
-const out={timestamp:bucket.timestamp,device_id:"AREA_AVG",status:"online",active_nodes:0};
-const nodesWithAny=new Set();
-
-for(const field of fields){
-const nodeMeans=[];
-for(const nodeId of HISTORY_NODES){
-const vals=bucket.nodes?.[nodeId]?.[field]||[];
-if(!vals.length)continue;
-const nodeMean=vals.reduce((sum,v)=>sum+v,0)/vals.length;
-nodeMeans.push(nodeMean);
-nodesWithAny.add(nodeId);
-}
-out[field]=nodeMeans.length
-?nodeMeans.reduce((sum,v)=>sum+v,0)/nodeMeans.length
-:null;
-}
-
-out.active_nodes=nodesWithAny.size;
-return out;
-})
-.filter(hasAnySensorData);
-}
-function makeActualDataset(field, values){
-return{
-label:metricLabelFor(field),
-metricField:field,
-rawValues:values,
-data:values,
-borderColor:metricColor(field),
-backgroundColor:"transparent",
-borderWidth:2,
-pointRadius:values.length>40?0:2,
-tension:.16,
-spanGaps:true,
-cubicInterpolationMode:"monotone"
-};
-}
-function makeForecastDataset(field, actualLength, current, points){
-const raw=[...new Array(Math.max(0,actualLength-1)).fill(null),current,...points];
-return{
-label:`${metricLabelFor(field)} Forecast`,
-isForecast:true,
-metricField:field,
-rawValues:raw,
-data:raw,
-borderColor:metricColor(field),
-backgroundColor:"transparent",
-borderDash:[6,5],
-borderWidth:2,
-pointRadius:2,
-tension:.08,
-hidden:!forecastVisible,
-cubicInterpolationMode:"monotone"
-};
-}
-
-function drawCharts(){
-
-if(typeof Chart==="undefined"){
-const area=$("historyChartArea");
-if(area)area.innerHTML='<div class="chart-empty chart-loading-state"><b>กำลังโหลดข้อมูลย้อนหลัง</b><span>กราฟจะพร้อมแสดงอัตโนมัติเมื่อข้อมูลโหลดเสร็จ</span></div>';
-if(historyActivated){
-ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load error:",e));
-}
-return;
-}
-
-const allBase=selectedRecords()
-.filter(r=>parseDate(r.timestamp))
-.sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
-const base=historyDisplayRows(allBase);
-const compareMode=historyNode==="compare";
-const averageMode=historyNode==="average";
-const areaAverageBase=averageMode?spatialAverageRows(allBase):[];
-
-if($("selectedMetricLabel")){
-const nodeText=compareMode
-?"แยก 3 จุด"
-:averageMode
-?"ค่าเฉลี่ยพื้นที่"
-:historyNodeLabel(historyNode);
-$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
-}
-
-historyGroupCharts=destroyChartList(historyGroupCharts);
-destroyChartSafe(historyChart);
-historyChart=null;
-const area=$("historyChartArea");
-if(!area)return;
-
-historyRangeCaption(averageMode?(areaAverageBase.length?areaAverageBase:allBase):(base.length?base:allBase));
-
-if(!base.length){
-area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
-["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
-if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
-drawForecast([]);
-return;
-}
-
-// ALL + ค่าเฉลี่ยพื้นที่: 6 กราฟ ตัวแปรละ 1 เส้น
-// ค่าในแต่ละช่วงคำนวณแบบ "เฉลี่ยแต่ละจุดก่อน แล้วจึงเฉลี่ยพื้นที่"
-// เพื่อไม่ให้จุดที่ส่งข้อมูลถี่กว่ามีน้ำหนักมากกว่า
-if(metric==="all"&&averageMode){
-const avgBase=areaAverageBase;
-if(!avgBase.length){
-area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลสำหรับคำนวณค่าเฉลี่ยพื้นที่ในช่วงเวลาที่เลือก</div>';
-["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
-if($("trend"))$("trend").textContent="ไม่มีข้อมูล";
-drawForecast([]);
-return;
-}
-
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
-
-area.innerHTML=`<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
-groupedChartShell("PM2.5","ค่าเฉลี่ยพื้นที่","historyPm25",miniLegend(["pm25"]))+
-groupedChartShell("PM10","ค่าเฉลี่ยพื้นที่","historyPm10",miniLegend(["pm10"]))+
-groupedChartShell("อุณหภูมิ","ค่าเฉลี่ยพื้นที่ • °C","historyTemp",miniLegend(["temperature"]))+
-groupedChartShell("ความชื้น","ค่าเฉลี่ยพื้นที่ • %","historyHumidity",miniLegend(["humidity"]))+
-groupedChartShell("แสง","ค่าเฉลี่ยพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
-
-const createAverage=(canvasId,field,yTitle)=>{
-const arr=avgBase.filter(r=>hasFiniteSensorValue(r[field]));
-const labels=historyLabelsToRangeEnd(arr);
-const vals=arr.map(r=>finiteNumberOrNull(r[field]));
-const c=new Chart($(canvasId),{
-type:"line",
-data:{labels,datasets:[makeActualDataset(field,padChartValuesToLabels(vals,labels))]},
-options:groupedChartOptions(yTitle)
-});
-historyGroupCharts.push(c);
-};
-createAverage("historyPm1","pm1","µg/m³");
-createAverage("historyPm25","pm25","µg/m³");
-createAverage("historyPm10","pm10","µg/m³");
-createAverage("historyTemp","temperature","°C");
-createAverage("historyHumidity","humidity","%");
-createAverage("historyLight","light","lux");
-
-drawForecast(avgBase);
-return;
-}
-
-// ALL + เปรียบเทียบ 3 จุด: แยกเป็น 6 กราฟ ตัวแปรละ 1 กราฟ และในแต่ละกราฟมี 3 เส้นตามสถานที่
-if(metric==="all"&&compareMode){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
-
-area.innerHTML=`<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
-groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด","historyPm25",miniLegend([]))+
-groupedChartShell("PM10","เปรียบเทียบ 3 จุด","historyPm10",miniLegend([]))+
-groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","historyTemp",miniLegend([]))+
-groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","historyHumidity",miniLegend([]))+
-groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","historyLight",miniLegend([]))+`</div>`;
-
-const createCompare=(canvasId,field,yTitle)=>{
-const data=buildNodeComparisonData(base,field);
-const c=new Chart($(canvasId),{
-type:"line",data,
-options:{...groupedChartOptions(yTitle),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
-});
-historyGroupCharts.push(c);
-};
-createCompare("historyPm1","pm1","µg/m³");
-createCompare("historyPm25","pm25","µg/m³");
-createCompare("historyPm10","pm10","µg/m³");
-createCompare("historyTemp","temperature","°C");
-createCompare("historyHumidity","humidity","%");
-createCompare("historyLight","light","lux");
-
-drawForecast(spatialAverageRows(base));
-return;
-}
-
-// ALL + จุดเดียว: คงรูปแบบเดิม แต่ข้อมูลทุกเส้นมาจากจุดเดียวกันเท่านั้น
-if(metric==="all"){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
-
-area.innerHTML=
-groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
-`<div class="metric-chart-grid-3">`+
-groupedChartShell("อุณหภูมิ",`${historyNodeLabel(historyNode)} • °C`,"historyTemp",miniLegend(["temperature"]))+
-groupedChartShell("ความชื้น",`${historyNodeLabel(historyNode)} • %`,"historyHumidity",miniLegend(["humidity"]))+
-groupedChartShell("แสง",`${historyNodeLabel(historyNode)} • lux`,"historyLight",miniLegend(["light"]))+
-`</div>`;
-
-const labels=historyLabelsToRangeEnd(base);
-const create=(canvasId,fields,yTitle)=>{
-const datasets=fields.map(field=>{
-const vals=base.map(r=>finiteNumberOrNull(r[field]));
-return makeActualDataset(field,padChartValuesToLabels(vals,labels));
-});
-const c=new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)});
-historyGroupCharts.push(c);
-};
-create("historyDust",["pm1","pm25","pm10"],"µg/m³");
-create("historyTemp",["temperature"],"°C");
-create("historyHumidity",["humidity"],"%");
-create("historyLight",["light"],"lux");
-// Forecast เป็นภาพรวมพื้นที่ จึงใช้ข้อมูลภาพรวมพื้นที่ประกอบเสมอ
-drawForecast(spatialAverageRows(allBase));
-return;
-}
-
-area.innerHTML='<canvas id="historyChart"></canvas>';
-
-const sourceRows=averageMode?areaAverageBase:base;
-const chartRows=sourceRows.filter(r=>hasFiniteSensorValue(r[metric]));
-const summaryRows=compareMode?spatialAverageRows(base,[metric]):chartRows;
-const summaryValues=summaryRows.map(r=>finiteNumberOrNull(r[metric])).filter(v=>v!==null);
-const s=stats(summaryRows,metric);
-
-if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
-if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
-if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
-if($("trendLast"))$("trendLast").textContent=s.last==null?"--":fmt(s.last);
-if($("trend")){
-const diff=summaryValues.length?summaryValues.at(-1)-summaryValues[0]:0;
-const pct=summaryValues[0]?diff/Math.abs(summaryValues[0])*100:0;
-const trendText=!summaryValues.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
-$("trend").textContent=averageMode&&trendText!=="ไม่มีข้อมูล"?`${trendText} • ค่าเฉลี่ยพื้นที่`:trendText;
-}
-
-if(compareMode){
-const data=buildNodeComparisonData(base.filter(r=>hasFiniteSensorValue(r[metric])),metric);
-historyChart=new Chart($("historyChart"),{
-type:"line",data,
-options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
-});
-drawForecast(summaryRows);
-}else{
-const values=chartRows.map(r=>finiteNumberOrNull(r[metric]));
-const labels=historyLabelsToRangeEnd(chartRows);
-historyChart=new Chart($("historyChart"),{
-type:"line",
-data:{labels,datasets:[makeActualDataset(metric,padChartValuesToLabels(values,labels))]},
-options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
-});
-// Forecast เป็นภาพรวมพื้นที่ แม้กราฟย้อนหลังจะเลือกดูจุดเดียว
-drawForecast(spatialAverageRows(allBase,[metric]));
-}
-}
-
-// =====================================================
-// FORECAST
-// =====================================================
-
-function linear(points){
-
-const n=
-points.length;
-
-if(
-n<2
-){
-return null;
-}
-
-let sx=0;
-let sy=0;
-let sxy=0;
-let sxx=0;
-
-for(
-const p of
-points
-){
-
-sx+=p.x;
-sy+=p.y;
-sxy+=p.x*p.y;
-sxx+=p.x*p.x;
-
-}
-
-const den=
-n*sxx-
-sx*sx;
-
-if(!den){
-return null;
-}
-
-const slope=
-(
-n*sxy-
-sx*sy
-)/
-den;
-
-return{
-
-slope,
-
-intercept:
-(
-sy-
-slope*sx
-)/
-n
-
-};
-
-}
-
-function hideForecastTechnicalMessage(){
-const el=$("forecastMessage");
-if(!el)return;
-el.innerHTML="";
-el.style.display="none";
-}
-
-function updateForecastToggle(){
-
-hideForecastTechnicalMessage();
-
-const b=
-$("forecastToggle");
-
-const l=
-$("forecastToggleLabel");
-
-const s=
-$("forecastToggleState");
-
-if(
-!b||
-!l
-){
-return;
-}
-
-b.classList.toggle(
-"is-on",
-forecastVisible
-);
-
-b.classList.toggle(
-"is-off",
-!forecastVisible
-);
-
-b.setAttribute(
-"aria-checked",
-forecastVisible
-?"true"
-:"false"
-);
-
-b.setAttribute(
-"aria-pressed",
-forecastVisible
-?"true"
-:"false"
-);
-
-b.title=
-forecastVisible
-?"กดเพื่อซ่อน Forecast"
-:"กดเพื่อแสดง Forecast";
-
-l.textContent=
-forecastVisible
-?"กำลังแสดงการคาดการณ์"
-:"ซ่อนการคาดการณ์";
-
-if(s){
-
-s.textContent=
-forecastVisible
-?"ON"
-:"OFF";
-
-}
-
-// V16:
-// เดิมซ่อนเฉพาะ forecastChart ตัวเดียว
-// แต่ตอน ALL จะใช้ forecastGroupCharts หลายกราฟ
-// จึงทำให้กด OFF แล้วเส้น Forecast ยังอยู่
-const charts=[
-forecastChart,
-...forecastGroupCharts
-]
-.filter(Boolean);
-
-charts.forEach(chart=>{
-
-if(
-!chart?.data?.datasets
-){
-return;
-}
-
-chart.data.datasets.forEach((ds,i)=>{
-
-const label=
-String(
-ds?.label||
-""
-);
-
-const isForecast=
-ds?.isForecast===true||
-label.includes("Forecast")||
-label.includes("คาดการณ์");
-
-if(isForecast){
-
-chart.setDatasetVisibility(
-i,
-forecastVisible
-);
-
-}
-
-});
-
-chart.update(
-"none"
-);
-
-});
-
-}
-
-function aiTrendFor(field){
-const list=aiForecastPayload?.data?.trend_analysis;
-if(!Array.isArray(list))return null;
-return list.find(x=>x?.field===field)||null;
-}
-function aiDirectionText(direction){
-return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
-}
-function forecastScopeData(scope){
-
-const list=
-Array.isArray(
-aiForecastPayload?.data?.scope_forecasts
-)
-?aiForecastPayload.data.scope_forecasts
-:[];
-
-const found=
-list.find(
-x=>
-String(x?.scope||"").trim()===scope
-);
-
-if(found){
-return found;
-}
-
-// backward compatibility: old Worker had AREA only
-if(scope==="AREA"&&aiForecastPayload?.data){
-return{
-scope:"AREA",
-confidence:
-aiForecastPayload.data.confidence||
-"low",
-trend_analysis:
-aiForecastPayload.data.trend_analysis||
-[],
-forecast_points:
-aiForecastPayload.data.forecast_points||
-[]
-};
-}
-
-return null;
-}
-
-function forecastPointsForScope(scope,field){
-
-const s=
-forecastScopeData(scope);
-
-const fp=
-Array.isArray(
-s?.forecast_points
-)
-?s.forecast_points.find(
-x=>x?.field===field
-)
-:null;
-
-if(!fp){
-return null;
-}
-
-const pts=[
-finiteNumberOrNull(fp.p10),
-finiteNumberOrNull(fp.p20),
-finiteNumberOrNull(fp.p30)
-];
-
-return pts.every(
-v=>v!==null
-)
-?pts
-:null;
-}
-
-function selectedForecastScope(){
-
-if(historyNode==="average"){
-return"AREA";
-}
-
-if(
-["Number 1","Number 2","Number 3"]
-.includes(historyNode)
-){
-return historyNode;
-}
-
-return"AREA";
-}
-
-function recentRowsForScope(
-allRows,
-scope,
-field=null,
-limit=12
-){
-
-let rows;
-
-if(scope==="AREA"){
-rows=
-spatialAverageRows(
-allRows,
-field?[field]:GRAPH_FIELDS
-);
-}else{
-rows=
-historyRowsForNode(
-allRows,
-scope
-);
-}
-
-return rows
-.filter(r=>
-parseDate(r?.timestamp)&&
-(
-field
-?hasFiniteSensorValue(r?.[field])
-:hasAnySensorData(r)
-)
-)
-.sort(
-(a,b)=>
-parseDate(a.timestamp)-
-parseDate(b.timestamp)
-)
-.slice(-limit);
-}
-
-function buildForecastCompareData(
-allRows,
-field
-){
-
-const actualByNode={};
-const labelSet=new Set();
-
-for(const nodeId of HISTORY_NODES){
-
-const rows=
-recentRowsForScope(
-allRows,
-nodeId,
-field,
-12
-);
-
-actualByNode[nodeId]=rows;
-
-for(const r of rows){
-labelSet.add(r.timestamp);
-}
-}
-
-const actualLabels=
-[...labelSet]
-.sort(
-(a,b)=>
-parseDate(a)-
-parseDate(b)
-);
-
-const labels=[
-...actualLabels,
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
-];
-
-const actualDatasets=[];
-const forecastDatasets=[];
-
-for(const nodeId of HISTORY_NODES){
-
-const rows=
-actualByNode[nodeId];
-
-const map=
-new Map(
-rows.map(
-r=>[
-r.timestamp,
-finiteNumberOrNull(r[field])
-]
-)
-);
-
-const actualValues=
-actualLabels.map(
-label=>
-map.has(label)
-?map.get(label)
-:null
-);
-
-actualDatasets.push(
-makeNodeDataset(
-nodeId,
-field,
-[
-...actualValues,
-null,
-null,
-null
-]
-)
-);
-
-const pts=
-forecastPointsForScope(
-nodeId,
-field
-);
-
-if(pts){
-
-const latestRow=
-[...rows]
-.reverse()
-.find(
-r=>
-hasFiniteSensorValue(
-r[field]
-)
-);
-
-const current=
-latestRow
-?finiteNumberOrNull(
-latestRow[field]
-)
-:null;
-
-const forecastValues=
-new Array(
-actualLabels.length+3
-)
-.fill(null);
-
-if(
-latestRow&&
-current!==null
-){
-
-const idx=
-actualLabels.indexOf(
-latestRow.timestamp
-);
-
-if(idx>=0){
-forecastValues[idx]=current;
-}
-}
-
-forecastValues[
-actualLabels.length
-]=pts[0];
-
-forecastValues[
-actualLabels.length+1
-]=pts[1];
-
-forecastValues[
-actualLabels.length+2
-]=pts[2];
-
-const fd=
-makeNodeDataset(
-nodeId,
-field,
-forecastValues
-);
-
-fd.label=
-`${historyNodeLabel(nodeId)} • คาดการณ์`;
-
-fd.isForecast=true;
-
-fd.borderDash=[
-6,
-5
-];
-
-fd.pointRadius=2;
-fd.tension=.08;
-fd.hidden=
-!forecastVisible;
-
-forecastDatasets.push(fd);
-}
-}
-
-return{
-labels,
-datasets:[
-...actualDatasets,
-...forecastDatasets
-]
-};
-}
-
-function drawForecast(arr){
-
-hideForecastTechnicalMessage();
-
-forecastGroupCharts=
-destroyChartList(
-forecastGroupCharts
-);
-
-destroyChartSafe(
-forecastChart
-);
-
-forecastChart=null;
-
-const area=
-$("forecastChartArea");
-
-if(!area){
-return;
-}
-
-const allRows=
-selectedRecords()
-.filter(
-r=>parseDate(r?.timestamp)
-)
-.sort(
-(a,b)=>
-parseDate(a.timestamp)-
-parseDate(b.timestamp)
-);
-
-const compareMode=
-historyNode==="compare";
-
-const scope=
-selectedForecastScope();
-
-const resultReady=
-aiForecastPayload?.data&&
-(
-aiForecastPayload.ai===true||
-[
-"all_ai_unavailable",
-"fast_forecast"
-]
-.includes(
-aiForecastPayload?.reason
-)
-);
-
-const providerText=
-aiForecastPayload?.ai===true
-?"ระบบวิเคราะห์"
-:"ระบบคาดการณ์";
-
-if(metric==="all"){
-
-if(compareMode){
-
-area.innerHTML=
-`<div style="
-display:flex;
-align-items:center;
-gap:10px 18px;
-flex-wrap:wrap;
-padding:9px 12px;
-margin:0 0 12px;
-border:1px solid rgba(56,189,248,.14);
-border-radius:12px;
-background:rgba(2,132,199,.045);
-font-size:12px;
-color:#94a3b8">
-<span><b style="color:#e2e8f0">เส้นทึบ</b> ข้อมูลจริง</span>
-<span><b style="color:#e2e8f0">เส้นประ</b> คาดการณ์</span>
-<span><b style="color:#e2e8f0">จุดที่ 1 / 2 / 3</b> = อีก 10 / 20 / 30 นาที</span>
-</div>`+
-`<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
-groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
-groupedChartShell("PM10","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm10",miniLegend([]))+
-groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","forecastTemp",miniLegend([]))+
-groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","forecastHumidity",miniLegend([]))+
-groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","forecastLight",miniLegend([]))+
-`</div>`;
-
-const createCompare=
-(canvasId,field,yTitle)=>{
-
-const data=
-buildForecastCompareData(
-allRows,
-field
-);
-
-const c=
-new Chart(
-$(canvasId),
-{
-type:"line",
-data,
-options:{
-...forecastChartOptions(
-yTitle
-),
-plugins:{
-legend:
-graphLegendOptions(),
-tooltip:{
-mode:"nearest",
-intersect:true,
-callbacks:{
-title:
-graphTooltipTitle,
-label:
-graphTooltipLabel
-}
-}
-}
-}
-}
-);
-
-forecastGroupCharts.push(c);
-};
-
-createCompare(
-"forecastPm1",
-"pm1",
-"µg/m³"
-);
-
-createCompare(
-"forecastPm25",
-"pm25",
-"µg/m³"
-);
-
-createCompare(
-"forecastPm10",
-"pm10",
-"µg/m³"
-);
-
-createCompare(
-"forecastTemp",
-"temperature",
-"°C"
-);
-
-createCompare(
-"forecastHumidity",
-"humidity",
-"%"
-);
-
-createCompare(
-"forecastLight",
-"light",
-"lux"
-);
-
-if($("forecastMessage")){
-$("forecastMessage").innerHTML="";
-$("forecastMessage").style.display="none";
-}
-
-updateForecastToggle();
-return;
-}
-
-// ALL + AREA หรือจุดเดียว
-const rows=
-recentRowsForScope(
-allRows,
-scope,
-null,
-12
-);
-
-if(!rows.length){
-area.innerHTML=
-'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
-return;
-}
-
-const scopeLabel=
-scope==="AREA"
-?"ค่าเฉลี่ยพื้นที่"
-:historyNodeLabel(scope);
-
-area.innerHTML=
-groupedChartShell(
-"ฝุ่นละออง",
-`${scopeLabel} • ข้อมูลจริง + คาดการณ์`,
-"forecastDust",
-miniLegend(
-["pm1","pm25","pm10"]
-)
-)+
-`<div class="metric-chart-grid-3">`+
-groupedChartShell(
-"อุณหภูมิ",
-`${scopeLabel} • °C`,
-"forecastTemp",
-miniLegend(
-["temperature"]
-)
-)+
-groupedChartShell(
-"ความชื้น",
-`${scopeLabel} • %`,
-"forecastHumidity",
-miniLegend(
-["humidity"]
-)
-)+
-groupedChartShell(
-"แสง",
-`${scopeLabel} • lux`,
-"forecastLight",
-miniLegend(
-["light"]
-)
-)+
-`</div>`;
-
-const actualLabels=
-rows.map(
-r=>r.timestamp
-);
-
-const labels=[
-...actualLabels,
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
-];
-
-const create=
-(canvasId,fields,yTitle)=>{
-
-const datasets=[];
-
-for(const field of fields){
-
-const raw=
-rows.map(
-r=>
-finiteNumberOrNull(
-r[field]
-)
-);
-
-datasets.push({
-...makeActualDataset(
-field,
-raw
-),
-data:[
-...raw,
-null,
-null,
-null
-],
-rawValues:[
-...raw,
-null,
-null,
-null
-]
-});
-
-const pts=
-forecastPointsForScope(
-scope,
-field
-);
-
-if(pts){
-
-const current=
-[...raw]
-.reverse()
-.find(
-v=>v!==null
-);
-
-const forecastDs=
-makeForecastDataset(
-field,
-raw.length,
-current,
-pts
-);
-
-forecastDs.hidden=
-!forecastVisible;
-
-datasets.push(
-forecastDs
-);
-}
-}
-
-const c=
-new Chart(
-$(canvasId),
-{
-type:"line",
-data:{
-labels,
-datasets
-},
-options:
-forecastChartOptions(
-yTitle
-)
-}
-);
-
-forecastGroupCharts.push(c);
-};
-
-create(
-"forecastDust",
-["pm1","pm25","pm10"],
-"µg/m³"
-);
-
-create(
-"forecastTemp",
-["temperature"],
-"°C"
-);
-
-create(
-"forecastHumidity",
-["humidity"],
-"%"
-);
-
-create(
-"forecastLight",
-["light"],
-"lux"
-);
-
-if($("forecastMessage")){
-$("forecastMessage").innerHTML=
-resultReady
-?`<b class="text-cyan-300">คาดการณ์ 30 นาที • ${esc(scopeLabel)} • ทุกตัวแปร</b>
-<div class="mt-2">${esc(providerText)} • แสดง +10, +20 และ +30 นาที</div>
-<div class="text-[12px] text-slate-500 mt-2">ผลคาดการณ์ใช้ข้อมูลของ ${esc(scopeLabel)} โดยตรง • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
-}
-
-updateForecastToggle();
-return;
-}
-
-// ตัวแปรเดียว
-let rows;
-
-if(compareMode){
-
-const data=
-buildForecastCompareData(
-allRows,
-metric
-);
-
-if(
-!data.labels.length
-){
-area.innerHTML=
-'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
-return;
-}
-
-area.innerHTML=
-'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
-
-forecastChart=
-new Chart(
-$("forecastChart"),
-{
-type:"line",
-data,
-options:{
-...forecastChartOptions(
-`${metricLabel()} ${metricUnit()}`.trim()
-),
-plugins:{
-legend:
-graphLegendOptions(),
-tooltip:{
-mode:"nearest",
-intersect:true,
-callbacks:{
-title:
-graphTooltipTitle,
-label:
-graphTooltipLabel
-}
-}
-}
-}
-}
-);
-
-if($("forecastMessage")){
-$("forecastMessage").innerHTML=
-resultReady
-?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • เปรียบเทียบ 3 จุด • ${metricLabel()}</b>
-<div class="mt-2">${esc(providerText)} • จุด 1/2/3 ถูกคาดการณ์แยกจากข้อมูลของแต่ละจุด</div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
-}
-
-updateForecastToggle();
-return;
-}
-
-rows=
-recentRowsForScope(
-allRows,
-scope,
-metric,
-12
-);
-
-if(!rows.length){
-area.innerHTML=
-'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
-return;
-}
-
-const scopeLabel=
-scope==="AREA"
-?"ค่าเฉลี่ยพื้นที่"
-:historyNodeLabel(scope);
-
-const values=
-rows.map(
-r=>
-finiteNumberOrNull(
-r[metric]
-)
-);
-
-const labels=
-rows.map(
-r=>r.timestamp
-);
-
-const datasets=[
-makeActualDataset(
-metric,
-values
-)
-];
-
-const pts=
-forecastPointsForScope(
-scope,
-metric
-);
-
-if(pts){
-
-labels.push(
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
-);
-
-datasets[0].data=[
-...values,
-null,
-null,
-null
-];
-
-datasets[0].rawValues=[
-...values,
-null,
-null,
-null
-];
-
-const current=
-values.at(-1);
-
-const fd=
-makeForecastDataset(
-metric,
-values.length,
-current,
-pts
-);
-
-fd.hidden=
-!forecastVisible;
-
-datasets.push(
-fd
-);
-}
-
-area.innerHTML=
-'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
-
-forecastChart=
-new Chart(
-$("forecastChart"),
-{
-type:"line",
-data:{
-labels,
-datasets
-},
-options:{
-...forecastChartOptions(
-`${metricLabel()} ${metricUnit()}`.trim()
-),
-plugins:{
-legend:
-graphLegendOptions(),
-tooltip:{
-mode:"nearest",
-intersect:true,
-callbacks:{
-title:
-graphTooltipTitle,
-label:
-graphTooltipLabel
-}
-}
-}
-}
-}
-);
-
-if($("forecastMessage")){
-$("forecastMessage").innerHTML="";
-$("forecastMessage").style.display="none";
-}
-
-updateForecastToggle();
-}
-
-// =====================================================
-// DATE RANGE PICKER
-// =====================================================
-
-function toDateTimeLocalValue(d){
-
-if(!d){
-return"";
-}
-
-const p=
-v=>
-String(v)
-.padStart(
-2,
-"0"
-);
-
-return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-
-}
-
-function dateFromRangeInput(id){
-
-const v=
-$(id)?.value;
-
-if(!v){
-return null;
-}
-
-const d=
-new Date(v);
-
-return Number.isFinite(
-d.getTime()
-)
-?d
-:null;
-
-}
-
-function sameCalendarDay(
-a,
-b
-){
-
-return!!(
-a&&
-b&&
-a.getFullYear()===
-b.getFullYear()&&
-a.getMonth()===
-b.getMonth()&&
-a.getDate()===
-b.getDate()
-);
-
-}
-
-function setPickerInputs(
-start,
-end
-){
-
-if(
-$("customRangeStart")
-){
-
-$("customRangeStart").value=
-toDateTimeLocalValue(
-start
-);
-
-}
-
-if(
-$("customRangeEnd")
-){
-
-$("customRangeEnd").value=
-toDateTimeLocalValue(
-end
-);
-
-}
-
-}
-
-function updateQuickRangeUI(key){
-
-document
-.querySelectorAll(
-".quick-range-option"
-)
-.forEach(
-button=>{
-
-const active=
-!!key&&
-button.dataset.range===
-key;
-
-button.classList.toggle(
-"active",
-active
-);
-
-if(active){
-
-button.setAttribute(
-"aria-current",
-"true"
-);
-
-}else{
-
-button.removeAttribute(
-"aria-current"
-);
-
-}
-
-}
-);
-
-}
-
-function closeHistoryRangePicker(){
-
-document.body.classList.remove(
-"history-range-modal-open"
-);
-
-const panel=
-$("historyRangeModal");
-
-const button=
-$("historyRangeButton");
-
-if(panel){
-
-panel.classList.remove(
-"active"
-);
-
-panel.setAttribute(
-"aria-hidden",
-"true"
-);
-
-}
-
-if(button){
-
-button.setAttribute(
-"aria-expanded",
-"false"
-);
-
-}
-
-if(
-$("customRangeError")
-){
-
-$("customRangeError").textContent=
-"";
-
-$("customRangeError")
-.classList
-.add(
-"hidden"
-);
-
-}
-
-}
-
-function openHistoryRangePicker(){
-
-const panel=
-$("historyRangeModal");
-
-// ทำงานแบบ Export modal: ย้าย modal ไปใต้ body โดยตรง
-// แล้วให้ CSS ของ modal คุมตำแหน่งทั้งหมด
-if(panel && panel.parentElement !== document.body){
-    document.body.appendChild(panel);
-}
-
-const button=
-$("historyRangeButton");
-
-if(!panel){
-return;
-}
-
-const w=
-rangeWindow();
-
-const end=
-w?.end
-?new Date(w.end)
-:new Date();
-
-const start=
-w?.start
-?new Date(w.start)
-:new Date(
-end.getTime()-
-86400000
-);
-
-setPickerInputs(
-start,
-end
-);
-
-calendarDisplayDate=
-new Date(
-end.getFullYear(),
-end.getMonth(),
-1
-);
-
-calendarSelectionStep=
-"start";
-
-updateQuickRangeUI(
-averageRange==="custom"
-?null
-:averageRange
-);
-
-renderRangeCalendar();
-
-panel.classList.add(
-"active"
-);
-
-panel.setAttribute(
-"aria-hidden",
-"false"
-);
-
-const modalBody=
-panel.querySelector(
-".history-range-modal-body"
-);
-
-if(modalBody){
-modalBody.scrollTop=0;
-}
-
-document.body.classList.add(
-"history-range-modal-open"
-);
-
-button?.setAttribute(
-"aria-expanded",
-"true"
-);
-
-}
-
-function renderRangeCalendar(){
-
-const grid=
-$("rangeCalendarGrid");
-
-const title=
-$("rangeCalendarTitle");
-
-if(
-!grid||
-!title
-){
-return;
-}
-
-const year=
-calendarDisplayDate.getFullYear();
-
-const month=
-calendarDisplayDate.getMonth();
-
-const firstDay=
-new Date(
-year,
-month,
-1
-)
-.getDay();
-
-const daysInMonth=
-new Date(
-year,
-month+1,
-0
-)
-.getDate();
-
-const daysInPrevMonth=
-new Date(
-year,
-month,
-0
-)
-.getDate();
-
-title.textContent=
-new Date(
-year,
-month,
-1
-)
-.toLocaleDateString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok",
-month:
-"long",
-year:
-"numeric"
-}
-);
-
-grid.innerHTML="";
-
-const selectedStart=
-dateFromRangeInput(
-"customRangeStart"
-);
-
-const selectedEnd=
-dateFromRangeInput(
-"customRangeEnd"
-);
-
-const startDay=
-selectedStart
-?new Date(
-selectedStart.getFullYear(),
-selectedStart.getMonth(),
-selectedStart.getDate()
-)
-:null;
-
-const endDay=
-selectedEnd
-?new Date(
-selectedEnd.getFullYear(),
-selectedEnd.getMonth(),
-selectedEnd.getDate()
-)
-:null;
-
-for(
-let i=0;
-i<42;
-i++
-){
-
-let day;
-
-let displayMonth=
-month;
-
-let muted=
-false;
-
-if(
-i<
-firstDay
-){
-
-day=
-daysInPrevMonth-
-firstDay+
-i+
-1;
-
-displayMonth=
-month-1;
-
-muted=true;
-
-}else if(
-i>=
-firstDay+
-daysInMonth
-){
-
-day=
-i-
-(
-firstDay+
-daysInMonth
-)+
-1;
-
-displayMonth=
-month+1;
-
-muted=true;
-
-}else{
-
-day=
-i-
-firstDay+
-1;
-
-}
-
-const date=
-new Date(
-year,
-displayMonth,
-day
-);
-
-const dateOnly=
-new Date(
-date.getFullYear(),
-date.getMonth(),
-date.getDate()
-);
-
-const button=
-document.createElement(
-"button"
-);
-
-button.type=
-"button";
-
-button.textContent=
-String(day);
-
-button.className=
-"range-calendar-day";
-
-if(muted){
-
-button.classList.add(
-"is-muted"
-);
-
-}
-
-if(
-sameCalendarDay(
-dateOnly,
-startDay
-)
-){
-
-button.classList.add(
-"is-start"
-);
-
-}
-
-if(
-sameCalendarDay(
-dateOnly,
-endDay
-)
-){
-
-button.classList.add(
-"is-end"
-);
-
-}
-
-if(
-startDay&&
-endDay&&
-dateOnly>=startDay&&
-dateOnly<=endDay
-){
-
-button.classList.add(
-"is-in-range"
-);
-
-}
-
-button.addEventListener(
-"click",
-()=>{
-
-const oldStart=
-dateFromRangeInput(
-"customRangeStart"
-);
-
-const oldEnd=
-dateFromRangeInput(
-"customRangeEnd"
-);
-
-if(
-calendarSelectionStep===
-"start"
-){
-
-const start=
-new Date(date);
-
-start.setHours(
-oldStart?.getHours()??
-0,
-oldStart?.getMinutes()??
-0,
-0,
-0
-);
-
-let end=
-oldEnd
-?new Date(oldEnd)
-:new Date(date);
-
-if(
-!oldEnd||
-end<start
-){
-
-end=
-new Date(date);
-
-end.setHours(
-23,
-59,
-0,
-0
-);
-
-}
-
-setPickerInputs(
-start,
-end
-);
-
-calendarSelectionStep=
-"end";
-
-}else{
-
-const end=
-new Date(date);
-
-end.setHours(
-oldEnd?.getHours()??
-23,
-oldEnd?.getMinutes()??
-59,
-0,
-0
-);
-
-let start=
-oldStart
-?new Date(oldStart)
-:new Date(date);
-
-if(
-end<start
-){
-
-const temp=
-new Date(start);
-
-start=end;
-
-end.setTime(
-temp.getTime()
-);
-
-}
-
-setPickerInputs(
-start,
-end
-);
-
-calendarSelectionStep=
-"start";
-
-}
-
-updateQuickRangeUI(
-null
-);
-
-renderRangeCalendar();
-
-}
-);
-
-grid.appendChild(
-button
-);
-
-}
-
-}
-
-function setRange(key){
-
-const c=
-RANGE_CONFIG[key];
-
-if(!c){
-return;
-}
-
-averageRange=
-key;
-
-customRangeStart=
-null;
-
-customRangeEnd=
-null;
-
-const w=
-rangeWindow();
-
-if(w){
-
-setPickerInputs(
-w.start,
-w.end
-);
-
-}
-
-const end=
-w?.end||
-new Date();
-
-calendarDisplayDate=
-new Date(
-end.getFullYear(),
-end.getMonth(),
-1
-);
-
-calendarSelectionStep=
-"start";
-
-updateQuickRangeUI(
-key
-);
-
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
-
-closeHistoryRangePicker();
-
-loadHistorical();
-
-}
-
-function applyCustomRange(){
-
-const start=
-dateFromRangeInput(
-"customRangeStart"
-);
-
-const end=
-dateFromRangeInput(
-"customRangeEnd"
-);
-
-const err=
-$("customRangeError");
-
-const showError=
-message=>{
-
-if(!err){
-return;
-}
-
-err.textContent=
-message;
-
-err.classList.remove(
-"hidden"
-);
-
-};
-
-if(
-!start||
-!end
-){
-
-showError(
-"กรุณาเลือกวันและเวลาเริ่มต้นกับสิ้นสุด"
-);
-
-return;
-
-}
-
-if(
-start>=end
-){
-
-showError(
-"เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น"
-);
-
-return;
-
-}
-
-if(
-end-start>
-30*
-86400000
-){
-
-showError(
-"เลือกช่วงเวลาได้สูงสุด 30 วัน"
-);
-
-return;
-
-}
-
-averageRange=
-"custom";
-
-customRangeStart=
-start;
-
-customRangeEnd=
-end;
-
-updateQuickRangeUI(
-null
-);
-
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
-
-closeHistoryRangePicker();
-
-loadHistorical();
-
-}
-
-// =====================================================
-// EXPORT
-// =====================================================
-
-function exportBounds(){
-
-const s=
-$("exportStartDate")
-?.value;
-
-const e=
-$("exportEndDate")
-?.value;
-
-if(
-!s||
-!e
-){
-return null;
-}
-
-return{
-
-start:
-new Date(
-s+
-"T00:00:00+07:00"
-),
-
-end:
-new Date(
-new Date(
-e+
-"T00:00:00+07:00"
-)
-.getTime()+
-86400000
-)
-
-};
-
-}
-
-async function refreshExport(){
-
-const body=
-$("exportPreviewBody");
-
-const b=
-exportBounds();
-
-if(
-!body||
-!b
-){
-return;
-}
-
-exportRows=[];
-
-let offset=0;
-
-while(true){
-
-const j=
-await fetchJson(
-`${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
-);
-
-const rows=
-(j.data||[])
-.map(
-normalize
-);
-
-exportRows.push(
-...rows
-);
-
-if(
-!j.has_more||
-!rows.length
-){
-break;
-}
-
-offset+=
-rows.length;
-
-}
-
-if(
-$("exportDataCount")
-){
-
-$("exportDataCount").textContent=
-String(
-exportRows.length
-);
-
-}
-
-body.innerHTML=
-exportRows.length
-
-?exportRows
-.slice(
-0,
-50
-)
-.map(
-r=>
-`<tr>
-<td>${esc(parseDate(r.timestamp)?.toLocaleString("th-TH")||"")}</td>
-<td>${esc(r.device_id)}</td>
-<td>${fmt(r.pm1)}</td>
-<td>${fmt(r.pm25)}</td>
-<td>${fmt(r.pm10)}</td>
-<td>${fmt(r.temperature)}</td>
-<td>${fmt(r.humidity)}</td>
-<td>${fmt(r.light)}</td>
-</tr>`
-)
-.join("")
-
-:'<tr><td colspan="8" class="export-empty-cell">ไม่พบข้อมูล</td></tr>';
-
-if(
-$("exportExcelButton")
-){
-
-$("exportExcelButton").disabled=
-!exportRows.length;
-
-}
-
-}
-
-function openExport(){
-
-const w=
-rangeWindow();
-
-const formatDate=
-d=>{
-
-const x=
-new Date(d);
-
-const p=
-n=>
-String(n)
-.padStart(
-2,
-"0"
-);
-
-return`${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}`;
-
-};
-
-if(
-$("exportStartDate")
-){
-
-$("exportStartDate").value=
-formatDate(
-w?.start||
-Date.now()-
-86400000
-);
-
-}
-
-if(
-$("exportEndDate")
-){
-
-$("exportEndDate").value=
-formatDate(
-w?.end||
-Date.now()
-);
-
-}
-
-const modal=
-$("exportModal");
-
-if(modal){
-
-modal.classList.add(
-"active"
-);
-
-modal.setAttribute(
-"aria-hidden",
-"false"
-);
-
-}
-
-refreshExport();
-
-}
-
-function closeExport(){
-
-const modal=
-$("exportModal");
-
-if(modal){
-
-modal.classList.remove(
-"active"
-);
-
-modal.setAttribute(
-"aria-hidden",
-"true"
-);
-
-}
-
-}
-
-let xlsxLoadingPromise=null;
-
-function ensureXLSX(){
-if(typeof XLSX!=="undefined")return Promise.resolve();
-
-if(xlsxLoadingPromise)return xlsxLoadingPromise;
-
-xlsxLoadingPromise=new Promise((resolve,reject)=>{
-const script=document.createElement("script");
-script.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-script.async=true;
-script.onload=()=>resolve();
-script.onerror=()=>reject(new Error("โหลดระบบ Excel ไม่สำเร็จ"));
-document.head.appendChild(script);
-});
-
-return xlsxLoadingPromise;
-}
-
-async function downloadExcel(){
-if(!exportRows.length)return;
-
-const button=$("exportExcelButton");
-const oldText=button?.textContent;
-
-try{
-if(button){
-button.disabled=true;
-button.textContent="กำลังเตรียม Excel...";
-}
-
-await ensureXLSX();
-
-const data=exportRows.map(r=>({
-"วันที่ / เวลา":parseDate(r.timestamp)?.toLocaleString("th-TH")||"",
-"อุปกรณ์":r.device_id,
-"PM1.0 (µg/m³)":r.pm1??"",
-"PM2.5 (µg/m³)":r.pm25??"",
-"PM10 (µg/m³)":r.pm10??"",
-"อุณหภูมิ (°C)":r.temperature??"",
-"ความชื้น (%)":r.humidity??"",
-"แสง (lux)":r.light??""
-}));
-
-const ws=XLSX.utils.json_to_sheet(data);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"PM2.5 Data");
-XLSX.writeFile(wb,"PM25_export.xlsx");
-}catch(e){
-console.error("Excel export error:",e);
-if($("exportError")){
-$("exportError").textContent="ไม่สามารถเตรียมไฟล์ Excel ได้ กรุณาลองใหม่";
-$("exportError").classList.remove("hidden");
-}
-}finally{
-if(button){
-button.disabled=false;
-button.textContent=oldText||"📊 ดาวน์โหลด Excel";
-}
-}
-}
-
-// =====================================================
-// AI ANALYSIS
-// =====================================================
-
-function aiStatusClass(payload){
-
-if(
-aiLoading
-){
-return"is-loading";
-}
-
-if(!payload){
-return"is-unavailable";
-}
-
-if(
-payload.ai===true&&
-payload.cached===true
-){
-return"is-ready";
-}
-
-if(
-payload.ai===true
-){
-return"is-connected";
-}
-
-if(
-payload.reason===
-"data_unavailable"
-){
-return"is-unavailable";
-}
-
-return"is-fallback";
-
-}
-
-function aiStatusText(payload){
-
-if(
-aiLoading
-){
-return"LOADING";
-}
-
-if(!payload){
-return"UNAVAILABLE";
-}
-
-if(
-payload.ai===true&&
-payload.cached===true
-){
-return"ข้อมูลพร้อมใช้งาน";
-}
-
-if(
-payload.ai===true
-){
-return"AI CONNECTED";
-}
-
-if(
-payload.reason===
-"data_unavailable"
-){
-return"ระบบข้อมูล OFFLINE";
-}
-
-if(
-payload.reason===
-"gemini_secret_not_configured"
-){
-return"ยังไม่พร้อมใช้งาน";
-}
-
-if(
-payload.reason===
-"gemini_quota_exhausted"
-){
-return"AI QUOTA LIMIT";
-}
-
-if(
-payload.reason===
-"gemini_unavailable"
-){
-return"ใช้ข้อมูลย้อนหลัง";
-}
-
-return"ระบบสำรอง";
-
-}
-
-function confidenceText(v){
-
-return{
-
-high:
-"สูง",
-
-medium:
-"ปานกลาง",
-
-low:
-"ต่ำ"
-
-}[
-String(
-v||""
-)
-.toLowerCase()
-]||
-"--";
-
-}
-
-
-function cleanAIObservationList(items){
-
-const source=
-Array.isArray(items)
-?items
-:[];
-
-const seen=
-new Set();
-
-return source
-.map(x=>normalizeProjectWording(x))
-.map(x=>String(x||"").trim())
-.filter(Boolean)
-
-// ตัดข้อความที่เป็นเพียงรายงานสถานะอุปกรณ์/โครงสร้างระบบ
-// เพราะหน้า "จุดตรวจวัด" มีหน้าที่แสดงข้อมูลเหล่านี้อยู่แล้ว
-.filter(x=>
-!/\b(?:Node|Number)\s*[123]\b/i.test(x)&&
-!/Gateway/i.test(x)&&
-!/ออนไลน์|ออฟไลน์|Sleep|OFFLINE|ONLINE/i.test(x)
-)
-
-// ตัดข้อความซ้ำ
-.filter(x=>{
-const key=x
-.toLowerCase()
-.replace(/\s+/g," ");
-if(seen.has(key))return false;
-seen.add(key);
-return true;
-})
-
-// หน้านี้ควรเป็นบทวิเคราะห์สั้น ๆ ไม่ใช่รายการข้อมูลดิบ
-.slice(0,3);
-
-}
-
-function aiSituationHeadline(data){
-
-const headline=
-normalizeProjectWording(
-data?.headline
-);
-
-if(
-headline&&
-String(headline).trim()
-){
-return String(headline).trim();
-}
-
-return"กำลังประเมินสถานการณ์จากข้อมูลล่าสุด";
-
-}
-
-function aiSituationSummary(data){
-
-const summary=
-normalizeProjectWording(
-data?.summary
-);
-
-if(
-summary&&
-String(summary).trim()
-){
-return String(summary).trim();
-}
-
-return"ยังไม่มีข้อสรุปเพิ่มเติมในขณะนี้";
-
-}
-
-function renderAI(payload){
-
-const badge=
-$("aiStatusBadge");
-
-const details=
-$("aiDetails");
-
-const generated=
-$("aiGeneratedAt");
-
-if(
-!badge||
-!details
-){
-return;
-}
-
-badge.className=
-`ai-status-badge ${aiStatusClass(payload)}`;
-
-badge.textContent=
-aiStatusText(
-payload
-);
-
-if(aiLoading){
-
-details.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังตีความสถานการณ์จากข้อมูลล่าสุด...</div>';
-
-return;
-}
-
-if(!payload){
-
-details.innerHTML=
-`<div class="ai-result-headline">ยังไม่มีบทวิเคราะห์ในขณะนี้</div>
-<div class="ai-result-summary">ดูค่าตรวจวัดล่าสุดได้จากหน้า “ภาพรวม” และ “จุดตรวจวัด”</div>`;
-
-if(generated){
-generated.textContent=
-"อัปเดตการวิเคราะห์: --";
-}
-
-return;
-}
-
-const data=
-payload.data||
-{};
-
-const observations=
-cleanAIObservationList(
-data.observations
-);
-
-const generatedDate=
-parseDate(
-payload.generated_at
-);
-
-if(generated){
-
-generated.textContent=
-generatedDate
-?`อัปเดตการวิเคราะห์: ${generatedDate.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok"
-}
-)}`
-:"อัปเดตการวิเคราะห์: --";
-}
-
-const recommendation=
-normalizeProjectWording(
-data.recommendation
-)||
-"ติดตามการเปลี่ยนแปลงของข้อมูลในรอบถัดไป";
-
-details.innerHTML=
-`
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-ภาพรวมที่ AI ตีความ
-</div>
-
-<div class="ai-result-headline">
-${esc(aiSituationHeadline(data))}
-</div>
-
-<div class="ai-result-summary">
-${esc(aiSituationSummary(data))}
-</div>
-
-</div>
-
-${observations.length
-?`
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-สิ่งที่ควรสนใจ
-</div>
-
-<div class="ai-observation-list">
-
-${observations
-.map(
-x=>
-`<div class="ai-observation">
-• ${esc(x)}
-</div>`
-)
-.join("")}
-
-</div>
-
-</div>
-`
-:`
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-สิ่งที่ควรสนใจ
-</div>
-
-<div class="ai-result-summary">
-ยังไม่พบประเด็นเพิ่มเติมที่จำเป็นต้องเน้นจากข้อมูลชุดนี้
-</div>
-
-</div>
-`
-}
-
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-คำแนะนำสำหรับตอนนี้
-</div>
-
-<div class="ai-recommendation">
-${esc(recommendation)}
-</div>
-
-</div>
-
-<div class="ai-meta-row">
-<span>AI ทำหน้าที่ตีความข้อมูล ไม่ได้แสดงรายการค่าตรวจวัดซ้ำจากหน้าอื่น</span>
-</div>`;
-
-}
-
-async function loadAI(
-force=false
-){
-
-if(
-aiLoading
-){
-return;
-}
-
-aiLoading=
-true;
-
-renderAI(
-aiPayload
-);
-
-const button=
-$("aiRefreshButton");
-
-if(button){
-
-button.disabled=
-true;
-
-}
-
-try{
-
-const url=
-API.ai+
-(
-force
-?"?refresh=1"
-:""
-);
-
-aiPayload=
-await fetchJson(
-url
-);
-
-aiLastLoadedAt=
-new Date();
-
-}catch(e){
-
-console.error(
-"AI analysis error:",
-e
-);
-
-aiPayload=
-null;
-
-}finally{
-
-aiLoading=
-false;
-
-if(button){
-
-button.disabled=
-false;
-
-}
-
-renderAI(
-aiPayload
-);
-
-}
-
-}
-
-// =====================================================
-// AI FORECAST
-// =====================================================
-
-function dustTrendSummary(trends){
-
-const fields=[
-"pm1",
-"pm25",
-"pm10"
-];
-
-const items=
-fields.map(
-field=>
-trends.find(
-x=>x?.field===field
-)
-);
-
-const valid=
-items.filter(Boolean);
-
-if(!valid.length){
-return{
-items,
-summary:"ยังไม่มีข้อมูลแนวโน้มฝุ่นเพียงพอ"
-};
-}
-
-const codes=
-valid.map(
-x=>
-String(
-x.direction||
-"stable"
-)
-.toLowerCase()
-);
-
-const up=
-codes.filter(
-x=>
-["up","increase","increasing"].includes(x)
-).length;
-
-const down=
-codes.filter(
-x=>
-["down","decrease","decreasing"].includes(x)
-).length;
-
-const stable=
-valid.length-
-up-
-down;
-
-let summary;
-
-if(
-down===valid.length
-){
-summary="ฝุ่นทุกขนาดมีแนวโน้มลดลง";
-}else if(
-up===valid.length
-){
-summary="ฝุ่นทุกขนาดมีแนวโน้มเพิ่มขึ้น";
-}else if(
-stable===valid.length
-){
-summary="ฝุ่นทุกขนาดค่อนข้างคงที่";
-}else if(
-down>up&&
-down>=stable
-){
-summary="ฝุ่นโดยรวมมีแนวโน้มลดลง แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
-}else if(
-up>down&&
-up>=stable
-){
-summary="ฝุ่นโดยรวมมีแนวโน้มเพิ่มขึ้น แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
-}else{
-summary="แนวโน้มฝุ่นแต่ละขนาดแตกต่างกัน ควรติดตามต่อเนื่อง";
-}
-
-return{
-items,
-summary
-};
-
-}
-
-function renderDustTrendCard(trends){
-
-const dust=
-dustTrendSummary(
-trends
-);
-
-const fields=[
-["pm1","PM1.0"],
-["pm25","PM2.5"],
-["pm10","PM10"]
-];
-
-const rows=
-fields.map(
-([field,label])=>{
-
-const item=
-trends.find(
-x=>x?.field===field
-);
-
-if(!item){
-return`
-<div class="ai-dust-mini is-missing">
-<div class="ai-dust-mini-label">${label}</div>
-<div class="ai-dust-mini-direction">ยังไม่มีข้อมูล</div>
-</div>`;
-}
-
-return`
-<div class="ai-dust-mini">
-<div class="ai-dust-mini-label">${label}</div>
-<div class="ai-dust-mini-direction">${esc(aiDirectionText(item.direction))}</div>
-<div class="ai-dust-mini-note">${esc(item.explanation||"")}</div>
-</div>`;
-
-})
-.join("");
-
-return`
-<div class="ai-trend-item ai-trend-dust">
-<div class="ai-trend-variable">🌫 ฝุ่นละออง</div>
-
-<div class="ai-dust-trend-grid">
-${rows}
-</div>
-
-<div class="ai-dust-summary">
-${esc(dust.summary)}
-</div>
-</div>`;
-
+.credit-image-button {
+    cursor: pointer;
 }
-
-
-function normalizeProjectWording(value){
-
-if(value===null||value===undefined){
-return value;
-}
-
-let s=String(value);
-
-/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก ผลวิเคราะห์เวอร์ชันก่อนหน้า */
-s=s
-.replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
-.replaceAll("การตรวจวัดสิ่งแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
-.replaceAll("การตรวจวัดสภาพแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
-.replaceAll("สภาพแวดล้อมของสถานศึกษา","สภาพแวดล้อมในพื้นที่")
-.replaceAll("ในสถานศึกษา","ในพื้นที่")
-.replaceAll("ของสถานศึกษา","ในพื้นที่");
-
-/* หลีกเลี่ยงคำแนะนำที่สมมติว่าพื้นที่มีระบบระบายอากาศ */
-if(/ระบบระบายอากาศ/.test(s)){
-s="ควรติดตามสภาพอากาศและคุณภาพอากาศในพื้นที่อย่างต่อเนื่อง เพื่อสังเกตการเปลี่ยนแปลง";
-}
-
-/* ปรับประโยคความสัมพันธ์ให้ไม่ฟันธงเกินข้อมูล */
-s=s
-.replace(
-/สภาพแวดล้อมในพื้นที่(?:ไม่|ไม่มี)\s*สัมพันธ์กับข้อมูลอื่น/g,
-"ยังไม่พบความสัมพันธ์ที่ชัดเจนของข้อมูลสภาพแวดล้อมในพื้นที่"
-)
-.replace(
-/ไม่มีความสัมพันธ์กับข้อมูลอื่น/g,
-"ยังไม่พบความสัมพันธ์ที่ชัดเจนกับข้อมูลอื่น"
-);
-
-return s;
-
-}
-
-function renderAIForecast(payload){
-
-const box=
-$("aiForecastDetails");
-
-const badge=
-$("aiForecastStatusBadge");
-
-const generated=
-$("aiForecastGeneratedAt");
-
-const providerLabel=
-$("aiTrendDecisionProvider");
-
-if(providerLabel){
-
-const provider=
-payload?.provider;
-
-providerLabel.textContent=
-provider==="gemini"
-?"ระบบวิเคราะห์"
-:provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:payload?.ai===false
-?"ระบบคาดการณ์"
-:"กำลังรอการวิเคราะห์...";
-
-}
-
-if(aiForecastLoading){
-
-if(providerLabel){
-providerLabel.textContent=
-"กำลังวิเคราะห์...";
-}
-
-if(box){
-box.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
-}
-
-
-if(badge){
-badge.textContent=
-"กำลังวิเคราะห์";
-}
-
-return;
-}
-
-if(!payload){
-
-if(box){
-box.innerHTML=
-'<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
-}
-
-if(badge){
-badge.textContent=
-"รอข้อมูล";
-}
-
-return;
-}
-
-const d=
-payload.data||
-{};
-
-const isAI=
-payload.ai===true;
-
-if(generated){
-
-const dt=
-parseDate(
-payload.generated_at
-);
-
-generated.textContent=
-dt
-?`อัปเดตการวิเคราะห์: ${dt.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok"
-}
-)}`
-:"อัปเดตการวิเคราะห์: --";
-
-}
-
-if(badge){
-
-badge.className=
-`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;
-
-const p=
-payload?.provider==="gemini"
-?"ระบบวิเคราะห์"
-:payload?.provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:payload?.provider==="rule"
-?"ระบบคาดการณ์"
-:"AI";
-
-badge.textContent=
-isAI
-?p
-:"ระบบคาดการณ์";
-
-}
-
-if(!box){
-return;
-}
-
-if(!isAI){
-
-if(
-payload?.reason==="fast_forecast" ||
-payload?.reason==="all_ai_unavailable"
-){
-
-const d=
-payload.data||
-{};
-
-box.innerHTML=
-`<div class="ai-ready-summary">
-<b>${esc(d.headline||"แนวโน้มระยะสั้นพร้อมใช้งาน")}</b>
-<div class="mt-1">${esc(d.air_forecast||"ระบบกำลังประเมินแนวโน้มจากข้อมูลที่มีอยู่")}</div>
-${d.heat_forecast?`<div class="mt-1">${esc(d.heat_forecast)}</div>`:""}
-</div>`;
-
-return;
-}
-
-box.innerHTML=
-`<div class="ai-unavailable">
-<b>ยังไม่สามารถสร้างแนวโน้มได้</b>
-<div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div>
-</div>`;
-
-return;
-}
-
-const trends=
-Array.isArray(
-d.trend_analysis
-)
-?d.trend_analysis
-:[];
 
 /*
-  ฝุ่น 3 ขนาดอยู่ในการ์ดเดียว
-  ส่วน Temperature / Humidity / Light
-  ยังคงเป็นการ์ดแยกเหมือนเดิม
-*/
+ * เมื่อเอาเมาส์ชี้รูป
+ * ให้ขยายรูปเล็กน้อยเท่านั้น
+ *
+ * ไม่มีคำว่า "ดูรูป"
+ * มาทับรูปอีกแล้ว
+ */
 
-const environmentFields=[
-"temperature",
-"humidity",
-"light"
-];
-
-const environmentCards=
-environmentFields
-.map(
-field=>
-trends.find(
-x=>x?.field===field
-)
-)
-.filter(Boolean);
-
-const dustCard=
-renderDustTrendCard(
-trends
-);
-
-const otherCards=
-environmentCards
-.map(
-x=>
-`<div class="ai-trend-item">
-<div class="ai-trend-variable">
-${esc(
-CURRENT_METRIC_CONFIG[
-x.field
-]?.label||
-x.field
-)}
-</div>
-
-<div class="ai-trend-direction">
-${esc(
-aiDirectionText(
-x.direction
-)
-)}
-</div>
-
-<div class="ai-trend-explanation">
-${esc(
-x.explanation||
-""
-)}
-</div>
-</div>`
-)
-.join("");
-
-box.innerHTML=
-`
-<div class="ai-forecast-headline">
-${esc(
-normalizeProjectWording(d.headline)||
-"แนวโน้มและคาดการณ์"
-)}
-</div>
-
-<div class="ai-trend-summary">
-${dustCard}
-${otherCards}
-</div>
-
-<div class="ai-trend-driver">
-<b>ปัจจัยที่เด่น:</b>
-${esc(
-normalizeProjectWording(d.primary_driver)||
-"--"
-)}
-<br>
-<b>สิ่งผิดปกติ:</b>
-${esc(
-normalizeProjectWording(d.anomaly_summary)||
-"--"
-)}
-</div>
-
-<div class="ai-forecast-grid mt-3">
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🌿 คุณภาพอากาศ
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.air_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🌡 สภาพความร้อน
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.heat_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-📍 พื้นที่
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.local_environment_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🏃 กิจกรรม
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.activity_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-</div>
-
-<div class="ai-meta-row">
-<span>
-คาดการณ์จากข้อมูลล่าสุดและข้อมูลย้อนหลัง
-</span>
-<span class="ai-confidence">
-${confidenceText(
-d.confidence||
-"low"
-)}
-<small>ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</small>
-</span>
-</div>`;
-
+.credit-image-button:hover img {
+    transform: scale(1.06);
 }
-
-async function loadAIForecast(
-force=false
-){
-
-if(
-aiForecastLoading
-){
-return;
-}
-
-aiForecastLoading=
-true;
-
-// แสดงสถานะรอทันทีในหน้ากราฟ ไม่ปล่อยข้อความเก่าค้างระหว่างประมวลผล
-const forecastMessageEl=
-$("forecastMessage");
-
-if(forecastMessageEl){
-forecastMessageEl.innerHTML=
-'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
-}
-
-renderAIForecast(
-aiForecastPayload
-);
-
-const button=
-$("aiForecastRefreshButton");
-
-if(button){
-
-button.disabled=
-true;
-
-}
-
-try{
-
-const url=
-API.forecast+
-(
-force
-?"?refresh=1"
-:""
-);
-
-aiForecastPayload=
-await fetchJson(
-url
-);
-
-aiForecastLastLoadedAt=
-new Date();
-
-}catch(e){
-
-console.error(
-"AI forecast error:",
-e
-);
-
-aiForecastPayload=
-null;
-
-}finally{
-
-aiForecastLoading=
-false;
-
-if(button){
-
-button.disabled=
-false;
-
-}
-
-renderAIForecast(
-aiForecastPayload
-);
-
-drawCharts();
-
-}
-
-}
-
-// =====================================================
-// HELP
-// =====================================================
-
-const HELP_CONTENT={
-
-systemGuide:{
-title:"📘 วิธีอ่าน Dashboard",
-html:`<div class="help-intro-card"><b>คู่มือรวมสำหรับการอ่านข้อมูล</b><span>ช่วยแยกความหมายของข้อมูลปัจจุบัน ข้อมูลย้อนหลัง และค่าคาดการณ์</span></div>
-<section class="help-section"><h4>ข้อมูลปัจจุบัน</h4><p>ใช้ดูสถานการณ์ล่าสุดที่ระบบยืนยันได้ในขณะนั้น หากขึ้น <b>--</b> หมายถึงยังไม่มีค่าที่เหมาะสำหรับแสดง ไม่ได้หมายถึงค่า 0</p></section>
-<section class="help-section"><h4>ข้อมูลย้อนหลัง</h4><p>ใช้ดูสิ่งที่เกิดขึ้นแล้วในช่วงเวลาที่เลือก เพื่อเปรียบเทียบการเปลี่ยนแปลงตามเวลา</p></section>
-<section class="help-section"><h4>ค่าคาดการณ์</h4><p>เป็นค่าประมาณของช่วงเวลาข้างหน้าเพื่อช่วยดูแนวโน้ม ไม่ใช่ค่าที่วัดได้ล่วงหน้าและไม่รับประกันว่าจะเกิดขึ้นจริง</p></section>
-<div class="help-tip"><b>อ่านให้ง่าย</b><span>เริ่มจากภาพรวมปัจจุบัน → ดูจุดตรวจวัด → ดูย้อนหลัง → ใช้การคาดการณ์เป็นข้อมูลประกอบ</span></div>`
-},
-
-overviewQuality:{
-title:"🌿 ภาพรวมคุณภาพอากาศ",
-html:`<div class="help-intro-card"><b>หัวข้อนี้ตอบว่า “ตอนนี้ภาพรวมของพื้นที่เป็นอย่างไร?”</b><span>สรุปข้อมูลล่าสุดจากจุดตรวจวัดที่พร้อมใช้งาน</span></div>
-<section class="help-section"><h4>PM2.5 และ PM10</h4><p>ช่องค่าฝุ่นด้านบนสลับ PM2.5 และ PM10 ทุกประมาณ 5 วินาที โดยเป็นค่าเฉลี่ยปัจจุบันจากจุดที่พร้อมใช้งาน ค่านี้ไม่ใช่ค่าเฉลี่ย 24 ชั่วโมง</p></section>
-<section class="help-section"><h4>อุณหภูมิและความชื้นเฉลี่ย</h4><p>ช่วยให้เห็นสภาพแวดล้อมโดยรวม อุณหภูมิและความชื้นมีระดับของตัวเอง และยังใช้พิจารณาร่วมกันในดัชนีความร้อนด้วย</p></section>
-<section class="help-section"><h4>จุดตรวจวัดที่พร้อม</h4><p>บอกจำนวนจุดที่ระบบยังยืนยันข้อมูลปัจจุบันได้จากทั้งหมด 3 จุด</p></section>
-<div class="help-tip"><b>เหมาะสำหรับ</b><span>ดูสถานการณ์เร็ว ๆ ก่อนเปิดดูรายละเอียดรายจุด</span></div>`
-},
-
-overviewNodes:{
-title:"📍 สถานะจุดตรวจวัด",
-html:`<div class="help-intro-card"><b>ดูว่าจุดใดพร้อมแสดงข้อมูลปัจจุบัน</b><span>แต่ละจุดอาจมีสถานะแตกต่างกัน จึงควรดูร่วมกับเวลาของข้อมูลล่าสุด</span></div>
-<section class="help-section"><h4>ONLINE</h4><p>หมายถึงขณะนี้ระบบยังยืนยันความพร้อมของจุดนั้นได้</p></section>
-<section class="help-section"><h4>OFFLINE</h4><p>หมายถึงขณะนี้ยังไม่สามารถยืนยันความพร้อมของจุดนั้นได้ จึงไม่ควรตีความค่าที่เก่ากว่าเป็นสถานการณ์ปัจจุบัน</p></section>`
-},
-
-smartSummary:{
-title:"✦ สรุปสถานการณ์",
-html:`<div class="help-intro-card"><b>สรุปสถานการณ์ปัจจุบันเป็น 6 เรื่อง</b><span>แต่ละช่องตอบคนละคำถาม และเชื่อมกันเฉพาะส่วนที่ควรอ่านร่วมกัน</span></div>
-<section class="help-section"><h4>🌿 คุณภาพอากาศ</h4><p>สลับแสดง PM2.5 และ PM10 ทุกประมาณ 5 วินาทีให้ตรงกับค่าฝุ่นด้านบน โดย PM2.5 ใช้สื่อสารระดับคุณภาพอากาศปัจจุบัน ส่วน PM10 แสดงค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงเพื่อเทียบกับค่าอ้างอิงของประเทศไทย 120 µg/m³ จึงไม่เอาค่า PM10 ที่วัดเพียงครั้งเดียวไปตัดสินว่าเกินมาตรฐาน 24 ชั่วโมง</p></section>
-<section class="help-section"><h4>☀️ ดัชนีความร้อน (Heat Index)</h4><p>บอกความร้อนที่ร่างกายอาจรู้สึกเมื่อพิจารณา <b>อุณหภูมิและความชื้นร่วมกัน</b> จึงไม่ใช่ค่าเดียวกับอุณหภูมิอากาศ</p></section>
-<section class="help-section"><h4>🌡️ อุณหภูมิ</h4><p>แปลผลเป็น หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด เพื่อช่วยเฝ้าระวังเบื้องต้น การเทียบระดับนี้ไม่ใช่ผลตัดสินมาตรฐานสุขภาพ</p></section>
-<section class="help-section"><h4>💧 ความชื้น</h4><p>แปลผลเป็น ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ ควรอ่านร่วมกับอุณหภูมิและดัชนีความร้อนเมื่อประเมินความรู้สึกร้อน</p></section>
-<section class="help-section"><h4>📍 จุดตรวจวัด</h4><p>บอกจำนวนจุดที่พร้อมแสดงข้อมูลปัจจุบัน เพื่อให้รู้ว่าภาพรวมในขณะนั้นมีข้อมูลจากกี่จุด</p></section>
-<section class="help-section"><h4>🏃 กิจกรรมกลางแจ้ง</h4><p>เป็นคำแนะนำเบื้องต้นจากสถานการณ์ฝุ่นและสภาพความร้อน ใช้ประกอบการตัดสินใจ ไม่ใช่คำแนะนำทางการแพทย์</p></section>
-<div class="help-warning">ส่วนนี้สรุป “สถานการณ์ปัจจุบัน” ไม่ใช่ข้อมูลย้อนหลังและไม่ใช่ค่าคาดการณ์อนาคต</div>`
-},
-
-monitoringPage:{
-title:"📍 หน้าจุดตรวจวัด",
-html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูแต่ละจุดแยกกัน</b><span>เหมาะเมื่ออยากรู้ว่าตำแหน่งใดมีค่าแตกต่างจากภาพรวม</span></div>
-<section class="help-section"><h4>ควรดูอะไรบ้าง?</h4><p>ดูสถานะของจุด เวลาของข้อมูลล่าสุด และค่าของตัวแปรแต่ละชนิด โดยไม่ควรนำค่าจากอีกจุดมาแทนกัน</p></section>
-<section class="help-section"><h4>ทำไมแต่ละจุดไม่เท่ากัน?</h4><p>สภาพแวดล้อมในแต่ละตำแหน่งอาจต่างกัน จึงเป็นเรื่องปกติที่ค่าบางช่วงจะไม่เท่ากัน</p></section>`
-},
-
-monitoring:{
-title:"📍 รายละเอียดจุดตรวจวัด",
-html:`<div class="help-intro-card"><b>การ์ดแต่ละใบเป็นข้อมูลของจุดนั้น</b><span>ใช้ดูค่าปัจจุบันและเวลาของข้อมูลล่าสุดแบบแยกจุด</span></div>
-<section class="help-section"><h4>ค่าที่แสดง</h4><p>PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น และความสว่างเป็นข้อมูลล่าสุดที่มีสำหรับจุดนั้น</p></section>
-<section class="help-section"><h4>เวลาของข้อมูลล่าสุด</h4><p>บอกว่าค่าที่เห็นมาจากเมื่อใด หากเป็นข้อมูลของเมื่อวานหรือวันก่อน ระบบจะแสดงวันให้ชัดเจน</p></section>
-<section class="help-section"><h4>สถานะกับเวลาเป็นคนละเรื่อง</h4><p>สถานะบอกความพร้อมในขณะนี้ ส่วนเวลาของข้อมูลบอกว่าค่าตรวจวัดล่าสุดเกิดขึ้นเมื่อใด จึงไม่ควรตีความว่าเป็นเวลาเดียวกันเสมอ</p></section>`
-},
-
-currentAir:{
-title:"📊 เปรียบเทียบจุดตรวจวัด",
-html:`<div class="help-intro-card"><b>ใช้เปรียบเทียบตัวแปรเดียวกันระหว่างจุด</b><span>เลือก PM2.5, อุณหภูมิ, ความชื้น หรือค่าที่ต้องการ แล้วดูความแตกต่างของแต่ละจุด</span></div>
-<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>เป็นค่าเฉลี่ยจากจุดที่มีข้อมูลพร้อมในขณะนั้น ใช้ดูภาพรวม ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
-<section class="help-section"><h4>จุดที่ค่าสูงที่สุด</h4><p>ช่วยชี้ว่าจุดใดมีค่ามากที่สุดในรอบล่าสุด แต่คำว่า “สูงที่สุด” ไม่ได้แปลว่า “อันตราย” เสมอไป ต้องดูเกณฑ์ของตัวแปรนั้นด้วย</p></section>
-<section class="help-section"><h4>จุดที่ควรสนใจ</h4><p>จะแสดงเมื่อค่าที่เลือกเข้าเงื่อนไขเฝ้าระวังของตัวแปรนั้น หากไม่เข้าเงื่อนไขจะระบุว่าอยู่ในระดับปกติหรือเป็นข้อมูลประกอบ</p></section>`
-},
-
-alerts:{
-title:"⚠ สิ่งที่ควรระวัง",
-html:`<div class="help-intro-card"><b>รวมเฉพาะเรื่องที่ควรให้ความสนใจในข้อมูลปัจจุบัน</b><span>ช่วยให้เห็นประเด็นสำคัญโดยไม่ต้องไล่อ่านทุกช่อง</span></div>
-<section class="help-section"><h4>ฝุ่น PM2.5</h4><p>ใช้ระดับคุณภาพอากาศปัจจุบันเพื่อช่วยบอกว่าควรติดตามหรือเพิ่มความระมัดระวังหรือไม่</p></section>
-<section class="help-section"><h4>อุณหภูมิ</h4><p>เตือนได้ทั้งด้านอากาศเย็นและอากาศร้อน โดยแปลเป็นระดับที่อ่านง่าย เช่น เย็น หนาว ร้อน หรือร้อนจัด</p></section>
-<section class="help-section"><h4>ความชื้น</h4><p>แสดงเมื่ออยู่ในช่วงที่โครงการกำหนดให้ควรเฝ้าระวัง และควรพิจารณาร่วมกับอุณหภูมิ ไม่ใช้ความชื้นเพียงค่าเดียวตัดสินผลต่อสุขภาพ</p></section>
-<section class="help-section"><h4>ดัชนีความร้อน</h4><p>พิจารณาอุณหภูมิและความชื้นร่วมกัน เพื่อช่วยบอกระดับความร้อนที่ร่างกายอาจรู้สึก</p></section>
-<section class="help-section"><h4>สถานะจุดตรวจวัด</h4><p>หากมีจุดที่ยังไม่พร้อม ระบบจะแจ้งให้ทราบเพื่อไม่ให้เข้าใจว่าภาพรวมมาจากครบทุกจุด</p></section>
-<div class="help-warning">การเตือนจากค่าปัจจุบันเป็นการเฝ้าระวังเบื้องต้น ไม่ใช่ผลตัดสินมาตรฐานเฉลี่ยตามช่วงเวลาหรือคำวินิจฉัยทางสุขภาพ</div>`
-},
-
-historyPage:{
-title:"📈 หน้าสถิติและกราฟ",
-html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูสิ่งที่เกิดขึ้นแล้วตามเวลา</b><span>เลือกจุด ตัวแปร และช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม</span></div>
-<section class="help-section"><h4>อย่าเทียบคนละช่วงเวลา</h4><p>ก่อนเปรียบเทียบตัวเลข ควรตรวจว่ากำลังดูช่วงเวลาเดียวกัน เพราะช่วงเวลาที่ต่างกันอาจให้ภาพรวมต่างกัน</p></section>
-<section class="help-section"><h4>กราฟย้อนหลังกับคาดการณ์ต่างกันอย่างไร?</h4><p>กราฟย้อนหลังแสดงสิ่งที่เกิดขึ้นแล้ว ส่วนกราฟคาดการณ์เป็นค่าประมาณของช่วงเวลาข้างหน้า</p></section>`
-},
-
-historical:{
-title:"📊 ตัวเลือกสถิติย้อนหลัง",
-html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูลที่ต้องการดู</b><span>เลือกจุดตรวจวัด ตัวแปร และช่วงเวลาให้ตรงกับคำถามที่ต้องการตอบ</span></div>
-<section class="help-section"><h4>เลือกจุด</h4><p>“เปรียบเทียบ 3 จุด” ใช้ดูความแตกต่างระหว่างจุด ส่วน “ค่าเฉลี่ยพื้นที่” ใช้ดูภาพรวมของจุดที่มีข้อมูลในช่วงนั้น</p></section>
-<section class="help-section"><h4>เลือกตัวแปร</h4><p>แต่ละตัวแปรมีหน่วยและความหมายต่างกัน จึงควรอ่านเกณฑ์ของตัวแปรนั้นก่อนสรุปว่า “สูง” หรือ “ต่ำ” หมายถึงอะไร</p></section>
-<section class="help-section"><h4>เลือกช่วงเวลา</h4><p>ช่วงสั้นเหมาะกับการดูการเปลี่ยนแปลงล่าสุด ส่วนช่วงยาวเหมาะกับการดูแนวโน้มโดยรวม</p></section>`
-},
-
-historyChart:{
-title:"📈 กราฟข้อมูลย้อนหลัง",
-html:`<div class="help-intro-card"><b>กราฟนี้แสดงข้อมูลที่เกิดขึ้นแล้ว</b><span>ตำแหน่งตามแนวนอนคือเวลา ส่วนแนวตั้งคือค่าของตัวแปรที่เลือก</span></div>
-<section class="help-section"><h4>เส้นของแต่ละจุด</h4><p>เมื่อเปรียบเทียบหลายจุด แต่ละเส้นแทนจุดของตัวเอง ค่าที่เกิดคนละเวลาไม่จำเป็นต้องอยู่ตำแหน่งเวลาเดียวกัน</p></section>
-<section class="help-section"><h4>ซูมกราฟ</h4><p>ใช้ดูช่วงเวลาที่สนใจให้ละเอียดขึ้น โดยรายละเอียดเมื่อชี้จุดจะแสดงวันและเวลาของค่านั้น</p></section>
-<section class="help-section"><h4>ช่วงที่ไม่มีจุดข้อมูล</h4><p>ไม่ควรตีความว่าเป็นค่า 0 เพราะอาจหมายถึงไม่มีข้อมูลสำหรับช่วงนั้น</p></section>`
-},
-
-forecastChart:{
-title:"🔮 กราฟคาดการณ์ 30 นาที",
-html:`<div class="help-intro-card"><b>ใช้ดูแนวโน้มที่อาจเกิดขึ้นในอีก 30 นาที</b><span>ข้อมูลจริงและค่าคาดการณ์ถูกแยกให้เห็นชัดเจน</span></div>
-<section class="help-section"><h4>ข้อมูลจริง</h4><p>คือค่าที่เกิดขึ้นแล้ว ใช้เป็นจุดอ้างอิงก่อนเข้าสู่ช่วงคาดการณ์</p></section>
-<section class="help-section"><h4>ค่าคาดการณ์ +10 / +20 / +30 นาที</h4><p>เป็นค่าประมาณของอนาคตเพื่อช่วยดูทิศทาง ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p></section>
-<section class="help-section"><h4>ควรใช้อย่างไร?</h4><p>ใช้ประกอบกับสถานการณ์ปัจจุบันและกราฟย้อนหลัง หากสถานการณ์เปลี่ยนเร็ว ผลคาดการณ์ก็อาจเปลี่ยนตามข้อมูลใหม่</p></section>`
-},
-
-currentSituation:{
-title:"🧭 สถานการณ์ปัจจุบัน",
-html:`<div class="help-intro-card"><b>อธิบายเฉพาะสิ่งที่เกิดขึ้นในข้อมูลปัจจุบัน</b><span>ช่วยสรุปว่าตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรระวังเรื่องใด</span></div>
-<section class="help-section"><h4>อ่านร่วมกับอะไร?</h4><p>ควรดูตัวเลขจริงในหน้าภาพรวมหรือหน้าจุดตรวจวัดร่วมด้วย โดยเฉพาะเมื่อจำเป็นต้องรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p></section>
-<div class="help-warning">ส่วนนี้ไม่ใช่การคาดการณ์อนาคต</div>`
-},
-
-forecast30:{
-title:"🔮 แนวโน้ม 30 นาที",
-html:`<div class="help-intro-card"><b>อธิบายสิ่งที่อาจเกิดขึ้นในช่วง 30 นาทีข้างหน้า</b><span>ใช้ดูทิศทางโดยประมาณ เช่น มีแนวโน้มเพิ่ม ลด หรือทรงตัว</span></div>
-<section class="help-section"><h4>ต่างจากสถานการณ์ปัจจุบันอย่างไร?</h4><p>สถานการณ์ปัจจุบันมาจากข้อมูลที่เกิดขึ้นแล้ว ส่วนแนวโน้ม 30 นาทีเป็นค่าประมาณของอนาคต จึงมีความไม่แน่นอน</p></section>
-<div class="help-warning">ใช้เป็นข้อมูลประกอบ ไม่ใช่คำยืนยันว่าจะเกิดค่าตามนั้นจริง</div>`
-},
-
-analysisPage:{
-title:"✦ หน้าวิเคราะห์และคาดการณ์",
-html:`<div class="help-intro-card"><b>หน้านี้แยก “ตอนนี้” ออกจาก “ข้างหน้า”</b><span>ฝั่งสถานการณ์ปัจจุบันช่วยสรุปสิ่งที่ควรสนใจ ส่วนฝั่งคาดการณ์ช่วยดูแนวโน้ม 30 นาที</span></div>
-<section class="help-section"><h4>สถานการณ์ปัจจุบัน</h4><p>อธิบายความหมายของข้อมูลล่าสุดโดยเน้นประเด็นสำคัญ ไม่ควรใช้แทนตัวเลขจริงเมื่อจำเป็นต้องดูค่ารายละเอียด</p></section>
-<section class="help-section"><h4>แนวโน้ม 30 นาที</h4><p>ใช้ดูทิศทางที่อาจเกิดขึ้นและควรอ่านเป็น “แนวโน้ม” ไม่ใช่คำยืนยันเหตุการณ์ในอนาคต</p></section>`
-},
-
-ai:{
-title:"✦ วิเคราะห์สถานการณ์",
-html:`<div class="help-intro-card"><b>ช่วยแปลข้อมูลให้เป็นภาษาที่อ่านง่าย</b><span>เน้นตอบว่า ตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรทำอะไรต่อ</span></div>
-<section class="help-section"><h4>ข้อมูลที่นำมาพิจารณา</h4><p>พิจารณาฝุ่น อุณหภูมิ ความชื้น ดัชนีความร้อน และแนวโน้มของข้อมูลที่เกี่ยวข้อง โดยไม่ควรใช้ตัวแปรใดเพียงค่าเดียวสรุปทุกสถานการณ์</p></section>
-<section class="help-section"><h4>เหตุใดอุณหภูมิ ความชื้น และดัชนีความร้อนจึงเชื่อมกัน?</h4><p>อุณหภูมิและความชื้นมีความหมายของตัวเอง แต่เมื่อประเมินความร้อนที่ร่างกายอาจรู้สึก จะต้องพิจารณาทั้งสองร่วมกันผ่านดัชนีความร้อน</p></section>
-<div class="help-warning">ข้อความวิเคราะห์เป็นข้อมูลประกอบการติดตาม ไม่ใช่คำวินิจฉัยทางการแพทย์หรือประกาศจากหน่วยงานทางการ</div>`
-},
-
-aboutPage:{
-title:"ℹ️ เกี่ยวกับโครงการ",
-html:`<div class="help-intro-card"><b>หน้านี้อธิบายสิ่งที่ผู้ใช้ควรรู้เพื่ออ่าน Dashboard ให้ถูกต้อง</b><span>เน้นความหมายของข้อมูล เกณฑ์อ้างอิง ข้อจำกัด และผู้เกี่ยวข้องกับโครงการ โดยไม่แสดงรายละเอียดการทำงานภายใน</span></div>
-<section class="help-section"><h4>ทำไมต้องมีหน้านี้?</h4><p>เพราะตัวเลขแต่ละชนิดมีความหมายและเกณฑ์ต่างกัน หน้านี้ช่วยป้องกันการตีความค่าปัจจุบันผิดจากค่าเฉลี่ยตามช่วงเวลา</p></section>`
-},
-
-aboutReadGuide:{
-title:"📖 อ่านข้อมูลบน Dashboard อย่างไร",
-html:`<div class="help-intro-card"><b>คำแนะนำสำหรับผู้ใช้ทั่วไป</b><span>เริ่มจากภาพรวม แล้วค่อยลงรายละเอียดรายจุดและข้อมูลย้อนหลัง</span></div>
-<section class="help-section"><h4>ข้อมูลรายจุด</h4><p>ใช้เมื่อต้องการรู้สถานการณ์ของตำแหน่งใดตำแหน่งหนึ่ง เพราะแต่ละจุดอาจมีสภาพแวดล้อมต่างกัน</p></section>
-<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>ช่วยสรุปภาพรวมของจุดที่มีข้อมูลในช่วงนั้น แต่ไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
-},
-
-aboutStandards:{
-title:"📚 เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ",
-html:`<div class="help-intro-card"><b>ใช้ตรวจว่าคำว่า “ดี”, “ปกติ”, “ร้อน” หรือ “เฝ้าระวัง” มาจากอะไร</b><span>แต่ละตัวแปรอาจใช้เกณฑ์คนละประเภท จึงต้องอ่านหมายเหตุของตัวแปรนั้น</span></div>
-<section class="help-section"><h4>เกณฑ์จากแหล่งอ้างอิง</h4><p>จะแสดงชื่อแหล่งอ้างอิงและช่วงค่าที่เกี่ยวข้อง พร้อมบอกข้อจำกัดเมื่อเกณฑ์นั้นไม่ได้ออกแบบมาสำหรับค่าปัจจุบันแบบทันที</p></section>
-<section class="help-section"><h4>เกณฑ์ของโครงการ</h4><p>หากเป็นช่วงค่าที่โครงการกำหนดเพื่อช่วยเฝ้าระวัง จะระบุไว้ชัดเจนว่าไม่ใช่มาตรฐานสุขภาพหรือข้อกำหนดทางกฎหมาย</p></section>`
-},
-
-aboutPeople:{
-title:"👥 ผู้เกี่ยวข้องกับโครงการ",
-html:`<div class="help-intro-card"><b>แสดงหน่วยงาน ผู้จัดทำ และครูที่ปรึกษาที่เกี่ยวข้องกับโครงการ</b><span>ส่วนนี้เป็นข้อมูลเครดิตและการติดต่อสาธารณะเท่านั้น</span></div>`
-}
-};
-
-function closeHelp(){
-
-const p=$("helpPopover");
-
-if(p){
-p.classList.remove("active");
-p.setAttribute("aria-hidden","true");
-}
-
-if(activeHelpButton){
-activeHelpButton.classList.remove("is-active");
-activeHelpButton.setAttribute("aria-expanded","false");
-}
-
-activeHelpButton=null;
-
-}
-
-function bindHelp(){
-
-document
-.querySelectorAll(".help-button")
-.forEach(b=>{
-
-b.addEventListener("click",e=>{
-
-e.preventDefault();
-e.stopPropagation();
-
-const x=HELP_CONTENT[b.dataset.help];
-
-if(!x){
-return;
-}
-
-if(activeHelpButton&&activeHelpButton!==b){
-activeHelpButton.classList.remove("is-active");
-activeHelpButton.setAttribute("aria-expanded","false");
-}
-
-activeHelpButton=b;
-b.classList.add("is-active");
-b.setAttribute("aria-expanded","true");
-
-const title=$("helpPopoverTitle");
-const body=$("helpPopoverBody");
-const p=$("helpPopover");
-
-if(title){
-title.textContent=x.title;
-}
-
-if(body){
-body.innerHTML=x.html;
-}
-
-if(!p){
-return;
-}
-
-p.classList.add("active");
-p.setAttribute("aria-hidden","false");
-p.setAttribute("tabindex","-1");
-
-requestAnimationFrame(()=>{
-try{p.focus({preventScroll:true});}catch{}
-});
-
-});
-
-});
-
-$("helpPopoverClose")
-?.addEventListener("click",e=>{
-e.preventDefault();
-e.stopPropagation();
-closeHelp();
-});
-
-document.addEventListener("click",e=>{
-
-const p=$("helpPopover");
-
-if(
-p?.classList.contains("active")&&
-!p.contains(e.target)&&
-!e.target.closest?.(".help-button")
-){
-closeHelp();
-}
-
-});
-
-}
-
-
-// =====================================================
-// CREDIT IMAGE VIEWER
-// =====================================================
-
-function openCreditImage(src,caption=""){
-
-const modal=
-$("creditImageModal");
-
-const img=
-$("creditFullImage");
-
-const text=
-$("creditImageCaption");
-
-if(
-!modal||
-!img
-){
-return;
-}
-
-img.src=
-src||"";
-
-img.alt=
-caption||"รูปภาพเครดิต";
-
-if(text){
-text.textContent=
-caption||"";
-}
-
-modal.classList.add(
-"active"
-);
-
-modal.setAttribute(
-"aria-hidden",
-"false"
-);
-
-document.body.classList.add(
-"credit-modal-open"
-);
-
-}
-
-function closeCreditImage(){
-
-const modal=
-$("creditImageModal");
-
-const img=
-$("creditFullImage");
-
-if(!modal){
-return;
-}
-
-modal.classList.remove(
-"active"
-);
-
-modal.setAttribute(
-"aria-hidden",
-"true"
-);
-
-document.body.classList.remove(
-"credit-modal-open"
-);
-
-if(img){
-setTimeout(()=>{
-if(
-!modal.classList.contains(
-"active"
-)
-){
-img.src="";
-}
-},180);
-}
-
-}
-
-window.openCreditImage=
-openCreditImage;
-
-window.closeCreditImage=
-closeCreditImage;
-
-document.addEventListener(
-"keydown",
-e=>{
-if(
-e.key==="Escape"&&
-$("creditImageModal")
-?.classList.contains(
-"active"
-)
-){
-closeCreditImage();
-}
-}
-);
-
-// =====================================================
-// EVENTS
-// =====================================================
-
-function bindEvents(){
-
-const currentSelect=
-$("currentMetric");
-
-if(currentSelect){
-
-currentSelect.value=
-currentMetric;
-
-currentSelect.addEventListener(
-"change",
-()=>{
-
-currentMetric=
-currentSelect.value;
-
-updateCurrent();
-
-}
-);
-
-}
-
-const historyNodeSelect=
-$("historyNode");
-
-if(historyNodeSelect){
-historyNodeSelect.value=historyNode;
-historyNodeSelect.addEventListener(
-"change",
-e=>{
-historyNode=e.target.value;
-drawCharts();
-}
-);
-}
-
-const metricSelect=
-$("metric");
-
-if(metricSelect){
-
-metricSelect.value=
-metric;
-
-metricSelect.addEventListener(
-"change",
-e=>{
-
-metric=
-e.target.value;
-
-drawCharts();
-
-}
-);
-
-}
-
-$("historyRangeButton")
-?.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-const panel=
-$("historyRangeModal");
-
-if(!panel){
-return;
-}
-
-if(
-!panel.classList.contains(
-"active"
-)
-){
-
-openHistoryRangePicker();
-
-}else{
-
-closeHistoryRangePicker();
-
-}
-
-}
-);
-
-document
-.querySelectorAll(
-".quick-range-option"
-)
-.forEach(
-button=>{
-
-button.addEventListener(
-"click",
-()=>{
-
-setRange(
-button.dataset.range
-);
-
-}
-);
-
-}
-);
-
-$("calendarPrev")
-?.addEventListener(
-"click",
-()=>{
-
-calendarDisplayDate=
-new Date(
-calendarDisplayDate.getFullYear(),
-calendarDisplayDate.getMonth()-1,
-1
-);
-
-renderRangeCalendar();
-
-}
-);
-
-$("calendarNext")
-?.addEventListener(
-"click",
-()=>{
-
-calendarDisplayDate=
-new Date(
-calendarDisplayDate.getFullYear(),
-calendarDisplayDate.getMonth()+1,
-1
-);
-
-renderRangeCalendar();
-
-}
-);
-
-$("customRangeStart")
-?.addEventListener(
-"change",
-()=>{
-
-updateQuickRangeUI(
-null
-);
-
-const d=
-dateFromRangeInput(
-"customRangeStart"
-);
-
-if(d){
-
-calendarDisplayDate=
-new Date(
-d.getFullYear(),
-d.getMonth(),
-1
-);
-
-}
-
-renderRangeCalendar();
-
-}
-);
-
-$("customRangeEnd")
-?.addEventListener(
-"change",
-()=>{
-
-updateQuickRangeUI(
-null
-);
-
-renderRangeCalendar();
-
-}
-);
-
-$("historyRangeApply")
-?.addEventListener(
-"click",
-applyCustomRange
-);
-
-$("historyRangeCancel")
-?.addEventListener(
-"click",
-closeHistoryRangePicker
-);
-
-$("historyRangeModalClose")
-?.addEventListener(
-"click",
-closeHistoryRangePicker
-);
-
-$("historyRangeModal")
-?.addEventListener(
-"click",
-e=>{
-
-const modal=
-$("historyRangeModal");
-
-if(
-e.target===modal||
-e.target?.dataset?.historyRangeClose==="true"||
-e.target?.classList?.contains(
-"history-range-modal-backdrop"
-)
-){
-
-closeHistoryRangePicker();
-
-}
-
-}
-);
-
-$("forecastToggle")
-?.addEventListener(
-"click",
-()=>{
-
-forecastVisible=
-!forecastVisible;
-
-updateForecastToggle();
-
-// redraw เพื่อให้ทุกกราฟย่อยใช้สถานะ ON/OFF เดียวกันทันที
-if(
-historyActivated&&
-typeof drawCharts==="function"
-){
-drawCharts();
-}
-
-}
-);
-
-$("aiRefreshButton")
-?.addEventListener(
-"click",
-()=>{
-
-loadAI(
-true
-);
-
-}
-);
-
-$("aiForecastRefreshButton")
-?.addEventListener(
-"click",
-()=>{
-
-loadAIForecast(
-true
-);
-
-}
-);
-
-$("exportButton")
-?.addEventListener(
-"click",
-openExport
-);
-
-$("exportModalClose")
-?.addEventListener(
-"click",
-closeExport
-);
-
-$("exportCancelButton")
-?.addEventListener(
-"click",
-closeExport
-);
 
 /*
-  ปิดหน้าต่างส่งออกได้เหมือนตัวเลือกช่วงเวลา:
-  - คลิกพื้นที่ว่าง / ฉากหลัง
-  - ปุ่ม X
-  - ปุ่มยกเลิก
-  - ปุ่ม Esc (มี listener ด้านล่าง)
+ * ลบป้าย "ดูรูป" เดิมออก
+ */
+
+.credit-image-button::after {
+    content: none;
+}
+
+/* =====================================================
+   COLLEGE
+   ===================================================== */
+
+.credit-college .credit-icon img {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: contain;
+    box-sizing: border-box;
+    transform: scale(1.20);
+}
+
+/* =====================================================
+   DEPARTMENT
+   ===================================================== */
+
+.credit-department .credit-icon img {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: contain;
+    box-sizing: border-box;
+    transform: scale(1.18);
+}
+
+/* =====================================================
+   DEVELOPER
+   ===================================================== */
+
+.credit-developer .credit-icon {
+    overflow: hidden;
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    border-color: rgba(56, 189, 248, 0.20);
+}
+
+.credit-developer .credit-icon img {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: cover;
+    object-position: center 10%;
+    border-radius: 13px;
+    transform: scale(1.12);
+    box-sizing: border-box;
+    transition: transform 0.3s ease;
+}
+
+.credit-developer .credit-icon:hover img {
+    transform: scale(1.18);
+}
+
+/* =====================================================
+   CREDIT CONTENT
+   ===================================================== */
+
+.credit-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.credit-label {
+    margin-bottom: 5px;
+    font-family: "Courier New", monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    color: #22d3ee;
+    text-transform: uppercase;
+}
+
+.credit-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.55;
+    color: #e2e8f0;
+    transition: color 0.25s ease;
+}
+
+.credit-role {
+    display: inline-flex;
+    margin-top: 7px;
+    padding: 3px 8px;
+    border: 1px solid rgba(34, 211, 238, 0.14);
+    border-radius: 5px;
+    background: rgba(34, 211, 238, 0.04);
+    font-family: "Courier New", monospace;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #64748b;
+}
+
+/* =====================================================
+   CREDIT LINKS
+   ===================================================== */
+
+.credit-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 9px;
+}
+
+.credit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border: 1px solid rgba(34, 211, 238, 0.20);
+    border-radius: 7px;
+    background: rgba(34, 211, 238, 0.055);
+    color: #67e8f9;
+    font-size: 9px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.22s ease;
+}
+
+.credit-arrow {
+    font-size: 11px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.credit-link:hover {
+    background: rgba(34, 211, 238, 0.14);
+    border-color: rgba(34, 211, 238, 0.55);
+    color: #cffafe;
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.10);
+    transform: translateY(-1px);
+}
+
+.credit-link:hover .credit-arrow {
+    transform: translate(2px, -2px);
+}
+
+/* =====================================================
+   HOVER
+   ===================================================== */
+
+.credit-box:hover {
+    background: linear-gradient(
+            135deg,
+            rgba(34, 211, 238, 0.055),
+            rgba(14, 165, 233, 0.018)
+        );
+}
+
+.credit-box:hover .credit-icon {
+    transform: translateY(-2px);
+    border-color: rgba(34, 211, 238, 0.50);
+    box-shadow: 0 0 22px rgba(34, 211, 238, 0.12);
+}
+
+.credit-box:hover .credit-title {
+    color: #67e8f9;
+}
+
+.credit-developer:hover .credit-icon {
+    border-color: rgba(56, 189, 248, 0.50);
+}
+
+/* =====================================================
+   SYSTEM STATUS
+   ===================================================== */
+
+.credit-bottom {
+    position: relative;
+    z-index: 3;
+    min-height: 34px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-top: 1px solid rgba(148, 163, 184, 0.10);
+    background: rgba(2, 6, 23, 0.32);
+    font-family: "Courier New", monospace;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: #475569;
+}
+
+.credit-status-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #22d3ee;
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.75);
+    animation: credit-pulse 2s ease-in-out infinite;
+}
+
+@keyframes credit-pulse {
+0%,
+100% {
+        opacity: 0.45;
+        transform: scale(0.85);
+    }
+
+50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.credit-line {
+    width: 30px;
+    height: 1px;
+    background: rgba(34, 211, 238, 0.25);
+}
+
+/* =====================================================
+   IMAGE MODAL
+   ===================================================== */
+
+.credit-image-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999;
+}
+
+.credit-image-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.credit-image-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.90);
+    backdrop-filter: blur(8px);
+}
+
+.credit-image-window {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    max-width: 82vw;
+    max-height: 82vh;
+    padding: 10px;
+    border: 1px solid rgba(34, 211, 238, 0.35);
+    border-radius: 16px;
+    background: linear-gradient(
+            145deg,
+            rgba(15, 23, 42, 0.98),
+            rgba(8, 47, 73, 0.96)
+        );
+    box-shadow: 0 0 45px rgba(34, 211, 238, 0.12),
+        0 25px 70px rgba(0, 0, 0, 0.60);
+    animation: creditImageOpen 0.22s ease-out;
+}
+
+.credit-full-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 78vw;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.credit-image-caption {
+    width: 100%;
+    margin-top: 8px;
+    padding: 5px 8px 2px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #67e8f9;
+}
+
+.credit-image-close {
+    position: fixed;
+    top: 22px;
+    right: 24px;
+    z-index: 1000000;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(103, 232, 249, 0.45);
+    border-radius: 50%;
+    background: rgba(8, 47, 73, 0.96);
+    color: #cffafe;
+    font-size: 29px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.credit-image-close:hover {
+    background: rgba(34, 211, 238, 0.18);
+    border-color: rgba(103, 232, 249, 0.80);
+    color: #ffffff;
+    transform: rotate(90deg);
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.20);
+}
+
+@keyframes creditImageOpen {
+from {
+        opacity: 0;
+        transform: scale(0.90);
+    }
+
+to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+
+@media (max-width: 1100px) {
+
+.credit-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.credit-box {
+    min-height: 115px;
+}
+
+.credit-box:nth-child(2) {
+    border-right: none;
+}
+
+.credit-box:nth-child(1),
+.credit-box:nth-child(2) {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+.credit-bar {
+    margin-top: 28px;
+}
+
+.credit-inner {
+    grid-template-columns: 1fr;
+}
+
+.credit-box {
+    min-height: 100px;
+    padding: 18px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.credit-box:last-child {
+    border-bottom: none;
+}
+
+.credit-icon {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+    border-radius: 12px;
+}
+
+.credit-icon img {
+    border-radius: 10px;
+}
+
+.credit-developer .credit-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+    overflow: hidden;
+}
+
+.credit-title {
+    font-size: 12px;
+}
+
+.credit-bottom {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    font-size: 7px;
+    line-height: 1.5;
+}
+
+.credit-line {
+    display: none;
+}
+
+.credit-image-window {
+    max-width: 90vw;
+    max-height: 78vh;
+    padding: 7px;
+    border-radius: 13px;
+}
+
+.credit-full-image {
+    max-width: 86vw;
+    max-height: 65vh;
+}
+
+.credit-image-close {
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    font-size: 25px;
+}
+
+.credit-image-caption {
+    font-size: 10px;
+}
+
+}
+
+/* =====================================================
+   SMALL MOBILE
+   ===================================================== */
+
+@media (max-width: 420px) {
+
+.credit-box {
+    padding: 16px 15px;
+    gap: 11px;
+}
+
+.credit-icon {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    border-radius: 11px;
+}
+
+.credit-icon img {
+    border-radius: 9px;
+}
+
+.credit-developer .credit-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    overflow: hidden;
+}
+
+.credit-title {
+    font-size: 11px;
+}
+
+.credit-link {
+    font-size: 8px;
+    padding: 4px 7px;
+}
+
+.credit-full-image {
+    max-width: 84vw;
+    max-height: 60vh;
+}
+
+}
+
+.range-ส่งออก {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 0.75rem;
+    border-radius: 0.75rem;
+    background: #102338;
+    color: #eaf2f8;
+    border: 1px solid rgba(148,163,184,.2);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.status-online-dot {
+    color: #34d399;
+}
+
+.status-offline-dot {
+    color: #64748b;
+}
+
+/* =========================================================
+   EXPORT MODAL
+========================================================= */
+
+.export-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.export-modal.show {
+    display: flex;
+}
+
+/* Background */
+
+.export-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 8, 18, 0.76);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+}
+
+/* Dialog */
+
+.export-dialog {
+    position: relative;
+    width: min(1100px, 100%);
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #071421;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 20px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+}
+
+/* Header */
+
+.export-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.export-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.export-subtitle {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.export-close {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 10px;
+    background: #172538;
+    color: #cbd5e1;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.export-close:hover {
+    background: #24364c;
+    color: #ffffff;
+}
+
+/* Date */
+
+.export-filter {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    padding: 20px 24px;
+}
+
+.export-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+}
+
+.export-date-group label {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.export-date-group input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    background: #102338;
+    color: #f8fafc;
+    font-family: inherit;
+}
+
+.export-date-arrow {
+    padding-bottom: 10px;
+    color: #64748b;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+}
+
+/* Summary */
+
+.export-summary {
+    display: flex;
+    gap: 12px;
+    padding: 0 24px 16px;
+}
+
+.export-summary > div {
+    min-width: 150px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #0d1d2d;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.export-summary span {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.export-summary strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 20px;
+    color: #22d3ee;
+}
+
+/* Preview */
+
+.export-preview {
+    min-height: 0;
+    padding: 0 24px 20px;
+}
+
+.export-preview-title {
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+.export-table-wrapper {
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 12px;
+}
+
+.export-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    min-width: 900px;
+}
+
+.export-table th {
+    position: sticky;
+    top: 0;
+    padding: 10px 12px;
+    text-align: left;
+    background: #102338;
+    color: #9fb7d1;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.82);
+}
+
+.export-table td {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+    color: #cbd5e1;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.82);
+}
+
+.export-table tbody tr:hover {
+    background: rgba(34, 211, 238, 0.035);
+}
+
+/* แถวคั่นระหว่างกลุ่มอุปกรณ์ (N1 / N2 / N3) */
+
+.export-table tbody tr.export-group-divider {
+    background: transparent;
+}
+
+.export-table tbody tr.export-group-divider:hover {
+    background: transparent;
+}
+
+.export-table tbody tr.export-group-divider td {
+    padding: 6px 11px;
+    border-top: 2px solid rgba(34, 211, 238, 0.25);
+    border-bottom: none;
+}
+
+/* Footer */
+
+.export-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.export-btn {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.export-btn-cancel {
+    background: #172538;
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.15);
+}
+
+.export-btn-primary {
+    background: #0891b2;
+    color: #ffffff;
+}
+
+.export-btn-primary:hover {
+    background: #06b6d4;
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+
+.export-filter {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.export-date-arrow {
+    display: none;
+}
+
+.export-summary {
+    flex-wrap: wrap;
+}
+
+.export-footer {
+    flex-direction: column;
+}
+
+.export-btn {
+    width: 100%;
+}
+
+}
+
+/* Export modal refinements */
+
+#exportBtn:hover {
+    background: #0e7490;
+    border-color: #22d3ee;
+}
+
+.export-date-group input:focus {
+    outline: none;
+    border-color: #22d3ee;
+    box-shadow: 0 0 0 3px rgba(34,211,238,.10);
+}
+
+@media (max-width:640px) {
+
+.export-dialog {
+    max-height: 94vh;
+    border-radius: 16px;
+}
+
+}
+
+/* =====================================================
+   ADVISOR
+   ===================================================== */
+
+.credit-advisor .credit-icon {
+    overflow: hidden;
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    border-color: rgba(34, 211, 238, 0.20);
+}
+
+.credit-advisor .credit-icon img {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 13px;
+    transform: scale(1.08);
+    box-sizing: border-box;
+    transition: transform 0.3s ease;
+}
+
+.credit-advisor .credit-icon:hover img {
+    transform: scale(1.14);
+}
+
+.credit-advisor:hover .credit-icon {
+    border-color: rgba(34, 211, 238, 0.50);
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+
+@media (max-width: 1100px) {
+
+.credit-box:nth-child(even) {
+    border-right: none;
+}
+
+.credit-box:nth-child(-n/**/+3) {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+.credit-advisor .credit-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+    overflow: hidden;
+}
+
+.credit-advisor .credit-icon img {
+    object-fit: cover;
+    object-position: center center;
+}
+
+}
+
+/* =====================================================
+   SMALL MOBILE
+   ===================================================== */
+
+@media (max-width: 420px) {
+
+.credit-advisor .credit-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    overflow: hidden;
+}
+
+.credit-advisor .credit-icon img {
+    object-fit: cover;
+    object-position: center center;
+}
+
+}
+
+/* =========================================================
+   HISTORICAL DATE / TIME RANGE PICKER
+   ใช้กับ Dashboard เวอร์ชัน Date/Time Range Picker
+   ========================================================= */
+
+/* ตัวครอบปุ่มเลือกช่วงเวลา */
+
+#historyRangePicker {
+    position: relative;
+    z-index: 80;
+}
+
+/* ปุ่มหลักด้านบน เช่น "24 ชั่วโมง" */
+
+#historyRangeButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    height: 42px;
+    padding: 0 13px;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 12px;
+    background: #102338;
+    color: #eaf2f8;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+#historyRangeButton:hover {
+    background: #132a42;
+    border-color: rgba(34, 211, 238, 0.42);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.06);
+}
+
+#historyRangeButton:active {
+    transform: translateY(1px);
+}
+
+#historyRangeButton[aria-expanded="true"] {
+    border-color: rgba(34, 211, 238, 0.55);
+    background: #12283e;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08),
+        0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================================================
+   PICKER PANEL
+   ========================================================= */
+
+#historyRangePanel {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 99999 !important;
+    width: min(640px, calc(100vw - 28px)) !important;
+    min-width: min(600px, calc(100vw - 28px)) !important;
+    max-width: calc(100vw - 28px) !important;
+    max-height: min(560px, calc(100vh - 90px)) !important;
+    overflow: auto !important;
+    background: linear-gradient(
+            145deg,
+            rgba(8, 24, 39, 0.995),
+            rgba(7, 29, 45, 0.995)
+        ) !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52),
+        inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+    color: #e2e8f0;
+    scrollbar-width: thin;
+    scrollbar-color: #1e4b66 transparent;
+}
+
+#historyRangePanel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#historyRangePanel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#historyRangePanel::-webkit-scrollbar-thumb {
+    background: #1e4b66;
+    border-radius: 999px;
+}
+
+/* สำคัญมาก:
+   เมื่อ JS ใส่ class hidden ต้องปิด Panel จริง */
+
+#historyRangePanel.hidden {
+    display: none !important;
+}
+
+/* =========================================================
+   MAIN LAYOUT
+   ซ้าย = ปฏิทิน / ขวา = Quick Range
+   ========================================================= */
+
+#historyRangePanel > .grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.65fr)
+        minmax(100px, 0.35fr) !important;
+    width: 100% !important;
+}
+
+/* ฝั่งปฏิทิน */
+
+#historyRangePanel > .grid > div:first-child {
+    min-width: 0 !important;
+    padding: 14px 14px 12px !important;
+    border-right: 1px solid rgba(51, 65, 85, 0.68) !important;
+}
+
+/* ฝั่ง Quick Range */
+
+#historyRangePanel > .grid > div:last-child {
+    min-width: 0 !important;
+    padding: 12px !important;
+    background: rgba(2, 6, 23, 0.10) !important;
+}
+
+/* =========================================================
+   CALENDAR HEADER
+   ========================================================= */
+
+#rangeCalendarTitle {
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    text-transform: none;
+}
+
+/* ปุ่มเดือนก่อน / เดือนถัดไป */
+
+#calendarPrev,
+#calendarNext {
+    width: 30px !important;
+    height: 30px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(71, 85, 105, 0.82);
+    border-radius: 8px !important;
+    background: rgba(15, 35, 56, 0.85);
+    color: #cbd5e1;
+    font-family: inherit;
+    font-size: 18px !important;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.16s ease,
+        color 0.16s ease,
+        border-color 0.16s ease;
+}
+
+#calendarPrev:hover,
+#calendarNext:hover {
+    background: #17314a;
+    color: #67e8f9;
+    border-color: rgba(34, 211, 238, 0.36);
+}
+
+/* =========================================================
+   CALENDAR GRID
+   ========================================================= */
+
+/* บังคับ 7 คอลัมน์จริง
+   ป้องกันปัญหาวันเรียงลงแนวตั้ง */
+
+#rangeCalendarGrid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+    width: 100% !important;
+    grid-auto-rows: 32px !important;
+}
+
+/* ปุ่มแต่ละวัน */
+
+#rangeCalendarGrid button {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    margin: 0;
+    padding: 0 !important;
+    border: 1px solid transparent;
+    border-radius: 8px !important;
+    background: transparent;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.14s ease,
+        border-color 0.14s ease,
+        color 0.14s ease,
+        transform 0.14s ease;
+}
+
+#rangeCalendarGrid button:hover {
+    background: rgba(34, 211, 238, 0.09) !important;
+    border-color: rgba(34, 211, 238, 0.14) !important;
+    color: #cffafe !important;
+}
+
+/* =========================================================
+   QUICK RANGE
+   ========================================================= */
+
+#quickRangeList {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    margin-top: 0 !important;
+}
+
+.quick-range-option {
+    appearance: none;
+    display: inline-flex !important;
+    width: auto !important;
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    background: transparent;
+    color: #cbd5e1 !important;
+    font-family: inherit;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    cursor: pointer;
+    transition: background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.quick-range-option:hover {
+    background: rgba(34, 211, 238, 0.075) !important;
+    color: #a5f3fc !important;
+    border-color: rgba(34, 211, 238, 0.10) !important;
+}
+
+/* =========================================================
+   START / END
+   ========================================================= */
+
+/* ส่วน Start / End เป็น div border-t ตัวแรก */
+
+#historyRangePanel > .border-t.grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    padding: 11px 14px !important;
+    border-top: 1px solid rgba(51, 65, 85, 0.68) !important;
+}
+#historyRangePanel label {
+    display: block;
+    min-width: 0;
+}
+
+#historyRangePanel label > span {
+    display: block;
+    margin-bottom: 4px !important;
+    color: #94a3b8 !important;
+    font-size: 9px !important;
+}
+
+/* กล่องครอบ input */
+
+#historyRangePanel label > div {
+    display: flex;
+    align-items: center;
+    min-height: 36px !important;
+    padding: 0 9px !important;
+    border: 1px solid rgba(71, 85, 105, 0.78) !important;
+    border-radius: 9px !important;
+    background: rgba(2, 6, 23, 0.22) !important;
+    transition: border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+#historyRangePanel label > div:focus-within {
+    border-color: rgba(34, 211, 238, 0.58) !important;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
+}
+
+/* datetime-local */
+
+#customRangeStart,
+#customRangeEnd {
+    appearance: none;
+    width: 100% !important;
+    min-width: 0;
+    height: 34px !important;
+    margin: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: #e2e8f0 !important;
+    font-family: inherit;
+    font-size: 11px !important;
+    color-scheme: dark;
+}
+
+#customRangeStart::-webkit-calendar-picker-indicator,
+#customRangeEnd::-webkit-calendar-picker-indicator {
+    opacity: 0.72;
+    filter: invert(83%)
+        sepia(9%)
+        saturate(635%)
+        hue-rotate(176deg)
+        brightness(92%);
+    cursor: pointer;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+/* footer คือ border-t ตัวสุดท้าย */
+
+#historyRangePanel > .border-t:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    padding: 9px 14px !important;
+    border-top: 1px solid rgba(51, 65, 85, 0.68) !important;
+    background: rgba(2, 6, 23, 0.13) !important;
+}
+
+/* Error */
+
+#customRangeError {
+    color: #f87171;
+    font-size: 9px !important;
+    margin-top: 0 !important;
+    margin-left: 6px !important;
+}
+
+#customRangeError.hidden {
+    display: none !important;
+}
+
+/* =========================================================
+   APPLY / CANCEL BUTTON
+   ========================================================= */
+
+#historyRangeCancel,
+#historyRangeApply {
+    min-height: 34px !important;
+    padding: 0 13px !important;
+    border-radius: 9px !important;
+    font-family: inherit;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.16s ease,
+        border-color 0.16s ease,
+        color 0.16s ease,
+        transform 0.16s ease;
+}
+
+#historyRangeCancel {
+    border: 1px solid rgba(71, 85, 105, 0.82) !important;
+    background: rgba(15, 35, 56, 0.72) !important;
+    color: #cbd5e1 !important;
+}
+
+#historyRangeCancel:hover {
+    background: rgba(30, 41, 59, 0.95) !important;
+    color: #ffffff !important;
+}
+
+#historyRangeApply {
+    border: 1px solid rgba(34, 211, 238, 0.34) !important;
+    background: linear-gradient(
+            135deg,
+            rgba(8, 145, 178, 0.78),
+            rgba(6, 182, 212, 0.72)
+        ) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 22px rgba(6, 182, 212, 0.12);
+}
+
+#historyRangeApply:hover {
+    border-color: rgba(103, 232, 249, 0.62) !important;
+    background: linear-gradient(
+            135deg,
+            rgba(8, 145, 178, 0.94),
+            rgba(6, 182, 212, 0.90)
+        ) !important;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+#historyRangePanel {
+    width: min(610px, calc(100vw - 24px)) !important;
+    min-width: 0 !important;
+}
+
+#historyRangePanel > .grid {
+    grid-template-columns: minmax(0, 1.35fr)
+            minmax(180px, 0.65fr) !important;
+}
+
+}
+
+@media (max-width: 720px) {
+
+#historyRangePicker {
+    position: static !important;
+}
+
+#historyRangePanel {
+    position: fixed !important;
+    top: 64px !important;
+    right: 10px !important;
+    bottom: auto !important;
+    left: 10px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: calc(100vh - 78px) !important;
+    border-radius: 16px !important;
+}
+
+#historyRangePanel > .grid {
+    grid-template-columns: 1fr !important;
+}
+
+#historyRangePanel > .grid > div:first-child {
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.68) !important;
+}
+
+#historyRangePanel > .grid > div:last-child {
+    border-right: 0;
+}
+
+#quickRangeList {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+}
+
+#historyRangePanel > .border-t:nth-of-type(1) {
+    grid-template-columns: 1fr !important;
+}
+
+#historyRangePanel > .border-t.grid {
+    grid-template-columns: 1fr !important;
+}
+
+#historyRangePanel > .border-t:last-child > div:last-child {
+    display: flex;
+    justify-content: flex-end !important;
+    gap: 8px;
+}
+
+}
+
+@media (max-width: 430px) {
+
+#historyRangePanel {
+    top: 56px !important;
+    right: 7px !important;
+    left: 7px !important;
+    max-height: calc(100vh - 66px) !important;
+}
+
+#historyRangePanel > .grid > div:first-child,
+#historyRangePanel > .grid > div:last-child {
+    padding: 12px !important;
+}
+
+#rangeCalendarGrid button {
+    height: 34px !important;
+    font-size: 11px;
+}
+
+#quickRangeList {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+#historyRangePanel > .border-t:nth-of-type(1) {
+    padding: 12px !important;
+}
+
+#historyRangePanel > .border-t.grid {
+    padding: 12px !important;
+}
+
+#historyRangePanel > .border-t:last-child > div:last-child {
+    width: 100%;
+}
+
+#historyRangeCancel,
+#historyRangeApply {
+    flex: 1 !important;
+}
+
+}
+
+/* =========================================================
+   DATE/TIME PICKER - CALENDAR ALIGNMENT FIX
+   แก้หัววัน อา จ อ พ พฤ ศ ส ที่เรียงลงแนวตั้ง
+   ========================================================= */
+
+/* แถวชื่อวันเหนือปฏิทิน */
+
+#historyRangePanel .grid-cols-7 {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    width: 100% !important;
+}
+
+/* เฉพาะแถวชื่อวัน ไม่กระทบช่องวันที่ */
+
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) {
+    gap: 3px !important;
+    margin-bottom: 4px !important;
+    text-align: center !important;
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    height: 22px !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+}
+
+/* Desktop: panel ไม่ใหญ่เกินจำเป็น */
+
+@media (min-width: 901px) {
+
+#historyRangePanel {
+    width: 620px !important;
+    min-width: 620px !important;
+}
+
+}
+
+/* =========================================================
+   EXPORT MODAL
+   ========================================================= */
+
+body.export-modal-open {
+    overflow: hidden;
+}
+
+.export-modal.active {
+    display: flex;
+}
+
+.export-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(1120px, calc(100vw - 36px));
+    max-height: calc(100vh - 36px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 20px;
+    background: linear-gradient(
+            145deg,
+            rgba(7, 24, 39, 0.995),
+            rgba(7, 22, 36, 0.995)
+        );
+    box-shadow: 0 35px 100px rgba(0, 0, 0, 0.62),
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    color: #eaf2f8;
+}
+
+/* -------------------------
+   Header
+   ------------------------- */
+
+.export-modal-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.72);
+}
+
+.export-modal-title-wrap {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.export-modal-icon {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(34, 211, 238, 0.18);
+    border-radius: 12px;
+    background: rgba(34, 211, 238, 0.08);
+    font-size: 18px;
+}
+
+.export-modal-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.export-modal-subtitle {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.export-modal-close {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(71, 85, 105, 0.55);
+    border-radius: 10px;
+    background: rgba(15, 35, 56, 0.78);
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.export-modal-close:hover {
+    color: #ffffff;
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+/* -------------------------
+   Body
+   ------------------------- */
+
+.export-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 18px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #1e4b66 transparent;
+}
+
+.export-modal-body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.export-modal-body::-webkit-scrollbar-thumb {
+    background: #1e4b66;
+    border-radius: 999px;
+}
+
+/* -------------------------
+   Date range
+   ------------------------- */
+
+.export-date-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr)
+        28px
+        minmax(0, 1fr);
+    align-items: end;
+    gap: 10px;
+}
+
+.export-field {
+    display: block;
+    min-width: 0;
+}
+
+.export-field > span {
+    display: block;
+    margin-bottom: 7px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.export-field input[type="date"] {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid rgba(71, 85, 105, 0.82);
+    border-radius: 11px;
+    outline: 0;
+    background: #102338;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 13px;
+    color-scheme: dark;
+    transition: border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.export-field input[type="date"]:focus {
+    border-color: rgba(34, 211, 238, 0.58);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
+}
+
+/* -------------------------
+   Summary
+   ------------------------- */
+
+.export-summary-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.export-count-card {
+    flex: 0 0 150px;
+    padding: 14px;
+    border: 1px solid rgba(34, 211, 238, 0.13);
+    border-radius: 13px;
+    background: rgba(34, 211, 238, 0.055);
+}
+
+.export-count-label,
+.export-count-unit {
+    color: #64748b;
+    font-size: 10px;
+}
+
+.export-count-value {
+    display: block;
+    margin: 5px 0 2px;
+    color: #22d3ee;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.export-summary-note {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: rgba(15, 35, 56, 0.36);
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* -------------------------
+   Preview title
+   ------------------------- */
+
+.export-preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    color: #e2e8f0;
+    font-size: 12px;
+}
+
+.export-preview-note {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.export-loading {
+    color: #67e8f9;
+    font-size: 11px;
+}
+
+.export-loading.hidden {
+    display: none;
+}
+
+/* -------------------------
+   Preview table
+   ------------------------- */
+
+.export-table-wrap {
+    width: 100%;
+    max-height: 330px;
+    overflow: auto;
+    border: 1px solid rgba(51, 65, 85, 0.76);
+    border-radius: 12px;
+    background: rgba(2, 12, 23, 0.22);
+    scrollbar-width: thin;
+    scrollbar-color: #31546c transparent;
+}
+
+.export-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #10273d;
+}
+
+.export-empty-cell {
+    height: 110px;
+    color: #64748b !important;
+    text-align: center !important;
+}
+
+.export-error {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(248, 113, 113, 0.20);
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.06);
+    color: #fca5a5;
+    font-size: 11px;
+}
+
+.export-error.hidden {
+    display: none;
+}
+
+/* -------------------------
+   Footer
+   ------------------------- */
+
+.export-modal-footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(51, 65, 85, 0.72);
+    background: rgba(2, 8, 18, 0.20);
+}
+
+.export-cancel-button,
+.export-excel-button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.export-cancel-button {
+    border: 1px solid rgba(71, 85, 105, 0.82);
+    background: #102338;
+    color: #cbd5e1;
+}
+
+.export-cancel-button:hover {
+    background: #172d44;
+}
+
+.export-excel-button {
+    border: 1px solid rgba(34, 211, 238, 0.30);
+    background: linear-gradient(
+            135deg,
+            #0891b2,
+            #06b6d4
+        );
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(6, 182, 212, 0.13);
+}
+
+.export-excel-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: linear-gradient(
+            135deg,
+            #0e9fbe,
+            #12c3df
+        );
+}
+
+.export-excel-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+    box-shadow: none;
+}
+
+/* =========================================================
+   EXPORT RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+.export-modal {
+    padding: 10px;
+}
+
+.export-modal-dialog {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+}
+
+.export-modal-header,
+    .export-modal-body,
+.export-modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.export-date-grid {
+    grid-template-columns: 1fr;
+}
+
+.export-date-arrow {
+    height: auto;
+    transform: rotate(90deg);
+}
+
+.export-summary-row {
+    flex-direction: column;
+}
+
+.export-count-card {
+    flex-basis: auto;
+}
+
+.export-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+}
+
+.export-cancel-button,
+.export-excel-button {
+    width: 100%;
+}
+
+}
+
+/* =========================================================
+   HISTORICAL TOOLBAR CONTROLS
+   PM2.5 / DATE RANGE / EXPORT
+   ========================================================= */
+
+.history-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ---------------------------------------------------------
+   ตัวเลือกตัวแปร เช่น PM2.5
+   --------------------------------------------------------- */
+
+.history-metric-select {
+    height: 42px;
+    min-width: 110px;
+    padding: 0 36px 0 14px;
+    border: 1px solid rgba(90, 132, 165, 0.46);
+    border-radius: 12px;
+    background-color: #10263b;
+    color: #eaf6ff;
+    color-scheme: dark;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    transition: background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.15s ease;
+}
+
+.history-metric-select:hover {
+    background-color: #143049;
+    border-color: rgba(34, 211, 238, 0.48);
+}
+
+.history-metric-select:focus {
+    border-color: #22d3ee;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+}
+
+/* ทำ dropdown option ให้อยู่ในธีมเข้ม */
+
+.history-metric-select option {
+    background: #102338;
+    color: #eaf2f8;
+}
+
+/* ---------------------------------------------------------
+   ปุ่มร่วมของ Range + Export
+   --------------------------------------------------------- */
+
+.history-toolbar-button {
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 14px;
+    border: 1px solid rgba(90, 132, 165, 0.46);
+    border-radius: 12px;
+    background: #10263b;
+    color: #eaf6ff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    transition: background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.15s ease;
+}
+
+.history-toolbar-button:hover {
+    background: #143049;
+    border-color: rgba(34, 211, 238, 0.48);
+}
+
+.history-toolbar-button:active {
+    transform: translateY(1px);
+}
+
+/* ---------------------------------------------------------
+   Icon + Arrow
+   --------------------------------------------------------- */
+
+.history-control-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #67e8f9;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.history-control-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #8aa6bc;
+    font-size: 12px;
+    line-height: 1;
+    transition: transform 0.18s ease,
+        color 0.18s ease;
+}
+
+/* ---------------------------------------------------------
+   ปุ่มเลือกช่วงเวลา
+   --------------------------------------------------------- */
+
+#historyRangeButton.history-toolbar-button {
+    min-width: 132px;
+    min-height: 42px;
+    border: 1px solid rgba(90, 132, 165, 0.46);
+    background: #10263b;
+    color: #eaf6ff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#historyRangeButton.history-toolbar-button:hover {
+    background: #143049;
+    border-color: rgba(34, 211, 238, 0.48);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.055);
+}
+
+#historyRangeButton.history-toolbar-button[aria-expanded="true"] {
+    background: #143149;
+    border-color: #22d3ee;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08),
+        0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+#historyRangeButton[aria-expanded="true"] .history-control-arrow {
+    color: #67e8f9;
+    transform: rotate(180deg);
+}
+
+/* ---------------------------------------------------------
+   ปุ่มส่งออก
+   --------------------------------------------------------- */
+
+#exportButton.history-export-button {
+    min-width: 106px;
+    border-color: rgba(34, 211, 238, 0.40);
+    background: linear-gradient(
+            180deg,
+            #12324a 0%,
+            #10283e 100%
+        );
+    color: #ecfeff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+#exportButton.history-export-button:hover {
+    background: linear-gradient(
+            180deg,
+            #174159 0%,
+            #123149 100%
+        );
+    border-color: #22d3ee;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.075),
+        0 7px 18px rgba(0, 0, 0, 0.16);
+}
+
+#exportButton.history-export-button:active {
+    transform: translateY(1px);
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 720px) {
+
+.history-toolbar {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 7px;
+}
+
+.history-metric-select,
+    .history-toolbar-button,
+#historyRangeButton.history-toolbar-button {
+    height: 40px;
+    min-height: 40px;
+    font-size: 12px;
+}
+
+.history-metric-select {
+    min-width: 100px;
+}
+
+#historyRangeButton.history-toolbar-button {
+    min-width: 122px;
+}
+
+#exportButton.history-export-button {
+    min-width: 98px;
+}
+
+}
+
+@media (max-width: 460px) {
+
+.history-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr)
+            minmax(0, 1.25fr);
+    width: 100%;
+}
+
+.history-metric-select,
+#historyRangeButton.history-toolbar-button {
+    width: 100%;
+}
+
+#exportButton.history-export-button {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+}
+
+/* Calendar header */
+
+#historyRangePanel .mb-4 {
+    margin-bottom: 10px !important;
+}
+
+/* ข้อความช่วยใต้ปฏิทิน */
+
+#rangeCalendarGrid + div {
+    margin-top: 7px !important;
+    color: #64748b !important;
+    font-size: 9px !important;
+}
+
+/* Quick range title */
+
+#historyRangePanel > .grid > div:last-child > div:first-child {
+    padding: 0 2px 6px !important;
+    color: #64748b !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+}
+
+/* ให้ selected quick range เด่นชัด */
+
+.quick-range-option.active,
+.quick-range-option[aria-current="true"] {
+    background: rgba(34, 211, 238, 0.12) !important;
+    border-color: rgba(34, 211, 238, 0.28) !important;
+    color: #67e8f9 !important;
+}
+
+#historyRangePanel > .border-t:last-child > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+}
+#historyRangePanel > .border-t:last-child > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+}
+
+/* Mobile */
+
+@media (max-width: 720px) {
+
+#historyRangePanel > .border-t:last-child > div:first-child {
+    justify-content: center !important;
+}
+
+}
+
+/* =========================================================
+   FORECAST DISPLAY TOGGLE
+   ========================================================= */
+
+.forecast-display-panel {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 12px;
+    border: 1px solid rgba(71, 85, 105, 0.34);
+    border-radius: 14px;
+    background: linear-gradient(
+            145deg,
+            rgba(8, 24, 39, 0.62),
+            rgba(7, 29, 45, 0.42)
+        );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.forecast-display-copy {
+    min-width: 0;
+}
+
+.forecast-display-title {
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.forecast-display-subtitle {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.forecast-display-controls {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.forecast-actual-legend {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 11px;
+    border: 1px solid rgba(34, 211, 238, 0.14);
+    border-radius: 11px;
+    background: rgba(34, 211, 238, 0.045);
+}
+
+.forecast-actual-line {
+    width: 28px;
+    height: 3px;
+    flex: 0 0 28px;
+    border-radius: 999px;
+    background: #22d3ee;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.24);
+}
+
+.forecast-actual-label {
+    color: #dbeafe;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.forecast-actual-note {
+    margin-top: 1px;
+    color: #64748b;
+    font-size: 8px;
+    white-space: nowrap;
+}
+
+.forecast-toggle-wrap {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px 6px 11px;
+    border: 1px solid rgba(52, 211, 153, 0.14);
+    border-radius: 11px;
+    background: rgba(52, 211, 153, 0.045);
+    transition: border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.forecast-toggle-copy {
+    min-width: 94px;
+}
+
+.forecast-toggle-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #d1fae5;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.forecast-dash-line {
+    width: 25px;
+    height: 0;
+    flex: 0 0 25px;
+    border-top: 2px dashed #34d399;
+}
+
+.forecast-toggle-status {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 8px;
+    white-space: nowrap;
+}
+
+.forecast-switch {
+    min-width: 76px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    padding: 4px 8px 4px 5px;
+    border: 1px solid rgba(71, 85, 105, 0.58);
+    border-radius: 999px;
+    background: #102338;
+    color: #64748b;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+}
+
+.forecast-switch:hover {
+    transform: translateY(-1px);
+}
+
+.forecast-switch:focus-visible {
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
+}
+
+.forecast-switch-track {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    flex: 0 0 34px;
+    border-radius: 999px;
+    background: #253a4d;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.09);
+    transition: background 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.forecast-switch-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #94a3b8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: transform 0.22s ease,
+        background 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.forecast-switch-state {
+    min-width: 21px;
+    color: currentColor;
+    font-size: 9px;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+/* ON */
+
+.forecast-switch.is-on {
+    border-color: rgba(52, 211, 153, 0.34);
+    background: rgba(52, 211, 153, 0.10);
+    color: #6ee7b7;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.035),
+        0 6px 18px rgba(16, 185, 129, 0.08);
+}
+
+.forecast-switch.is-on .forecast-switch-track {
+    background: linear-gradient(
+            90deg,
+            #0f766e,
+            #059669
+        );
+    box-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.16),
+        0 0 12px rgba(52, 211, 153, 0.15);
+}
+
+.forecast-switch.is-on .forecast-switch-thumb {
+    transform: translateX(14px);
+    background: #ecfdf5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30),
+        0 0 8px rgba(236, 253, 245, 0.22);
+}
+
+/* OFF */
+
+.forecast-switch.is-off {
+    border-color: rgba(71, 85, 105, 0.50);
+    background: rgba(15, 35, 56, 0.74);
+    color: #64748b;
+    box-shadow: none;
+}
+
+.forecast-switch.is-off .forecast-switch-track {
+    background: #25384a;
+}
+
+.forecast-switch.is-off .forecast-switch-thumb {
+    transform: translateX(0);
+    background: #94a3b8;
+}
+
+@media (max-width: 720px) {
+
+.forecast-display-panel {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.forecast-display-controls {
+    width: 100%;
+    justify-content: space-between;
+}
+
+.forecast-actual-legend,
+.forecast-toggle-wrap {
+    flex: 1;
+}
+
+.forecast-toggle-wrap {
+    justify-content: space-between;
+}
+
+}
+
+@media (max-width: 480px) {
+
+.forecast-display-controls {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.forecast-actual-legend,
+.forecast-toggle-wrap {
+    width: 100%;
+}
+
+}
+
+/* =========================================================
+   PRE-AI SYSTEM HEALTH POLISH
+   ========================================================= */
+
+#gatewayStatusTop {
+    letter-spacing: .03em;
+}
+
+#nodesActiveTop {
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+
+#nodesActiveTop {
+    white-space: normal;
+}
+
+}
+
+/* =========================================================
+   SECTION HELP / INFO SYSTEM
+   ========================================================= */
+
+.section-title-with-help {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.help-button {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,.24);
+    background: rgba(15,23,42,.72);
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color .18s ease,
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+.help-button:hover,
+.help-button:focus-visible,
+.help-button.is-active {
+    color: #67e8f9;
+    border-color: rgba(34,211,238,.48);
+    background: rgba(34,211,238,.10);
+    box-shadow: 0 0 0 3px
+        rgba(34,211,238,.06);
+    outline: none;
+}
+
+.help-button:hover {
+    transform: translateY(-1px);
+}
+
+.help-popover {
+    position: fixed;
+    z-index: 9999;
+    display: none;
+    max-height: min(520px,calc(100vh - 24px));
+    overflow: auto;
+    padding: 0;
+    border: 1px solid rgba(71,85,105,.72);
+    border-radius: 16px;
+    background: rgba(7,20,34,.98);
+    box-shadow: 0 22px 60px
+        rgba(0,0,0,.38);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.help-popover.active {
+    display: block;
+}
+
+.help-popover-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(51,65,85,.72);
+    background: rgba(7,20,34,.96);
+}
+
+.help-popover-eyebrow {
+    margin-bottom: 3px;
+    color: #64748b;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .13em;
+}
+
+.help-popover-header h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.help-popover-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(71,85,105,.72);
+    border-radius: 9px;
+    background: rgba(15,23,42,.72);
+    color: #94a3b8;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: .18s ease;
+}
+
+.help-popover-close:hover {
+    color: #fff;
+    border-color: rgba(148,163,184,.45);
+    background: rgba(30,41,59,.88);
+}
+
+.help-popover-body {
+    padding: 15px 16px 17px;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.75;
+}
+
+.help-popover-body p {
+    margin: 0 0 11px;
+}
+
+.help-popover-body p:last-child {
+    margin-bottom: 0;
+}
+
+.help-popover-body ul {
+    margin: 8px 0 12px;
+    padding-left: 18px;
+}
+
+.help-popover-body li {
+    margin: 4px 0;
+}
+
+.help-popover-body b {
+    color: #e2e8f0;
+}
+
+.help-muted {
+    color: #64748b !important;
+    font-size: 11px;
+}
+
+.help-info-box {
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid rgba(51,65,85,.75);
+    border-radius: 12px;
+    background: rgba(15,23,42,.52);
+}
+
+.help-info-grid {
+    display: grid;
+    grid-template-columns: minmax(0,1fr)
+        auto;
+    gap: 7px 14px;
+    margin-top: 9px;
+}
+
+.help-info-grid span {
+    color: #94a3b8;
+}
+
+.help-status-list {
+    display: grid;
+    gap: 8px;
+    margin: 11px 0 13px;
+}
+
+.help-status-list > div {
+    display: grid;
+    grid-template-columns: 10px 58px
+        minmax(0,1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border: 1px solid rgba(51,65,85,.60);
+    border-radius: 10px;
+    background: rgba(15,23,42,.40);
+}
+
+.help-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+}
+
+.help-status-dot.online {
+    background: #34d399;
+}
+
+.help-status-dot.sleep {
+    background: #facc15;
+}
+
+.help-status-dot.offline {
+    background: #f87171;
+}
+
+/* =========================================================
+   CURRENT AIR QUALITY + ENVIRONMENT
+   ========================================================= */
+
+.current-environment-card {
+    min-width: 0;
+}
+
+.current-environment-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.current-environment-controls {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+}
+
+.current-metric-label {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.current-metric-select {
+    min-width: 125px;
+    height: 40px;
+    padding: 0 34px 0 13px;
+    border: 1px solid rgba(71,85,105,.72);
+    border-radius: 11px;
+    outline: none;
+    color: #f8fafc;
+    background-color: rgba(15,35,54,.86);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+
+.current-metric-select:hover {
+    border-color: rgba(34,211,238,.38);
+    background-color: rgba(15,39,59,.96);
+}
+
+.current-metric-select:focus {
+    border-color: rgba(34,211,238,.68);
+    box-shadow: 0 0 0 3px rgba(34,211,238,.08);
+}
+
+.current-metric-select option {
+    color: #e2e8f0;
+    background: #0b1c2c;
+}
+
+.current-quality-badge {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border: 1px solid rgba(71,85,105,.65);
+    border-radius: 999px;
+    color: #cbd5e1;
+    background: rgba(15,23,42,.42);
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+    transition: .2s ease;
+}
+
+.current-quality-normal {
+    color: #6ee7b7;
+    border-color: rgba(52,211,153,.22);
+    background: rgba(52,211,153,.07);
+}
+
+.current-quality-warning {
+    color: #fde047;
+    border-color: rgba(250,204,21,.24);
+    background: rgba(250,204,21,.07);
+}
+
+.current-quality-critical {
+    color: #fca5a5;
+    border-color: rgba(248,113,113,.24);
+    background: rgba(248,113,113,.08);
+}
+
+.current-quality-info {
+    color: #67e8f9;
+    border-color: rgba(34,211,238,.22);
+    background: rgba(34,211,238,.07);
+}
+
+.current-quality-unavailable {
+    color: #cbd5e1;
+    border-color: rgba(100,116,139,.28);
+    background: rgba(51,65,85,.10);
+}
+
+.current-environment-grid {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.current-environment-item {
+    position: relative;
+    min-width: 0;
+    min-height: 125px;
+    padding: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(51,65,85,.26);
+    border-radius: 14px;
+    background: linear-gradient(145deg,rgba(4,21,35,.72),rgba(7,26,42,.46));
+    transition: transform .18s ease,border-color .18s ease,background .18s ease;
+}
+
+.current-environment-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(34,211,238,.18);
+    background: linear-gradient(145deg,rgba(5,25,41,.84),rgba(7,29,46,.56));
+}
+
+.current-environment-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.current-environment-label {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.current-environment-icon {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(34,211,238,.10);
+    border-radius: 8px;
+    color: #38bdf8;
+    background: rgba(34,211,238,.05);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.current-environment-value {
+    display: block;
+    margin-top: 10px;
+    color: #f8fafc;
+    font-size: 23px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -.025em;
+}
+
+.current-watch-value {
+    font-size: 20px;
+}
+
+.current-environment-detail {
+    margin-top: 7px;
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.current-environment-footer {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 13px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(51,65,85,.30);
+    color: #526174;
+    font-size: 9px;
+}
+
+.current-environment-footer-dot {
+    width: 5px;
+    height: 5px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #22d3ee;
+    box-shadow: 0 0 8px rgba(34,211,238,.35);
+}
+
+@media (max-width:900px) {
+
+.current-environment-header {
+    flex-direction: column;
+}
+
+.current-environment-controls {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.current-environment-grid {
+    grid-template-columns: 1fr;
+}
+
+}
+
+@media (max-width:520px) {
+
+.current-environment-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+.current-metric-label {
+    grid-column: 1/-1;
+}
+
+.current-metric-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.current-environment-item {
+    min-height: 110px;
+    padding: 14px;
+}
+
+.current-environment-value {
+    font-size: 20px;
+}
+
+}
+
+#quickRangeList .quick-range-option {
+    display: inline-flex !important;
+    width: auto !important;
+    text-align : center !important;
+}
+
+/* =========================================================
+   FINAL HISTORY DATE/TIME RANGE PICKER
+   Quick ranges = one vertical column
+   Removed ranges: 3 hours / 3 days
+   ========================================================= */
+
+#historyRangePicker {
+    position: relative;
+}
+
+#historyRangePanel.history-range-panel {
+    width: min(720px, calc(100vw - 32px)) !important;
+    max-width: 720px;
+    background: #091827 !important;
+    border: 1px solid rgba(148,163,184,.18) !important;
+    border-radius: 16px;
+    box-shadow: 0 22px 60px rgba(0,0,0,.42) !important;
+    overflow: hidden;
+}
+
+#historyRangePanel.history-range-panel.hidden {
+    display: none !important;
+}
+
+#historyRangePanel .history-range-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 150px !important;
+    min-height: 306px;
+}
+
+#historyRangePanel .history-range-calendar {
+    min-width: 0;
+    padding: 16px;
+    border-right: 1px solid #1e293b;
+}
+
+#historyRangePanel .history-range-quick {
+    min-width: 0;
+    padding: 12px;
+}
+
+#historyRangePanel #quickRangeList.quick-range-list {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    width: 100%;
+    margin-top: 4px;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 34px;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option:hover {
+    background: rgba(34,211,238,.08);
+    border-color: rgba(34,211,238,.16);
+    color: #e2f9ff;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option.active,
+#historyRangePanel #quickRangeList .quick-range-option[aria-current="true"] {
+    background: rgba(34,211,238,.12) !important;
+    border-color: rgba(34,211,238,.28) !important;
+    color: #67e8f9 !important;
+}
+
+#rangeCalendarTitle {
+    min-height: 20px;
+}
+
+#rangeCalendarGrid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0,1fr)) !important;
+    gap: 4px !important;
+}
+
+#rangeCalendarGrid button {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+    #historyRangePanel.history-range-panel {
+        position: fixed !important;
+        top: 72px !important;
+        right: 16px !important;
+        left: 16px !important;
+        width: auto !important;
+        max-height: calc(100vh - 88px);
+        overflow-y: auto;
+    }
+
+    #historyRangePanel .history-range-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    #historyRangePanel .history-range-calendar {
+        border-right: 0;
+        border-bottom: 1px solid #1e293b;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+        gap: 6px !important;
+    }
+}
+
+#rangeCalendarGrid .range-calendar-day {
+    border: 1px solid transparent;
+    background: transparent;
+    color: #dbe7f3;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+#rangeCalendarGrid .range-calendar-day:hover {
+    background: rgba(34,211,238,.09);
+    border-color: rgba(34,211,238,.18);
+    color: #ffffff;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-muted {
+    color: #475569;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-in-range {
+    background: rgba(34,211,238,.07);
+}
+
+#rangeCalendarGrid .range-calendar-day.is-start,
+#rangeCalendarGrid .range-calendar-day.is-end {
+    background: rgba(34,211,238,.24);
+    border-color: rgba(103,232,249,.42);
+    color: #e6fbff;
+    font-weight: 800;
+}
+
+@media (max-width: 700px) {
+    #historyRangePanel #quickRangeList.quick-range-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+}
+
+/* =========================================================
+   SMART SUMMARY — EXPANDED RULE ENGINE
+   ========================================================= */
+.smart-summary-card{justify-content:flex-start!important;min-height:100%;}
+.smart-summary-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.smart-summary-title-wrap{display:flex;align-items:center;gap:12px;min-width:0;}
+.smart-summary-icon{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.14);color:#67e8f9;font-size:18px;}
+.smart-summary-mode{flex:0 0 auto;border:1px solid rgba(34,211,238,.18);background:rgba(8,47,73,.32);color:#67e8f9;border-radius:999px;padding:5px 8px;font-size:9px;font-weight:800;letter-spacing:.08em;}
+.smart-summary-body{margin-top:16px;display:flex;flex-direction:column;gap:10px;color:#cbd5e1;font-size:13px;line-height:1.55;}
+.smart-summary-loading{padding:14px;border-radius:12px;background:rgba(2,18,33,.40);color:#94a3b8;}
+.smart-summary-headline{display:flex;align-items:flex-start;gap:9px;font-weight:900;font-size:14px;color:#f8fafc;}
+.smart-summary-headline.normal{color:#6ee7b7}.smart-summary-headline.watch{color:#fcd34d}.smart-summary-headline.critical{color:#fca5a5}.smart-summary-headline.offline{color:#fca5a5}
+.smart-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.smart-summary-stat{border:1px solid rgba(148,163,184,.10);background:rgba(2,18,33,.34);border-radius:11px;padding:9px 10px;min-width:0;}
+.smart-summary-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;}
+.smart-summary-stat-value{margin-top:3px;font-size:12px;font-weight:800;color:#e2e8f0;white-space:normal;word-break:break-word;}
+.smart-summary-notes{display:flex;flex-direction:column;gap:6px;}
+.smart-summary-note{display:flex;gap:7px;align-items:flex-start;padding:7px 9px;border-radius:9px;background:rgba(15,23,42,.34);color:#94a3b8;font-size:11px;}
+.smart-summary-note.warn{color:#fcd34d;background:rgba(120,53,15,.14)}
+.smart-summary-note.danger{color:#fca5a5;background:rgba(127,29,29,.14)}
+.smart-summary-note.info{color:#bae6fd;background:rgba(8,47,73,.18)}
+
+/* =========================================================
+   AI ANALYSIS — GEMINI CONNECTED UI
+   ========================================================= */
+.ai-analysis-card{display:flex;flex-direction:column;min-height:100%;}
+.ai-analysis-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.ai-analysis-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.ai-refresh-button{border:1px solid rgba(34,211,238,.22);background:rgba(8,47,73,.30);color:#bae6fd;border-radius:10px;padding:7px 10px;font-size:10px;font-weight:800;transition:.18s ease;}
+.ai-refresh-button:hover{background:rgba(8,145,178,.16);border-color:rgba(34,211,238,.42);transform:translateY(-1px)}
+.ai-refresh-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.ai-status-badge{border-radius:999px;padding:6px 10px;font-size:9px;font-weight:900;letter-spacing:.04em;border:1px solid rgba(148,163,184,.18);background:rgba(15,23,42,.50);color:#cbd5e1;white-space:nowrap;}
+.ai-status-badge.is-connected{color:#6ee7b7;border-color:rgba(52,211,153,.28);background:rgba(6,78,59,.18)}
+.ai-status-badge.is-cached{color:#67e8f9;border-color:rgba(34,211,238,.28);background:rgba(8,47,73,.24)}
+.ai-status-badge.is-unavailable{color:#fca5a5;border-color:rgba(248,113,113,.24);background:rgba(127,29,29,.15)}
+.ai-status-badge.is-fallback{color:#fcd34d;border-color:rgba(251,191,36,.24);background:rgba(120,53,15,.15)}
+.ai-status-badge.is-loading{color:#cbd5e1;}
+.ai-details-panel{margin-top:14px;border:1px solid rgba(148,163,184,.10);background:rgba(2,18,33,.42);border-radius:14px;padding:16px;color:#cbd5e1;min-height:190px;}
+.ai-loading-state{display:flex;align-items:center;gap:9px;color:#94a3b8;font-size:12px;}
+.ai-loading-dot{width:8px;height:8px;border-radius:50%;background:#22d3ee;box-shadow:0 0 0 0 rgba(34,211,238,.5);animation:aiPulse 1.4s infinite;}
+@keyframes aiPulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.45)}70%{box-shadow:0 0 0 8px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+.ai-result-headline{font-size:16px;font-weight:900;color:#f8fafc;line-height:1.4;}
+.ai-result-summary{margin-top:8px;color:#cbd5e1;font-size:12px;line-height:1.7;}
+.ai-result-section{margin-top:14px;}
+.ai-result-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:800;}
+.ai-observation-list{margin-top:7px;display:flex;flex-direction:column;gap:6px;}
+.ai-observation{padding:8px 10px;border-radius:9px;background:rgba(15,23,42,.42);border:1px solid rgba(148,163,184,.08);font-size:11px;color:#cbd5e1;}
+.ai-recommendation{margin-top:7px;padding:10px 11px;border-radius:10px;background:rgba(8,47,73,.22);border:1px solid rgba(34,211,238,.12);color:#bae6fd;font-size:11px;line-height:1.6;}
+.ai-meta-row{margin-top:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;color:#64748b;}
+.ai-confidence{font-weight:800;color:#94a3b8;}
+.ai-analysis-footer{margin-top:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#475569;font-size:9px;line-height:1.4;}
+@media(max-width:900px){.ai-analysis-header{flex-direction:column}.ai-analysis-actions{width:100%;justify-content:flex-start}.smart-summary-grid{grid-template-columns:1fr}}
+
+/* =========================================================
+   2026-08-25 UI UPGRADE — SMART SUMMARY + AI FORECAST
+   ========================================================= */
+.smart-summary-headline{font-size:15px;font-weight:900;line-height:1.45;margin-bottom:12px;color:#eaf2f8}.smart-summary-headline.normal{color:#86efac}.smart-summary-headline.watch{color:#fde68a}.smart-summary-headline.critical,.smart-summary-headline.offline{color:#fca5a5}.smart-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.smart-summary-stat{min-width:0;padding:12px;border:1px solid rgba(148,163,184,.12);border-radius:14px;background:linear-gradient(145deg,rgba(8,25,41,.88),rgba(8,20,34,.76));box-shadow:inset 0 1px 0 rgba(255,255,255,.02)}.smart-summary-stat-label{font-size:9px;font-weight:900;letter-spacing:.11em;color:#64748b}.smart-summary-stat-value{margin-top:5px;font-size:13px;font-weight:800;line-height:1.45;color:#e2e8f0}.smart-summary-stat-sub{margin-top:4px;font-size:9px;color:#64748b}.smart-summary-air{border-color:rgba(34,211,238,.14)}.smart-summary-heat{border-color:rgba(251,191,36,.14)}.smart-summary-environment{border-color:rgba(125,211,252,.14)}.smart-summary-system{border-color:rgba(52,211,153,.14)}.smart-summary-activity{margin-top:10px;padding:12px 13px;border:1px solid rgba(34,211,238,.15);border-radius:14px;background:rgba(34,211,238,.045);font-size:11px;line-height:1.65;color:#cbd5e1}.smart-summary-activity-label{margin-bottom:4px;font-size:10px;font-weight:900;color:#67e8f9;letter-spacing:.04em}.smart-summary-notes{display:grid;gap:6px;margin-top:9px}.smart-summary-note{display:flex;gap:7px;align-items:flex-start;padding:8px 10px;border-radius:10px;font-size:10px;line-height:1.5;background:rgba(15,35,56,.42);color:#94a3b8}.smart-summary-note.warn{border:1px solid rgba(251,191,36,.14);color:#fde68a}.smart-summary-note.danger{border:1px solid rgba(248,113,113,.14);color:#fca5a5}.ai-forecast-shell{position:relative;overflow:hidden;border:1px solid rgba(34,211,238,.18);border-radius:17px;background:linear-gradient(145deg,rgba(6,23,38,.96),rgba(7,35,48,.84));box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 12px 30px rgba(0,0,0,.12)}.ai-forecast-shell:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#22d3ee,#34d399)}.ai-forecast-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;border-bottom:1px solid rgba(148,163,184,.09)}.ai-forecast-kicker{font-size:10px;font-weight:900;letter-spacing:.12em;color:#67e8f9}.ai-forecast-subtitle{margin-top:3px;font-size:10px;color:#64748b}.ai-forecast-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.ai-forecast-status{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid rgba(34,211,238,.16);border-radius:999px;background:rgba(34,211,238,.06);font-size:10px;font-weight:800;color:#67e8f9}.ai-forecast-refresh,.ai-refresh-button{min-height:32px;padding:0 11px;border:1px solid rgba(148,163,184,.18);border-radius:9px;background:#102338;color:#cbd5e1;font:inherit;font-size:10px;font-weight:800;cursor:pointer;transition:.18s}.ai-forecast-refresh:hover,.ai-refresh-button:hover{border-color:rgba(34,211,238,.45);color:#cffafe;background:#0d2a40}.ai-forecast-details{padding:14px 15px;color:#cbd5e1;font-size:11px;line-height:1.7}.ai-forecast-headline{margin-bottom:11px;font-size:14px;font-weight:900;color:#fff}.ai-forecast-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ai-forecast-item{padding:11px;border:1px solid rgba(148,163,184,.1);border-radius:12px;background:rgba(5,18,31,.68);color:#cbd5e1}.ai-forecast-label{margin-bottom:5px;font-size:9px;font-weight:900;letter-spacing:.08em;color:#67e8f9}.ai-forecast-generated{padding:0 15px 12px;font-size:9px;color:#475569}.forecast-base-label{margin-top:14px;margin-bottom:-8px;font-size:9px;font-weight:900;letter-spacing:.11em;color:#475569}.ai-analysis-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto;margin-right:8px}.ai-generated-at{font-size:9px;color:#64748b}.ai-meta-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.1);font-size:9px;color:#64748b}.ai-confidence{color:#67e8f9;font-weight:800}.ai-result-headline{font-size:15px;font-weight:900;color:#fff}.ai-result-summary{margin-top:6px;color:#cbd5e1}.ai-result-section{margin-top:13px}.ai-result-label{margin-bottom:5px;font-size:10px;font-weight:900;letter-spacing:.06em;color:#67e8f9}.ai-observation-list{display:grid;gap:5px}.ai-observation{padding:7px 9px;border-radius:9px;background:rgba(15,35,56,.42)}.ai-recommendation{padding:10px 11px;border:1px solid rgba(52,211,153,.12);border-radius:11px;background:rgba(52,211,153,.045);color:#d1fae5}.ai-loading-state{display:flex;align-items:center;gap:8px;color:#67e8f9}.ai-loading-dot{width:8px;height:8px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.7);animation:aiPulse 1.1s infinite ease-in-out}@keyframes aiPulse{50%{opacity:.35;transform:scale(.8)}}
+@media(max-width:900px){.smart-summary-grid,.ai-forecast-grid{grid-template-columns:1fr}.ai-forecast-topbar{align-items:flex-start;flex-direction:column}.ai-forecast-actions{justify-content:flex-start}.ai-analysis-actions{align-items:flex-start;margin:8px 0 0}}
+@media(max-width:560px){.smart-summary-stat{padding:10px}.smart-summary-stat-value{font-size:12px}.ai-forecast-details{padding:12px}.ai-forecast-grid{gap:7px}}
+/* FINAL DASHBOARD LAYOUT CLEANUP */
+section.grid { align-items: start; }
+.smart-summary-card,.current-environment-card,.alerts-card,.ai-analysis-card { height:auto; min-height:0; }
+.section-title-with-help { align-items:center; }
+.help-button { flex:0 0 auto; }
+.ai-analysis-footer { justify-content:flex-start; }
+
+
+/* =========================================================
+   2026-08-25 FINAL LAYOUT BALANCE
+   ลดช่องว่างจาก grid stretch และทำให้แต่ละการ์ดสูงตามเนื้อหา
+   ========================================================= */
+.dashboard-top-row,
+.dashboard-current-row,
+.dashboard-ai-row{
+    align-items:start!important;
+    grid-auto-rows:max-content!important;
+}
+
+.monitoring-card,
+.smart-summary-card,
+.current-environment-card,
+.alerts-card,
+.ai-analysis-card,
+.ai-forecast-card{
+    align-self:start!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+}
+
+/* Monitoring: ไม่ให้กล่องถูกยืดตาม Smart Summary */
+.monitoring-card{
+    display:block!important;
+}
+.monitoring-card .node{
+    height:auto!important;
+    min-height:0!important;
+}
+
+/* Smart Summary: กระชับ แต่ยังอ่านง่าย */
+.smart-summary-card{
+    padding:16px!important;
+}
+.smart-summary-header{
+    margin-bottom:0!important;
+}
+.smart-summary-body{
+    margin-top:12px!important;
+    gap:8px!important;
+}
+.smart-summary-headline{
+    margin-bottom:8px!important;
+}
+.smart-summary-grid{
+    gap:8px!important;
+}
+.smart-summary-stat{
+    padding:10px!important;
+    min-height:0!important;
+}
+.smart-summary-activity{
+    margin-top:8px!important;
+    padding:10px 11px!important;
+}
+.smart-summary-notes{
+    margin-top:7px!important;
+    gap:5px!important;
+}
+.smart-summary-note{
+    padding:7px 9px!important;
+}
+
+/* Current / Alerts: card สูงตามข้อมูลจริง */
+.current-environment-card,
+.alerts-card{
+    display:block!important;
+}
+#alerts{
+    margin-top:12px;
+    min-height:0!important;
+}
+
+/* AI: ป้องกันสองฝั่งบังคับความสูงเท่ากัน */
+.ai-analysis-card,
+.ai-forecast-card{
+    display:block!important;
+}
+.ai-details-panel{
+    min-height:0!important;
+    height:auto!important;
+}
+.ai-forecast-shell,
+.ai-forecast-details{
+    min-height:0!important;
+    height:auto!important;
+}
+
+/* กราฟเป็นข้อมูลเชิงลึก จึงกระชับและอยู่ช่วงล่าง */
+#forecastChart{
+    width:100%!important;
+    max-height:230px!important;
+}
+#historyChart{
+    width:100%!important;
+    max-height:310px!important;
+}
+.historical-section{
+    margin-top:0!important;
+}
+
+/* ช่องไฟระหว่าง section ให้สม่ำเสมอ */
+.dashboard-top-row,
+.dashboard-current-row,
+.dashboard-ai-row,
+.historical-section{
+    margin-bottom:16px!important;
+}
+
+@media (max-width:1279px){
+    .dashboard-top-row{
+        grid-template-columns:1fr!important;
+    }
+    .monitoring-card,
+    .smart-summary-card{
+        grid-column:auto!important;
+    }
+}
+
+@media (max-width:900px){
+    .dashboard-current-row,
+    .dashboard-ai-row{
+        grid-template-columns:1fr!important;
+    }
+    .current-environment-card{
+        grid-column:auto!important;
+    }
+}
+
+
+/* =========================================================
+   PRIORITY LAYOUT — NO EMPTY TRACKS
+   2026-08-25
+   ========================================================= */
+.dashboard-monitoring-section,
+.dashboard-summary-section,
+.dashboard-current-section,
+.dashboard-ai-stack,
+.historical-section,
+.dashboard-charts-zone{width:100%;}
+
+/* Each major block owns a full row. This removes the large blank areas
+   created when a short card shared a CSS-grid row with a taller card. */
+.monitoring-card,.smart-summary-card,.current-environment-card,
+.ai-analysis-card,.ai-forecast-card,.historical-section,.dashboard-chart-card{
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+}
+
+/* 1. Monitoring */
+.monitoring-card{padding:18px!important;}
+.monitoring-card > .grid{gap:12px!important;}
+.monitoring-card .node{min-height:0!important;padding:14px!important;}
+
+/* 2. Smart Summary — wide horizontal status center */
+.smart-summary-card{padding:18px!important;}
+.smart-summary-body{margin-top:12px!important;gap:8px!important;}
+.smart-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;}
+.smart-summary-stat{padding:11px 12px!important;min-height:86px!important;}
+.smart-summary-activity{margin-top:8px!important;padding:10px 12px!important;}
+.smart-summary-notes{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-top:7px!important;}
+.smart-summary-note{height:100%;margin:0!important;}
+
+/* 3. Current + Alerts are one coherent section */
+.current-environment-card{padding:18px!important;}
+.current-environment-grid{margin-top:16px!important;}
+.current-alerts-strip{margin-top:14px;padding-top:14px;border-top:1px solid rgba(148,163,184,.10);}
+.current-alerts-strip .section-title-with-help{margin-bottom:9px;}
+.current-alerts-strip h2{font-size:15px!important;}
+.current-alerts-strip #alerts{margin-top:0!important;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.current-alerts-strip #alerts > *{margin:0!important;}
+.current-environment-footer{margin-top:12px!important;}
+
+/* 4. AI blocks are stacked, never forced into equal-height columns */
+.dashboard-ai-stack{display:grid;grid-template-columns:1fr;gap:16px;}
+.dashboard-ai-block{margin:0!important;}
+.ai-analysis-card,.ai-forecast-card{padding:18px!important;}
+.ai-details-panel{min-height:0!important;padding:14px!important;}
+.ai-forecast-shell{margin-top:12px!important;}
+#forecastMessage{margin-top:12px!important;}
+.forecast-base-label{margin-top:12px!important;}
+
+/* 5. Historical statistics before all graphs */
+.historical-section{padding:18px!important;}
+.historical-section .soft{padding:14px!important;}
+.historical-section .grid.grid-cols-6{gap:18px!important;}
+.historical-section .grid.grid-cols-5{gap:18px!important;}
+
+/* 6. Graphs live at the bottom */
+.dashboard-charts-zone{display:grid;grid-template-columns:1fr;gap:16px;margin-top:0!important;}
+.dashboard-chart-card{padding:18px!important;}
+.chart-zone-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.chart-zone-title{font-size:18px;font-weight:900;color:#f8fafc;}
+.chart-zone-subtitle{margin-top:3px;font-size:11px;color:#64748b;}
+.bottom-chart-wrap{margin-top:0!important;padding:12px!important;}
+#historyChart{width:100%!important;max-height:330px!important;}
+#forecastChart{width:100%!important;max-height:280px!important;margin-top:12px!important;}
+.forecast-display-panel{margin-top:0!important;}
+
+/* Global section rhythm */
+.dashboard-monitoring-section,.dashboard-summary-section,.dashboard-current-section,
+.dashboard-ai-stack,.historical-section,.dashboard-charts-zone{margin-bottom:16px!important;}
+
+@media(max-width:1200px){
+  .smart-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .smart-summary-notes{grid-template-columns:1fr!important;}
+  .current-alerts-strip #alerts{grid-template-columns:1fr!important;}
+}
+@media(max-width:760px){
+  .smart-summary-grid{grid-template-columns:1fr!important;}
+  .monitoring-card > .grid{grid-template-columns:1fr!important;}
+  .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;}
+  .chart-zone-title{font-size:16px;}
+}
+@media(max-width:480px){
+  .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:1fr!important;}
+}
+
+
+/* =========================================================
+   AI ENVIRONMENTAL INTELLIGENCE / AI TREND
+   ========================================================= */
+.ai-intelligence-section{align-self:start;min-height:0!important;height:auto!important;overflow:visible}
+.ai-intelligence-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.ai-intelligence-statusline{margin-top:6px;font-size:11px;color:#64748b;letter-spacing:.04em}
+.ai-intelligence-badges{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ai-intelligence-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+.ai-intelligence-panel{min-width:0;height:auto!important;align-self:start;padding:16px;border:1px solid rgba(148,163,184,.13);border-radius:16px;background:rgba(4,17,31,.42)}
+.ai-forecast-panel{border-color:rgba(34,211,238,.22);background:linear-gradient(145deg,rgba(6,31,46,.62),rgba(4,17,31,.5))}
+.ai-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.ai-panel-head h3{font-size:15px;font-weight:900;color:#e2e8f0;margin-top:3px}
+.ai-panel-kicker{font-size:9px;font-weight:900;letter-spacing:.16em;color:#22d3ee}
+.ai-model-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.ai-model-strip>div{padding:11px 12px;border:1px solid rgba(148,163,184,.12);border-radius:12px;background:rgba(2,13,25,.46);min-width:0}
+.ai-model-strip-label{display:block;font-size:8px;font-weight:800;letter-spacing:.12em;color:#64748b;margin-bottom:4px}
+.ai-model-strip b{display:block;font-size:11px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-trend-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.ai-trend-item{padding:10px 11px;border-radius:11px;border:1px solid rgba(34,211,238,.13);background:rgba(2,18,31,.5)}
+.ai-trend-variable{font-size:9px;font-weight:900;color:#67e8f9;letter-spacing:.08em}
+.ai-trend-direction{font-size:12px;font-weight:900;color:#f1f5f9;margin-top:4px}
+.ai-trend-explanation{font-size:10px;line-height:1.45;color:#94a3b8;margin-top:4px}
+.ai-trend-driver{margin-top:10px;padding:10px 12px;border-left:2px solid #22d3ee;background:rgba(34,211,238,.055);border-radius:0 10px 10px 0;font-size:10px;color:#cbd5e1}
+.ai-numeric-base{min-height:0!important}
+.ai-unavailable{padding:12px;border:1px solid rgba(248,113,113,.2);border-radius:12px;background:rgba(127,29,29,.09);color:#fca5a5}
+.dashboard-charts-zone{align-items:start!important}
+.dashboard-chart-card{height:auto!important;min-height:0!important;align-self:start!important}
+.bottom-forecast-canvas{max-height:290px!important}
+#historyChart{max-height:310px!important}
+@media(max-width:1100px){.ai-intelligence-grid{grid-template-columns:1fr}.ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-trend-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.ai-intelligence-header,.ai-panel-head{flex-direction:column}.ai-intelligence-badges{justify-content:flex-start}.ai-model-strip,.ai-trend-summary{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   LOCAL ENVIRONMENT — FEATURED ENVIRONMENT CARD
+   Make weather/local environmental information visually more prominent.
+   ========================================================= */
+@media (min-width: 901px){
+  .smart-summary-grid{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    align-items:stretch;
+  }
+  .smart-summary-air,
+  .smart-summary-heat,
+  .smart-summary-system{
+    grid-column:span 1;
+  }
+  .smart-summary-environment{
+    grid-column:span 3;
+    min-height:112px!important;
+    padding:15px 18px!important;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    border-color:rgba(125,211,252,.28)!important;
+    background:
+      radial-gradient(circle at 88% 20%,rgba(125,211,252,.12),transparent 34%),
+      linear-gradient(145deg,rgba(8,34,54,.96),rgba(7,24,42,.88))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 26px rgba(0,0,0,.10);
+  }
+  .smart-summary-environment::after{
+    content:"☁";
+    position:absolute;
+    right:18px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:48px;
+    line-height:1;
+    opacity:.10;
+    pointer-events:none;
+  }
+  .smart-summary-environment .smart-summary-stat-label{
+    font-size:10px!important;
+    color:#7dd3fc!important;
+  }
+  .smart-summary-environment .smart-summary-stat-value{
+    margin-top:7px!important;
+    padding-right:62px;
+    font-size:20px!important;
+    line-height:1.25!important;
+    color:#f0f9ff!important;
+  }
+  .smart-summary-environment .smart-summary-stat-sub{
+    margin-top:7px!important;
+    font-size:10px!important;
+    color:#94a3b8!important;
+  }
+}
+@media (max-width:900px){
+  .smart-summary-environment{
+    min-height:104px!important;
+    padding:14px!important;
+    border-color:rgba(125,211,252,.25)!important;
+  }
+  .smart-summary-environment .smart-summary-stat-value{
+    font-size:17px!important;
+  }
+}
+
+
+/* =========================================================
+   NODE STATUS DISPLAY POLICY
+   Dashboard shows only ONLINE / OFFLINE.
+   Internal SLEEP remains in backend logic.
+   ========================================================= */
+.status-sleep{color:#34d399!important;}
+.status-sleep-dot{color:#34d399!important;}
+
+
+/* =========================================================
+   COMPACT AI + SMART SUMMARY
+   ========================================================= */
+.ai-intelligence-section,
+.ai-environmental-intelligence{
+  min-height:0!important;
+  height:auto!important;
+}
+.ai-intelligence-grid{
+  align-items:start!important;
+}
+.ai-intelligence-card,
+.ai-analysis-panel,
+.ai-forecast-panel{
+  min-height:0!important;
+  height:auto!important;
+}
+.ai-unavailable{
+  min-height:0!important;
+  padding:14px 16px!important;
+}
+.ai-intelligence-meta-grid{
+  gap:10px!important;
+}
+.ai-intelligence-meta-grid > *{
+  min-height:68px!important;
+  padding:12px 14px!important;
+}
+@media (min-width:901px){
+  .smart-summary-grid{
+    grid-template-columns:1fr 1fr 1.7fr 1fr!important;
+  }
+  .smart-summary-environment{
+    grid-column:auto!important;
+    min-height:92px!important;
+    padding:12px 15px!important;
+  }
+  .smart-summary-environment::after{
+    font-size:38px!important;
+  }
+  .smart-summary-environment .smart-summary-stat-value{
+    font-size:17px!important;
+  }
+}
+
+
+/* =========================================================
+   FINAL COMPACT FIX
+   ========================================================= */
+.ai-intelligence-section,
+.ai-environmental-intelligence,
+.ai-intelligence-card,
+.ai-analysis-panel,
+.ai-forecast-panel{
+  min-height:0!important;
+  height:auto!important;
+}
+.ai-intelligence-grid{
+  align-items:start!important;
+}
+.ai-unavailable{
+  min-height:0!important;
+  padding:12px 14px!important;
+}
+.ai-intelligence-meta-grid{
+  gap:8px!important;
+}
+.ai-intelligence-meta-grid > *{
+  min-height:58px!important;
+  padding:10px 12px!important;
+}
+@media (min-width:901px){
+  .smart-summary-grid{
+    grid-template-columns:1fr 1fr 1.45fr 1fr!important;
+  }
+  .smart-summary-environment{
+    grid-column:auto!important;
+    min-height:82px!important;
+    padding:11px 14px!important;
+  }
+  .smart-summary-environment::after{
+    font-size:34px!important;
+  }
+  .smart-summary-environment .smart-summary-stat-value{
+    font-size:16px!important;
+  }
+}
+
+
+/* =========================================================
+   TEACHER REVISION — RESPONSIVE TYPOGRAPHY + GRAPH LEGIBILITY
+   2026-08-26
+   ========================================================= */
+
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
+body{
+  font-size:16px;
+  line-height:1.55;
+}
+
+/* General readable minimums */
+.text-\[8px\]{font-size:11px!important;}
+.text-\[9px\]{font-size:11px!important;}
+.text-\[10px\]{font-size:12px!important;}
+.text-\[11px\]{font-size:13px!important;}
+.text-xs{font-size:13px!important;line-height:1.45!important;}
+.text-sm{font-size:15px!important;line-height:1.55!important;}
+
+.section-title-with-help h2,
+.chart-zone-title{
+  line-height:1.3!important;
+}
+
+.node{
+  font-size:15px;
+}
+.node > div:first-child b{
+  font-size:18px!important;
+}
+.node .grid{
+  font-size:14px!important;
+}
+.node .grid b{
+  font-size:16px!important;
+}
+.node [id^="lastUpdate"]{
+  font-size:13px!important;
+}
+
+.smart-summary-stat-label,
+.ai-model-strip-label,
+.ai-panel-kicker{
+  font-size:11px!important;
+}
+.smart-summary-stat-value{
+  font-size:18px!important;
+  line-height:1.35!important;
+}
+.smart-summary-stat-sub,
+.ai-trend-explanation,
+.chart-zone-subtitle{
+  font-size:13px!important;
+  line-height:1.5!important;
+}
+
+.current-environment-label,
+.current-environment-detail{
+  font-size:14px!important;
+}
+.current-environment-value{
+  font-size:25px!important;
+}
+
+.ai-details-panel,
+.ai-forecast-details,
+.ai-numeric-base{
+  font-size:14px!important;
+  line-height:1.6!important;
+}
+.ai-panel-head h3{
+  font-size:17px!important;
+}
+.ai-trend-variable{
+  font-size:12px!important;
+}
+.ai-trend-direction{
+  font-size:15px!important;
+}
+.ai-model-strip b{
+  font-size:13px!important;
+}
+
+.history-toolbar select,
+.history-toolbar button,
+.current-metric-select,
+.current-quality-badge,
+input[type="date"],
+input[type="datetime-local"]{
+  font-size:16px!important;
+  min-height:44px;
+}
+
+.help-button,
+.ai-refresh-button,
+.ai-forecast-refresh,
+.history-toolbar-button{
+  min-height:44px;
+}
+
+.credit-label{
+  font-size:11px!important;
+}
+.credit-title{
+  font-size:14px!important;
+  line-height:1.45!important;
+}
+.credit-role,
+.credit-link{
+  font-size:12px!important;
+}
+
+/* Chart canvases remain readable without creating oversized layout */
+#historyChart,
+#forecastChart{
+  min-height:260px;
+}
+
+/* Mobile typography and touch layout */
+@media(max-width:640px){
+  body{
+    font-size:16px!important;
+    line-height:1.6;
+  }
+
+  .max-w-\[1800px\]{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  header .text-xl,
+  header .md\:text-2xl{
+    font-size:18px!important;
+    line-height:1.35!important;
+  }
+
+  .section-title-with-help h2,
+  .chart-zone-title,
+  .ai-intelligence-header h2{
+    font-size:19px!important;
+  }
+
+  .node{
+    padding:14px!important;
+  }
+  .node > div:first-child b{
+    font-size:19px!important;
+  }
+  .node .grid{
+    font-size:15px!important;
+    gap:10px 14px!important;
+  }
+  .node .grid b{
+    font-size:17px!important;
+  }
+
+  .smart-summary-stat{
+    min-height:0!important;
+    padding:14px!important;
+  }
+  .smart-summary-stat-value{
+    font-size:20px!important;
+  }
+  .smart-summary-stat-sub{
+    font-size:14px!important;
+  }
+
+  .current-environment-grid{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .current-environment-value{
+    font-size:27px!important;
+  }
+  .current-environment-detail{
+    font-size:14px!important;
+  }
+
+  .ai-intelligence-panel{
+    padding:14px!important;
+  }
+  .ai-details-panel,
+  .ai-forecast-details,
+  .ai-numeric-base{
+    font-size:15px!important;
+  }
+  .ai-model-strip{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .ai-model-strip b{
+    white-space:normal!important;
+    overflow:visible!important;
+  }
+
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .historical-section b.block.text-2xl{
+    font-size:23px!important;
+  }
+
+  .chart-zone-subtitle{
+    font-size:13px!important;
+  }
+
+  #historyChart,
+  #forecastChart{
+    min-height:300px;
+    max-height:360px!important;
+  }
+
+  .forecast-display-panel{
+    align-items:flex-start!important;
+  }
+  .forecast-display-controls{
+    width:100%;
+    flex-wrap:wrap!important;
+  }
+
+  .credit-title{
+    font-size:15px!important;
+  }
+  .credit-role,
+  .credit-link{
+    font-size:13px!important;
+  }
+}
+
+@media(max-width:380px){
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5,
+  .ai-model-strip{
+    grid-template-columns:1fr!important;
+  }
+}
+
+/* =========================================================
+   MOBILE UX REDESIGN — 2026-08-26
+   Fixes long cards, cramped graphs and unreadable mobile layout
+   ========================================================= */
+@media (max-width:640px){
+  .max-w-\[1800px\]{padding-left:12px!important;padding-right:12px!important}
+  .glass.card{border-radius:22px!important}
+  .historical-section,.dashboard-chart-card{padding:16px!important}
+
+  /* Historical: 6 averages become a compact 2 x 3 grid even on narrow phones */
+  .historical-section .grid.grid-cols-6{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:0!important;
+  }
+  .historical-section .grid.grid-cols-6>div{
+    padding:13px 10px!important;
+    border-bottom:1px solid rgba(148,163,184,.09);
+  }
+  .historical-section .grid.grid-cols-6>div:nth-last-child(-n+2){border-bottom:0}
+  .historical-section .grid.grid-cols-6 b.block.text-2xl{font-size:24px!important;margin-top:4px!important}
+  .historical-section .grid.grid-cols-6 .truncate{white-space:normal!important;overflow:visible!important}
+
+  /* ALL has no meaningful single-variable avg/max/min; keep summary compact */
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .historical-section .grid.grid-cols-5>div{padding:10px!important;background:rgba(2,12,23,.22);border-radius:12px}
+  .historical-section .grid.grid-cols-5>div:last-child{grid-column:1/-1}
+
+  .history-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important;gap:10px!important}
+  .history-toolbar .history-export-button{grid-column:1/-1!important;width:100%!important}
+  .history-toolbar select,.history-toolbar-button{width:100%!important;min-width:0!important}
+
+  /* Chart cards: give the data area room and stop labels from crushing the plot */
+  .chart-zone-heading{display:block!important;margin-bottom:10px!important}
+  .chart-zone-title{font-size:20px!important;line-height:1.25!important}
+  .chart-zone-subtitle{font-size:14px!important;line-height:1.45!important;margin-top:5px!important}
+  .bottom-chart-wrap{padding:10px 8px!important;overflow:hidden!important}
+  .bottom-chart-wrap>div:first-child{font-size:13px!important}
+  #historyChart,#forecastChart{width:100%!important;min-height:0!important;max-height:none!important;height:330px!important}
+
+  .forecast-display-panel{padding:12px!important;gap:10px!important}
+  .forecast-display-copy{width:100%!important}
+  .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important}
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;min-width:0!important;padding:10px 12px!important}
+
+  /* AI section: reduce dead vertical space without shrinking readable text */
+  .ai-intelligence-panel{padding:12px!important}
+  .ai-details-panel,.ai-forecast-details{padding:14px!important;line-height:1.55!important}
+  .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .ai-model-strip>div{min-height:94px!important;padding:13px!important}
+  .ai-model-strip-label{font-size:12px!important}
+  .ai-model-strip b{font-size:15px!important;line-height:1.4!important}
+
+  /* Secondary copy was too dim on a phone */
+  .text-slate-500,.chart-zone-subtitle,.forecast-display-subtitle,.smart-summary-stat-sub,.current-environment-detail{
+    color:#94a3b8!important;
+  }
+
+  .credit-title{font-size:17px!important}
+  .credit-role,.credit-link{font-size:14px!important}
+}
+
+@media (max-width:380px){
+  /* Keep useful two-column summaries; previous rule made the page unnecessarily long */
+  .historical-section .grid.grid-cols-6,
+  .historical-section .grid.grid-cols-5,
+  .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .historical-section .grid.grid-cols-5>div:last-child{grid-column:1/-1}
+  #historyChart,#forecastChart{height:320px!important}
+}
+
+
+/* =========================================================
+   GROUPED GRAPH REDESIGN — DESKTOP + MOBILE
+   ========================================================= */
+.chart-render-area{width:100%;}
+.metric-chart-panel{
+  border:1px solid rgba(56,189,248,.12);
+  background:rgba(2,12,27,.42);
+  border-radius:16px;
+  padding:14px;
+  margin-top:12px;
+}
+.metric-chart-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:8px;
+}
+.metric-chart-title{
+  font-size:16px;
+  font-weight:800;
+  color:#eaf2ff;
+}
+.metric-chart-subtitle{
+  margin-top:2px;
+  font-size:13px;
+  color:#8291a8;
+}
+.metric-chart-legend{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:8px 12px;
+  font-size:12px;
+  color:#aab7ca;
+}
+.metric-chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+.metric-chart-legend i{display:inline-block;width:18px;height:3px;border-radius:999px;}
+.metric-chart-canvas-wrap{
+  position:relative;
+  height:240px;
+  min-width:0;
+}
+.metric-chart-grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.chart-empty{
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#94a3b8;
+  font-size:15px;
+}
+.bottom-chart-wrap{overflow:hidden;}
+.dashboard-chart-card{overflow:hidden;}
+
+@media(max-width:900px){
+  .metric-chart-grid-3{grid-template-columns:1fr;}
+  .metric-chart-canvas-wrap{height:230px;}
+}
+
+@media(max-width:640px){
+  /* Larger, clearer mobile text */
+  body{font-size:17px!important;}
+  .section-title-with-help h2,
+  .chart-zone-title,
+  .ai-intelligence-header h2{font-size:22px!important;line-height:1.28!important;}
+  .chart-zone-subtitle,
+  .metric-chart-subtitle,
+  .forecast-display-subtitle,
+  .smart-summary-stat-sub{font-size:14px!important;line-height:1.55!important;color:#9aa8bc!important;}
+  .node .grid{font-size:16px!important;}
+  .node .grid b{font-size:18px!important;}
+  .node [id^="lastUpdate"]{font-size:14px!important;}
+  .smart-summary-stat-label,
+  .ai-model-strip-label,
+  .ai-panel-kicker{font-size:12px!important;letter-spacing:.08em;}
+  .smart-summary-stat-value{font-size:21px!important;}
+  .current-environment-label{font-size:15px!important;}
+  .current-environment-value{font-size:29px!important;}
+  .ai-details-panel,.ai-forecast-details,.ai-numeric-base{font-size:16px!important;line-height:1.7!important;}
+  .credit-title{font-size:17px!important;}
+  .credit-role,.credit-link{font-size:14px!important;}
+
+  /* Historical statistics: 2 columns instead of one very long stack */
+  .historical-section .grid.grid-cols-6{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+  .historical-section .grid.grid-cols-6 > div{
+    padding:12px!important;
+    border:1px solid rgba(148,163,184,.08);
+    border-radius:12px;
+    background:rgba(2,12,27,.28);
+  }
+
+  /* ALL selected detail should be compact */
+  .historical-section .grid.grid-cols-5{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+
+  /* Grouped charts */
+  .dashboard-chart-card{padding:14px!important;}
+  .chart-zone-heading{display:block!important;}
+  .chart-zone-title{margin-bottom:5px;}
+  .metric-chart-panel{padding:12px;border-radius:14px;}
+  .metric-chart-head{display:block;margin-bottom:10px;}
+  .metric-chart-title{font-size:17px;}
+  .metric-chart-subtitle{font-size:13px;}
+  .metric-chart-legend{
+    justify-content:flex-start;
+    margin-top:8px;
+    font-size:13px;
+    gap:8px 12px;
+  }
+  .metric-chart-legend i{width:20px;height:4px;}
+  .metric-chart-canvas-wrap{height:260px;}
+  .metric-chart-grid-3{grid-template-columns:1fr;gap:10px;}
+
+  /* Forecast control: compact on mobile */
+  .forecast-display-panel{padding:12px!important;}
+  .forecast-display-controls{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    width:100%;
+  }
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;}
+
+  /* AI section less vertically wasteful */
+  .ai-model-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .ai-model-strip > div{min-height:0!important;padding:12px!important;}
+}
+
+@media(max-width:390px){
+  .historical-section .grid.grid-cols-6{grid-template-columns:1fr 1fr!important;}
+  .historical-section .grid.grid-cols-5{grid-template-columns:1fr 1fr!important;}
+  .metric-chart-canvas-wrap{height:245px;}
+}
+
+/* =========================================================
+   HUMAN-CENTERED DASHBOARD TWEAKS
+   ========================================================= */
+
+.smart-summary-stat.smart-summary-environment{
+    background:
+        linear-gradient(135deg,rgba(56,189,248,.08),rgba(15,23,42,.18));
+    border-color:rgba(56,189,248,.22);
+}
+
+.smart-summary-stat-value{
+    overflow-wrap:anywhere;
+}
+
+.smart-summary-activity.is-watch{
+    border-color:rgba(251,191,36,.28);
+    background:rgba(120,53,15,.10);
+}
+
+@media (max-width:900px){
+    .smart-summary-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+}
+
+@media (max-width:560px){
+    .smart-summary-grid{
+        grid-template-columns:1fr!important;
+    }
+}
+
+
+/* =========================================================
+   DETAILED HELP DIALOG — HUMAN FRIENDLY
+   ========================================================= */
+
+.help-popover{
+    left:50%!important;
+    top:50%!important;
+    width:min(820px,calc(100vw - 28px))!important;
+    max-width:820px!important;
+    max-height:min(82vh,780px)!important;
+    transform:translate(-50%,-50%)!important;
+    box-shadow:
+        0 26px 80px rgba(0,0,0,.58),
+        0 0 0 100vmax rgba(2,6,23,.66)!important;
+    overscroll-behavior:contain;
+}
+
+.help-popover-body{
+    padding:18px 20px 22px!important;
+    font-size:14px!important;
+    line-height:1.7!important;
+}
+
+.help-section{
+    padding:0 0 16px;
+    margin:0 0 16px;
+    border-bottom:1px solid rgba(148,163,184,.12);
+}
+
+.help-section:last-of-type{
+    border-bottom:0;
+}
+
+.help-section h4{
+    margin:0 0 8px;
+    color:#e2e8f0;
+    font-size:15px;
+    font-weight:900;
+}
+
+.help-section p{
+    margin:0 0 9px;
+}
+
+.help-section ul{
+    margin:7px 0 9px;
+    padding-left:21px;
+}
+
+.help-section li{
+    margin:5px 0;
+}
+
+.help-formula{
+    margin:10px 0;
+    padding:11px 13px;
+    overflow:auto;
+    border:1px solid rgba(34,211,238,.20);
+    border-radius:10px;
+    background:rgba(8,47,73,.24);
+    color:#bae6fd;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px;
+    line-height:1.6;
+    white-space:normal;
+}
+
+.help-formula-small{
+    font-size:12px;
+}
+
+.help-threshold-grid{
+    display:grid;
+    grid-template-columns:minmax(120px,.75fr) minmax(0,1.25fr);
+    gap:0;
+    overflow:hidden;
+    margin:10px 0;
+    border:1px solid rgba(71,85,105,.62);
+    border-radius:11px;
+}
+
+.help-threshold-grid > *{
+    padding:8px 10px;
+    border-bottom:1px solid rgba(71,85,105,.42);
+}
+
+.help-threshold-grid > *:nth-last-child(-n+2){
+    border-bottom:0;
+}
+
+.help-threshold-grid span{
+    color:#93c5fd;
+    background:rgba(15,23,42,.45);
+}
+
+.help-threshold-grid b{
+    color:#e2e8f0;
+}
+
+.help-warning{
+    margin:10px 0;
+    padding:10px 12px;
+    border:1px solid rgba(251,191,36,.24);
+    border-radius:10px;
+    background:rgba(120,53,15,.13);
+    color:#fde68a;
+}
+
+.help-sources{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px 12px;
+    padding:12px 13px;
+    border:1px solid rgba(56,189,248,.17);
+    border-radius:11px;
+    background:rgba(14,116,144,.08);
+    color:#94a3b8;
+    font-size:12px;
+}
+
+.help-sources b{
+    width:100%;
+    color:#cbd5e1;
+}
+
+.help-sources a{
+    color:#67e8f9;
+    text-decoration:underline;
+    text-underline-offset:3px;
+}
+
+.help-sources a:hover{
+    color:#cffafe;
+}
+
+@media(max-width:640px){
+    .help-popover{
+        width:calc(100vw - 18px)!important;
+        max-height:88vh!important;
+    }
+
+    .help-popover-body{
+        padding:15px!important;
+        font-size:13px!important;
+    }
+
+    .help-threshold-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+/* =========================================================
+   CREDIT BAR — PREMIUM CARD REDESIGN
+   ========================================================= */
+
+.credit-bar{
+    margin-top:42px!important;
+    padding:18px 18px 0!important;
+    overflow:hidden!important;
+    border:1px solid rgba(56,189,248,.18)!important;
+    border-radius:24px 24px 0 0!important;
+    background:
+        radial-gradient(circle at 12% 0%,rgba(34,211,238,.10),transparent 32%),
+        radial-gradient(circle at 88% 10%,rgba(59,130,246,.08),transparent 30%),
+        linear-gradient(180deg,rgba(7,24,40,.98),rgba(5,17,30,.99))!important;
+    box-shadow:
+        0 -12px 45px rgba(8,145,178,.08),
+        inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+.credit-bar::before{
+    opacity:.07!important;
+    background-size:42px 42px!important;
+}
+
+.credit-bar::after{
+    left:12%!important;
+    width:76%!important;
+}
+
+.credit-inner{
+    display:grid!important;
+    grid-template-columns:1.25fr 1.25fr 1fr 1fr 1fr!important;
+    gap:12px!important;
+    align-items:stretch!important;
+    width:100%!important;
+}
+
+.credit-box{
+    min-height:150px!important;
+    padding:18px!important;
+    gap:14px!important;
+    border:1px solid rgba(148,163,184,.12)!important;
+    border-radius:18px!important;
+    background:
+        linear-gradient(145deg,rgba(15,31,49,.90),rgba(7,24,40,.66))!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.028),
+        0 10px 28px rgba(0,0,0,.16)!important;
+    overflow:hidden!important;
+    isolation:isolate;
+    transition:
+        transform .24s ease,
+        border-color .24s ease,
+        box-shadow .24s ease,
+        background .24s ease!important;
+}
+
+.credit-box::before{
+    content:"";
+    position:absolute;
+    inset:0 auto auto 0;
+    width:100%;
+    height:2px;
+    opacity:.75;
+    background:linear-gradient(90deg,rgba(34,211,238,.72),rgba(59,130,246,.28),transparent);
+    pointer-events:none;
+}
+
+.credit-box:hover{
+    transform:translateY(-4px)!important;
+    border-color:rgba(34,211,238,.30)!important;
+    background:
+        linear-gradient(145deg,rgba(13,38,57,.96),rgba(7,27,45,.78))!important;
+    box-shadow:
+        0 15px 36px rgba(0,0,0,.24),
+        0 0 28px rgba(34,211,238,.055)!important;
+}
+
+/* Order: College → Department → Developer 1 → Developer 2 → Advisor */
+.credit-college{order:1;}
+.credit-department{order:2;}
+.credit-developer{order:3;}
+.credit-advisor{order:4;}
+
+.credit-icon{
+    flex:0 0 62px!important;
+    width:62px!important;
+    height:62px!important;
+    min-width:62px!important;
+    min-height:62px!important;
+    max-width:62px!important;
+    max-height:62px!important;
+    border-radius:17px!important;
+    border-color:rgba(56,189,248,.24)!important;
+    background:
+        linear-gradient(145deg,rgba(34,211,238,.11),rgba(59,130,246,.045))!important;
+    box-shadow:
+        inset 0 0 18px rgba(34,211,238,.035),
+        0 7px 18px rgba(0,0,0,.18)!important;
+}
+
+.credit-icon img{
+    border-radius:15px!important;
+}
+
+.credit-developer .credit-icon,
+.credit-advisor .credit-icon{
+    width:62px!important;
+    height:62px!important;
+    min-width:62px!important;
+    min-height:62px!important;
+    max-width:62px!important;
+    max-height:62px!important;
+}
+
+.credit-advisor .credit-icon img,
+.credit-developer .credit-icon img{
+    padding:0!important;
+    object-fit:cover!important;
+}
+
+.credit-advisor .credit-icon img{
+    object-position:center 15%!important;
+}
+
+.credit-content{
+    display:flex;
+    min-width:0;
+    flex:1;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.credit-label{
+    margin-bottom:7px!important;
+    font-size:10px!important;
+    letter-spacing:2px!important;
+    color:#67e8f9!important;
+    opacity:.95;
+}
+
+.credit-title{
+    font-size:14px!important;
+    font-weight:800!important;
+    line-height:1.5!important;
+    color:#f1f5f9!important;
+    text-wrap:balance;
+}
+
+.credit-role{
+    width:max-content;
+    max-width:100%;
+    margin-top:10px!important;
+    padding:5px 10px!important;
+    border-radius:999px!important;
+    border-color:rgba(34,211,238,.18)!important;
+    background:rgba(8,145,178,.07)!important;
+    color:#94a3b8!important;
+    font-size:9px!important;
+    letter-spacing:1.15px!important;
+}
+
+.credit-links{
+    gap:7px!important;
+    margin-top:11px!important;
+}
+
+.credit-link{
+    padding:6px 10px!important;
+    border-radius:9px!important;
+    background:rgba(8,145,178,.075)!important;
+    border-color:rgba(34,211,238,.22)!important;
+    font-size:10px!important;
+}
+
+.credit-link:hover{
+    background:rgba(8,145,178,.16)!important;
+    border-color:rgba(103,232,249,.42)!important;
+}
+
+.credit-bottom{
+    min-height:44px!important;
+    margin-top:16px!important;
+    margin-left:-18px!important;
+    margin-right:-18px!important;
+    padding:0 20px!important;
+    border-top:1px solid rgba(148,163,184,.10)!important;
+    background:rgba(2,6,23,.30)!important;
+    color:#64748b!important;
+    font-size:9px!important;
+    letter-spacing:1.25px!important;
+}
+
+@media(max-width:1350px){
+    .credit-inner{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .credit-box{
+        min-height:136px!important;
+    }
+
+}
+
+@media(max-width:720px){
+    .credit-bar{
+        padding:12px 12px 0!important;
+        border-radius:18px 18px 0 0!important;
+    }
+
+    .credit-inner{
+        grid-template-columns:1fr!important;
+        gap:9px!important;
+    }
+
+    .credit-box{
+        min-height:0!important;
+        padding:14px!important;
+    }
+
+    .credit-bottom{
+        margin-left:-12px!important;
+        margin-right:-12px!important;
+        padding:10px 14px!important;
+        min-height:48px!important;
+        flex-wrap:wrap;
+        text-align:center;
+    }
+}
+
+/* =========================================================
+   HELP — SENSOR CRITERIA CARDS
+   ========================================================= */
+
+.help-sensor-card{
+    margin:10px 0;
+    padding:13px 14px;
+    border:1px solid rgba(148,163,184,.13);
+    border-radius:12px;
+    background:rgba(15,23,42,.34);
+}
+
+.help-sensor-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:7px;
+}
+
+.help-sensor-head > b{
+    color:#f1f5f9;
+    font-size:14px;
+}
+
+.help-chip{
+    display:inline-flex;
+    align-items:center;
+    flex:0 0 auto;
+    padding:3px 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.help-chip.has-standard{
+    color:#a7f3d0;
+    border:1px solid rgba(52,211,153,.23);
+    background:rgba(6,78,59,.18);
+}
+
+.help-chip.no-standard{
+    color:#cbd5e1;
+    border:1px solid rgba(148,163,184,.20);
+    background:rgba(51,65,85,.18);
+}
+
+.help-chip.context-standard{
+    color:#fde68a;
+    border:1px solid rgba(251,191,36,.22);
+    background:rgba(120,53,15,.16);
+}
+
+@media(max-width:560px){
+    .help-sensor-head{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:6px;
+    }
+}
+
+
+/* =========================================================
+   CREDIT — SINGLE-LINE NAMES + IMAGE VIEWER FIX
+   ========================================================= */
+
+.credit-inner{
+    grid-template-columns:
+        minmax(285px,1.28fr)
+        minmax(300px,1.34fr)
+        minmax(250px,1.05fr)
+        minmax(250px,1.05fr)
+        minmax(245px,1.02fr)!important;
+}
+
+.credit-title{
+    display:block!important;
+    width:100%!important;
+    max-width:none!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    font-size:clamp(11px,.70vw,14px)!important;
+    line-height:1.45!important;
+    letter-spacing:0!important;
+}
+
+.credit-content{
+    overflow:visible!important;
+}
+
+.credit-box{
+    overflow:visible!important;
+}
+
+.credit-image-button{
+    cursor:pointer!important;
+    user-select:none;
+}
+
+.credit-image-button::after{
+    pointer-events:none!important;
+}
+
+.credit-modal-open{
+    overflow:hidden!important;
+}
+
+.credit-image-modal{
+    opacity:0;
+    visibility:hidden;
+    display:flex!important;
+    pointer-events:none;
+    align-items:center;
+    justify-content:center;
+    transition:
+        opacity .18s ease,
+        visibility .18s ease;
+}
+
+.credit-image-modal.active{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+}
+
+.credit-image-close{
+    cursor:pointer!important;
+}
+
+@media(max-width:1500px){
+    .credit-inner{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .credit-title{
+        font-size:13px!important;
+        white-space:normal!important;
+    }
+}
+
+@media(max-width:720px){
+    .credit-inner{
+        grid-template-columns:1fr!important;
+    }
+
+    .credit-title{
+        white-space:normal!important;
+    }
+}
+
+
+/* =========================================================
+   CREDIT FINAL POLISH
+   - College/Department: wrap naturally
+   - Developer/Advisor names: single line
+   - Hover image label: "ดูรูป"
+   ========================================================= */
+
+.credit-inner{
+    grid-template-columns:
+        minmax(300px,1.28fr)
+        minmax(330px,1.42fr)
+        minmax(270px,1.10fr)
+        minmax(270px,1.10fr)
+        minmax(260px,1.05fr)!important;
+    gap:12px!important;
+}
+
+/* Give each card breathing room */
+.credit-box{
+    min-width:0!important;
+    overflow:hidden!important;
+    padding:18px 16px!important;
+    gap:13px!important;
+}
+
+/* College + Department can wrap naturally */
+.credit-college .credit-title,
+.credit-department .credit-title{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    font-size:13px!important;
+    line-height:1.45!important;
+    text-wrap:balance;
+}
+
+/* Person names stay on one line */
+.credit-developer .credit-title,
+.credit-advisor .credit-title{
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    max-width:100%!important;
+    font-size:clamp(10px,.64vw,13px)!important;
+    line-height:1.4!important;
+}
+
+/* Keep content inside card */
+.credit-content{
+    min-width:0!important;
+    overflow:hidden!important;
+}
+
+.credit-role{
+    max-width:100%!important;
+}
+
+/* =========================================================
+   IMAGE HOVER — SHOW "ดูรูป"
+   ========================================================= */
+
+.credit-image-button{
+    position:relative!important;
+    overflow:hidden!important;
+    cursor:pointer!important;
+}
+
+.credit-image-button::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:0;
+    background:
+        linear-gradient(
+            to top,
+            rgba(2,6,23,.78) 0%,
+            rgba(2,6,23,.24) 44%,
+            transparent 72%
+        );
+    transition:opacity .22s ease;
+}
+
+.credit-image-button::after{
+    content:"ดูรูป"!important;
+    position:absolute!important;
+    left:50%!important;
+    bottom:5px!important;
+    z-index:3!important;
+    transform:translate(-50%,6px)!important;
+    padding:3px 7px!important;
+    border:1px solid rgba(103,232,249,.35)!important;
+    border-radius:999px!important;
+    background:rgba(2,6,23,.78)!important;
+    backdrop-filter:blur(5px)!important;
+    color:#cffafe!important;
+    font-size:8px!important;
+    font-weight:800!important;
+    line-height:1!important;
+    letter-spacing:.2px!important;
+    white-space:nowrap!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    transition:
+        opacity .22s ease,
+        transform .22s ease!important;
+}
+
+.credit-image-button:hover::before{
+    opacity:1;
+}
+
+.credit-image-button:hover::after{
+    opacity:1!important;
+    transform:translate(-50%,0)!important;
+}
+
+/* Preserve each image's own base crop/scale while hovering */
+.credit-college .credit-image-button:hover img{
+    transform:scale(1.24)!important;
+}
+
+.credit-department .credit-image-button:hover img{
+    transform:scale(1.22)!important;
+}
+
+.credit-developer .credit-image-button:hover img,
+.credit-advisor .credit-image-button:hover img{
+    transform:scale(1.18)!important;
+}
+
+/* Slight hover lift only on the image itself */
+.credit-image-button:hover{
+    border-color:rgba(103,232,249,.55)!important;
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.25),
+        0 0 18px rgba(34,211,238,.10)!important;
+}
+
+/* Medium screens: use two columns and allow names to wrap if needed */
+@media(max-width:1500px){
+    .credit-inner{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .credit-developer .credit-title,
+    .credit-advisor .credit-title{
+        white-space:normal!important;
+        overflow:visible!important;
+        text-overflow:clip!important;
+        font-size:13px!important;
+    }
+}
+
+/* Mobile */
+@media(max-width:720px){
+    .credit-inner{
+        grid-template-columns:1fr!important;
+    }
+
+    .credit-box{
+        padding:14px!important;
+    }
+}
+
+
+/* =========================================================
+   CREDIT RESPONSIVE LAYOUT — FINAL
+   Desktop: 5 cards in one row
+   Mobile: 5 cards stacked vertically
+   ========================================================= */
+
+/* ---------- DESKTOP / LAPTOP ---------- */
+@media (min-width: 1101px){
+
+    .credit-inner{
+        display:grid!important;
+
+        /* College | Department | Dev 1 | Dev 2 | Advisor */
+        grid-template-columns:
+            minmax(300px,1.28fr)
+            minmax(320px,1.34fr)
+            minmax(230px,.96fr)
+            minmax(230px,.96fr)
+            minmax(230px,.96fr)!important;
+
+        gap:12px!important;
+        align-items:stretch!important;
+    }
+
+    .credit-box{
+        min-width:0!important;
+        min-height:148px!important;
+        padding:17px 15px!important;
+        gap:12px!important;
+        overflow:hidden!important;
+    }
+
+    /* Keep logos/photos compact enough to preserve text size */
+    .credit-icon,
+    .credit-developer .credit-icon,
+    .credit-advisor .credit-icon{
+        flex:0 0 54px!important;
+        width:54px!important;
+        height:54px!important;
+        min-width:54px!important;
+        min-height:54px!important;
+        max-width:54px!important;
+        max-height:54px!important;
+        border-radius:15px!important;
+    }
+
+    .credit-icon img{
+        border-radius:13px!important;
+    }
+
+    .credit-content{
+        min-width:0!important;
+        overflow:hidden!important;
+    }
+
+    /* Labels can stay compact */
+    .credit-label{
+        margin-bottom:6px!important;
+        font-size:9px!important;
+        letter-spacing:1.7px!important;
+    }
+
+    /* College / Department get more room and may wrap to 2 lines */
+    .credit-college .credit-title,
+    .credit-department .credit-title{
+        white-space:normal!important;
+        overflow:visible!important;
+        text-overflow:clip!important;
+        font-size:13px!important;
+        line-height:1.42!important;
+    }
+
+    /* Person names stay readable and on one line */
+    .credit-developer .credit-title,
+    .credit-advisor .credit-title{
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+        font-size:13px!important;
+        line-height:1.42!important;
+    }
+
+    .credit-role{
+        margin-top:8px!important;
+        padding:4px 9px!important;
+        font-size:9px!important;
+        letter-spacing:.95px!important;
+    }
+
+    .credit-links{
+        gap:6px!important;
+        margin-top:9px!important;
+        flex-wrap:wrap!important;
+    }
+
+    .credit-link{
+        padding:5px 9px!important;
+        font-size:10px!important;
+    }
+}
+
+
+/* ---------- TABLET ---------- */
+@media (min-width: 721px) and (max-width: 1100px){
+
+    .credit-inner{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:10px!important;
+    }
+
+    .credit-box{
+        min-height:132px!important;
+    }
+
+    .credit-title{
+        white-space:normal!important;
+        overflow:visible!important;
+        text-overflow:clip!important;
+        font-size:13px!important;
+    }
+}
+
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 720px){
+
+    .credit-bar{
+        padding:12px 12px 0!important;
+    }
+
+    .credit-inner{
+        display:grid!important;
+
+        /* 5 cards from top to bottom */
+        grid-template-columns:1fr!important;
+        grid-template-rows:auto!important;
+
+        gap:10px!important;
+        width:100%!important;
+    }
+
+    .credit-box{
+        width:100%!important;
+        min-height:112px!important;
+        padding:14px!important;
+        gap:13px!important;
+        overflow:hidden!important;
+    }
+
+    .credit-icon,
+    .credit-developer .credit-icon,
+    .credit-advisor .credit-icon{
+        flex:0 0 56px!important;
+        width:56px!important;
+        height:56px!important;
+        min-width:56px!important;
+        min-height:56px!important;
+        max-width:56px!important;
+        max-height:56px!important;
+    }
+
+    .credit-content{
+        min-width:0!important;
+    }
+
+    .credit-label{
+        font-size:9px!important;
+    }
+
+    /* On mobile, allow every long title to wrap naturally */
+    .credit-title,
+    .credit-college .credit-title,
+    .credit-department .credit-title,
+    .credit-developer .credit-title,
+    .credit-advisor .credit-title{
+        white-space:normal!important;
+        overflow:visible!important;
+        text-overflow:clip!important;
+        font-size:13px!important;
+        line-height:1.45!important;
+    }
+
+    .credit-role{
+        margin-top:7px!important;
+    }
+
+    .credit-links{
+        margin-top:8px!important;
+        gap:6px!important;
+        flex-wrap:wrap!important;
+    }
+
+    .credit-link{
+        font-size:10px!important;
+        padding:5px 8px!important;
+    }
+
+    .credit-bottom{
+        margin-top:12px!important;
+    }
+}
+
+
+/* =========================================================
+   LIGHTHOUSE / RENDERING PERFORMANCE
+   ========================================================= */
+
+/* Heavy below-the-fold areas are skipped until near viewport. */
+.ai-intelligence-section,
+.historical-section,
+.dashboard-charts-zone,
+.credit-bar{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 720px;
+}
+
+.credit-bar{
+    contain-intrinsic-size:auto 230px;
+}
+
+/* New dust-profile card gets a neutral atmospheric accent. */
+.smart-summary-stat.smart-summary-environment{
+    background:
+        linear-gradient(135deg,rgba(100,116,139,.09),rgba(15,23,42,.18))!important;
+    border-color:rgba(148,163,184,.20)!important;
+}
+
+/* Avoid expensive paint work when motion is reduced. */
+@media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+}
+
+/* =========================================================
+   HISTORY RANGE PICKER — CLEAN MODAL POPOVER
+   แก้ปัญหาปฏิทินกางทับสถิติ/ดูเหมือน UI แตก
+   ========================================================= */
+
+/* ตัว parent ไม่ต้องเป็นกรอบอ้างอิงของ panel อีกต่อไป */
+#historyRangePicker{
+    position:relative!important;
+}
+
+/* เปิดเป็นกล่องลอยกลางหน้าจอ */
+#historyRangePanel.history-range-panel{
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:50%!important;
+
+    width:min(680px,calc(100vw - 32px))!important;
+    max-width:680px!important;
+    max-height:min(78vh,650px)!important;
+
+    margin:0!important;
+    transform:translate(-50%,-50%)!important;
+
+    z-index:9999!important;
+
+    overflow:auto!important;
+    overscroll-behavior:contain;
+
+    border:1px solid rgba(103,232,249,.22)!important;
+    border-radius:20px!important;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(9,24,39,.995),
+            rgba(6,19,33,.995)
+        )!important;
+
+    box-shadow:
+        0 30px 90px rgba(0,0,0,.62),
+        0 0 0 100vmax rgba(2,6,23,.68)!important;
+}
+
+/* ปิดจริงเมื่อมี hidden */
+#historyRangePanel.history-range-panel.hidden{
+    display:none!important;
+}
+
+/* Calendar + Quick range */
+#historyRangePanel .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 172px!important;
+    min-height:0!important;
+}
+
+/* ฝั่งปฏิทิน */
+#historyRangePanel .history-range-calendar{
+    min-width:0!important;
+    padding:20px!important;
+    border-right:1px solid rgba(71,85,105,.45)!important;
+}
+
+/* ฝั่งตัวเลือกด่วน */
+#historyRangePanel .history-range-quick{
+    min-width:0!important;
+    padding:16px 12px!important;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15,23,42,.30),
+            rgba(2,6,23,.20)
+        );
+}
+
+#historyRangePanel #quickRangeList.quick-range-list{
+    display:flex!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    gap:5px!important;
+    width:100%!important;
+    margin-top:7px!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option{
+    width:100%!important;
+    min-height:35px!important;
+
+    padding:0 11px!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+
+    background:transparent!important;
+    color:#cbd5e1!important;
+
+    font-size:12px!important;
+    font-weight:750!important;
+    line-height:1!important;
+
+    text-align:left!important;
+    white-space:nowrap!important;
+
+    transition:
+        background .16s ease,
+        border-color .16s ease,
+        color .16s ease!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option:hover{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.08)!important;
+    border-color:rgba(34,211,238,.16)!important;
+}
+
+#historyRangePanel #quickRangeList .quick-range-option.active,
+#historyRangePanel #quickRangeList .quick-range-option[aria-current="true"]{
+    color:#67e8f9!important;
+    background:rgba(34,211,238,.13)!important;
+    border-color:rgba(34,211,238,.32)!important;
+}
+
+/* Calendar header */
+#rangeCalendarTitle{
+    color:#e2e8f0!important;
+    font-size:14px!important;
+    font-weight:850!important;
+}
+
+#calendarPrev,
+#calendarNext{
+    width:34px!important;
+    height:34px!important;
+    border-radius:9px!important;
+}
+
+/* Day names */
+#historyRangePanel .grid-cols-7:not(#rangeCalendarGrid){
+    color:#64748b!important;
+}
+
+/* Calendar dates */
+#rangeCalendarGrid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:5px!important;
+}
+
+#rangeCalendarGrid .range-calendar-day{
+    width:100%!important;
+    height:36px!important;
+    min-width:0!important;
+
+    padding:0!important;
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+
+    background:transparent!important;
+    color:#dbe7f3!important;
+
+    font-size:12px!important;
+    font-weight:650!important;
+}
+
+#rangeCalendarGrid .range-calendar-day:hover{
+    color:#fff!important;
+    background:rgba(34,211,238,.09)!important;
+    border-color:rgba(34,211,238,.20)!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-muted{
+    color:#475569!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-in-range{
+    background:rgba(34,211,238,.07)!important;
+}
+
+#rangeCalendarGrid .range-calendar-day.is-start,
+#rangeCalendarGrid .range-calendar-day.is-end{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.24)!important;
+    border-color:rgba(103,232,249,.48)!important;
+    font-weight:850!important;
+}
+
+/* Start / End fields */
+#historyRangePanel input[type="datetime-local"]{
+    color:#e2e8f0!important;
+    color-scheme:dark!important;
+}
+
+/* Footer ปุ่ม */
+#historyRangePanel #historyRangeCancel,
+#historyRangePanel #historyRangeApply{
+    min-height:38px!important;
+}
+
+/* ให้ panel ไม่ได้รับผลจาก content-visibility ของ section */
+.historical-section:has(#historyRangePanel:not(.hidden)){
+    content-visibility:visible!important;
+}
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+@media(max-width:700px){
+
+    #historyRangePanel.history-range-panel{
+        left:12px!important;
+        right:12px!important;
+        top:12px!important;
+        bottom:12px!important;
+
+        width:auto!important;
+        max-width:none!important;
+        max-height:none!important;
+
+        transform:none!important;
+
+        border-radius:18px!important;
+    }
+
+    #historyRangePanel .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:16px!important;
+        border-right:0!important;
+        border-bottom:1px solid rgba(71,85,105,.45)!important;
+    }
+
+    #historyRangePanel .history-range-quick{
+        padding:12px 16px 16px!important;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:7px!important;
+    }
+
+    #historyRangePanel #quickRangeList .quick-range-option{
+        justify-content:center!important;
+        text-align:center!important;
+    }
+
+    #rangeCalendarGrid .range-calendar-day{
+        height:34px!important;
+    }
+}
+
+@media(max-width:420px){
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr 1fr!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:14px 12px!important;
+    }
+
+    #rangeCalendarGrid{
+        gap:3px!important;
+    }
+
+    #rangeCalendarGrid .range-calendar-day{
+        height:32px!important;
+        font-size:11px!important;
+    }
+}
+
+/* =========================================================
+   AI TREND — COMPACT LAYOUT
+   Dust = full width
+   Temp / Humidity / Light = 3 equal cards below
+   ========================================================= */
+
+.ai-trend-summary{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:9px!important;
+    align-items:start!important;
+}
+
+/* ฝุ่นกินเต็มแถว ไม่บังคับการ์ดอื่นสูงตาม */
+.ai-trend-dust{
+    grid-column:1 / -1!important;
+    min-height:0!important;
+    padding:11px 12px!important;
+}
+
+/* PM1 / PM2.5 / PM10 อยู่ในแถวเดียว */
+.ai-dust-trend-grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;
+    margin-top:8px!important;
+}
+
+.ai-dust-mini{
+    min-width:0!important;
+    padding:9px 10px!important;
+    border:1px solid rgba(148,163,184,.10)!important;
+    border-radius:10px!important;
+    background:rgba(8,25,41,.58)!important;
+}
+
+.ai-dust-mini-label{
+    font-size:10px!important;
+    font-weight:900!important;
+    color:#e2e8f0!important;
+}
+
+.ai-dust-mini-direction{
+    margin-top:4px!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    color:#f8fafc!important;
+}
+
+.ai-dust-mini-note{
+    margin-top:3px!important;
+    font-size:9px!important;
+    line-height:1.45!important;
+    color:#64748b!important;
+}
+
+.ai-dust-mini.is-missing .ai-dust-mini-direction{
+    color:#64748b!important;
+}
+
+.ai-dust-summary{
+    margin-top:8px!important;
+    padding:8px 10px!important;
+    border-radius:9px!important;
+    background:rgba(34,211,238,.055)!important;
+    color:#bae6fd!important;
+    font-size:10px!important;
+    font-weight:800!important;
+    line-height:1.5!important;
+}
+
+/* Temp / Humidity / Light ไม่ยืดสูงเกินเนื้อหา */
+.ai-trend-summary > .ai-trend-item:not(.ai-trend-dust){
+    min-height:0!important;
+    height:auto!important;
+    align-self:start!important;
+}
+
+/* การ์ด Forecast ด้านล่างให้เตี้ยลงนิดหน่อย */
+.ai-forecast-grid{
+    align-items:start!important;
+}
+
+.ai-forecast-item{
+    min-height:0!important;
+    padding:10px 11px!important;
+}
+
+/* Tablet */
+@media(max-width:1000px){
+
+    .ai-trend-summary{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .ai-trend-dust{
+        grid-column:1 / -1!important;
+    }
+
+    .ai-dust-trend-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    }
+}
+
+/* Mobile */
+@media(max-width:640px){
+
+    .ai-trend-summary{
+        grid-template-columns:1fr!important;
+    }
+
+    .ai-trend-dust{
+        grid-column:auto!important;
+    }
+
+    .ai-dust-trend-grid{
+        grid-template-columns:1fr!important;
+    }
+
+    .ai-dust-mini{
+        padding:8px 9px!important;
+    }
+}
+
+
+/* =========================================================
+   AI SECTION — FONT SIZE / READABILITY FINAL
+   เพิ่มขนาดตัวอักษรทั้ง Desktop และ Mobile
+   โดยไม่เปลี่ยนโครงสร้างหรือ logic ของ AI
+   ========================================================= */
+
+/* หัวข้อหลักของโซน */
+.ai-intelligence-section .section-title-with-help h2{
+    font-size:clamp(24px,1.65vw,30px)!important;
+    line-height:1.25!important;
+}
+
+/* ข้อความรองใต้หัวข้อ */
+.ai-intelligence-statusline{
+    font-size:13px!important;
+    line-height:1.55!important;
+}
+
+/* Badge AI ด้านขวาบน */
+.ai-status-badge,
+.ai-forecast-status{
+    font-size:11px!important;
+    line-height:1!important;
+    padding:7px 10px!important;
+}
+
+/* Kicker เช่น "สถานการณ์ปัจจุบัน" / "แนวโน้ม 30 นาที" */
+.ai-panel-kicker{
+    font-size:12px!important;
+    line-height:1.4!important;
+    letter-spacing:.08em!important;
+}
+
+/* หัวข้อ "ตอนนี้เป็นอย่างไร" / "อีก 30 นาทีเป็นอย่างไร" */
+.ai-panel-head h3{
+    font-size:18px!important;
+    line-height:1.35!important;
+}
+
+/* ปุ่มวิเคราะห์ใหม่ */
+.ai-refresh-button,
+.ai-forecast-refresh{
+    font-size:12px!important;
+    line-height:1.2!important;
+    padding:10px 13px!important;
+}
+
+/* เนื้อหาฝั่ง Current Situation */
+.ai-details-panel{
+    font-size:14px!important;
+    line-height:1.72!important;
+}
+
+.ai-details-panel b,
+.ai-details-panel strong{
+    font-size:inherit!important;
+}
+
+/* headline/summary ของ AI */
+.ai-headline,
+.ai-summary,
+.ai-section-title,
+.ai-recommendation{
+    line-height:1.65!important;
+}
+
+.ai-headline{
+    font-size:17px!important;
+}
+
+.ai-summary{
+    font-size:14px!important;
+}
+
+/* รายการสิ่งที่ระบบพบ */
+.ai-findings,
+.ai-findings li,
+.ai-details-panel li{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+/* คำแนะนำ */
+.ai-recommendation{
+    font-size:13px!important;
+}
+
+/* meta / เวลาวิเคราะห์ */
+.ai-analysis-footer,
+.ai-forecast-generated,
+.ai-meta-row{
+    font-size:11px!important;
+    line-height:1.45!important;
+}
+
+/* =========================================================
+   FORECAST CARDS
+   ========================================================= */
+
+.ai-forecast-details{
+    font-size:14px!important;
+    line-height:1.65!important;
+}
+
+/* หัวข้อใน Forecast */
+.ai-forecast-headline{
+    font-size:17px!important;
+    line-height:1.45!important;
+}
+
+.ai-trend-variable{
+    font-size:13px!important;
+    line-height:1.4!important;
+}
+
+.ai-trend-direction{
+    font-size:14px!important;
+    line-height:1.4!important;
+}
+
+.ai-trend-explanation{
+    font-size:12px!important;
+    line-height:1.55!important;
+}
+
+/* PM1 / PM2.5 / PM10 */
+.ai-dust-mini-label{
+    font-size:12px!important;
+}
+
+.ai-dust-mini-direction{
+    font-size:14px!important;
+    line-height:1.35!important;
+}
+
+.ai-dust-mini-note{
+    font-size:11px!important;
+    line-height:1.55!important;
+}
+
+.ai-dust-summary{
+    font-size:12px!important;
+    line-height:1.55!important;
+}
+
+/* ปัจจัยเด่น / สิ่งผิดปกติ */
+.ai-trend-driver{
+    font-size:12px!important;
+    line-height:1.6!important;
+}
+
+/* การ์ดสรุปด้านล่าง: คุณภาพอากาศ/ความร้อน/พื้นที่/กิจกรรม */
+.ai-forecast-item{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+.ai-forecast-label{
+    font-size:12px!important;
+    line-height:1.4!important;
+    margin-bottom:4px!important;
+}
+
+/* ข้อความ AI Trend ด้านล่าง */
+.ai-numeric-base{
+    font-size:13px!important;
+    line-height:1.6!important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:720px){
+
+    .ai-intelligence-section{
+        padding:16px!important;
+    }
+
+    .ai-intelligence-section .section-title-with-help h2{
+        font-size:24px!important;
+    }
+
+    .ai-intelligence-statusline{
+        font-size:12px!important;
+        margin-top:5px!important;
+    }
+
+    .ai-intelligence-badges{
+        gap:7px!important;
+        flex-wrap:wrap!important;
+    }
+
+    .ai-status-badge,
+    .ai-forecast-status{
+        font-size:10px!important;
+        padding:7px 9px!important;
+    }
+
+    .ai-panel-kicker{
+        font-size:11px!important;
+    }
+
+    .ai-panel-head h3{
+        font-size:18px!important;
+    }
+
+    .ai-panel-head{
+        gap:10px!important;
+        align-items:flex-start!important;
+    }
+
+    .ai-refresh-button,
+    .ai-forecast-refresh{
+        font-size:12px!important;
+        padding:10px 12px!important;
+        min-height:40px!important;
+    }
+
+    .ai-details-panel,
+    .ai-forecast-details{
+        font-size:14px!important;
+        line-height:1.75!important;
+    }
+
+    .ai-headline,
+    .ai-forecast-headline{
+        font-size:17px!important;
+        line-height:1.5!important;
+    }
+
+    .ai-summary{
+        font-size:14px!important;
+    }
+
+    .ai-findings,
+    .ai-findings li,
+    .ai-details-panel li{
+        font-size:13px!important;
+        line-height:1.65!important;
+    }
+
+    .ai-recommendation{
+        font-size:13px!important;
+        line-height:1.6!important;
+    }
+
+    .ai-trend-variable{
+        font-size:13px!important;
+    }
+
+    .ai-trend-direction{
+        font-size:14px!important;
+    }
+
+    .ai-trend-explanation{
+        font-size:12px!important;
+        line-height:1.6!important;
+    }
+
+    .ai-dust-mini-label{
+        font-size:12px!important;
+    }
+
+    .ai-dust-mini-direction{
+        font-size:14px!important;
+    }
+
+    .ai-dust-mini-note{
+        font-size:11px!important;
+    }
+
+    .ai-dust-summary{
+        font-size:12px!important;
+    }
+
+    .ai-trend-driver{
+        font-size:12px!important;
+        line-height:1.65!important;
+    }
+
+    .ai-forecast-item{
+        font-size:13px!important;
+        line-height:1.65!important;
+        padding:12px!important;
+    }
+
+    .ai-forecast-label{
+        font-size:12px!important;
+    }
+
+    .ai-analysis-footer,
+    .ai-forecast-generated,
+    .ai-meta-row{
+        font-size:11px!important;
+    }
+
+    .ai-numeric-base{
+        font-size:13px!important;
+        line-height:1.65!important;
+    }
+}
+
+
+
+/* =========================================================
+   MOBILE / TABLET FINAL POLISH
+   ========================================================= */
+
+@media(max-width:760px){
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3{
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        gap:12px!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > div:first-child{
+        width:100%!important;
+    }
+
+    .monitoring-card .section-title-with-help{
+        display:flex!important;
+        align-items:center!important;
+        gap:9px!important;
+        flex-wrap:nowrap!important;
+    }
+
+    .monitoring-card .section-title-with-help h2{
+        white-space:nowrap!important;
+        word-break:keep-all!important;
+        overflow-wrap:normal!important;
+        font-size:23px!important;
+        line-height:1.25!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center{
+        width:100%!important;
+        justify-content:stretch!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center > .badge{
+        width:100%!important;
+        min-width:0!important;
+        padding:11px 13px!important;
+        display:grid!important;
+        grid-template-columns:auto auto minmax(0,1fr)!important;
+        align-items:center!important;
+        gap:8px 12px!important;
+        border-radius:14px!important;
+    }
+
+    .monitoring-card > .flex.justify-between.items-center.mb-3 > .flex.justify-center > .badge > div{
+        margin:0!important;
+    }
+
+    .monitoring-card #nodesActiveTop{
+        text-align:right!important;
+        white-space:nowrap!important;
+        font-size:11px!important;
+    }
+
+    #gatewayStatusTop{
+        white-space:nowrap!important;
+        font-size:14px!important;
+    }
+
+    .monitoring-card .node > .flex.justify-between{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) auto!important;
+        align-items:start!important;
+        gap:10px!important;
+    }
+
+    .monitoring-card .node > .flex.justify-between > b{
+        min-width:0!important;
+        font-size:20px!important;
+        line-height:1.3!important;
+    }
+
+    #n1status,
+    #n2status,
+    #n3status{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:flex-end!important;
+        flex-wrap:nowrap!important;
+        gap:5px!important;
+        white-space:nowrap!important;
+        min-width:max-content!important;
+        font-size:12px!important;
+        line-height:1.2!important;
+    }
+
+    #n1status .badge,
+    #n2status .badge,
+    #n3status .badge{
+        white-space:nowrap!important;
+        padding:5px 8px!important;
+        font-size:11px!important;
+    }
+
+    .monitoring-card .node .grid{
+        column-gap:16px!important;
+        row-gap:10px!important;
+    }
+
+    .monitoring-card .node .grid > span{
+        white-space:nowrap!important;
+        min-width:0!important;
+    }
+
+    #historyChartArea canvas,
+    #forecastChartArea canvas{
+        cursor:zoom-in!important;
+        touch-action:manipulation;
+    }
+
+    .metric-chart-canvas-wrap::after,
+    .bottom-chart-wrap::after{
+        content:"🔍 แตะกราฟเพื่อขยาย";
+        position:absolute;
+        right:8px;
+        top:8px;
+        z-index:4;
+        pointer-events:none;
+        padding:5px 8px;
+        border-radius:999px;
+        background:rgba(2,6,23,.74);
+        border:1px solid rgba(103,232,249,.18);
+        color:#a5f3fc;
+        font-size:10px;
+        font-weight:800;
+        line-height:1;
+        backdrop-filter:blur(6px);
+    }
+
+    .bottom-chart-wrap{
+        position:relative!important;
+    }
+}
+
+@media(min-width:761px) and (max-width:1100px){
+
+    #historyChartArea canvas,
+    #forecastChartArea canvas{
+        cursor:zoom-in!important;
+    }
+
+    .metric-chart-canvas-wrap::after,
+    .bottom-chart-wrap::after{
+        content:"🔍 แตะเพื่อขยาย";
+        position:absolute;
+        right:10px;
+        top:10px;
+        z-index:4;
+        pointer-events:none;
+        padding:5px 8px;
+        border-radius:999px;
+        background:rgba(2,6,23,.70);
+        border:1px solid rgba(103,232,249,.16);
+        color:#a5f3fc;
+        font-size:10px;
+        font-weight:800;
+    }
+
+    .bottom-chart-wrap{
+        position:relative!important;
+    }
+}
+
+/* =========================================================
+   FULLSCREEN CHART ZOOM VIEWER
+   ========================================================= */
+
+.chart-zoom-viewer{
+    position:fixed;
+    inset:0;
+    z-index:12000;
+    display:none;
+}
+
+.chart-zoom-viewer.active{
+    display:block;
+}
+
+.chart-zoom-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(2,6,23,.92);
+    backdrop-filter:blur(8px);
+}
+
+.chart-zoom-dialog{
+    position:absolute;
+    inset:12px;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    border:1px solid rgba(103,232,249,.22);
+    border-radius:18px;
+    background:#071625;
+    box-shadow:0 30px 90px rgba(0,0,0,.58);
+}
+
+.chart-zoom-toolbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 13px;
+    border-bottom:1px solid rgba(148,163,184,.12);
+    background:rgba(8,25,41,.96);
+}
+
+.chart-zoom-title{
+    color:#f8fafc;
+    font-size:15px;
+    font-weight:900;
+    line-height:1.25;
+}
+
+.chart-zoom-help{
+    margin-top:3px;
+    color:#94a3b8;
+    font-size:10px;
+    line-height:1.35;
+}
+
+.chart-zoom-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+}
+
+.chart-zoom-actions button{
+    min-width:38px;
+    height:38px;
+    padding:0 10px;
+    border:1px solid rgba(103,232,249,.18);
+    border-radius:10px;
+    background:rgba(15,35,56,.9);
+    color:#e2e8f0;
+    font-size:14px;
+    font-weight:900;
+}
+
+.chart-zoom-actions #chartZoomReset{
+    min-width:54px;
+    font-size:11px;
+}
+
+.chart-zoom-actions .chart-zoom-close{
+    color:#fecaca;
+    border-color:rgba(248,113,113,.22);
+}
+
+.chart-zoom-stage{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:none;
+    user-select:none;
+    background:
+        radial-gradient(circle at 50% 50%,rgba(14,165,233,.05),transparent 50%),
+        #061320;
+}
+
+.chart-zoom-image{
+    display:block;
+    max-width:94%;
+    max-height:92%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    transform-origin:center center;
+    will-change:transform;
+    -webkit-user-drag:none;
+    user-select:none;
+}
+
+body.chart-zoom-open{
+    overflow:hidden!important;
+}
+
+@media(max-width:560px){
+
+    .chart-zoom-dialog{
+        inset:6px;
+        border-radius:15px;
+    }
+
+    .chart-zoom-toolbar{
+        padding:10px;
+        align-items:flex-start;
+    }
+
+    .chart-zoom-title{
+        font-size:14px;
+    }
+
+    .chart-zoom-help{
+        font-size:9px;
+        max-width:160px;
+    }
+
+    .chart-zoom-actions{
+        gap:4px;
+    }
+
+    .chart-zoom-actions button{
+        min-width:34px;
+        height:34px;
+        padding:0 7px;
+        border-radius:9px;
+    }
+
+    .chart-zoom-actions #chartZoomReset{
+        min-width:48px;
+        font-size:10px;
+    }
+
+    .chart-zoom-image{
+        max-width:98%;
+        max-height:94%;
+    }
+}
+
+
+/* =========================================================
+   INTERACTIVE CHART VIEWER — FINAL OVERRIDES
+   ========================================================= */
+
+/* Graphs are interactive-open targets on every device */
+#historyChartArea canvas,
+#forecastChartArea canvas{
+    cursor:zoom-in!important;
+}
+
+/* Desktop hint */
+@media(min-width:1101px){
+
+    .bottom-chart-wrap{
+        position:relative!important;
+    }
+
+    .bottom-chart-wrap::after{
+        content:"⛶ คลิกกราฟเพื่อขยาย";
+        position:absolute;
+        top:10px;
+        right:10px;
+        z-index:5;
+        pointer-events:none;
+        padding:6px 9px;
+        border-radius:999px;
+        background:rgba(2,6,23,.72);
+        border:1px solid rgba(103,232,249,.16);
+        color:#a5f3fc;
+        font-size:10px;
+        font-weight:800;
+        line-height:1;
+        backdrop-filter:blur(6px);
+    }
+}
+
+/*
+  Viewer now contains a REAL Chart.js canvas.
+  Disable old image-viewer assumptions.
 */
-$("exportModal")
-?.addEventListener(
-"click",
-e=>{
-
-const modal=
-$("exportModal");
-
-if(
-e.target===modal||
-e.target?.dataset?.exportClose==="true"||
-e.target?.classList?.contains(
-"export-modal-backdrop"
-)
-){
-
-closeExport();
-
-}
-
-}
-);
-
-$("exportStartDate")
-?.addEventListener(
-"change",
-refreshExport
-);
-
-$("exportEndDate")
-?.addEventListener(
-"change",
-refreshExport
-);
-
-$("exportExcelButton")
-?.addEventListener(
-"click",
-downloadExcel
-);
-
-document
-.addEventListener(
-"keydown",
-e=>{
-
-if(
-e.key==="Escape"
-){
-
-closeExport();
-
-closeHelp();
-
-closeCreditImage();
-
-closeHistoryRangePicker();
-
-}
-
-}
-);
-
-}
-
-
-// =====================================================
-// INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
-//
-// Uses Chart.js only.
-// Desktop:
-// - Mouse wheel zoom
-// - Drag horizontally to pan
-// - Hover tooltip
-//
-// Mobile / Tablet:
-// - Pinch zoom
-// - Drag horizontally to pan
-// - Tap tooltip
-// =====================================================
-
-let chartInteractiveViewerReady=false;
-let chartInteractiveInstance=null;
-
-function cloneChartDatasetForViewer(ds){
-
-const copy={
-label:ds.label||"ข้อมูล",
-metricField:ds.metricField,
-rawValues:Array.isArray(ds.rawValues)?[...ds.rawValues]:null,
-
-data:Array.isArray(ds.data)
-?ds.data.map(
-v=>(
-v&&typeof v==="object"
-?{...v}
-:v
-)
-)
-:[],
-
-borderColor:ds.borderColor,
-backgroundColor:ds.backgroundColor,
-
-borderWidth:Math.max(
-Number(ds.borderWidth||2),
-2
-),
-
-pointRadius:Math.max(
-Number(ds.pointRadius||0),
-3
-),
-
-pointHoverRadius:Math.max(
-Number(ds.pointHoverRadius||4),
-6
-),
-
-pointHitRadius:14,
-tension:ds.tension??0.25,
-fill:ds.fill??false,
-spanGaps:ds.spanGaps??true,
-hidden:ds.hidden===true
-};
-
-if(Array.isArray(ds.borderDash)){
-copy.borderDash=[...ds.borderDash];
-}
-
-if(ds.pointBackgroundColor){
-copy.pointBackgroundColor=ds.pointBackgroundColor;
-}
-
-if(ds.pointBorderColor){
-copy.pointBorderColor=ds.pointBorderColor;
-}
-
-return copy;
-
-}
-
-function chartViewerTitleForCanvas(canvas){
-
-const metricPanel=
-canvas.closest(".metric-chart-panel");
-
-if(metricPanel){
-
-return(
-metricPanel.querySelector(".metric-chart-title")
-?.textContent?.trim()||
-"กราฟข้อมูล"
-);
-
-}
-
-const card=
-canvas.closest(".dashboard-chart-card");
-
-return(
-card?.querySelector(".chart-zone-title")
-?.textContent?.trim()||
-"กราฟข้อมูล"
-);
-
-}
-
-function chartViewerUnitFromOriginal(original){
-
-const text=
-original?.options?.scales?.y?.title?.text;
-
-return typeof text==="string"
-?text
-:"";
-
-}
-
-function setupChartZoomViewer(){
-
-if(chartInteractiveViewerReady){
-return;
-}
-
-chartInteractiveViewerReady=true;
-
-const viewer=document.createElement("div");
-
-viewer.id="chartZoomViewer";
-viewer.className="chart-zoom-viewer";
-viewer.setAttribute("aria-hidden","true");
-
-viewer.innerHTML=`
-<div class="chart-zoom-backdrop" data-chart-zoom-close="true"></div>
-
-<div class="chart-zoom-dialog" role="dialog" aria-modal="true" aria-label="กราฟแบบโต้ตอบ">
-
-<div class="chart-zoom-toolbar">
-
-<div class="chart-zoom-heading">
-<div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
-<div class="chart-zoom-help" id="chartZoomHelp">
-เลือกเส้นที่ต้องการด้านล่าง • ชี้/แตะจุดเพื่อดู “ค่าของเส้นนั้น” และเวลาที่ข้อมูลจุดนั้นถูกบันทึก
-</div>
-</div>
-
-<div class="chart-zoom-actions">
-<button type="button" id="chartZoomOut" aria-label="ย่อกราฟ" title="ย่อ">−</button>
-<button type="button" id="chartZoomReset" aria-label="รีเซ็ตการซูม" title="รีเซ็ต">Reset</button>
-<button type="button" id="chartZoomIn" aria-label="ขยายกราฟ" title="ขยาย">+</button>
-<button type="button" id="chartZoomClose" class="chart-zoom-close" aria-label="ปิด" title="ปิด">×</button>
-</div>
-
-</div>
-
-<div class="chart-zoom-statusbar">
-<span>🔎 ซูมช่วงเวลา</span>
-<span>↔ ลากเพื่อเลื่อน</span>
-<span>● ชี้จุด = ค่า + เวลาจริงของจุดนั้น</span>
-</div>
-
-<div class="chart-series-controls" id="chartSeriesControls">
-<div class="chart-series-controls-head">
-<div>
-<div class="chart-series-controls-title">ข้อมูลที่แสดง</div>
-<div class="chart-series-controls-help">เลือกชื่อข้อมูลเพื่อดูเส้นนั้นเพียงเส้นเดียว • กด “แสดงทั้งหมด” เพื่อกลับมาดูทุกเส้น</div>
-</div>
-<button type="button" class="chart-series-show-all" id="chartSeriesShowAll">แสดงทั้งหมด</button>
-</div>
-<div class="chart-series-buttons" id="chartSeriesButtons"></div>
-</div>
-
-<div class="chart-zoom-stage" id="chartZoomStage">
-<canvas id="chartZoomCanvas"></canvas>
-</div>
-
-</div>
-`;
-
-document.body.appendChild(viewer);
-
-const stage=$("chartZoomStage");
-
-let labels=[];
-let fullMin=0;
-let fullMax=0;
-let viewMin=0;
-let viewMax=0;
-
-let dragging=false;
-let dragStartX=0;
-let dragStartMin=0;
-let dragStartMax=0;
-
-let pinchStartDistance=0;
-let pinchStartSpan=0;
-let pinchCenterRatio=.5;
-
-function destroyInteractiveChart(){
-
-if(chartInteractiveInstance){
-
-try{
-chartInteractiveInstance.destroy();
-}catch{}
-
-chartInteractiveInstance=null;
-
-}
-
-}
-
-function clampWindow(){
-
-const total=
-fullMax-fullMin;
-
-let span=
-viewMax-viewMin;
-
-const minSpan=
-Math.min(
-60*1000,
-total
-);
-
-if(span<minSpan){
-span=minSpan;
-}
-
-if(span>total){
-span=total;
-}
-
-if(viewMin<fullMin){
-viewMin=fullMin;
-viewMax=viewMin+span;
-}
-
-if(viewMax>fullMax){
-viewMax=fullMax;
-viewMin=viewMax-span;
-}
-
-}
-
-function applyWindow(){
-
-if(!chartInteractiveInstance){
-return;
-}
-
-clampWindow();
-
-chartInteractiveInstance.options.scales.x.min=
-viewMin;
-
-chartInteractiveInstance.options.scales.x.max=
-viewMax;
-
-chartInteractiveInstance.update("none");
-
-const total=
-Math.max(
-1,
-fullMax-fullMin
-);
-
-const shown=
-Math.max(
-1,
-viewMax-viewMin
-);
-
-const percent=
-Math.round(
-(total/shown)*100
-);
-
-const reset=$("chartZoomReset");
-
-if(reset){
-reset.textContent=
-percent<=105
-?"Reset"
-:`${percent}%`;
-}
-
-}
-
-function zoomAt(factor,ratio=.5){
-
-if(!chartInteractiveInstance){
-return;
-}
-
-ratio=
-Math.min(
-1,
-Math.max(
-0,
-ratio
-)
-);
-
-const span=
-viewMax-viewMin;
-
-const newSpan=
-span/factor;
-
-const anchor=
-viewMin+
-span*ratio;
-
-viewMin=
-anchor-
-newSpan*ratio;
-
-viewMax=
-anchor+
-newSpan*(1-ratio);
-
-applyWindow();
-
-}
-
-function panBy(deltaIndex){
-
-viewMin+=deltaIndex;
-viewMax+=deltaIndex;
-
-applyWindow();
-
-}
-
-function resetZoom(){
-
-viewMin=fullMin;
-viewMax=fullMax;
-
-applyWindow();
-
-}
-
-function closeViewer(){
-
-destroyInteractiveChart();
-
-const seriesButtons=
-$("chartSeriesButtons");
-
-if(seriesButtons){
-seriesButtons.innerHTML="";
-}
-
-viewer.classList.remove("active");
-viewer.setAttribute("aria-hidden","true");
-document.body.classList.remove("chart-zoom-open");
-
-}
-
-function getOriginalChart(canvas){
-
-if(typeof Chart==="undefined"){
-return null;
-}
-
-if(typeof Chart.getChart==="function"){
-
-const c=
-Chart.getChart(canvas);
-
-if(c){
-return c;
-}
-
-}
-
-const all=[
-historyChart,
-forecastChart,
-...historyGroupCharts,
-...forecastGroupCharts
-].filter(Boolean);
-
-return all.find(
-c=>c.canvas===canvas
-)||null;
-
-}
-
-
-function updateSeriesControlUI(){
-
-const wrap=
-$("chartSeriesControls");
-
-const buttons=
-$("chartSeriesButtons");
-
-const showAll=
-$("chartSeriesShowAll");
-
-if(
-!wrap||
-!buttons||
-!showAll||
-!chartInteractiveInstance
-){
-return;
-}
-
-const datasets=
-chartInteractiveInstance.data.datasets||[];
-
-if(datasets.length<=1){
-
-wrap.classList.add(
-"is-single"
-);
-
-buttons.innerHTML="";
-
-showAll.classList.add(
-"hidden"
-);
-
-const one=
-datasets[0];
-
-if(one){
-
-const label=
-document.createElement(
-"div"
-);
-
-label.className=
-"chart-series-single-label";
-
-label.textContent=
-one.label||
-"ข้อมูล";
-
-buttons.appendChild(
-label
-);
-
-}
-
-return;
-}
-
-wrap.classList.remove(
-"is-single"
-);
-
-showAll.classList.remove(
-"hidden"
-);
-
-buttons.innerHTML="";
-
-datasets.forEach(
-(ds,index)=>{
-
-const button=
-document.createElement(
-"button"
-);
-
-button.type="button";
-button.className=
-"chart-series-button";
-
-const visible=
-chartInteractiveInstance.isDatasetVisible(
-index
-);
-
-button.classList.toggle(
-"is-active",
-visible
-);
-
-button.classList.toggle(
-"is-hidden",
-!visible
-);
-
-button.setAttribute(
-"aria-pressed",
-visible
-?"true"
-:"false"
-);
-
-button.dataset.index=
-String(
-index
-);
-
-const mark=
-visible
-?"✓"
-:"";
-
-button.innerHTML=
-`<span class="chart-series-check">${mark}</span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
-
-buttons.appendChild(
-button
-);
-
-}
-);
-
-const allVisible=
-datasets.every(
-(_,index)=>
-chartInteractiveInstance.isDatasetVisible(
-index
-)
-);
-
-showAll.disabled=
-allVisible;
-
-showAll.classList.toggle(
-"is-complete",
-allVisible
-);
-
-}
-
-function bindSeriesControlEvents(){
-
-const buttons=
-$("chartSeriesButtons");
-
-const showAll=
-$("chartSeriesShowAll");
-
-buttons?.addEventListener(
-"click",
-e=>{
-
-const button=
-e.target.closest(
-".chart-series-button"
-);
-
-if(
-!button||
-!chartInteractiveInstance
-){
-return;
-}
-
-const index=
-Number(
-button.dataset.index
-);
-
-if(
-!Number.isInteger(
-index
-)
-){
-return;
-}
-
-// เลือกเส้นเดียวให้ชัดเจน:
-// ผู้ใช้กด "จุดตรวจวัด 1" = เห็นเฉพาะจุด 1
-chartInteractiveInstance.data.datasets.forEach(
-(_,datasetIndex)=>{
-chartInteractiveInstance.setDatasetVisibility(
-datasetIndex,
-datasetIndex===index
-);
-}
-);
-
-chartInteractiveInstance.update(
-"none"
-);
-
-updateSeriesControlUI();
-
-}
-);
-
-showAll?.addEventListener(
-"click",
-()=>{
-
-if(!chartInteractiveInstance){
-return;
-}
-
-chartInteractiveInstance.data.datasets.forEach(
-(_,index)=>{
-
-chartInteractiveInstance.setDatasetVisibility(
-index,
-true
-);
-
-}
-);
-
-chartInteractiveInstance.update(
-"none"
-);
-
-updateSeriesControlUI();
-
-}
-);
-
-}
-
-async function openInteractiveChart(canvas){
-
-if(typeof Chart==="undefined"){
-
-try{
-await ensureChartLibrary();
-}catch{
-return;
-}
-
-}
-
-const original=
-getOriginalChart(canvas);
-
-if(!original){
-return;
-}
-
-labels=
-Array.isArray(original.data.labels)
-?[...original.data.labels]
-:[];
-
-const timeValues=
-labels.map(v=>{
-const d=parseDate(v);
-return d?d.getTime():null;
-});
-
-const validTimes=
-timeValues.filter(Number.isFinite);
-
-if(validTimes.length<2){
-return;
-}
-
-fullMin=Math.min(...validTimes);
-fullMax=Math.max(...validTimes);
-
-viewMin=fullMin;
-viewMax=fullMax;
-
-$("chartZoomTitle").textContent=
-chartViewerTitleForCanvas(canvas);
-
-viewer.classList.add("active");
-viewer.setAttribute("aria-hidden","false");
-document.body.classList.add("chart-zoom-open");
-
-destroyInteractiveChart();
-
-const viewerCanvas=$("chartZoomCanvas");
-
-const datasets=
-original.data.datasets.map(ds=>{
-const copy=cloneChartDatasetForViewer(ds);
-const source=Array.isArray(ds.data)?ds.data:[];
-copy.data=labels.map((label,index)=>{
-const x=timeValues[index];
-const raw=source[index];
-const y=
-raw&&typeof raw==="object"
-?finiteNumberOrNull(raw.y)
-:finiteNumberOrNull(raw);
-
-return Number.isFinite(x)&&y!==null
-?{x,y}
-:null;
-}).filter(Boolean);
-return copy;
-});
-
-const unit=
-chartViewerUnitFromOriginal(original);
-
-const isTouch=
-(navigator.maxTouchPoints||0)>0;
-
-chartInteractiveInstance=
-new Chart(
-viewerCanvas,
-{
-
-type:"line",
-
-data:{
-labels,
-datasets
-},
-
-options:{
-
-responsive:true,
-maintainAspectRatio:false,
-animation:false,
-normalized:true,
-
-interaction:{
-mode:"nearest",
-intersect:true
-},
-
-layout:{
-padding:{
-top:8,
-right:12,
-bottom:8,
-left:8
-}
-},
-
-plugins:{
-
-legend:{
-display:false
-},
-
-tooltip:{
-enabled:true,
-mode:"nearest",
-intersect:true,
-callbacks:{
-title:graphTooltipTitle,
-label:graphTooltipLabel
-},
-backgroundColor:"rgba(2,6,23,.94)",
-titleColor:"#f8fafc",
-bodyColor:"#e2e8f0",
-borderColor:"rgba(103,232,249,.25)",
-borderWidth:1,
-padding:11,
-displayColors:true,
-titleFont:{
-size:13,
-weight:"800"
-},
-bodyFont:{
-size:12
-}
-}
-
-},
-
-scales:{
-
-x:{
-type:"linear",
-min:fullMin,
-max:fullMax,
-
-grid:{
-color:"rgba(148,163,184,.09)"
-},
-
-ticks:{
-color:"#94a3b8",
-maxRotation:0,
-autoSkip:true,
-maxTicksLimit:isTouch?7:14,
-font:{
-size:isTouch?12:12
-},
-callback:function(value){
-const span=Math.max(0,Number(this.max)-Number(this.min));
-const d=new Date(Number(value));
-if(!Number.isFinite(d.getTime()))return"";
-
-const DAY=24*60*60*1000;
-if(span>=3*DAY){
-return d.toLocaleDateString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short"
-});
-}
-
-if(span>=DAY){
-return d.toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
-}
-
-return d.toLocaleTimeString("th-TH",{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-second:span<=10*60*1000?"2-digit":undefined,
-hour12:false
-});
-}
-},
-
-border:{
-color:"rgba(148,163,184,.16)"
-}
-
-},
-
-y:{
-beginAtZero:false,
-
-grid:{
-color:"rgba(148,163,184,.10)"
-},
-
-ticks:{
-color:"#94a3b8",
-font:{
-size:isTouch?12:12
-}
-},
-
-title:{
-display:Boolean(unit),
-text:unit,
-color:"#94a3b8",
-font:{
-size:12,
-weight:"700"
-}
-},
-
-border:{
-color:"rgba(148,163,184,.16)"
-}
-
-}
-
-}
-
-}
-
-}
-);
-
-updateSeriesControlUI();
-
-}
-
-document.addEventListener("click",e=>{
-
-const canvas=
-e.target?.closest?.(
-"#historyChartArea canvas, #forecastChartArea canvas"
-);
-
-if(!canvas){
-return;
-}
-
-openInteractiveChart(canvas);
-
-});
-
-viewer.addEventListener("click",e=>{
-
-if(e.target?.dataset?.chartZoomClose==="true"){
-closeViewer();
-}
-
-});
-
-$("chartZoomClose")
-?.addEventListener("click",closeViewer);
-
-$("chartZoomReset")
-?.addEventListener("click",resetZoom);
-
-$("chartZoomIn")
-?.addEventListener("click",()=>{
-zoomAt(1.5,.5);
-});
-
-$("chartZoomOut")
-?.addEventListener("click",()=>{
-zoomAt(1/1.5,.5);
-});
-
-bindSeriesControlEvents();
-
-stage.addEventListener("wheel",e=>{
-
-if(!chartInteractiveInstance){
-return;
-}
-
-e.preventDefault();
-
-const rect=
-stage.getBoundingClientRect();
-
-const ratio=
-(e.clientX-rect.left)/
-Math.max(
-1,
-rect.width
-);
-
-zoomAt(
-e.deltaY<0
-?1.25
-:0.8,
-ratio
-);
-
-},{
-passive:false
-});
-
-stage.addEventListener("mousedown",e=>{
-
-if(!chartInteractiveInstance){
-return;
-}
-
-dragging=true;
-dragStartX=e.clientX;
-dragStartMin=viewMin;
-dragStartMax=viewMax;
-
-stage.classList.add("is-panning");
-
-});
-
-window.addEventListener("mousemove",e=>{
-
-if(!dragging||!chartInteractiveInstance){
-return;
-}
-
-const rect=
-stage.getBoundingClientRect();
-
-const dx=
-e.clientX-dragStartX;
-
-const span=
-dragStartMax-dragStartMin;
-
-const shift=
--(dx/Math.max(1,rect.width))*span;
-
-viewMin=
-dragStartMin+
-shift;
-
-viewMax=
-dragStartMax+
-shift;
-
-applyWindow();
-
-});
-
-window.addEventListener("mouseup",()=>{
-
-dragging=false;
-stage.classList.remove("is-panning");
-
-});
-
-function touchDistance(a,b){
-
-return Math.hypot(
-b.clientX-a.clientX,
-b.clientY-a.clientY
-);
-
-}
-
-stage.addEventListener("touchstart",e=>{
-
-if(!chartInteractiveInstance){
-return;
-}
-
-if(e.touches.length===2){
-
-pinchStartDistance=
-touchDistance(
-e.touches[0],
-e.touches[1]
-);
-
-pinchStartSpan=
-viewMax-viewMin;
-
-const rect=
-stage.getBoundingClientRect();
-
-const centerX=
-(
-e.touches[0].clientX+
-e.touches[1].clientX
-)/2;
-
-pinchCenterRatio=
-Math.min(
-1,
-Math.max(
-0,
-(centerX-rect.left)/
-Math.max(1,rect.width)
-)
-);
-
-dragging=false;
-return;
-
-}
-
-if(e.touches.length===1){
-
-dragging=true;
-dragStartX=
-e.touches[0].clientX;
-
-dragStartMin=
-viewMin;
-
-dragStartMax=
-viewMax;
-
-}
-
-},{
-passive:true
-});
-
-stage.addEventListener("touchmove",e=>{
-
-if(!chartInteractiveInstance){
-return;
-}
-
-if(e.touches.length===2){
-
-e.preventDefault();
-
-const d=
-touchDistance(
-e.touches[0],
-e.touches[1]
-);
-
-if(
-pinchStartDistance>0&&
-d>0
-){
-
-const factor=
-d/
-pinchStartDistance;
-
-const newSpan=
-pinchStartSpan/
-factor;
-
-const anchor=
-viewMin+
-(viewMax-viewMin)*
-pinchCenterRatio;
-
-viewMin=
-anchor-
-newSpan*
-pinchCenterRatio;
-
-viewMax=
-anchor+
-newSpan*
-(1-pinchCenterRatio);
-
-applyWindow();
-
-}
-
-return;
-
-}
-
-if(
-e.touches.length===1&&
-dragging
-){
-
-e.preventDefault();
-
-const rect=
-stage.getBoundingClientRect();
-
-const dx=
-e.touches[0].clientX-
-dragStartX;
-
-const span=
-dragStartMax-
-dragStartMin;
-
-const shift=
--(dx/Math.max(1,rect.width))*span;
-
-viewMin=
-dragStartMin+
-shift;
-
-viewMax=
-dragStartMax+
-shift;
-
-applyWindow();
-
-}
-
-},{
-passive:false
-});
-
-stage.addEventListener("touchend",e=>{
-
-if(e.touches.length<2){
-pinchStartDistance=0;
-}
-
-if(e.touches.length===0){
-dragging=false;
-}
-
-});
-
-document.addEventListener("keydown",e=>{
-
-if(
-e.key==="Escape"&&
-viewer.classList.contains("active")
-){
-closeViewer();
-}
-
-});
-
-}
-
-
-// =====================================================
-// PERFORMANCE — DEFER BELOW-THE-FOLD WORK
-// =====================================================
-
-function ensureChartLibrary(){
-
-if(
-chartLibraryReady&&
-typeof Chart!=="undefined"
-){
-return Promise.resolve();
-}
-
-if(chartLibraryPromise){
-return chartLibraryPromise;
-}
-
-chartLibraryPromise=
-new Promise((resolve,reject)=>{
-
-if(typeof Chart!=="undefined"){
-chartLibraryReady=true;
-resolve();
-return;
-}
-
-const s=
-document.createElement("script");
-
-s.src=
-"https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js";
-
-s.async=true;
-
-s.onload=()=>{
-chartLibraryReady=true;
-resolve();
-};
-
-s.onerror=()=>{
-chartLibraryPromise=null;
-reject(
-new Error("Chart.js load failed")
-);
-};
-
-document.head.appendChild(s);
-
-});
-
-return chartLibraryPromise;
-
-}
-
-function setHistoryChartMessage(title,detail="",isError=false){
-
-const area=
-$("historyChartArea");
-
-if(!area){
-return;
-}
-
-area.innerHTML=
-`<div class="chart-loading-state ${isError?"is-error":""}">
-<b>${esc(title)}</b>
-${detail?`<span>${esc(detail)}</span>`:""}
-${isError?`<button type="button" class="chart-state-retry" id="historyRetryButton">ลองใหม่</button>`:""}
-</div>`;
-
-if(isError){
-
-$("historyRetryButton")?.addEventListener(
-"click",
-()=>{
-activateHistorySection(true);
-},
-{once:true}
-);
-
-}
-
-}
-
-async function activateHistorySection(force=false){
-
-if(historyLoading&&!force){
-return;
-}
-
-historyActivated=true;
-historyLoading=true;
-
-setHistoryChartMessage(
-"กำลังโหลดข้อมูลย้อนหลัง",
-"กรุณารอสักครู่"
-);
-
-try{
-
-records=
-await loadHistory();
-
-renderAverages();
-
-await ensureChartLibrary();
-
-drawCharts();
-
-}catch(e){
-
-console.error(
-"Deferred history/chart load error:",
-e
-);
-
-setHistoryChartMessage(
-"โหลดข้อมูลย้อนหลังไม่สำเร็จ",
-e?.name==="AbortError"
-?"การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่"
-:"ไม่สามารถโหลดข้อมูลได้ในขณะนี้ กรุณาลองใหม่",
-true
-);
-
-}finally{
-
-historyLoading=false;
-
-}
-
-}
-
-function activateAISection(){
-
-if(aiSectionActivated){
-return;
-}
-
-aiSectionActivated=true;
-
-loadAI(false);
-loadAIForecast(false);
-
-}
-
-function setupDeferredSections(){
-
-// Historical data is useful immediately after opening the dashboard.
-// Start preparing it in the background without waiting for the user to scroll.
-activateHistorySection();
-
-const aiTarget=
-document.querySelector(".ai-intelligence-section");
-
-if(
-"IntersectionObserver" in window &&
-aiTarget
-){
-
-const aiObserver=
-new IntersectionObserver(
-entries=>{
-
-if(
-entries.some(x=>x.isIntersecting)
-){
-aiObserver.disconnect();
-activateAISection();
-}
-
-},
-{
-rootMargin:"500px 0px"
-}
-);
-
-aiObserver.observe(aiTarget);
-
-}else{
-
-setTimeout(
-()=>{
-activateAISection();
-},
-1200
-);
-
-}
-
-}
-
-// =====================================================
-// INITIAL LOAD
-// =====================================================
-
-async function loadInitial(){
-
-try{
-
-const[
-latest,
-mother,
-alerts,
-standards
-]=
-await Promise.all([
-
-loadLatest(),
-
-loadMother(),
-
-loadAlerts()
-.catch(
-()=>[]
-),
-
-loadStandards()
-.catch(
-()=>null
-)
-
-]);
-
-apiConnectionOnline=
-true;
-
-latestNodes=
-latest;
-
-motherStatus=
-mother;
-
-alertStates=
-alerts;
-
-standardsData=
-standards;
-
-latestRecord=
-latestNodes.at(-1)||
-null;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-// V15: warm Forecast cache/request หลังข้อมูลหลักพร้อม
-// เพื่อให้เมื่อเปิด "สถิติและกราฟ" กราฟคาดการณ์พร้อมเร็วขึ้น
-if(typeof loadAIForecast==="function"){
-  loadAIForecast(false);
-}
-
-}catch(e){
-
-console.error(
-"Initial load error:",
-e
-);
-
-apiConnectionOnline=
-false;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-}
-
-}
-
-// =====================================================
-// REALTIME
-// =====================================================
-
-async function loadRealtime(){
-
-try{
-
-const[
-latest,
-mother,
-alerts
-]=
-await Promise.all([
-
-loadLatest(),
-
-loadMother(),
-
-loadAlerts()
-.catch(
-()=>alertStates
-)
-
-]);
-
-apiConnectionOnline=
-true;
-
-latestNodes=
-latest;
-
-motherStatus=
-mother;
-
-alertStates=
-alerts;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-}catch(e){
-
-console.error(
-"Realtime error:",
-e
-);
-
-apiConnectionOnline=
-false;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-}
-
-}
-
-// =====================================================
-// HISTORY
-// =====================================================
-
-async function loadHistorical(){
-
-if(!historyActivated){
-return;
-}
-
-try{
-
-records=
-await loadHistory();
-
-renderAverages();
-
-if(typeof Chart!=="undefined"){
-drawCharts();
-}
-
-}catch(e){
-
-console.error(
-"History error:",
-e
-);
-
-setHistoryChartMessage(
-"โหลดกราฟข้อมูลย้อนหลังไม่สำเร็จ",
-"กรุณาลองใหม่อีกครั้ง",
-true
-);
-
-}
-
-}
-
-// =====================================================
-// STANDARDS
-// =====================================================
-
-async function loadStandardsOnly(){
-
-try{
-
-standardsData=
-await loadStandards();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-}catch(e){
-
-console.error(
-"Standards error:",
-e
-);
-
-}
-
-}
-
-// =====================================================
-// CLOCK
-// =====================================================
-
-function updateClock(){
-
-if(
-$("clock")
-){
-
-$("clock").textContent=
-new Date()
-.toLocaleString(
-"th-TH",
-{
-timeZone:
-"Asia/Bangkok",
-dateStyle:
-"medium",
-timeStyle:
-"medium"
-}
-);
-
-}
-
-}
-
-// =====================================================
-// START
-// =====================================================
-
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
-
-updateQuickRangeUI(
-averageRange
-);
-
-updateForecastToggle();
-
-renderAI(
-null
-);
-
-renderAIForecast(
-null
-);
-
-bindEvents();
-
-bindHelp();
-setupChartZoomViewer();
-
-setupDeferredSections();
-
-updateClock();
-
-loadInitial();
-
-// =====================================================
-// CLOCK
-// =====================================================
-
-setInterval(
-updateClock,
-1000
-);
-
-// =====================================================
-// REALTIME
-// =====================================================
-
-setInterval(
-loadRealtime,
-10000
-);
-
-// =====================================================
-// HISTORICAL
-// =====================================================
-
-setInterval(
-loadHistorical,
-60000
-);
-
-// =====================================================
-// STANDARDS
-// =====================================================
-
-setInterval(
-loadStandardsOnly,
-300000
-);
-
-// =====================================================
-// LOCAL STATUS REFRESH
-// =====================================================
-
-setInterval(
-()=>{
-
-renderMonitoring();
-updateCurrent();
-updateSmart();
-
-},
-5000
-);
-
-// =====================================================
-// NAVIGATION REDESIGN 2026-08-28
-// UI-only layer. Existing API, status, history, AI and export logic stay unchanged.
-// =====================================================
-const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
-let currentDashboardPage="overview";
-
-function getDashboardPageFromHash(){
-  const raw=String(location.hash||"").replace(/^#/,"").trim().toLowerCase();
-  return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
-}
-
-function openDashboardPage(page,{updateHash=true}={}){
-  page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
-  currentDashboardPage=page;
-  document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
-    panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
-  });
-  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>{
-    const active=btn.dataset.dashboardPage===page;
-    btn.classList.toggle("active",active);
-    btn.setAttribute("aria-current",active?"page":"false");
-  });
-  const links=$("dashboardNavLinks");
-  const toggle=$("dashboardMobileToggle");
-  if(links) links.classList.remove("open");
-  if(toggle) toggle.setAttribute("aria-expanded","false");
-  if(updateHash){
-    const next="#"+page;
-    if(location.hash!==next) history.replaceState(null,"",next);
-  }
-  if(page==="history"){
-    if(typeof activateHistorySection==="function") activateHistorySection();
-
-    // V15:
-    // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
-    // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
-    if(typeof loadAIForecast==="function"){
-      loadAIForecast(false);
-    }
-  }
-
-  if(page==="analysis" && typeof activateAISection==="function") activateAISection();
-  if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
-    setTimeout(()=>{
-      try{
-        if(historyChart) historyChart.resize();
-        if(forecastChart) forecastChart.resize();
-        historyGroupCharts.forEach(c=>c?.resize?.());
-        forecastGroupCharts.forEach(c=>c?.resize?.());
-      }catch(e){}
-    },120);
-  }
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function dashboardAlertCount(){
-  const box=$("alerts");
-  if(!box) return 0;
-  const text=(box.textContent||"").trim();
-  if(!text || /กำลังตรวจสอบ|ไม่พบ|ปกติ|ไม่มี.*เตือน/i.test(text)) return 0;
-  const explicit=box.querySelectorAll(".alert-item,.alert-row,[data-alert]").length;
-  return explicit||1;
-}
-
-function latestActiveNodes(){
-  return [1,2,3].map(getNode).filter(n=>n && ["online","sleep"].includes(getNodeStatus(n)));
-}
-
-function averageLatestField(field){
-  const values=latestActiveNodes().map(n=>finiteNumberOrNull(n[field])).filter(v=>v!==null);
-  if(!values.length) return null;
-  return values.reduce((a,b)=>a+b,0)/values.length;
-}
-
-function newestNodeTime(){
-
-const dates=
-latestNodes
-.map(
-n=>
-parseDate(
-nodeReadingTime(
-n
-)
-)
-)
-.filter(Boolean);
-
-if(!dates.length){
-return null;
-}
-
-return new Date(
-Math.max(
-...dates.map(
-d=>d.getTime()
-)
-)
-);
-}
-
-function overviewAdvice(pm25){
-  const g=pm25Guidance(pm25);
-  if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคุณภาพอากาศ";
-  if(g.level==="critical") return "คุณภาพอากาศอยู่ในระดับที่ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
-  if(g.level==="warning") return "ควรเฝ้าระวังฝุ่น PM2.5 โดยเฉพาะผู้ที่ไวต่อมลพิษทางอากาศ";
-  if(g.label==="ปานกลาง") return "คุณภาพอากาศโดยรวมอยู่ในระดับปานกลาง สามารถติดตามกิจกรรมได้ตามความเหมาะสม";
-  return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
-}
-
-let overviewParticleMetric="pm25";
-let overviewParticleRenderedMetric=null;
-let overviewParticleSwitchTimer=null;
-
-function updateOverviewParticleDisplay(animate=false){
-  const field=overviewParticleMetric;
-  const value=averageLatestField(field);
-  const label=field==="pm10"?"PM10 เฉลี่ยปัจจุบัน":"PM2.5 เฉลี่ยปัจจุบัน";
-  const box=document.querySelector(".overview-main-value");
-
-  const applyValue=()=>{
-    if($("overviewParticleLabel")) $("overviewParticleLabel").textContent=label;
-    if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
-    overviewParticleRenderedMetric=field;
-  };
-
-  const metricReallyChanged=
-    overviewParticleRenderedMetric!==null &&
-    overviewParticleRenderedMetric!==field;
-
-  if(!animate || !metricReallyChanged){
-    if(overviewParticleSwitchTimer){
-      clearTimeout(overviewParticleSwitchTimer);
-      overviewParticleSwitchTimer=null;
-    }
-    if(box) box.classList.remove("is-switching");
-    applyValue();
-    return;
-  }
-
-  if(overviewParticleSwitchTimer){
-    clearTimeout(overviewParticleSwitchTimer);
-  }
-
-  if(box) box.classList.add("is-switching");
-
-  overviewParticleSwitchTimer=window.setTimeout(()=>{
-    applyValue();
-    requestAnimationFrame(()=>{
-      if(box) box.classList.remove("is-switching");
-    });
-    overviewParticleSwitchTimer=null;
-  },160);
-}
-
-function toggleOverviewParticleMetric(){
-  overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
-  updateOverviewParticleDisplay(true);
-  updateSmart();
-}
-
-function updateNavigationDashboard(){
-  const pm25=averageLatestField("pm25");
-  const temp=averageLatestField("temperature");
-  const hum=averageLatestField("humidity");
-  const guide=pm25Guidance(pm25);
-  const active=activeCount();
-
-  updateOverviewParticleDisplay();
-  if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
-  if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
-  if($("overviewTempStatus")){const t=temperatureLevel(temp);$("overviewTempStatus").textContent=t.label;$("overviewTempStatus").className=`overview-metric-status ${t.severity}`;}
-  if($("overviewHumidityStatus")){const hu=humidityLevel(hum);$("overviewHumidityStatus").textContent=hu.label;$("overviewHumidityStatus").className=`overview-metric-status ${hu.severity}`;}
-  if($("overviewActiveNodes")) $("overviewActiveNodes").textContent=`${active} / ${TOTAL_NODES}`;
-  if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
-
-  const qb=$("overviewQualityBadge");
-  if(qb){
-    qb.textContent=guide.label||"รอข้อมูล";
-    qb.className="overview-quality-badge "+(guide.level==="critical"?"is-critical":guide.level==="warning"?"is-warning":guide.level==="normal"?"is-normal":"is-waiting");
-  }
-
-  const newest=newestNodeTime();
-  if($("overviewLastUpdated")){
-    $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${thaiNodeReadingDateTime(newest)}`:"ข้อมูลล่าสุด: --";
-  }
-
-  for(let i=1;i<=3;i++){
-    const node=getNode(i);
-    const st=getNodeDisplayStatus(node);
-    const dot=$("overviewNodeDot"+i);
-    const label=$("overviewNodeStatus"+i);
-    if(dot) dot.className=`overview-node-dot ${st}`;
-    if(label){
-      const readingTime=
-nodeReadingTime(
-node
-);
-
-const t=
-readingTime
-?thaiNodeReadingDateTime(
-readingTime
-)
-:"--";
-
-label.textContent=
-st==="online"
-?`ONLINE • ข้อมูลล่าสุด ${t}`
-:"OFFLINE";
-    }
-  }
-
-  const systemOnline=apiConnectionOnline && motherOnline();
-  const navDot=$("navSystemDot");
-  const navText=$("navSystemStatus");
-  let navState="is-offline";
-  let navLabel="กำลังตรวจสอบสถานะ";
-
-  if(!apiConnectionOnline){
-    navState="is-offline";
-    navLabel="ระบบข้อมูล OFFLINE";
-  }else if(!motherOnline()){
-    navState="is-offline";
-    navLabel="ระบบข้อมูล OFFLINE";
-  }else if(active===TOTAL_NODES){
-    navState="is-online";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
-  }else if(active>0){
-    navState="is-warning";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
-  }else{
-    navState="is-offline";
-    navLabel=`จุดตรวจวัด ONLINE 0/${TOTAL_NODES}`;
-  }
-
-  if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
-  if(navText) navText.textContent=navLabel;
-
-  const sourceAlerts=$("alerts");
-  const overviewAlerts=$("overviewAlerts");
-  if(sourceAlerts&&overviewAlerts) overviewAlerts.innerHTML=sourceAlerts.innerHTML;
-}
-
-function bindDashboardNavigation(){
-  document.querySelectorAll("[data-dashboard-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.dashboardPage)));
-  document.querySelectorAll("[data-go-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.goPage)));
-  document.querySelectorAll("[data-node-jump]").forEach(btn=>btn.addEventListener("click",()=>{
-    const n=btn.dataset.nodeJump;
-    openDashboardPage("monitoring");
-    setTimeout(()=>{
-      const card=$("nodeCard"+n);
-      if(!card) return;
-      card.scrollIntoView({behavior:"smooth",block:"center"});
-      card.classList.remove("navigation-highlight");
-      void card.offsetWidth;
-      card.classList.add("navigation-highlight");
-      setTimeout(()=>card.classList.remove("navigation-highlight"),1700);
-    },180);
-  }));
-  const toggle=$("dashboardMobileToggle");
-  const links=$("dashboardNavLinks");
-  if(toggle&&links) toggle.addEventListener("click",()=>{
-    const open=links.classList.toggle("open");
-    toggle.setAttribute("aria-expanded",open?"true":"false");
-  });
-  window.addEventListener("hashchange",()=>openDashboardPage(getDashboardPageFromHash(),{updateHash:false}));
-  openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
-}
-
-bindDashboardNavigation();
-updateNavigationDashboard();
-refreshPM10History24h();
-setInterval(updateNavigationDashboard,2000);
-setInterval(toggleOverviewParticleMetric,5000);
-setInterval(refreshPM10History24h,60000);
-
-
-// =========================================================
-// V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
-// =========================================================
-(function(){
-  function fitHelpToViewport(){
-    const popover=document.getElementById("helpPopover");
-    if(!popover || !popover.classList.contains("active")) return;
-
-    if(window.matchMedia("(max-width: 1023px)").matches){
-      popover.style.setProperty("position","fixed","important");
-      popover.style.setProperty("top","max(8px, env(safe-area-inset-top))","important");
-      popover.style.setProperty("right","8px","important");
-      popover.style.setProperty("bottom","max(8px, env(safe-area-inset-bottom))","important");
-      popover.style.setProperty("left","8px","important");
-      popover.style.setProperty("width","auto","important");
-      popover.style.setProperty("max-width","none","important");
-      popover.style.setProperty("max-height","none","important");
-      popover.style.setProperty("transform","none","important");
-      popover.style.setProperty("margin","0","important");
-    }else{
-      // Let the desktop CSS own positioning.
-      ["position","top","right","bottom","left","width","max-width","max-height","transform","margin"]
-        .forEach(function(prop){ popover.style.removeProperty(prop); });
-    }
-  }
-
-  // Run after the existing .help-button click handler has inserted content.
-  document.addEventListener("click",function(e){
-    if(!e.target.closest(".help-button")) return;
-    requestAnimationFrame(fitHelpToViewport);
-  });
-
-  window.addEventListener("resize",fitHelpToViewport,{passive:true});
-  window.addEventListener("orientationchange",function(){
-    setTimeout(fitHelpToViewport,80);
-  });
-})();
-
-// =========================================================
-// PUBLIC DISPLAY CONFIG
-// =========================================================
-function configDevice(deviceId){
-return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
-}
-
-function applyPublicDisplayConfig(){
-for(let i=1;i<=3;i++){
-const d=configDevice(`Number ${i}`)||{};
-const name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`;
-const loc=String(d.location_name||"").trim();
-const desc=String(d.description||"").trim();
-
-const ot=$(`overviewNodeTitle${i}`);
-const ol=$(`overviewNodeLocation${i}`);
-const nt=$(`nodeTitle${i}`);
-const nl=$(`nodeLocation${i}`);
-const nd=$(`nodeDescription${i}`);
-const ho=$(`historyNodeOption${i}`);
-
-if(ot)ot.textContent=name;
-if(ol){ol.textContent=loc;ol.classList.toggle("hidden",!loc);}
-if(nt)nt.textContent=name;
-if(nl){nl.textContent=loc;nl.classList.toggle("hidden",!loc);}
-if(nd){nd.textContent=desc;nd.classList.toggle("hidden",!desc);}
-if(ho)ho.textContent=loc?`${name} • ${loc}`:name;
-}
-
-const h=$("publicAboutHeading");
-const intro=$("publicAboutIntro");
-const heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";
-const about=String(publicDisplayConfig?.content?.about_intro||"").trim();
-
-if(h)h.textContent=heading;
-if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about);}
-
-const ann=publicDisplayConfig?.content||{};
-const aw=$("siteAnnouncementWrap");
-const ab=$("siteAnnouncement");
-const at=$("siteAnnouncementTitle");
-const am=$("siteAnnouncementMessage");
-const ai=$("siteAnnouncementIcon");
-const enabled=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
-
-if(aw){
-aw.classList.toggle("hidden",!enabled);
-if(enabled){
-const sev=["info","warning","maintenance"].includes(String(ann.announcement_severity))
-?String(ann.announcement_severity):"info";
-ab.className=`site-announcement is-${sev}`;
-at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";
-am.textContent=String(ann.announcement_message||"").trim();
-ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
-}
-}
-
-if(historyActivated&&typeof Chart!=="undefined"){
-try{drawCharts();}catch(e){console.warn("Chart label refresh failed",e);}
-}
-}
-
-async function loadPublicDisplayConfig(){
-try{
-const r=await fetch(API.publicConfig,{cache:"no-store",headers:{Accept:"application/json"}});
-if(!r.ok)throw new Error(`HTTP ${r.status}`);
-const j=await r.json();
-if(!j?.success||!j?.data)throw new Error("Public config unavailable");
-publicDisplayConfig=j.data;
-applyManagedHelpOverrides(publicDisplayConfig?.help||{});
-applyPublicDisplayConfig();
-return j.data;
-}catch(e){
-console.warn("Public display config unavailable; using defaults.");
-applyPublicDisplayConfig();
-return publicDisplayConfig;
-}
-}
-
-(function startPublicDisplayConfig(){
-const run=()=>loadPublicDisplayConfig();
-if(document.readyState==="loading"){
-document.addEventListener("DOMContentLoaded",run,{once:true});
-}else{
-run();
-}
-})();
-
-// =========================================================
-// V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
-// Some mobile browsers use a visual viewport smaller or
-// offset from the CSS layout viewport. This keeps modal-like
-// UI inside the actually visible screen.
-// =========================================================
-(function setupVisualViewportFloatingUI(){
-
-  const MOBILE_MAX = 760;
-  const GAP = 8;
-
-  function isMobileViewport(){
-    return window.matchMedia(`(max-width:${MOBILE_MAX}px)`).matches;
-  }
-
-  function visibleViewport(){
-    const vv = window.visualViewport;
-    return {
-      left: vv ? vv.offsetLeft : 0,
-      top: vv ? vv.offsetTop : 0,
-      width: vv ? vv.width : window.innerWidth,
-      height: vv ? vv.height : window.innerHeight
-    };
-  }
-
-  function clearFit(el){
-    if(!el) return;
-    [
-      "position","left","right","top","bottom",
-      "width","height","minWidth","maxWidth",
-      "minHeight","maxHeight","margin","transform"
-    ].forEach(prop=>el.style.removeProperty(prop));
-  }
-
-  function fitFloating(el){
-    if(!el || !isMobileViewport()) return;
-
-    // Portal to BODY. This avoids transformed/content-visibility ancestors
-    // becoming a fixed-position containing block on some browsers.
-    if(el.parentElement !== document.body){
-      document.body.appendChild(el);
+.chart-zoom-stage{
+    position:relative!important;
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:block!important;
+    padding:12px!important;
+    touch-action:none!important;
+}
+
+.chart-zoom-stage canvas{
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    max-height:none!important;
+    display:block!important;
+    touch-action:none!important;
+}
+
+.chart-zoom-image{
+    display:none!important;
+}
+
+.chart-zoom-heading{
+    min-width:0;
+}
+
+.chart-zoom-statusbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    padding:7px 13px;
+    border-bottom:1px solid rgba(148,163,184,.10);
+    background:rgba(6,19,32,.96);
+    color:#94a3b8;
+    font-size:10px;
+    line-height:1.35;
+}
+
+.chart-zoom-loading,
+.chart-zoom-error{
+    position:absolute;
+    inset:50% auto auto 50%;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    padding:10px 13px;
+    border-radius:11px;
+    border:1px solid rgba(103,232,249,.18);
+    background:rgba(2,6,23,.88);
+    color:#cbd5e1;
+    font-size:12px;
+    font-weight:750;
+    text-align:center;
+    pointer-events:none;
+}
+
+.chart-zoom-loading.hidden{
+    display:none!important;
+}
+
+/* Reset button needs more room than old 100% label */
+.chart-zoom-actions #chartZoomReset{
+    min-width:58px!important;
+}
+
+/* Mobile */
+@media(max-width:720px){
+
+    .chart-zoom-dialog{
+        inset:4px!important;
+        border-radius:14px!important;
     }
 
-    const v = visibleViewport();
-    const gap = Math.min(GAP, Math.max(4, v.width * 0.02));
-    const width = Math.max(240, v.width - gap * 2);
-    const height = Math.max(240, v.height - gap * 2);
-
-    el.style.setProperty("position","fixed","important");
-    el.style.setProperty("left",`${v.left + gap}px`,"important");
-    el.style.setProperty("top",`${v.top + gap}px`,"important");
-    el.style.setProperty("right","auto","important");
-    el.style.setProperty("bottom","auto","important");
-    el.style.setProperty("width",`${width}px`,"important");
-    el.style.setProperty("max-width",`${width}px`,"important");
-    el.style.setProperty("height","auto","important");
-    el.style.setProperty("max-height",`${height}px`,"important");
-    el.style.setProperty("margin","0","important");
-    el.style.setProperty("transform","none","important");
-  }
-
-  function fitOpenFloatingUI(){
-    // V10: History Range ใช้ CSS full-screen mobile modal โดยตรง
-    // ห้ามคำนวณ width/left/top จาก VisualViewport เพราะบาง browser
-    // รายงานค่าชั่วคราวแคบมาก ทำให้ panel ไปกองมุมซ้าย
-    const help = document.getElementById("helpPopover");
-    if(help && help.classList.contains("active")){
-      fitFloating(help);
+    .chart-zoom-toolbar{
+        padding:9px 8px!important;
+        gap:6px!important;
     }
-  }
 
-  function restoreDesktop(){
-    if(isMobileViewport()) return;
-    clearFit(document.getElementById("helpPopover"));
-  }
-
-  function refresh(){
-    if(isMobileViewport()) fitOpenFloatingUI();
-    else restoreDesktop();
-  }
-
-  // Watch both dialogs so opening them from any existing code path is safe.
-  ["helpPopover"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-
-    const observer=new MutationObserver(()=>{
-      requestAnimationFrame(refresh);
-    });
-
-    observer.observe(el,{
-      attributes:true,
-      attributeFilter:["class","aria-hidden"]
-    });
-  });
-
-  window.addEventListener("resize",refresh,{passive:true});
-  window.addEventListener("orientationchange",()=>{
-    setTimeout(refresh,80);
-    setTimeout(refresh,260);
-  },{passive:true});
-
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize",refresh,{passive:true});
-    window.visualViewport.addEventListener("scroll",refresh,{passive:true});
-  }
-
-  document.addEventListener("click",e=>{
-    if(
-      e.target.closest?.("#historyRangeButton") ||
-      e.target.closest?.(".help-button")
-    ){
-      requestAnimationFrame(refresh);
-      setTimeout(refresh,80);
+    .chart-zoom-title{
+        font-size:13px!important;
+        max-width:150px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
     }
-  });
-})();
 
+    .chart-zoom-help{
+        font-size:8px!important;
+        max-width:165px!important;
+    }
 
-// =====================================================
-// V18 — CONTEXTUAL EXPLANATIONS
-// =====================================================
-const V18_INFO={
-monitoring:{
-title:"สถานะจุดตรวจวัด",
-html:`<p><b>ONLINE</b> — จุดตรวจวัดพร้อมใช้งานและระบบยังยืนยันการทำงานได้ตามปกติ</p>
-<p><b>OFFLINE</b> — ไม่สามารถยืนยันการติดต่อกับจุดตรวจวัดได้ในขณะนั้น</p>
-<p><b>ข้อมูลล่าสุด</b> — เวลาของข้อมูลตรวจวัดชุดที่กำลังแสดง ซึ่งอาจต่างจากเวลาที่สถานะเปลี่ยนแปลง</p>`
-},
-history:{
-title:"กราฟย้อนหลังและค่าเฉลี่ยพื้นที่",
-html:`<p>กราฟย้อนหลังใช้ดูข้อมูลตามช่วงเวลาที่เลือกและเปรียบเทียบแต่ละจุดได้</p>
-<p><b>ค่าเฉลี่ยพื้นที่</b> ใช้ช่วยมองสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
-<p>ช่วงเวลาที่ยาวอาจแสดงข้อมูลในระดับรายละเอียดที่เหมาะสมเพื่อให้อ่านแนวโน้มได้ชัดเจน</p>`
-},
-forecast:{
-title:"แนวโน้มล่วงหน้า 30 นาที",
-html:`<p>แสดงค่าประมาณที่อาจเกิดขึ้นในอีก <b>10, 20 และ 30 นาที</b> เพื่อช่วยดูทิศทางระยะสั้น</p>
-<p>ผลลัพธ์ <b>ไม่ใช่ค่ารับประกัน</b> และไม่ใช่การพยากรณ์อากาศอย่างเป็นทางการ</p>
-<p> ใช้บอกระดับความพร้อมของข้อมูลประกอบการคาดการณ์ ไม่ใช่เปอร์เซ็นต์ Accuracy</p>`
-},
-systemGuide:{
-title:"วิธีอ่านข้อมูลจากระบบ",
-html:`<p><b>PM2.5</b> เป็นตัวหลักสำหรับสื่อสถานการณ์คุณภาพอากาศ</p>
-<p><b>อุณหภูมิ</b> แสดงระดับตั้งแต่หนาวจัดถึงร้อนจัด โดยใช้เพื่อเฝ้าระวังเบื้องต้น</p>
-<p><b>ความชื้น</b> แสดง ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ</p>
-<p><b>Heat Index</b> ยังคงแสดงแยก ใช้ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้นร่วมกัน</p>
-<p><b>Lux</b> ใช้บอกระดับความสว่าง และไม่ใช่ UV Index</p>
-<p>หน้า Dashboard เน้นให้เข้าใจว่า <b>สถานการณ์เป็นอย่างไร → ค่าหมายถึงอะไร → ควรปฏิบัติตัวอย่างไร</b></p>`
-}
-};
-function v18OpenInfo(key){const t=V18_INFO[key],m=$("v18InfoModal");if(!t||!m)return;$("v18InfoTitle").textContent=t.title;$("v18InfoBody").innerHTML=t.html;m.classList.add("active");m.setAttribute("aria-hidden","false");document.body.classList.add("v18-modal-open");}
-function v18CloseInfo(){const m=$("v18InfoModal");if(!m)return;m.classList.remove("active");m.setAttribute("aria-hidden","true");document.body.classList.remove("v18-modal-open");}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-v18-help]");if(b){e.preventDefault();v18OpenInfo(b.dataset.v18Help);return;}if(e.target.closest("[data-v18-info-close]")){e.preventDefault();v18CloseInfo();}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.classList.contains("active"))v18CloseInfo();});
+    .chart-zoom-actions{
+        gap:3px!important;
+    }
 
-// =========================================================
-// V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
-// =========================================================
-const AUTH_TOKEN_KEY="localAirAuthTokenV31";
-let authToken=sessionStorage.getItem(AUTH_TOKEN_KEY)||"";
-let authUser=null;
-let managedHelpCache={};
-let currentHelpEditorKey="";
+    .chart-zoom-actions button{
+        min-width:32px!important;
+        height:32px!important;
+        padding:0 6px!important;
+        font-size:13px!important;
+    }
 
-function authRoleThai(role){
-  return role==="owner"?"เจ้าของระบบ":role==="admin"?"ผู้ดูแลระบบ":"ผู้ใช้งาน";
+    .chart-zoom-actions #chartZoomReset{
+        min-width:48px!important;
+        font-size:9px!important;
+    }
+
+    .chart-zoom-statusbar{
+        gap:8px!important;
+        padding:6px 8px!important;
+        font-size:8px!important;
+    }
+
+    .chart-zoom-stage{
+        padding:5px!important;
+    }
 }
 
-function authRoleLabel(role){
-  return role==="owner"?"OWNER":role==="admin"?"ADMIN":"USER";
+/* Tablet */
+@media(min-width:721px) and (max-width:1100px){
+
+    .chart-zoom-dialog{
+        inset:8px!important;
+    }
+
+    .chart-zoom-stage{
+        padding:9px!important;
+    }
+
+    .chart-zoom-statusbar{
+        font-size:9px!important;
+    }
 }
 
-async function apiJson(url,options={}){
-  const headers={Accept:"application/json",...(options.headers||{})};
-  if(options.body && !headers["Content-Type"]) headers["Content-Type"]="application/json";
-  if(authToken) headers.Authorization=`Bearer ${authToken}`;
-  const r=await fetch(url,{...options,headers,cache:"no-store"});
-  let j=null;
-  try{j=await r.json();}catch(_){j={success:false,message:`HTTP ${r.status}`};}
-  if(!r.ok) throw new Error(j?.message||`HTTP ${r.status}`);
-  return j;
+
+
+/* =========================================================
+   INTERACTIVE VIEWER — NO PLUGIN CURSOR POLISH
+   ========================================================= */
+
+.chart-zoom-stage{
+    cursor:grab;
 }
 
-function setAuthMessage(id,text,type=""){
-  const el=$(id); if(!el)return;
-  el.textContent=text||"";
-  el.classList.toggle("is-error",type==="error");
-  el.classList.toggle("is-success",type==="success");
+.chart-zoom-stage.is-panning{
+    cursor:grabbing;
 }
 
-function updateAccountUI(){
-  const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
-  const menu=$("accountDropdown"),adminBtn=$("openAdminCenterButton");
-  if(!button||!text)return;
-  if(authUser){
-    text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
-    chev?.classList.remove("hidden");
-    if(badge){badge.textContent=authRoleThai(authUser.role);badge.classList.remove("hidden");}
-    const mn=$("accountMenuName"),mr=$("accountMenuRole");
-    if(mn)mn.textContent=authUser.display_name||authUser.email;
-    if(mr)mr.textContent=`${authRoleLabel(authUser.role)} • ${authRoleThai(authUser.role)}`;
-    adminBtn?.classList.toggle("hidden",!["admin","owner"].includes(authUser.role));
-  }else{
-    text.textContent="เข้าสู่ระบบ";
-    chev?.classList.add("hidden");
-    badge?.classList.add("hidden");
-    menu?.classList.add("hidden");
+.chart-zoom-stage canvas{
+    touch-action:none!important;
+}
+
+
+/* =========================================================
+   INTERACTIVE GRAPH — DATA SERIES CONTROLS
+   คนทั่วไปเห็นชัดว่าเส้นกราฟเปิด/ปิดได้
+   ========================================================= */
+
+.chart-series-controls{
+    flex:0 0 auto;
+    padding:10px 13px;
+    border-bottom:1px solid rgba(148,163,184,.10);
+    background:rgba(7,22,37,.97);
+}
+
+.chart-series-controls-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+}
+
+.chart-series-controls-title{
+    color:#e2e8f0;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.3;
+}
+
+.chart-series-controls-help{
+    margin-top:2px;
+    color:#7f91a8;
+    font-size:10px;
+    line-height:1.35;
+}
+
+.chart-series-show-all{
+    flex:0 0 auto;
+    min-height:32px;
+    padding:0 10px;
+    border:1px solid rgba(103,232,249,.22);
+    border-radius:9px;
+    background:rgba(34,211,238,.08);
+    color:#a5f3fc;
+    font-size:10px;
+    font-weight:850;
+    transition:
+        background .16s ease,
+        opacity .16s ease;
+}
+
+.chart-series-show-all:hover:not(:disabled){
+    background:rgba(34,211,238,.14);
+}
+
+.chart-series-show-all:disabled,
+.chart-series-show-all.is-complete{
+    opacity:.42;
+    cursor:default;
+}
+
+.chart-series-show-all.hidden{
+    display:none!important;
+}
+
+.chart-series-buttons{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:7px;
+}
+
+.chart-series-button{
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:0 10px;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:10px;
+    background:rgba(15,35,56,.72);
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:850;
+    line-height:1;
+    white-space:nowrap;
+    transition:
+        background .16s ease,
+        border-color .16s ease,
+        color .16s ease,
+        opacity .16s ease;
+}
+
+.chart-series-button.is-active{
+    color:#ecfeff;
+    border-color:rgba(103,232,249,.34);
+    background:rgba(34,211,238,.10);
+}
+
+.chart-series-button.is-hidden{
+    opacity:.52;
+    text-decoration:line-through;
+    background:rgba(15,23,42,.45);
+}
+
+.chart-series-check{
+    width:17px;
+    height:17px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(148,163,184,.36);
+    border-radius:5px;
+    color:#67e8f9;
+    font-size:11px;
+    font-weight:900;
+    line-height:1;
+}
+
+.chart-series-button.is-active .chart-series-check{
+    border-color:rgba(52,211,153,.55);
+    background:rgba(16,185,129,.13);
+    color:#6ee7b7;
+}
+
+.chart-series-single-label{
+    display:inline-flex;
+    align-items:center;
+    min-height:32px;
+    padding:0 10px;
+    border-radius:9px;
+    border:1px solid rgba(148,163,184,.12);
+    background:rgba(15,35,56,.45);
+    color:#cbd5e1;
+    font-size:11px;
+    font-weight:800;
+}
+
+.chart-series-controls.is-single .chart-series-controls-help{
+    display:none;
+}
+
+.chart-series-controls.is-single .chart-series-controls-head{
+    margin-bottom:6px;
+}
+
+/* Mobile */
+@media(max-width:720px){
+
+    .chart-series-controls{
+        padding:8px;
+    }
+
+    .chart-series-controls-head{
+        gap:8px;
+        margin-bottom:7px;
+    }
+
+    .chart-series-controls-title{
+        font-size:11px;
+    }
+
+    .chart-series-controls-help{
+        font-size:8px;
+        max-width:210px;
+    }
+
+    .chart-series-show-all{
+        min-height:30px;
+        padding:0 8px;
+        font-size:9px;
+    }
+
+    .chart-series-buttons{
+        gap:5px;
+    }
+
+    .chart-series-button{
+        min-height:32px;
+        padding:0 8px;
+        gap:5px;
+        font-size:10px;
+        border-radius:9px;
+    }
+
+    .chart-series-check{
+        width:16px;
+        height:16px;
+        font-size:10px;
+    }
+
+    .chart-series-single-label{
+        min-height:30px;
+        padding:0 8px;
+        font-size:10px;
+    }
+}
+
+
+/* =========================================================
+   NAVIGATION REDESIGN 2026-08-28
+   Keeps the existing dashboard theme and logic.
+   ========================================================= */
+.dashboard-nav{position:sticky;top:10px;z-index:80;margin:-4px 0 20px;border-radius:18px;backdrop-filter:blur(18px);background:rgba(7,17,31,.92)}
+.dashboard-nav-inner{min-height:62px;padding:8px 10px;display:flex;align-items:center;gap:12px}
+.dashboard-nav-links{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.dashboard-nav-link{appearance:none;border:0;background:transparent;color:#94a3b8;font:inherit;font-size:.9rem;font-weight:800;padding:11px 14px;border-radius:12px;cursor:pointer;white-space:nowrap;transition:.18s ease}
+.dashboard-nav-link:hover{color:#e2e8f0;background:rgba(148,163,184,.08)}
+.dashboard-nav-link.active{color:#cffafe;background:linear-gradient(135deg,rgba(34,211,238,.16),rgba(14,165,233,.08));box-shadow:inset 0 0 0 1px rgba(34,211,238,.22)}
+.dashboard-system-pill{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(9,24,39,.92);font-size:.78rem;font-weight:800;color:#cbd5e1;white-space:nowrap}
+.dashboard-system-dot{width:9px;height:9px;border-radius:50%;background:#64748b;box-shadow:0 0 0 4px rgba(100,116,139,.10)}
+.dashboard-system-dot.is-online{background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.10),0 0 12px rgba(52,211,153,.35)}
+.dashboard-system-dot.is-offline{background:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.10),0 0 12px rgba(248,113,113,.28)}
+.dashboard-alert-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);color:#fecaca;font-size:.7rem}.dashboard-alert-badge.hidden{display:none}
+.dashboard-mobile-toggle{display:none;align-items:center;gap:8px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.18);color:#cffafe;border-radius:12px;padding:10px 13px;font:inherit;font-weight:800;cursor:pointer}.dashboard-mobile-toggle-icon{font-size:1.05rem}
+.dashboard-pages{position:relative}.dashboard-page{display:none}.dashboard-page.active{display:block;animation:dashboardPageIn .22s ease both}@keyframes dashboardPageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.dashboard-page-heading{margin:6px 2px 18px}.dashboard-page-heading h1{margin:3px 0 4px;font-size:clamp(1.6rem,2.2vw,2.25rem);line-height:1.15}.dashboard-page-heading p{margin:0;max-width:850px;color:#94a3b8;font-size:.93rem;line-height:1.7}.overview-eyebrow{font-size:.7rem;letter-spacing:.16em;font-weight:900;color:#22d3ee}.overview-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;padding:26px;margin-bottom:14px;overflow:hidden;position:relative}.overview-hero:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-110px;top:-150px;background:rgba(34,211,238,.07);pointer-events:none}.overview-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.overview-title{margin:5px 0 5px;font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.12}.overview-subtitle{margin:0;color:#94a3b8;line-height:1.7;max-width:820px}.overview-quality-badge{display:inline-flex;align-items:center;justify-content:center;min-width:120px;min-height:38px;padding:8px 14px;border-radius:999px;font-size:.82rem;font-weight:900;border:1px solid rgba(148,163,184,.2);background:rgba(100,116,139,.12);color:#cbd5e1;white-space:nowrap}.overview-quality-badge.is-normal{color:#a7f3d0;background:rgba(16,185,129,.11);border-color:rgba(52,211,153,.25)}.overview-quality-badge.is-warning{color:#fde68a;background:rgba(245,158,11,.11);border-color:rgba(251,191,36,.25)}.overview-quality-badge.is-critical{color:#fecaca;background:rgba(239,68,68,.11);border-color:rgba(248,113,113,.27)}.overview-guidance{margin-top:18px;font-size:1.05rem;font-weight:800;color:#e2e8f0}.overview-freshness{display:flex;align-items:center;gap:7px;margin-top:10px;color:#64748b;font-size:.76rem}.overview-freshness-dot{width:7px;height:7px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.4)}.overview-main-value{min-width:220px;text-align:center;padding:22px 26px;border-radius:20px;background:linear-gradient(145deg,rgba(34,211,238,.11),rgba(14,165,233,.04));border:1px solid rgba(34,211,238,.19)}.overview-main-label{display:block;color:#94a3b8;font-size:.78rem}.overview-main-value strong{display:block;font-size:clamp(2.7rem,5vw,4.6rem);line-height:1.05;margin:9px 0 3px;color:#ecfeff}.overview-main-unit{color:#67e8f9;font-size:.78rem}.overview-metrics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}.overview-metric-card{padding:18px 20px}.overview-metric-card>span{display:block;color:#94a3b8;font-size:.78rem}.overview-metric-card b{display:inline-block;margin-top:7px;font-size:1.65rem}.overview-metric-card small{margin-left:7px;color:#64748b}.overview-section-head,.overview-alert-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:0 2px 12px}.overview-section-head h2,.overview-alert-head h2{margin:3px 0 0;font-size:1.25rem}.overview-link-button{border:0;background:transparent;color:#67e8f9;font:inherit;font-size:.78rem;font-weight:800;cursor:pointer;padding:7px 0}.overview-link-button:hover{color:#cffafe}.overview-node-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.overview-node-card{appearance:none;color:inherit;text-align:left;padding:16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;cursor:pointer;transition:.18s ease}.overview-node-card:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.3)}.overview-node-dot{width:11px;height:11px;border-radius:50%;background:#64748b}.overview-node-dot.online{background:#34d399;box-shadow:0 0 10px rgba(52,211,153,.4)}.overview-node-dot.offline{background:#64748b}.overview-node-card b{display:block}.overview-node-card small{display:block;color:#94a3b8;margin-top:3px}.overview-node-arrow{font-size:1.45rem;color:#475569}.overview-alert-card{margin-bottom:18px}.overview-alert-card #overviewAlerts{line-height:1.7}.node.navigation-highlight{animation:nodeNavigationHighlight 1.5s ease}@keyframes nodeNavigationHighlight{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 2px rgba(34,211,238,.55),0 0 28px rgba(34,211,238,.16)}}
+.about-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.about-card{padding:22px;display:flex;gap:16px;align-items:flex-start}.about-card-wide{grid-column:1/-1}.about-card-icon{flex:0 0 42px;width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.18);color:#67e8f9;font-size:1.15rem}.about-card h2{margin:2px 0 8px;font-size:1.08rem}.about-card p{margin:0;color:#94a3b8;line-height:1.75;font-size:.9rem}.about-chip-list{display:flex;flex-wrap:wrap;gap:8px}.about-chip-list span{padding:7px 10px;border-radius:999px;background:#102338;border:1px solid rgba(148,163,184,.16);font-size:.78rem;color:#cbd5e1}.system-flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:18px}.system-flow span{padding:8px 10px;border-radius:10px;background:#091827;border:1px solid rgba(148,163,184,.14);font-size:.76rem;font-weight:800}.system-flow i{font-style:normal;color:#22d3ee}.about-credit-note{margin-top:14px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}.about-credit-note h2{margin:3px 0 5px}.about-credit-note p{margin:0;color:#94a3b8}.about-credit-note>span{font-size:1.6rem;color:#22d3ee}
+@media(max-width:1100px){.dashboard-nav-inner{flex-wrap:wrap}.dashboard-system-pill{margin-left:auto}.dashboard-nav-links{order:3;flex-basis:100%;overflow-x:auto;padding-bottom:2px}.dashboard-nav-link{flex:0 0 auto}.overview-hero{grid-template-columns:1fr}.overview-main-value{min-width:0}.overview-title-row{align-items:center}}
+@media(max-width:760px){.dashboard-nav{top:6px}.dashboard-nav-inner{padding:8px}.dashboard-mobile-toggle{display:inline-flex}.dashboard-nav-links{display:none;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;overflow:visible}.dashboard-nav-links.open{display:flex}.dashboard-nav-link{text-align:left;width:100%}.dashboard-system-pill{font-size:.7rem;padding:0 10px}.overview-hero{padding:20px}.overview-title-row{display:block}.overview-quality-badge{margin-top:12px}.overview-metrics-grid,.overview-node-grid,.about-grid{grid-template-columns:1fr}.about-card-wide{grid-column:auto}.overview-section-head,.overview-alert-head{align-items:flex-start;flex-direction:column}.overview-main-value strong{font-size:3rem}.system-flow{align-items:stretch}.system-flow i{align-self:center}.about-credit-note{align-items:flex-start}.dashboard-page-heading{margin-top:2px}}
+@media(prefers-reduced-motion:reduce){.dashboard-page.active,.node.navigation-highlight{animation:none}.overview-node-card{transition:none}}
+
+
+/* =========================================================
+   HISTORY RANGE CONTEXT — 2026-08-28
+   แสดงวัน/เวลาเริ่ม-สิ้นสุดของกราฟให้ชัด โดยเฉพาะ 7/30 วัน
+   ========================================================= */
+.history-range-caption{
+    margin-top: 12px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(34,211,238,.14);
+    border-radius: 12px;
+    background: rgba(2,12,23,.34);
+}
+.history-range-edge{
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.history-range-edge span,
+.history-range-center span{
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+.history-range-edge b{
+    color: #cbd5e1;
+    font-size: 11px;
+    line-height: 1.35;
+}
+.history-range-edge-end{
+    text-align: right;
+}
+.history-range-center{
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.history-range-center span{
+    color: #67e8f9;
+}
+.history-range-center small{
+    color: #64748b;
+    font-size: 9px;
+}
+
+/* =========================================================
+   ABOUT — MEASUREMENT CRITERIA & REFERENCES
+   ========================================================= */
+.about-standards-section{
+    margin-top: 14px;
+    padding: 22px;
+}
+.about-standards-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.about-standards-header h2{
+    margin: 3px 0 6px;
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+.about-standards-header p{
+    margin: 0;
+    color: #94a3b8;
+    font-size: .86rem;
+    line-height: 1.65;
+    max-width: 900px;
+}
+.about-standard-badge{
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(34,211,238,.22);
+    background: rgba(34,211,238,.08);
+    color: #67e8f9;
+    font-size: .7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.about-standards-grid{
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 12px;
+}
+.about-standard-card{
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(148,163,184,.13);
+    border-radius: 16px;
+    background: rgba(5,20,35,.62);
+}
+.about-standard-card.about-standard-primary{
+    grid-column: span 2;
+}
+.about-standard-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.about-standard-head span{
+    color: #f8fafc;
+    font-size: 1rem;
+    font-weight: 900;
+}
+.about-standard-head b{
+    color: #67e8f9;
+    font-size: .68rem;
+    font-weight: 800;
+    text-align: right;
+}
+.about-standard-card p{
+    margin: 0;
+    color: #94a3b8;
+    font-size: .78rem;
+    line-height: 1.65;
+}
+.about-threshold-list{
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 7px;
+    margin-bottom: 12px;
+}
+.about-threshold-list.compact{
+    grid-template-columns: 1fr;
+}
+.about-threshold-list div{
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,.1);
+    background: rgba(15,35,56,.58);
+}
+.about-threshold-list span,
+.about-threshold-list b{
+    display: block;
+}
+.about-threshold-list span{
+    color: #94a3b8;
+    font-size: .65rem;
+}
+.about-threshold-list b{
+    margin-top: 3px;
+    color: #e2e8f0;
+    font-size: .7rem;
+}
+.about-standard-note{
+    padding-top: 10px;
+    border-top: 1px solid rgba(148,163,184,.1);
+}
+.about-standard-big{
+    margin: 4px 0 10px;
+    color: #67e8f9;
+    font-size: 1.65rem;
+    font-weight: 900;
+}
+.about-standard-big small{
+    font-size: .72rem;
+    color: #94a3b8;
+}
+.about-reference-box{
+    margin-top: 14px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(148,163,184,.13);
+}
+.about-reference-title{
+    margin-bottom: 10px;
+    color: #cbd5e1;
+    font-size: .78rem;
+    font-weight: 900;
+}
+.about-reference-links{
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 8px;
+}
+.about-reference-links a{
+    min-width: 0;
+    padding: 10px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid rgba(34,211,238,.12);
+    border-radius: 11px;
+    background: rgba(34,211,238,.04);
+    text-decoration: none;
+    transition: .2s ease;
+}
+.about-reference-links a:hover{
+    transform: translateY(-1px);
+    border-color: rgba(34,211,238,.34);
+    background: rgba(34,211,238,.08);
+}
+.about-reference-links span{
+    color: #64748b;
+    font-size: .61rem;
+}
+.about-reference-links b{
+    color: #bae6fd;
+    font-size: .68rem;
+    line-height: 1.35;
+}
+
+@media (max-width: 1000px){
+    .about-standards-grid{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .about-standard-card.about-standard-primary{
+        grid-column: span 2;
+    }
+    .about-reference-links{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .about-threshold-list{
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+@media (max-width: 640px){
+    .history-range-caption{
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .history-range-center{
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+    .history-range-edge{
+        grid-row: 2;
+    }
+    .about-standards-section{
+        padding: 16px;
+    }
+    .about-standards-header{
+        flex-direction: column;
+    }
+    .about-standards-grid{
+        grid-template-columns: 1fr;
+    }
+    .about-standard-card.about-standard-primary{
+        grid-column: auto;
+    }
+    .about-threshold-list{
+        grid-template-columns: 1fr;
+    }
+    .about-reference-links{
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   ABOUT PROJECT — DETAILED DOCUMENTATION 2026-08-28 V3
+   ========================================================= */
+.about-chip-list-spaced{margin-top:14px}
+.about-card-subtext{margin-top:12px!important}
+.about-detail-section{margin-top:14px;padding:24px}
+.about-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+.about-detail-head h2{margin:4px 0 0;font-size:1.25rem}
+.about-detail-grid,.about-interpretation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.about-detail-grid article,.about-interpretation-grid article{padding:17px 18px;border-radius:15px;background:#091827;border:1px solid rgba(148,163,184,.14)}
+.about-detail-grid article b,.about-interpretation-grid article b{display:block;margin-bottom:7px;color:#eaf2f8}
+.about-detail-grid article p,.about-interpretation-grid article p{margin:0;color:#94a3b8;line-height:1.7;font-size:.86rem}
+.about-status-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.about-status-rules>div{position:relative;padding:18px;border-radius:15px;background:#091827;border:1px solid rgba(148,163,184,.14)}
+.about-status-rules b{display:inline-block;margin-left:8px}.about-status-rules p{margin:8px 0 0;color:#94a3b8;line-height:1.7;font-size:.86rem}
+.about-rule-dot{display:inline-block;width:9px;height:9px;border-radius:999px}.about-rule-dot.is-online{background:#34d399;box-shadow:0 0 10px rgba(52,211,153,.35)}.about-rule-dot.is-offline{background:#64748b}.about-rule-dot.is-gateway{background:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.35)}
+.about-caution-box{margin-top:14px;padding:15px 17px;border-radius:14px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);color:#cbd5e1;line-height:1.7;font-size:.86rem}.about-caution-box b{color:#fbbf24}
+#page-about>.credit-bar{margin-top:18px;border-radius:20px;overflow:hidden}
+#page-about .about-credit-note{margin-top:18px}
+
+@media(max-width:900px){.about-status-rules{grid-template-columns:1fr}.about-detail-grid,.about-interpretation-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.about-detail-section{padding:18px}.about-detail-head{flex-direction:column}.about-detail-head .about-standard-badge{align-self:flex-start}}
+
+/* =========================================================
+   HISTORY RANGE PICKER — VIEWPORT-CENTERED MODAL
+   2026-08-28
+   ========================================================= */
+
+body.history-range-modal-open {
+    overflow: hidden;
+}
+
+body.history-range-modal-open::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 99980;
+    background: rgba(2, 8, 18, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+#historyRangePanel.history-range-panel {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    z-index: 100000 !important;
+    width: min(720px, calc(100vw - 32px)) !important;
+    max-width: 720px !important;
+    max-height: calc(100vh - 36px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
+
+@media (max-width: 700px) {
+    #historyRangePanel.history-range-panel {
+        top: 50% !important;
+        left: 50% !important;
+        right: auto !important;
+        width: min(560px, calc(100vw - 24px)) !important;
+        max-height: calc(100vh - 24px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE READABILITY & UI AUDIT — 2026-08-28 V5
+   เป้าหมาย: อ่านได้จริงบนมือถือ/แท็บเล็ต/คอม โดยไม่เปลี่ยน logic
+   ========================================================= */
+
+html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+}
+
+/* ป้องกันข้อความ/คอนโทรลล้นการ์ด */
+body,
+button,
+input,
+select,
+textarea{
+    font-family:Inter,system-ui,"Noto Sans Thai",sans-serif;
+}
+
+img,canvas,svg{max-width:100%;}
+
+/* ---------- Tablet / small laptop ---------- */
+@media (min-width:761px) and (max-width:1100px){
+    body{font-size:15px;line-height:1.55;}
+    .dashboard-nav-link{font-size:.92rem;}
+    .dashboard-system-pill{font-size:.8rem;}
+    .dashboard-page-heading p,
+    .about-card p{font-size:.94rem;}
+    .overview-main-label,
+    .overview-main-unit,
+    .overview-metric-card>span,
+    .about-chip-list span,
+    .system-flow span{font-size:.82rem;}
+    .help-popover-body{font-size:13px;}
+    .export-modal-subtitle,
+    .export-field>span,
+    .export-summary-note{font-size:12px;}
+}
+
+/* ---------- Mobile readability baseline ---------- */
+@media (max-width:760px){
+    body{
+        font-size:15px;
+        line-height:1.55;
+        overflow-wrap:anywhere;
+    }
+
+    .max-w-\[1800px\]{
+        padding-left:10px!important;
+        padding-right:10px!important;
+    }
+
+    .card{border-radius:16px;}
+    .p-5{padding:16px;}
+    .p-4{padding:14px;}
+
+    /* Utility text ที่เดิมเล็กเกินไปบนมือถือ */
+    .text-xs{font-size:13px!important;line-height:1.45!important;}
+    .text-sm{font-size:14px!important;line-height:1.55!important;}
+    .text-\[8px\],
+    .text-\[9px\],
+    .text-\[10px\],
+    .text-\[11px\]{font-size:12px!important;line-height:1.4!important;}
+
+    h1,.text-4xl{line-height:1.15;}
+    h2,.text-2xl{font-size:21px!important;line-height:1.25!important;}
+    .text-xl{font-size:18px!important;line-height:1.35!important;}
+    .text-lg{font-size:16px!important;line-height:1.4!important;}
+
+    /* Touch target ขั้นต่ำใกล้ 44px */
+    button,
+    select,
+    input[type="button"],
+    input[type="submit"]{
+        min-height:44px;
+    }
+    select,
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="text"],
+    input[type="number"]{
+        font-size:16px!important; /* กัน iOS auto zoom */
+    }
+
+    /* Header */
+    header.glass.card{padding:14px!important;gap:12px!important;}
+    header .w-20{width:54px!important;height:54px!important;}
+    header .text-xl,
+    header .md\:text-2xl{font-size:18px!important;line-height:1.25!important;}
+    header .text-sm{font-size:13px!important;}
+
+    /* Navigation */
+    .dashboard-nav{margin-bottom:14px;}
+    .dashboard-nav-inner{gap:8px;}
+    .dashboard-mobile-toggle{font-size:14px;padding:0 13px;min-height:44px;}
+    .dashboard-nav-link{font-size:14px!important;min-height:44px;padding:11px 13px;}
+    .dashboard-system-pill{font-size:12px!important;min-height:38px;padding:0 10px;}
+    .dashboard-alert-badge{font-size:11px!important;min-width:20px;height:20px;}
+
+    /* Page headings */
+    .dashboard-page-heading h1{font-size:27px!important;}
+    .dashboard-page-heading p{font-size:14px!important;line-height:1.65;}
+    .overview-eyebrow{font-size:11px!important;}
+
+    /* Overview */
+    .overview-hero{padding:17px!important;gap:16px;}
+    .overview-title{font-size:25px!important;}
+    .overview-subtitle{font-size:14px;line-height:1.65;}
+    .overview-quality-badge{font-size:13px!important;white-space:normal;text-align:center;}
+    .overview-guidance{font-size:16px!important;line-height:1.55;}
+    .overview-freshness{font-size:12px!important;}
+    .overview-main-value{padding:18px 16px;}
+    .overview-main-label,
+    .overview-main-unit{font-size:13px!important;}
+    .overview-main-value strong{font-size:44px!important;}
+    .overview-metric-card{padding:15px 16px;}
+    .overview-metric-card>span{font-size:13px!important;}
+    .overview-metric-card b{font-size:24px!important;}
+    .overview-metric-card small{font-size:13px;}
+    .overview-section-head h2,
+    .overview-alert-head h2{font-size:19px!important;}
+    .overview-link-button{font-size:13px!important;min-height:40px;}
+    .overview-node-card{padding:14px;grid-template-columns:auto minmax(0,1fr) auto;}
+    .overview-node-card b{font-size:15px;}
+    .overview-node-card small{font-size:13px;line-height:1.45;}
+
+    /* Monitoring cards */
+    .node{padding:15px!important;}
+    .node b.text-xl{font-size:18px!important;}
+    .node .grid.text-sm{font-size:14px!important;line-height:1.6;}
+    .node [id$="status"]{font-size:12px!important;line-height:1.45;}
+    .badge{font-size:12px!important;}
+    #gatewayStatusTop{font-size:14px;}
+    #nodesActiveTop{font-size:12px!important;}
+
+    /* Smart summary + AI */
+    .smart-summary-mode,
+    .smart-summary-stat-label,
+    .smart-summary-stat-sub,
+    .smart-summary-activity-label,
+    .ai-status-badge,
+    .ai-result-label,
+    .ai-panel-kicker,
+    .ai-model-strip-label,
+    .ai-trend-variable,
+    .ai-forecast-kicker,
+    .ai-forecast-label,
+    .forecast-base-label,
+    .ai-generated-at,
+    .ai-analysis-footer,
+    .ai-forecast-generated{
+        font-size:12px!important;
+        line-height:1.4!important;
+        letter-spacing:.04em!important;
+    }
+    .smart-summary-stat-value,
+    .smart-summary-note,
+    .smart-summary-activity,
+    .ai-observation,
+    .ai-recommendation,
+    .ai-forecast-details,
+    .ai-trend-explanation,
+    .ai-trend-driver,
+    .ai-model-strip b,
+    .ai-intelligence-statusline,
+    .chart-zone-subtitle{
+        font-size:13px!important;
+        line-height:1.6!important;
+    }
+    .smart-summary-headline,
+    .ai-result-headline,
+    .ai-forecast-headline{font-size:16px!important;}
+    .ai-refresh-button,
+    .ai-forecast-refresh{font-size:13px!important;min-height:42px!important;}
+    .ai-forecast-status{font-size:12px!important;min-height:34px;}
+
+    /* Historical toolbar / cards */
+    .history-toolbar{justify-content:stretch;gap:8px;}
+    .history-toolbar>select,
+    .history-toolbar>button{font-size:14px!important;}
+    .history-toolbar .history-export-button{min-height:44px!important;}
+    .help-button{width:36px!important;height:36px!important;flex-basis:36px!important;font-size:15px!important;}
+    .history-range-caption{font-size:12px!important;}
+
+    /* Chart UI around canvas */
+    .metric-chart-title,
+    .chart-zone-title{font-size:15px!important;}
+    .metric-chart-subtitle,
+    .chart-series-controls-help,
+    .chart-zone-subtitle{font-size:12px!important;}
+    .metric-chart-legend,
+    .chart-series-controls-title,
+    .chart-series-button,
+    .chart-series-single-label,
+    .chart-series-show-all{font-size:12px!important;}
+    .chart-series-button,
+    .chart-series-single-label,
+    .chart-series-show-all{min-height:40px!important;}
+
+    /* History range modal */
+    #historyRangePanel.history-range-panel{
+        left:8px!important;
+        right:8px!important;
+        top:8px!important;
+        bottom:8px!important;
+        border-radius:16px!important;
+        overflow:auto!important;
+    }
+    #historyRangePanel .history-range-calendar{padding:14px!important;}
+    #historyRangePanel .history-range-quick{padding:12px 14px 15px!important;}
+    #rangeCalendarTitle{font-size:17px!important;}
+    #historyRangePanel .grid-cols-7:not(#rangeCalendarGrid)>div{font-size:12px!important;height:26px!important;}
+    #rangeCalendarGrid{gap:4px!important;}
+    #rangeCalendarGrid .range-calendar-day{height:40px!important;font-size:14px!important;}
+    #historyRangePanel #quickRangeList .quick-range-option{min-height:42px!important;font-size:14px!important;}
+    #calendarPrev,#calendarNext{width:42px!important;height:42px!important;font-size:18px!important;}
+    #historyRangePanel #historyRangeCancel,
+    #historyRangePanel #historyRangeApply{min-height:44px!important;font-size:14px!important;}
+
+    /* Help modal/popover */
+    .help-popover{
+        left:8px!important;
+        right:8px!important;
+        top:8px!important;
+        bottom:8px!important;
+        width:auto!important;
+        max-width:none!important;
+        max-height:none!important;
+        border-radius:15px!important;
+    }
+    .help-popover-header{padding:14px;}
+    .help-popover-eyebrow{font-size:11px!important;}
+    .help-popover-header h3{font-size:18px!important;line-height:1.35;}
+    .help-popover-close{width:40px;height:40px;font-size:22px;}
+    .help-popover-body{padding:14px;font-size:14px!important;line-height:1.75!important;}
+    .help-muted{font-size:13px!important;}
+    .help-section h4{font-size:15px!important;}
+    .help-chip{font-size:12px!important;}
+    .help-formula,.help-warning,.help-sources,.help-sources a{font-size:13px!important;line-height:1.6;}
+    .help-threshold-grid{font-size:13px!important;}
+
+    /* Export modal */
+    .export-modal{padding:8px!important;}
+    .export-modal-dialog{width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;border-radius:15px;}
+    .export-modal-header{padding-top:13px;padding-bottom:13px;gap:10px;}
+    .export-modal-icon{width:38px;height:38px;flex-basis:38px;font-size:17px;}
+    .export-modal-title{font-size:18px!important;}
+    .export-modal-subtitle{font-size:13px!important;line-height:1.45;}
+    .export-modal-close{width:42px;height:42px;font-size:23px;}
+    .export-modal-body{padding-top:14px;padding-bottom:14px;}
+    .export-field>span{font-size:13px!important;}
+    .export-field input[type="date"]{height:46px;font-size:16px!important;}
+    .export-count-label,.export-count-unit,.export-preview-note{font-size:12px!important;}
+    .export-summary-note,.export-loading,.export-error{font-size:13px!important;}
+    .export-preview-head{font-size:14px!important;}
+    .export-table{font-size:12px!important;min-width:720px;}
+    .export-modal-footer{gap:8px;}
+    .export-cancel-button,.export-excel-button{min-height:44px;font-size:14px!important;padding:0 12px;}
+
+    /* Chart fullscreen */
+    .chart-zoom-dialog{inset:5px!important;border-radius:14px;}
+    .chart-zoom-toolbar{padding:9px!important;gap:8px;}
+    .chart-zoom-title{font-size:16px!important;}
+    .chart-zoom-help{font-size:12px!important;max-width:180px!important;}
+    .chart-zoom-actions button{min-width:42px!important;height:42px!important;font-size:16px!important;}
+    .chart-zoom-actions #chartZoomReset{font-size:12px!important;min-width:58px!important;}
+
+    /* About project */
+    .about-card{padding:17px;gap:13px;}
+    .about-card-icon{width:40px;height:40px;flex-basis:40px;}
+    .about-card h2{font-size:17px!important;line-height:1.4;}
+    .about-card p{font-size:14px!important;line-height:1.7;}
+    .about-chip-list span,
+    .system-flow span{font-size:13px!important;line-height:1.4;}
+    .about-detail-section{padding:16px!important;}
+    .about-detail-section p,
+    .about-detail-section li{font-size:14px!important;line-height:1.7;}
+    .about-standard-badge{font-size:12px!important;}
+    .about-credit-note{padding:16px;}
+
+    /* Credit cards */
+    .credit-box{min-height:0!important;padding:16px!important;gap:12px;}
+    .credit-label{font-size:11px!important;}
+    .credit-title{font-size:14px!important;line-height:1.45!important;}
+    .credit-subtitle,.credit-role{font-size:12px!important;line-height:1.5!important;}
+    .credit-link{font-size:12px!important;min-height:38px;}
+    .credit-icon{width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;flex-basis:48px!important;}
+    .credit-footer-note{font-size:11px!important;}
+}
+
+/* ---------- Very narrow phones ---------- */
+@media (max-width:390px){
+    body{font-size:14px;}
+    .dashboard-system-pill{max-width:170px;overflow:hidden;text-overflow:ellipsis;}
+    .overview-title{font-size:23px!important;}
+    .overview-main-value strong{font-size:40px!important;}
+    .dashboard-page-heading h1{font-size:24px!important;}
+    .export-modal-footer{grid-template-columns:1fr!important;}
+    .chart-zoom-help{display:none;}
+    #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:1fr!important;}
+}
+
+/* Desktop: keep dense layout but never use microscopic UI text */
+@media (min-width:1101px){
+    .help-popover-body{font-size:13px;}
+    .export-modal-subtitle,
+    .export-field>span,
+    .export-summary-note{font-size:12px;}
+    .dashboard-system-pill{font-size:.8rem;}
+}
+
+
+/* =========================================================
+   V7 — FINAL UI REPAIR / SUMMARY / MONITORING / ABOUT
+   2026-08-28
+   ========================================================= */
+
+/* 1) History range modal: always above the dim/blur layer.
+   JS moves #historyRangePanel directly under body when opened. */
+body.history-range-modal-open::before{
+    z-index:999900!important;
+    background:rgba(2,8,18,.70)!important;
+    backdrop-filter:blur(5px)!important;
+    -webkit-backdrop-filter:blur(5px)!important;
+}
+body > #historyRangePanel.history-range-panel{
+    z-index:1000000!important;
+    isolation:isolate;
+    opacity:1!important;
+    filter:none!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    box-shadow:0 28px 90px rgba(0,0,0,.68),0 0 0 1px rgba(103,232,249,.08)!important;
+}
+body > #historyRangePanel.history-range-panel *{
+    filter:none!important;
+}
+
+/* 2) Smart Summary — all 4 information cards use the same footprint.
+   Dust card no longer pretends to be weather/cloud information. */
+@media (min-width:901px){
+    .smart-summary-grid{
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        align-items:stretch!important;
+    }
+    .smart-summary-air,
+    .smart-summary-heat,
+    .smart-summary-environment,
+    .smart-summary-system{
+        grid-column:auto!important;
+        min-height:94px!important;
+        padding:13px 14px!important;
+        display:block!important;
+    }
+    .smart-summary-environment::after{
+        content:none!important;
+        display:none!important;
+    }
+    .smart-summary-environment .smart-summary-stat-value{
+        padding-right:0!important;
+        font-size:16px!important;
+    }
+}
+
+/* 3) Outdoor activity must read like a recommendation, not a footnote. */
+.smart-summary-activity{
+    margin-top:14px!important;
+    padding:15px 17px!important;
+    border-radius:15px!important;
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:14px!important;
+    font-size:14px!important;
+    line-height:1.65!important;
+    color:#e2e8f0!important;
+}
+.smart-summary-activity-label{
+    margin:0!important;
+    padding:7px 10px!important;
+    border-radius:999px!important;
+    background:rgba(34,211,238,.08)!important;
+    border:1px solid rgba(34,211,238,.16)!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+}
+@media(max-width:640px){
+    .smart-summary-activity{
+        grid-template-columns:1fr!important;
+        gap:9px!important;
+        padding:14px!important;
+        font-size:14px!important;
+    }
+    .smart-summary-activity-label{justify-self:start!important;}
+}
+
+/* 4-5) Monitoring status: separate the main receiving station from node count. */
+.monitoring-status-cluster{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(155px,1fr));
+    gap:9px;
+    min-width:min(390px,100%);
+}
+.monitoring-status-card{
+    min-width:0;
+    padding:11px 13px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,.16);
+    background:#102338;
+}
+.monitoring-primary-status{border-color:rgba(34,211,238,.18);}
+.monitoring-node-count{border-color:rgba(52,211,153,.18);}
+.monitoring-status-label{
+    color:#94a3b8;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.05em;
+}
+.monitoring-status-value,
+.monitoring-node-count-value{
+    margin-top:5px;
+    color:#eaf2f8;
+    font-size:14px;
+    font-weight:900;
+    line-height:1.3;
+}
+.monitoring-node-count-value{color:#6ee7b7;}
+.monitoring-status-hint{
+    margin-top:4px;
+    color:#64748b;
+    font-size:9px;
+    line-height:1.35;
+}
+@media(max-width:760px){
+    .monitoring-card>.flex.justify-between{
+        align-items:stretch!important;
+        flex-direction:column!important;
+        gap:12px!important;
+    }
+    .monitoring-status-cluster{
+        min-width:0;
+        width:100%;
+        grid-template-columns:1fr 1fr;
+    }
+    .monitoring-status-label{font-size:11px;}
+    .monitoring-status-value,.monitoring-node-count-value{font-size:15px;}
+    .monitoring-status-hint{font-size:11px;}
+}
+@media(max-width:430px){
+    .monitoring-status-cluster{grid-template-columns:1fr;}
+}
+
+/* 6) Standards: compact supporting data into one useful card. */
+.about-standards-grid{align-items:start!important;}
+.about-standard-supporting{grid-column:span 2;}
+.about-supporting-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:9px;
+}
+.about-supporting-item{
+    min-width:0;
+    padding:12px;
+    border:1px solid rgba(148,163,184,.10);
+    border-radius:12px;
+    background:rgba(15,35,56,.45);
+}
+.about-supporting-item strong{
+    display:block;
+    margin-bottom:7px;
+    color:#e2e8f0;
+    font-size:13px;
+}
+.about-supporting-item span{
+    display:block;
+    color:#cbd5e1;
+    font-size:12px;
+    line-height:1.6;
+}
+.about-supporting-item small{
+    display:block;
+    margin-top:7px;
+    padding-top:7px;
+    border-top:1px solid rgba(148,163,184,.09);
+    color:#64748b;
+    font-size:10px;
+    line-height:1.55;
+}
+@media(max-width:900px){
+    .about-standard-supporting{grid-column:auto;}
+    .about-supporting-grid{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+    .about-supporting-item strong{font-size:14px;}
+    .about-supporting-item span{font-size:13px;}
+    .about-supporting-item small{font-size:12px;}
+}
+
+/* 7) Project participants heading + credit cards are one section. */
+.about-credit-section{
+    margin-top:18px;
+    overflow:hidden;
+    border:1px solid rgba(34,211,238,.22);
+    border-radius:22px;
+    background:linear-gradient(180deg,rgba(13,27,45,.90),rgba(7,17,31,.94));
+    box-shadow:0 14px 40px rgba(0,0,0,.18);
+}
+#page-about .about-credit-section .about-credit-note{
+    margin:0!important;
+    padding:20px 22px 17px;
+    border:0!important;
+    border-bottom:1px solid rgba(148,163,184,.12)!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+}
+#page-about .about-credit-section .about-credit-note h2{
+    margin:4px 0 5px;
+    font-size:1.35rem;
+}
+#page-about .about-credit-section .about-credit-note p{
+    margin:0;
+    color:#94a3b8;
+    font-size:.86rem;
+    line-height:1.65;
+}
+#page-about .about-credit-section>.credit-bar{
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+}
+@media(max-width:640px){
+    #page-about .about-credit-section .about-credit-note{padding:16px;}
+    #page-about .about-credit-section .about-credit-note h2{font-size:19px;}
+    #page-about .about-credit-section .about-credit-note p{font-size:13px;}
+}
+
+
+/* =========================================================
+   V8 — HISTORY LABEL READABILITY + MOBILE RANGE MODAL
+   2026-08-28
+   ========================================================= */
+
+/* ช่วงยาวไม่ต้องแสดง timestamp ระดับวินาทีในแถบสรุปใต้กราฟ */
+.history-range-caption .history-range-edge b{
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+}
+.history-range-caption .history-range-center small{
+    white-space:nowrap;
+}
+
+/* มือถือ: ใช้เป็น full-screen sheet เกือบเต็มจอแทนการคำนวณ top:50%.
+   วิธีนี้ไม่ขึ้นกับ layout viewport / address bar ของ browser มือถือ */
+@media (max-width:700px){
+    body.history-range-modal-open{
+        overflow:hidden!important;
+        touch-action:none;
+    }
+
+    /* บนมือถือปิด backdrop-filter เพราะบาง browser สร้าง compositing layer
+       ที่ทำให้ fixed modal ถูก blur/หายตาม backdrop ได้ */
+    body.history-range-modal-open::before{
+        position:fixed!important;
+        inset:0!important;
+        background:rgba(2,8,18,.84)!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+        z-index:999900!important;
+    }
+
+    body > #historyRangePanel.history-range-panel{
+        position:fixed!important;
+        top:max(8px, env(safe-area-inset-top))!important;
+        right:8px!important;
+        bottom:max(8px, env(safe-area-inset-bottom))!important;
+        left:8px!important;
+        width:auto!important;
+        max-width:none!important;
+        height:auto!important;
+        max-height:none!important;
+        margin:0!important;
+        transform:none!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+        border-radius:18px!important;
+        z-index:1000000!important;
+        background:#091827!important;
+    }
+
+    body > #historyRangePanel .history-range-layout{
+        display:block!important;
+    }
+
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick{
+        width:100%!important;
+    }
+
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    /* ปุ่มยกเลิก/ใช้งานอยู่ให้เห็นง่ายแม้เนื้อหายาว */
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+        z-index:4!important;
+        background:#091827!important;
+        box-shadow:0 -10px 24px rgba(2,8,18,.78)!important;
+    }
+
+    .history-range-caption{
+        gap:8px!important;
+    }
+    .history-range-caption .history-range-edge b,
+    .history-range-caption .history-range-center small{
+        white-space:normal!important;
+    }
+}
+
+@media (max-width:390px){
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
+
+
+/* =========================================================
+   V9 FINAL RESPONSIVE / MODAL HARDENING
+   ========================================================= */
+
+/* Keep all dashboard dialogs above chart/canvas stacking contexts. */
+#historyRangePanel,
+#exportModal,
+#helpModal,
+#chartExpandModal,
+#creditImageModal {
+    position: fixed;
+    isolation: isolate;
+}
+
+/* Avoid tiny secondary text on compact screens. */
+@media (max-width: 760px) {
+    body { font-size: 14px; }
+
+    .text-\\[10px\\],
+    .text-\\[11px\\],
+    .text-xs,
+    .overview-eyebrow,
+    .about-card-subtext,
+    .current-environment-detail,
+    .ai-intelligence-statusline,
+    .credit-label {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+    .dashboard-nav-link,
+    button, select, input {
+        min-height: 42px;
+    }
+
+    #historyRangePanel {
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 !important;
+        transform: none !important;
+        overflow: auto !important;
+        overscroll-behavior: contain;
+        z-index: 2147483000 !important;
+    }
+
+    #historyRangePanel .history-range-dialog,
+    #historyRangePanel .range-calendar-panel,
+    #historyRangePanel .history-range-panel-inner {
+        width: min(100% - 20px, 680px) !important;
+        max-width: 680px !important;
+        margin: max(10px, env(safe-area-inset-top)) auto max(10px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .about-detail-grid,
+    .about-interpretation-grid,
+    .about-supporting-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+    .about-detail-grid,
+    .about-interpretation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================================
+   HISTORY NODE COMPARISON — 2026-08-28
+   ========================================================= */
+.history-toolbar .history-metric-select{min-width:150px;}
+#historyNode{min-width:190px;}
+.metric-chart-grid-3{align-items:start;}
+@media(max-width:760px){
+  .history-toolbar .history-metric-select,#historyNode{width:100%;min-width:0;}
+}
+
+
+/* =========================================================
+   PUBLIC GUIDE / HELP READABILITY — 2026-08-28
+   ========================================================= */
+.about-section-lead{
+    margin-top:8px;
+    max-width:900px;
+    color:#94a3b8;
+    font-size:14px;
+    line-height:1.8;
+}
+.about-reader-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+    margin-top:18px;
+}
+.about-reader-card{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    padding:18px;
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:18px;
+    background:rgba(15,23,42,.44);
+}
+.about-reader-icon{
+    flex:0 0 42px;
+    width:42px;
+    height:42px;
+    border-radius:13px;
+    display:grid;
+    place-items:center;
+    background:rgba(34,211,238,.09);
+    border:1px solid rgba(34,211,238,.16);
+    font-size:20px;
+}
+.about-reader-card b{display:block;color:#f8fafc;font-size:15px;line-height:1.55}
+.about-reader-card p{margin:6px 0 0;color:#94a3b8;font-size:13.5px;line-height:1.8}
+.about-reading-tip{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    margin-top:14px;
+    padding:15px 17px;
+    border-radius:16px;
+    border:1px solid rgba(34,211,238,.16);
+    background:rgba(34,211,238,.06);
+}
+.about-reading-tip-icon{font-size:20px;line-height:1.3}
+.about-reading-tip b{display:block;color:#cffafe;margin-bottom:3px}
+.about-reading-tip span{display:block;color:#cbd5e1;font-size:13.5px;line-height:1.75}
+
+.help-popover{
+    width:min(620px,calc(100vw - 24px));
+    max-height:min(78vh,760px);
+}
+.help-popover-header{padding:18px 20px}
+.help-popover-body{padding:18px 20px 22px;line-height:1.8}
+.help-popover-body .help-section{margin:0 0 14px;padding:15px 16px;border-radius:16px;background:rgba(15,23,42,.42);border:1px solid rgba(148,163,184,.12)}
+.help-popover-body .help-section h4{margin:0 0 7px;color:#f8fafc;font-size:15px;line-height:1.5}
+.help-popover-body .help-section p{margin:0;color:#cbd5e1;font-size:13.5px;line-height:1.8}
+.help-intro-card{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding:15px 16px;
+    margin-bottom:14px;
+    border-radius:16px;
+    background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(59,130,246,.06));
+    border:1px solid rgba(34,211,238,.18);
+}
+.help-intro-card b{color:#e0f2fe;font-size:15px;line-height:1.5}
+.help-intro-card span{color:#cbd5e1;font-size:13.5px;line-height:1.75}
+.help-simple-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.help-simple-grid>div,.help-choice-list>div{
+    padding:11px 12px;
+    border-radius:13px;
+    background:rgba(2,6,23,.34);
+    border:1px solid rgba(148,163,184,.10);
+}
+.help-simple-grid b,.help-choice-list b{display:block;color:#e2e8f0;font-size:13.5px;margin-bottom:3px}
+.help-simple-grid span,.help-choice-list span{display:block;color:#94a3b8;font-size:12.5px;line-height:1.65}
+.help-choice-list{display:grid;gap:8px}
+.help-tip{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    margin:3px 0 14px;
+    padding:13px 15px;
+    border-radius:14px;
+    background:rgba(16,185,129,.07);
+    border:1px solid rgba(16,185,129,.16);
+}
+.help-tip b{flex:0 0 auto;color:#a7f3d0}
+.help-tip span{color:#cbd5e1;font-size:13px;line-height:1.7}
+.help-steps{list-style:none!important;margin:0!important;padding:0!important;display:grid;gap:9px}
+.help-steps li{display:flex;gap:10px;align-items:center;padding:10px 11px;border-radius:12px;background:rgba(2,6,23,.32)}
+.help-steps li>span{width:28px;height:28px;display:grid;place-items:center;border-radius:999px;background:rgba(34,211,238,.11);color:#67e8f9;font-weight:800;font-size:12px}
+.help-steps b{display:block;color:#e2e8f0;font-size:13.5px}
+.help-steps small{display:block;color:#94a3b8;font-size:12px;margin-top:1px}
+.help-warning{font-size:13px;line-height:1.75}
+.help-muted{font-size:12.5px!important;color:#94a3b8!important;margin-top:7px!important}
+
+@media(max-width:760px){
+    .about-reader-grid{grid-template-columns:1fr}
+    .about-reader-card{padding:15px}
+    .help-popover{width:calc(100vw - 16px);max-height:84vh}
+    .help-popover-header{padding:15px 16px}
+    .help-popover-body{padding:14px 14px 18px}
+    .help-simple-grid{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   UX CLARITY — STATUS + FORECAST EXPLANATION
+   ========================================================= */
+.dashboard-system-dot.is-warning{
+  background:#f59e0b;
+  box-shadow:0 0 0 4px rgba(245,158,11,.12),0 0 16px rgba(245,158,11,.35);
+}
+
+.forecast-accuracy-note{
+  margin-top:14px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid rgba(245,158,11,.22);
+  border-radius:14px;
+  background:rgba(245,158,11,.07);
+  color:#cbd5e1;
+  line-height:1.65;
+}
+.forecast-accuracy-note b{
+  display:block;
+  color:#fbbf24;
+  margin-bottom:2px;
+  font-size:13px;
+}
+.forecast-accuracy-note span{
+  display:block;
+  font-size:12px;
+  color:#94a3b8;
+}
+.forecast-accuracy-icon{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:12px;
+  color:#fbbf24;
+  border:1px solid rgba(245,158,11,.28);
+  background:rgba(245,158,11,.10);
+}
+.ai-confidence small{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  font-weight:500;
+  color:#64748b;
+}
+@media(max-width:640px){
+  .forecast-accuracy-note{padding:11px 12px;gap:10px}
+  .forecast-accuracy-note span{font-size:11px}
+}
+
+
+/* =========================================================
+   V11 MOBILE UX / READABILITY / HELP CONSOLIDATION
+   Final override layer for compact screens.
+   ========================================================= */
+html,body{max-width:100%;overflow-x:clip}
+.section-title-with-help{min-width:0}
+.overview-title-help,.chart-title-with-help{display:flex;align-items:center;gap:10px;min-width:0}
+.chart-title-with-help .chart-zone-title{min-width:0}
+.forecast-display-panel-compact{padding:12px 14px!important}
+.forecast-display-panel-compact .forecast-display-controls{width:100%;margin:0!important}
+
+/* Important secondary text should never be microscopic. */
+.monitoring-status-label,
+.monitoring-status-hint,
+.current-environment-detail,
+.history-range-caption,
+.metric-chart-subtitle,
+.chart-series-controls-help,
+.ai-result-summary,
+.ai-observation,
+.ai-recommendation,
+.ai-forecast-details,
+.ai-forecast-subtitle,
+.ai-forecast-generated,
+.ai-meta-row,
+.ai-analysis-footer,
+.about-reader-card p,
+.about-reading-tip span,
+.credit-subtitle{font-size:max(12px,.78rem);line-height:1.55}
+
+@media (max-width:760px){
+  html,body{width:100%;overflow-x:clip}
+  body{font-size:15px!important;line-height:1.55}
+  body>.max-w-\[1800px\]{padding:10px!important}
+
+  /* Header */
+  header.glass.card{padding:13px!important;margin-bottom:10px!important;gap:10px!important}
+  header .flex.items-center.gap-4{gap:11px!important;align-items:center!important}
+  header img.w-20{width:54px!important;height:54px!important}
+  header .text-xl{font-size:17px!important;line-height:1.35!important}
+  header .text-sm{font-size:13px!important;line-height:1.5!important}
+
+  /* Decorative English eyebrows are unnecessary on a phone. */
+  .overview-eyebrow{display:none!important}
+
+  /* Navigation: never truncate the status message. */
+  .dashboard-nav{top:max(4px,env(safe-area-inset-top))!important;margin-bottom:12px!important}
+  .dashboard-nav-inner{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;gap:8px!important;padding:8px!important;align-items:center!important}
+  .dashboard-mobile-toggle{grid-column:1!important;min-height:44px!important;font-size:14px!important}
+  .dashboard-system-pill{grid-column:2!important;justify-self:stretch!important;justify-content:center!important;max-width:none!important;min-width:0!important;min-height:44px!important;padding:7px 10px!important;font-size:12.5px!important;line-height:1.3!important;white-space:normal!important;text-align:center!important;overflow:visible!important;text-overflow:clip!important}
+  #navSystemStatus{min-width:0;overflow-wrap:anywhere}
+  .dashboard-nav-links{grid-column:1/-1!important;width:100%!important;margin:0!important}
+  .dashboard-nav-link{min-height:46px!important;font-size:15px!important;padding:11px 13px!important}
+
+  /* Page headings */
+  .dashboard-page-heading{margin:6px 0 12px!important}
+  .dashboard-page-heading h1{font-size:24px!important;line-height:1.3!important}
+  .dashboard-page-heading p{font-size:14px!important;line-height:1.65!important;margin-top:5px!important}
+
+  /* Overview */
+  .overview-hero{padding:16px!important;gap:15px!important}
+  .overview-title-row{display:block!important}
+  .overview-title-help{align-items:flex-start!important}
+  .overview-title{font-size:24px!important;line-height:1.3!important}
+  .overview-subtitle{font-size:14px!important;line-height:1.65!important;margin-top:6px!important}
+  .overview-quality-badge{margin-top:11px!important;font-size:14px!important;min-height:38px!important;padding:8px 11px!important}
+  .overview-guidance{font-size:15px!important;line-height:1.7!important;margin-top:13px!important}
+  .overview-freshness{font-size:13px!important;line-height:1.5!important;margin-top:10px!important}
+  .overview-main-value{padding:13px 14px!important}
+  .overview-main-label{font-size:13px!important}
+  .overview-main-value strong{font-size:42px!important;line-height:1.05!important}
+  .overview-main-unit{font-size:14px!important}
+  .overview-metrics-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .overview-metric-card{min-height:0!important;padding:14px!important}
+  .overview-metric-card>span{font-size:14px!important}
+  .overview-metric-card>b{font-size:24px!important;line-height:1.2!important}
+  .overview-metric-card small{font-size:13px!important}
+  .overview-section-head{gap:9px!important;margin-top:18px!important}
+  .overview-section-head h2,.overview-alert-head h2{font-size:19px!important;line-height:1.35!important}
+  .overview-link-button{font-size:14px!important;width:100%!important;justify-content:center!important;min-height:42px!important}
+  .overview-node-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .overview-node-card{min-height:62px!important;padding:12px 13px!important}
+  .overview-node-card b{font-size:15px!important}
+  .overview-node-card small{font-size:13px!important}
+
+  /* Summary */
+  .smart-summary-card{padding:15px!important}
+  .smart-summary-header{align-items:flex-start!important}
+  .smart-summary-mode{display:none!important}
+  .smart-summary-body{font-size:14px!important;line-height:1.65!important}
+  .smart-summary-headline{font-size:17px!important}
+  .smart-summary-stat-label{font-size:12px!important;letter-spacing:.04em!important}
+  .smart-summary-stat-value{font-size:14px!important}
+  .smart-summary-stat-sub{font-size:12px!important}
+  .smart-summary-activity{font-size:14px!important}
+  .smart-summary-note{font-size:13px!important}
+
+  /* Monitoring */
+  .monitoring-card{padding:15px!important}
+  .monitoring-card>.flex.justify-between{display:block!important}
+  .monitoring-status-cluster{grid-template-columns:1fr!important;min-width:0!important;width:100%!important;margin-top:12px!important}
+  .monitoring-status-card{padding:12px 13px!important}
+  .monitoring-status-label{font-size:13px!important}
+  .monitoring-status-value,.monitoring-node-count-value{font-size:16px!important}
+  .monitoring-status-hint{font-size:13px!important;line-height:1.55!important}
+  .node{padding:14px!important}
+  .node .font-black{font-size:17px!important}
+  .node [id$="status"]{font-size:13px!important}
+  .badge{font-size:12.5px!important;min-height:32px!important}
+
+  /* History controls and statistics */
+  .historical-section{padding:15px!important}
+  .historical-section h2{font-size:20px!important}
+  .history-toolbar{display:grid!important;grid-template-columns:1fr!important;width:100%!important;gap:9px!important;margin-top:2px!important}
+  .history-toolbar>select,.history-toolbar>.relative,.history-toolbar>button{width:100%!important;min-width:0!important}
+  .history-metric-select,.history-toolbar-button{min-height:46px!important;font-size:15px!important}
+  #historyRangeButton{width:100%!important;justify-content:space-between!important}
+  .history-export-button{justify-content:center!important}
+  .historical-section>.soft{padding:14px!important}
+  .historical-section>.soft .grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px 12px!important}
+  .historical-section>.soft .grid-cols-5>div:last-child{grid-column:1/-1!important}
+  .historical-section>.soft .grid-cols-5 span{font-size:13px!important}
+  .historical-section>.soft .grid-cols-5 b{font-size:21px!important;margin-top:4px!important;overflow-wrap:anywhere}
+  #selectedMetricLabel{font-size:14px!important}
+
+  /* Charts */
+  .dashboard-charts-zone{grid-template-columns:1fr!important;gap:12px!important}
+  .dashboard-chart-card{padding:14px!important;overflow:hidden!important}
+  .chart-zone-heading{margin-bottom:8px!important}
+  .chart-title-with-help{justify-content:space-between!important;align-items:center!important}
+  .chart-zone-title{font-size:18px!important;line-height:1.35!important}
+  .chart-zone-subtitle{display:none!important}
+  .bottom-chart-wrap{padding:10px!important;margin-top:8px!important}
+  .chart-render-area{width:100%!important;min-width:0!important;min-height:300px!important;overflow:hidden!important}
+  .chart-render-area canvas{max-width:100%!important}
+  .metric-chart-card{padding:12px!important}
+  .metric-chart-title{font-size:16px!important}
+  .metric-chart-subtitle{font-size:13px!important}
+  .metric-chart-legend{font-size:13px!important;gap:7px!important;flex-wrap:wrap!important}
+  .chart-series-controls{gap:7px!important}
+  .chart-series-button,.chart-series-single-label,.chart-series-show-all{font-size:13px!important;min-height:42px!important}
+  .history-range-caption{font-size:13px!important;line-height:1.5!important;grid-template-columns:1fr!important;text-align:left!important}
+  .history-range-caption>*{text-align:left!important}
+
+  /* Forecast face: only controls stay visible; explanation lives in ?. */
+  .forecast-display-panel{padding:11px!important;margin-top:8px!important}
+  .forecast-display-copy{display:none!important}
+  .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+  .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;min-width:0!important}
+  .forecast-actual-label,.forecast-toggle-name{font-size:14px!important}
+  .forecast-actual-note,.forecast-toggle-status{font-size:12px!important}
+  .forecast-switch{min-height:42px!important;flex-shrink:0!important}
+  .forecast-accuracy-note{display:none!important}
+
+  /* Analysis: make meaningful text readable; hide decorative micro labels. */
+  .ai-forecast-kicker,.forecast-base-label{display:none!important}
+  .ai-forecast-topbar{padding:13px!important}
+  .ai-forecast-subtitle{font-size:13px!important}
+  .ai-forecast-status{font-size:13px!important;min-height:36px!important}
+  .ai-forecast-refresh,.ai-refresh-button{font-size:14px!important;min-height:44px!important}
+  .ai-forecast-details,.ai-result-summary,.ai-observation,.ai-recommendation{font-size:14px!important;line-height:1.7!important}
+  .ai-forecast-headline,.ai-result-headline{font-size:17px!important}
+  .ai-forecast-label,.ai-result-label{font-size:12px!important;letter-spacing:.03em!important}
+  .ai-forecast-generated,.ai-generated-at,.ai-meta-row,.ai-analysis-footer{font-size:12px!important;line-height:1.5!important}
+  .ai-confidence small{font-size:11px!important;line-height:1.45!important}
+
+  /* Help becomes a readable near-fullscreen sheet. */
+  .help-popover{position:fixed!important;inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;border-radius:18px!important;overflow:hidden!important}
+  .help-popover-header{position:sticky!important;top:0!important;z-index:2!important;padding:14px 15px!important;background:#091827!important}
+  .help-popover-eyebrow{display:none!important}
+  .help-popover-header h3{font-size:19px!important;line-height:1.35!important}
+  .help-popover-close{width:44px!important;height:44px!important;font-size:24px!important}
+  .help-popover-body{padding:14px 14px 20px!important;font-size:15px!important;line-height:1.75!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+  .help-intro-card{padding:14px!important}
+  .help-intro-card b{font-size:16px!important}
+  .help-intro-card span{font-size:14px!important}
+  .help-popover-body .help-section{padding:14px!important;margin-bottom:11px!important}
+  .help-popover-body .help-section h4{font-size:16px!important}
+  .help-popover-body .help-section p{font-size:14px!important;line-height:1.75!important}
+  .help-simple-grid{grid-template-columns:1fr!important}
+  .help-simple-grid b,.help-choice-list b,.help-steps b{font-size:14px!important}
+  .help-simple-grid span,.help-choice-list span,.help-steps small,.help-muted{font-size:13px!important;line-height:1.65!important}
+  .help-warning,.help-tip span{font-size:13.5px!important;line-height:1.7!important}
+  .help-steps li{align-items:flex-start!important}
+  .help-steps li>span{flex:0 0 30px!important;width:30px!important;height:30px!important;font-size:13px!important}
+
+  /* Date-range modal */
+  body>#historyRangePanel.history-range-panel{inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-height:none!important;border-radius:18px!important;padding:0!important}
+  #historyRangePanel .history-range-calendar{padding:14px!important}
+  #historyRangePanel .history-range-quick{padding:12px 14px!important}
+  #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #rangeCalendarTitle{font-size:17px!important}
+  #rangeCalendarGrid .range-calendar-day{min-height:42px!important;font-size:14px!important}
+  #historyRangePanel .text-\[11px\],#historyRangePanel .text-xs{font-size:13px!important}
+  #historyRangePanel input{font-size:16px!important;min-height:42px!important}
+
+  /* Export modal */
+  .export-modal{padding:8px!important}
+  .export-modal-dialog{width:calc(100vw - 16px)!important;max-width:none!important;max-height:calc(100dvh - 16px)!important}
+  .export-modal-title{font-size:19px!important}
+  .export-modal-subtitle,.export-summary-note,.export-preview-note,.export-field>span{font-size:13px!important;line-height:1.55!important}
+  .export-date-grid{grid-template-columns:1fr!important}
+  .export-date-arrow{transform:rotate(90deg);justify-self:center}
+  .export-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
+  .export-table{font-size:13px!important;min-width:700px!important}
+  .export-modal-footer{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .export-cancel-button,.export-excel-button{font-size:14px!important;min-height:46px!important}
+
+  /* About / credits */
+  .about-reader-card p,.about-reading-tip span,.about-detail-section p,.about-detail-section li{font-size:14px!important;line-height:1.75!important}
+  .about-reader-card b,.about-card h2{font-size:16px!important}
+  .credit-label,.credit-role,.credit-bottom{display:none!important}
+  .credit-title{font-size:15px!important}
+  .credit-subtitle{font-size:13px!important}
+  .credit-link{font-size:13px!important;min-height:40px!important}
+}
+
+@media (max-width:390px){
+  body>.max-w-\[1800px\]{padding:8px!important}
+  header img.w-20{width:48px!important;height:48px!important}
+  header .text-xl{font-size:16px!important}
+  .dashboard-nav-inner{grid-template-columns:1fr!important}
+  .dashboard-mobile-toggle,.dashboard-system-pill{grid-column:1!important;width:100%!important}
+  .dashboard-system-pill{justify-self:stretch!important}
+  .overview-title{font-size:22px!important}
+  .overview-main-value strong{font-size:38px!important}
+  .historical-section>.soft .grid-cols-5{grid-template-columns:1fr!important}
+  .historical-section>.soft .grid-cols-5>div:last-child{grid-column:auto!important}
+  #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:1fr!important}
+  .export-modal-footer{grid-template-columns:1fr!important}
+  .chart-render-area{min-height:280px!important}
+}
+
+@media (min-width:761px) and (max-width:1100px){
+  .dashboard-charts-zone{grid-template-columns:1fr!important}
+  .history-toolbar{flex-wrap:wrap!important}
+  .history-toolbar>*{flex:1 1 180px!important}
+  .help-popover{width:min(680px,calc(100vw - 32px))!important;max-height:82vh!important}
+}
+
+@media (orientation:landscape) and (max-height:600px) and (max-width:1000px){
+  .help-popover{inset:6px!important}
+  .help-popover-body{padding-bottom:16px!important}
+  body>#historyRangePanel.history-range-panel{inset:6px!important}
+  .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
+}
+
+/* V11.1 — final tiny-text and header-brand guard */
+@media (max-width:760px){
+  .text-\[8px\],.text-\[9px\],.text-\[10px\],.text-\[11px\],.text-xs{
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+  header .flex.items-center.gap-4>div:first-child{
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    flex:0 0 auto!important;
+  }
+}
+@media(max-width:390px){
+  header img.w-20{width:44px!important;height:44px!important}
+  header .flex.items-center.gap-4{align-items:flex-start!important}
+}
+
+
+/* =========================================================
+   V12 — CROSS-DEVICE UI / UX AUDIT
+   Desktop + Laptop + Tablet + Mobile + Landscape
+   Visual/readability layer only. No API/calculation changes.
+   ========================================================= */
+
+:root{
+  --ui-readable-xs:12px;
+  --ui-readable-sm:13px;
+  --ui-readable-md:14px;
+  --ui-readable-lg:16px;
+}
+
+/* Prevent accidental horizontal page overflow at every viewport. */
+html,body{max-width:100%;overflow-x:hidden}
+img,svg,canvas{max-width:100%}
+
+/* ---------- Global readable microcopy ---------- */
+.smart-summary-mode,
+.smart-summary-stat-label,
+.smart-summary-stat-sub,
+.smart-summary-note,
+.smart-summary-activity,
+.smart-summary-activity-label,
+.ai-refresh-button,
+.ai-status-badge,
+.ai-result-label,
+.ai-observation,
+.ai-recommendation,
+.ai-meta-row,
+.ai-analysis-footer,
+.ai-forecast-kicker,
+.ai-forecast-subtitle,
+.ai-forecast-status,
+.ai-forecast-refresh,
+.ai-forecast-details,
+.ai-forecast-label,
+.ai-forecast-generated,
+.forecast-base-label,
+.ai-generated-at,
+.ai-panel-kicker,
+.ai-model-strip-label,
+.ai-model-strip b,
+.ai-trend-variable,
+.ai-trend-explanation,
+.ai-trend-driver,
+.ai-intelligence-statusline,
+.chart-zone-subtitle{
+  font-size:var(--ui-readable-xs)!important;
+  line-height:1.55!important;
+}
+
+/* Tiny uppercase labels are decorative; keep them subtle but readable. */
+.ai-panel-kicker,
+.ai-model-strip-label,
+.ai-trend-variable,
+.ai-forecast-kicker,
+.forecast-base-label,
+.ai-result-label,
+.smart-summary-stat-label{
+  letter-spacing:.06em!important;
+}
+
+/* Core analysis copy should never be micro-text on desktop either. */
+.ai-result-summary,
+.ai-forecast-details,
+.ai-observation,
+.ai-recommendation,
+.smart-summary-activity,
+.smart-summary-note{
+  font-size:13px!important;
+  line-height:1.65!important;
+}
+.ai-result-headline,.ai-forecast-headline{font-size:16px!important;line-height:1.45!important}
+.smart-summary-headline{font-size:16px!important}
+.smart-summary-stat-value{font-size:14px!important}
+
+/* Buttons / clickable targets */
+.help-trigger,
+.dashboard-alert-button,
+.ai-refresh-button,
+.ai-forecast-refresh,
+.history-toolbar-button,
+.history-metric-select,
+.chart-series-button,
+.chart-series-show-all{
+  min-height:38px;
+}
+.help-trigger{min-width:34px;min-height:34px}
+
+/* ---------- Desktop >= 1280 ---------- */
+@media (min-width:1280px){
+  body{font-size:15px;line-height:1.55}
+  .dashboard-page-heading h1{font-size:30px;line-height:1.25}
+  .dashboard-page-heading p{font-size:14px;line-height:1.65;max-width:920px}
+  .dashboard-nav-link{font-size:14px;min-height:42px}
+  .dashboard-system-pill{font-size:13px;min-height:40px}
+  .overview-title{font-size:29px;line-height:1.25}
+  .overview-subtitle{font-size:14px;line-height:1.65}
+  .overview-guidance{font-size:15px;line-height:1.7}
+  .overview-freshness{font-size:13px}
+  .overview-metric-card>span{font-size:13px}
+  .overview-metric-card small{font-size:12.5px}
+  .overview-node-card small{font-size:12.5px}
+  .monitoring-status-label,.monitoring-status-hint{font-size:12.5px}
+  .history-toolbar{gap:10px;align-items:center}
+  .history-metric-select,.history-toolbar-button{font-size:14px;min-height:42px}
+  .chart-zone-title{font-size:19px}
+  .chart-zone-subtitle{font-size:12.5px!important}
+  .chart-render-area{min-height:330px}
+  .metric-chart-title{font-size:16px}
+  .metric-chart-subtitle,.metric-chart-legend{font-size:12.5px}
+  .help-popover{width:min(680px,calc(100vw - 48px));max-height:min(82vh,820px)}
+  .help-popover-body{font-size:14px;line-height:1.75}
+  .help-popover-body .help-section p,
+  .help-intro-card span,
+  .help-simple-grid span,
+  .help-choice-list span{font-size:13.5px;line-height:1.7}
+}
+
+/* ---------- Laptop / small desktop 1024–1279 ---------- */
+@media (min-width:1024px) and (max-width:1279px){
+  body{font-size:14.5px}
+  .dashboard-page-heading h1{font-size:27px}
+  .dashboard-nav-inner{gap:8px}
+  .dashboard-nav-link{font-size:13.5px;padding-left:11px;padding-right:11px}
+  .dashboard-system-pill{font-size:12.5px}
+  .overview-title{font-size:26px}
+  .overview-main-value strong{font-size:48px}
+  .overview-metric-card>b{font-size:22px}
+  .history-toolbar{flex-wrap:wrap;gap:9px}
+  .history-toolbar>*{flex:1 1 170px}
+  .dashboard-charts-zone{gap:14px}
+  .chart-render-area{min-height:315px}
+  .help-popover{width:min(660px,calc(100vw - 36px));max-height:82vh}
+}
+
+/* ---------- Tablet 761–1023 ---------- */
+@media (min-width:761px) and (max-width:1023px){
+  body{font-size:14.5px}
+  .dashboard-page-heading h1{font-size:26px}
+  .dashboard-page-heading p{font-size:14px;line-height:1.65}
+  .dashboard-nav-inner{gap:8px}
+  .dashboard-nav-links{flex-wrap:wrap}
+  .dashboard-nav-link{font-size:13.5px;min-height:42px}
+  .dashboard-system-pill{font-size:12.5px;white-space:normal;text-align:center}
+  .overview-title{font-size:25px}
+  .overview-subtitle,.overview-guidance{font-size:14px}
+  .overview-metric-card>span{font-size:13px}
+  .overview-node-card small{font-size:12.5px}
+  .dashboard-charts-zone{grid-template-columns:1fr!important}
+  .history-toolbar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .history-toolbar>*{width:100%!important;min-width:0!important}
+  .history-metric-select,.history-toolbar-button{min-height:44px;font-size:14px}
+  .chart-render-area{min-height:320px}
+  .help-popover{width:min(680px,calc(100vw - 28px))!important;max-height:84vh!important}
+  .export-modal-dialog{width:min(94vw,900px)}
+}
+
+/* ---------- Mobile <= 760 ---------- */
+@media (max-width:760px){
+  body{font-size:15px!important;line-height:1.58!important}
+  body>.max-w-\[1800px\]{padding-left:10px!important;padding-right:10px!important}
+
+  /* Header / nav */
+  .dashboard-nav-inner{grid-template-columns:auto minmax(0,1fr)!important}
+  .dashboard-system-pill{
+    font-size:13px!important;
+    line-height:1.35!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  .dashboard-nav-link{font-size:15px!important}
+
+  /* Main hierarchy */
+  .dashboard-page-heading h1{font-size:24px!important}
+  .dashboard-page-heading p{font-size:14px!important}
+  .overview-title{font-size:23px!important}
+  .overview-subtitle{font-size:14px!important}
+  .overview-guidance{font-size:15px!important}
+  .overview-freshness{font-size:13px!important}
+  .overview-main-label{font-size:13px!important}
+  .overview-main-unit{font-size:14px!important}
+  .overview-metric-card>span{font-size:14px!important}
+  .overview-metric-card small{font-size:13px!important}
+
+  /* Do not hide meaningful chart context on mobile; keep one short readable line. */
+  .chart-zone-subtitle{
+    display:block!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+    margin-top:4px!important;
+  }
+
+  /* Analysis */
+  .smart-summary-stat-label,
+  .smart-summary-stat-sub,
+  .ai-result-label,
+  .ai-forecast-label,
+  .ai-forecast-generated,
+  .ai-generated-at,
+  .ai-meta-row,
+  .ai-analysis-footer,
+  .ai-confidence small{
+    font-size:12px!important;
+    line-height:1.5!important;
+  }
+  .smart-summary-stat-value{font-size:14px!important}
+  .smart-summary-note,.smart-summary-activity,
+  .ai-result-summary,.ai-observation,.ai-recommendation,.ai-forecast-details{
+    font-size:14px!important;
+    line-height:1.7!important;
+  }
+
+  /* Controls */
+  .history-metric-select,.history-toolbar-button{font-size:15px!important;min-height:46px!important}
+  .help-trigger{min-width:40px!important;min-height:40px!important;font-size:17px!important}
+  .chart-series-button,.chart-series-show-all,.chart-series-single-label{font-size:13.5px!important;min-height:42px!important}
+
+  /* Charts */
+  .chart-render-area{min-height:310px!important}
+  .metric-chart-title{font-size:16px!important}
+  .metric-chart-subtitle,.metric-chart-legend{font-size:13px!important}
+  .history-range-caption{font-size:13px!important}
+
+  /* Forecast controls: explanatory paragraphs stay in ? */
+  .forecast-display-copy,.forecast-accuracy-note{display:none!important}
+  .forecast-actual-label,.forecast-toggle-name{font-size:14px!important}
+  .forecast-actual-note,.forecast-toggle-status{font-size:13px!important}
+
+  /* Help */
+  .help-popover-body{font-size:15px!important}
+  .help-popover-body .help-section p{font-size:14px!important}
+  .help-simple-grid span,.help-choice-list span,.help-steps small,.help-muted{font-size:13.5px!important}
+
+  /* Export remains horizontally scrollable because six sensor columns cannot
+     be compressed legibly into a phone width. */
+  .export-table{font-size:13px!important}
+}
+
+/* ---------- Very small phones <= 390 ---------- */
+@media (max-width:390px){
+  body>.max-w-\[1800px\]{padding-left:8px!important;padding-right:8px!important}
+  .dashboard-nav-inner{grid-template-columns:1fr!important}
+  .dashboard-mobile-toggle,.dashboard-system-pill{grid-column:1!important;width:100%!important}
+  .dashboard-system-pill{font-size:13px!important}
+  .dashboard-page-heading h1{font-size:22px!important}
+  .overview-title{font-size:21px!important}
+  .overview-main-value strong{font-size:38px!important}
+  .chart-render-area{min-height:290px!important}
+  .help-popover-header h3{font-size:18px!important}
+}
+
+/* ---------- Wide screens: avoid cards becoming excessively stretched ---------- */
+@media (min-width:1600px){
+  .dashboard-page-heading p{max-width:1000px}
+  .dashboard-chart-card{padding:20px}
+  .chart-render-area{min-height:350px}
+  .help-popover{width:700px}
+}
+
+/* ---------- Short landscape screens ---------- */
+@media (orientation:landscape) and (max-height:650px) and (max-width:1100px){
+  .help-popover{
+    position:fixed!important;
+    inset:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    max-height:none!important;
+  }
+  .help-popover-body{overflow-y:auto!important;padding-bottom:18px!important}
+  body>#historyRangePanel.history-range-panel{inset:6px!important;max-height:none!important}
+  .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
+}
+
+/* ---------- Accessibility / interaction ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
   }
 }
 
-function openAuthModal(mode="login"){
-  const modal=$("authModal"); if(!modal)return;
-  modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
-  setAuthMode(mode);
-  loadAuthStatus();
-}
-function closeAuthModal(){const m=$("authModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
-function setAuthMode(mode){
-  document.querySelectorAll("[data-auth-mode]").forEach(b=>b.classList.toggle("active",b.dataset.authMode===mode));
-  $("loginForm")?.classList.toggle("hidden",mode!=="login");
-  $("registerForm")?.classList.toggle("hidden",mode!=="register");
-  $("ownerSetupForm")?.classList.add("hidden");
-  $("authTabs")?.classList.remove("hidden");
-  const t=$("authTitle");if(t)t.textContent=mode==="register"?"สมัครสมาชิก":"เข้าสู่ระบบ";
-}
-async function loadAuthStatus(){
-  try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
-}
 
-async function restoreAuthSession(){
-  if(!authToken){authUser=null;updateAccountUI();return;}
-  try{const j=await apiJson(API.authMe);authUser=j.user||null;}catch(_){authToken="";authUser=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);}
-  updateAccountUI();
-}
+/* =========================================================
+   V13 — REAL-DEVICE MOBILE FIX
+   Based on Android portrait recordings/screenshots.
+   Fixes range sheet, export sheet, vertical density and
+   nested-scroll problems without changing data/API logic.
+   ========================================================= */
 
-async function doLogin(email,password){
-  const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
-  authToken=String(j.token||"");authUser=j.user||null;
-  sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);updateAccountUI();return j;
-}
+@media (max-width:760px){
 
-function applyManagedHelpOverrides(help){
-  managedHelpCache=help&&typeof help==="object"?help:{};
-  if(typeof HELP_CONTENT==="undefined")return;
-  for(const [key,model] of Object.entries(managedHelpCache)){
-    if(!model||typeof model!=="object")continue;
-    HELP_CONTENT[key]={
-      title:String(model.title||HELP_CONTENT[key]?.title||"คำอธิบาย"),
-      html:managedHelpHtml(model)
-    };
+  /* ---------- History date/range sheet ----------
+     One scroll container only; quick ranges are compact chips.
+     This prevents the very tall one-option-per-row sheet. */
+  body > #historyRangePanel.history-range-panel{
+    display:flex!important;
+    flex-direction:column!important;
+    top:max(8px,env(safe-area-inset-top))!important;
+    right:8px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    left:8px!important;
+    width:auto!important;
+    max-width:none!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+
+  body > #historyRangePanel .history-range-layout{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    flex:0 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+
+  body > #historyRangePanel .history-range-calendar{
+    padding:14px 14px 10px!important;
+  }
+
+  body > #historyRangePanel .history-range-calendar .text-\[11px\]{
+    font-size:12px!important;
+    line-height:1.4!important;
+  }
+
+  body > #historyRangePanel .history-range-quick{
+    padding:8px 14px 12px!important;
+    border-top:1px solid rgba(148,163,184,.12)!important;
+  }
+
+  body > #historyRangePanel #quickRangeList.quick-range-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    padding-top:6px!important;
+  }
+
+  body > #historyRangePanel #quickRangeList .quick-range-option{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-height:42px!important;
+    padding:8px 10px!important;
+    margin:0!important;
+    text-align:center!important;
+    font-size:14px!important;
+    line-height:1.25!important;
+    border:1px solid rgba(148,163,184,.16)!important;
+  }
+
+  /* Date/time fields stay compact and readable. */
+  body > #historyRangePanel > .border-t.p-4{
+    padding:10px 14px!important;
+    gap:8px!important;
+    grid-template-columns:1fr 1fr!important;
+    flex:0 0 auto!important;
+  }
+  body > #historyRangePanel input[type="datetime-local"]{
+    min-height:40px!important;
+    font-size:13px!important;
+  }
+
+  /* Footer must never disappear below the phone viewport. */
+  body > #historyRangePanel > .border-t:last-child{
+    position:relative!important;
+    flex:0 0 auto!important;
+    padding:10px 14px!important;
+    background:#091827!important;
+    box-shadow:0 -8px 20px rgba(2,8,18,.48)!important;
+  }
+  body > #historyRangePanel > .border-t:last-child > .text-xs{
+    font-size:12px!important;
+    line-height:1.35!important;
+  }
+  body > #historyRangePanel #historyRangeCancel,
+  body > #historyRangePanel #historyRangeApply{
+    min-height:42px!important;
+    font-size:14px!important;
+  }
+
+  /* ---------- Export sheet ----------
+     The desktop table preview is not useful on a narrow phone:
+     it forces a ~700px table inside a ~400px viewport and creates
+     a second horizontal scroll area. Keep count + date selection,
+     then export directly. */
+  .export-modal{
+    padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))!important;
+    overflow:hidden!important;
+  }
+  .export-modal-dialog{
+    display:flex!important;
+    flex-direction:column!important;
+    width:calc(100vw - 16px)!important;
+    max-height:calc(100dvh - 16px)!important;
+    overflow:hidden!important;
+  }
+  .export-modal-header{
+    flex:0 0 auto!important;
+    padding:14px!important;
+  }
+  .export-modal-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    padding:14px!important;
+  }
+  .export-modal-footer{
+    position:relative!important;
+    flex:0 0 auto!important;
+    padding:12px 14px!important;
+    background:#091827!important;
+    box-shadow:0 -8px 20px rgba(2,8,18,.48)!important;
+  }
+
+  /* Hide only the sample table on phones. The export itself still contains
+     all selected records and columns. */
+  .export-preview,
+  .export-preview-section,
+  .export-table-wrap{
+    display:none!important;
+  }
+
+  .export-modal-subtitle{
+    font-size:14px!important;
+    line-height:1.5!important;
+  }
+  .export-summary-note{
+    font-size:13px!important;
+    line-height:1.55!important;
+  }
+
+  /* ---------- Monitoring cards ----------
+     Preserve all measurements but reduce unnecessary vertical travel. */
+  .monitoring-node-card,
+  .node-card{
+    padding-top:16px!important;
+    padding-bottom:16px!important;
+  }
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{
+    row-gap:12px!important;
+  }
+
+  /* Long section headings + ? must not squeeze each other. */
+  .section-title-with-help,
+  .chart-zone-heading,
+  .monitoring-section-heading{
+    min-width:0!important;
+  }
+  .section-title-with-help > :first-child,
+  .chart-zone-heading > :first-child{
+    min-width:0!important;
   }
 }
-function nl2brEsc(value){return esc(String(value||"")).replace(/\n/g,"<br>");}
-function managedHelpHtml(model){
-  const blocks=Array.isArray(model?.blocks)?model.blocks:[];
-  if(!blocks.length)return `<div class="help-intro-card"><b>${esc(model?.title||"คำอธิบาย")}</b><span>ยังไม่มีคำอธิบายเพิ่มเติม</span></div>`;
-  return blocks.map((b,i)=>`<section class="help-section"><h4>${esc(b?.heading||`หัวข้อ ${i+1}`)}</h4><p>${nl2brEsc(b?.description||"")}</p></section>`).join("");
-}
-function defaultHelpModel(key){
-  const src=HELP_CONTENT?.[key];
-  const title=String(src?.title||"คำอธิบาย");
-  const box=document.createElement("div");box.innerHTML=String(src?.html||"");
-  let blocks=[...box.querySelectorAll(".help-section")].map((sec,i)=>({id:`block-${i+1}`,heading:sec.querySelector("h4")?.textContent?.trim()||`หัวข้อ ${i+1}`,description:sec.querySelector("p")?.textContent?.trim()||sec.textContent.trim()}));
-  if(!blocks.length){
-    const intro=box.querySelector(".help-intro-card");
-    const text=intro?.querySelector("span")?.textContent?.trim()||box.textContent.trim();
-    if(text)blocks=[{id:"block-1",heading:"คำอธิบาย",description:text}];
+
+/* Small phones: range dates stack, quick ranges remain 2 columns. */
+@media (max-width:390px){
+  body > #historyRangePanel > .border-t.p-4{
+    grid-template-columns:1fr!important;
   }
-  return {title,blocks};
-}
-function getHelpEditorModel(key){
-  const m=managedHelpCache?.[key];
-  return m?{title:String(m.title||""),blocks:(m.blocks||[]).map(x=>({...x}))}:defaultHelpModel(key);
-}
-function helpButtonLabel(key){
-  const b=document.querySelector(`.help-button[data-help="${CSS.escape(key)}"]`);
-  return b?.getAttribute("aria-label")?.replace(/^ดูคำอธิบาย\s*/,"")||HELP_CONTENT?.[key]?.title||key;
-}
-function populateHelpKeySelect(){
-  const select=$("helpKeySelect");if(!select)return;
-  const keys=[...new Set([...document.querySelectorAll(".help-button[data-help]")].map(b=>b.dataset.help).filter(Boolean))];
-  select.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(helpButtonLabel(k))}</option>`).join("");
-  currentHelpEditorKey=select.value||keys[0]||"";loadHelpEditor(currentHelpEditorKey);
-}
-function loadHelpEditor(key){
-  currentHelpEditorKey=key;const m=getHelpEditorModel(key);
-  if($("helpEditorTitle"))$("helpEditorTitle").value=m.title||"";
-  renderHelpBlockEditor(m.blocks||[]);renderHelpPreview();
-}
-function renderHelpBlockEditor(blocks){
-  const root=$("helpBlockList");if(!root)return;
-  root.innerHTML="";
-  (blocks||[]).forEach((b,i)=>root.appendChild(createHelpBlockElement(b,i)));
-}
-function createHelpBlockElement(block={},index=0){
-  const d=document.createElement("div");d.className="admin-help-block";d.dataset.blockId=block.id||`block-${Date.now()}-${index}`;
-  d.innerHTML=`<div class="admin-help-block-head"><b>หัวข้อ ${index+1}</b><button type="button" class="admin-remove-block">ลบ</button></div><label class="admin-field">หัวข้อเรื่อง<input class="admin-block-heading" type="text" maxlength="120"></label><label class="admin-field">คำอธิบาย<textarea class="admin-block-description" rows="5" maxlength="1800"></textarea></label>`;
-  d.querySelector(".admin-block-heading").value=block.heading||"";d.querySelector(".admin-block-description").value=block.description||"";
-  d.querySelector(".admin-remove-block").addEventListener("click",()=>{d.remove();renumberHelpBlocks();renderHelpPreview();});
-  d.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderHelpPreview));return d;
-}
-function renumberHelpBlocks(){document.querySelectorAll("#helpBlockList .admin-help-block").forEach((d,i)=>{const b=d.querySelector(".admin-help-block-head b");if(b)b.textContent=`หัวข้อ ${i+1}`;});}
-function collectHelpEditor(){
-  const blocks=[...document.querySelectorAll("#helpBlockList .admin-help-block")].map((d,i)=>({id:d.dataset.blockId||`block-${i+1}`,heading:d.querySelector(".admin-block-heading")?.value.trim()||"",description:d.querySelector(".admin-block-description")?.value.trim()||""})).filter(x=>x.heading||x.description);
-  return {help_key:currentHelpEditorKey,title:$("helpEditorTitle")?.value.trim()||"",blocks};
-}
-function renderHelpPreview(){
-  const p=$("helpLivePreview");if(!p)return;const m=collectHelpEditor();
-  p.innerHTML=`<div class="help-popover-header"><b>${esc(m.title||"คำอธิบาย")}</b></div><div class="help-popover-body">${managedHelpHtml(m)}</div>`;
-}
-async function saveHelpEditor(){
-  const b=$("saveHelpButton");if(b)b.disabled=true;setAuthMessage("helpSaveMessage","กำลังบันทึก...");
-  try{const payload=collectHelpEditor();const j=await apiJson(API.manageHelp,{method:"POST",body:JSON.stringify(payload)});managedHelpCache[payload.help_key]=j.data;applyManagedHelpOverrides(managedHelpCache);publicDisplayConfig.help=managedHelpCache;setAuthMessage("helpSaveMessage","บันทึกแล้ว และ Dashboard จะใช้ข้อความใหม่นี้ทันที","success");}
-  catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+  body > #historyRangePanel #quickRangeList.quick-range-list{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body > #historyRangePanel .history-range-calendar{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
 }
 
-function renderAdminDevices(){
-  const root=$("adminDeviceList");if(!root)return;const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}"><h4>📍 จุดตรวจวัด ${i+1}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div><label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label><label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label><label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description" maxlength="300" rows="3">${esc(d.description||"")}</textarea></label></div>`).join("");
-}
-async function saveAdminDevices(){
-  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||""}));
-  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
-  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกชื่อจุดตรวจวัดแล้ว","success");}
-  catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+/* Tablet portrait: keep the range chooser compact rather than full-height. */
+@media (min-width:761px) and (max-width:1023px){
+  #historyRangePanel #quickRangeList.quick-range-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
 }
 
-function renderAnnouncementPreview(){
-  const root=$("announcementPreview");if(!root)return;const enabled=$("announcementEnabled")?.checked;const sev=$("announcementSeverity")?.value||"info";const title=$("announcementTitle")?.value.trim()||"ประกาศจากระบบ";const msg=$("announcementMessage")?.value.trim()||"ตัวอย่างข้อความประกาศ";
-  root.innerHTML=enabled?`<div class="site-announcement is-${esc(sev)}"><span class="site-announcement-icon">${sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ"}</span><div><strong>${esc(title)}</strong><p>${nl2brEsc(msg)}</p></div></div>`:`<div class="admin-empty">ประกาศถูกปิดอยู่ ผู้ใช้ทั่วไปจะไม่เห็นส่วนนี้</div>`;
-}
-function loadAnnouncementEditor(){
-  const c=publicDisplayConfig?.content||{};if($("announcementEnabled"))$("announcementEnabled").checked=String(c.announcement_enabled||"0")==="1";if($("announcementSeverity"))$("announcementSeverity").value=c.announcement_severity||"info";if($("announcementTitle"))$("announcementTitle").value=c.announcement_title||"";if($("announcementMessage"))$("announcementMessage").value=c.announcement_message||"";renderAnnouncementPreview();
-}
-async function saveAnnouncement(){
-  const payload={enabled:$("announcementEnabled")?.checked?"1":"0",severity:$("announcementSeverity")?.value||"info",title:$("announcementTitle")?.value||"",message:$("announcementMessage")?.value||""};const b=$("saveAnnouncementButton");if(b)b.disabled=true;setAuthMessage("announcementSaveMessage","กำลังบันทึก...");
-  try{await apiJson(API.manageAnnouncement,{method:"POST",body:JSON.stringify(payload)});await loadPublicDisplayConfig();loadAnnouncementEditor();setAuthMessage("announcementSaveMessage","บันทึกประกาศแล้ว","success");}catch(e){setAuthMessage("announcementSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+/* Desktop/laptop export preview stays available and scrolls only inside
+   its own preview area if the table is wider than the card. */
+@media (min-width:761px){
+  .export-table-wrap{
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overscroll-behavior-inline:contain!important;
+  }
 }
 
-async function loadAdminUsers(){
-  const root=$("adminUserList");if(!root)return;root.innerHTML='<div class="admin-empty">กำลังโหลด...</div>';
-  try{const j=await apiJson(API.manageUsers);const owner=authUser?.role==="owner";root.innerHTML=(j.data||[]).map(u=>`<div class="admin-user-row" data-user-id="${u.id}"><div class="admin-user-name"><b>${esc(u.display_name||"ผู้ใช้งาน")}</b><small>${esc(authRoleThai(u.role))}</small></div><div class="admin-user-email">${esc(u.email)}</div><select class="admin-user-role" ${owner?"":"disabled"}><option value="user" ${u.role==="user"?"selected":""}>User</option><option value="admin" ${u.role==="admin"?"selected":""}>Admin</option><option value="owner" ${u.role==="owner"?"selected":""}>Owner</option></select><select class="admin-user-status" ${owner?"":"disabled"}><option value="active" ${u.status==="active"?"selected":""}>ใช้งาน</option><option value="disabled" ${u.status==="disabled"?"selected":""}>ระงับ</option><option value="pending" ${u.status==="pending"?"selected":""}>รอยืนยัน</option></select><button class="admin-user-save" type="button" ${owner?"":"disabled"}>บันทึก</button></div>`).join("")||'<div class="admin-empty">ยังไม่มีผู้ใช้งาน</div>';
-    root.querySelectorAll(".admin-user-save").forEach(btn=>btn.addEventListener("click",()=>saveAdminUserRow(btn.closest(".admin-user-row"))));
-  }catch(e){root.innerHTML=`<div class="admin-empty">${esc(e.message)}</div>`;}
-}
-async function saveAdminUserRow(row){
-  if(!row||authUser?.role!=="owner")return;const btn=row.querySelector(".admin-user-save");if(btn)btn.disabled=true;
-  try{await apiJson(API.manageUsersUpdate,{method:"POST",body:JSON.stringify({user_id:Number(row.dataset.userId),role:row.querySelector(".admin-user-role").value,status:row.querySelector(".admin-user-status").value})});setAuthMessage("userSaveMessage","อัปเดตสิทธิ์เรียบร้อย","success");await loadAdminUsers();}catch(e){setAuthMessage("userSaveMessage",e.message,"error");}finally{if(btn)btn.disabled=false;}
+
+/* =========================================================
+   V14 — MOBILE HELP MODAL FIX
+   Every ? opens as a viewport modal on phones/tablets.
+   No button-anchored positioning on narrow screens.
+   ========================================================= */
+
+@media (max-width:1023px){
+
+  /* Backdrop covers the viewport and locks the visual context. */
+  .help-popover-backdrop,
+  .help-backdrop{
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    z-index:9998!important;
+    background:rgba(2,8,18,.72)!important;
+    backdrop-filter:blur(4px)!important;
+    -webkit-backdrop-filter:blur(4px)!important;
+  }
+
+  /* The help panel itself is a centered viewport modal.
+     Reset all desktop anchoring/transform values explicitly. */
+  .help-popover{
+    position:fixed!important;
+    top:max(10px,env(safe-area-inset-top))!important;
+    right:10px!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+    left:10px!important;
+
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:auto!important;
+    max-height:none!important;
+
+    margin:0!important;
+    transform:none!important;
+    translate:none!important;
+
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+
+    z-index:9999!important;
+    border-radius:18px!important;
+    box-shadow:0 24px 70px rgba(0,0,0,.55)!important;
+  }
+
+  /* Remove any pseudo-arrow used by desktop popovers. */
+  .help-popover::before,
+  .help-popover::after{
+    display:none!important;
+    content:none!important;
+  }
+
+  .help-popover-header{
+    position:sticky!important;
+    top:0!important;
+    z-index:2!important;
+    flex:0 0 auto!important;
+    padding:14px 14px 12px!important;
+    background:rgba(8,23,38,.98)!important;
+    border-bottom:1px solid rgba(148,163,184,.14)!important;
+  }
+
+  .help-popover-header h3{
+    min-width:0!important;
+    margin:0!important;
+    font-size:19px!important;
+    line-height:1.35!important;
+  }
+
+  .help-popover-close,
+  .help-close{
+    flex:0 0 auto!important;
+    min-width:40px!important;
+    min-height:40px!important;
+  }
+
+  .help-popover-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    padding:14px!important;
+    padding-bottom:calc(18px + env(safe-area-inset-bottom))!important;
+  }
+
+  /* Make long help content comfortable to read on real devices. */
+  .help-popover-body,
+  .help-popover-body p,
+  .help-popover-body li,
+  .help-popover-body span{
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+  }
+
+  .help-popover-body p,
+  .help-popover-body li{
+    font-size:14px!important;
+    line-height:1.72!important;
+  }
+
+  /* Any legacy positional classes/inline anchoring helpers must not win. */
+  .help-popover.is-top,
+  .help-popover.is-bottom,
+  .help-popover.is-left,
+  .help-popover.is-right,
+  .help-popover[data-placement]{
+    top:max(10px,env(safe-area-inset-top))!important;
+    right:10px!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+    left:10px!important;
+    transform:none!important;
+  }
 }
 
-function openAdminCenter(){
-  if(!["admin","owner"].includes(authUser?.role||""))return;const m=$("adminCenter");if(!m)return;m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);populateHelpKeySelect();renderAdminDevices();loadAnnouncementEditor();loadAdminUsers();
+@media (max-width:390px){
+  .help-popover{
+    top:max(6px,env(safe-area-inset-top))!important;
+    right:6px!important;
+    bottom:max(6px,env(safe-area-inset-bottom))!important;
+    left:6px!important;
+    border-radius:16px!important;
+  }
+  .help-popover-header{padding:12px!important}
+  .help-popover-body{padding:12px!important}
+  .help-popover-header h3{font-size:18px!important}
 }
-function closeAdminCenter(){const m=$("adminCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
-function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
 
-(function setupAuthCmsV31(){
-  const run=()=>{
-    restoreAuthSession();
-    $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
-    document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
-    document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
-    document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
-    document.querySelectorAll("[data-toggle-password]").forEach(x=>x.addEventListener("click",()=>{const input=$(x.dataset.togglePassword);if(input)input.type=input.type==="password"?"text":"password";}));
-    $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
-    $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
-    $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
-    $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
-    $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
-    $("openAdminCenterButton")?.addEventListener("click",openAdminCenter);
-    $("changePasswordButton")?.addEventListener("click",async()=>{if(!authUser)return;const current=prompt("กรอกรหัสผ่านปัจจุบัน");if(current===null)return;const next=prompt("กรอกรหัสผ่านใหม่ (อย่างน้อย 10 ตัวอักษร)");if(next===null)return;try{await apiJson(API.authChangePassword,{method:"POST",body:JSON.stringify({current_password:current,new_password:next})});alert("เปลี่ยนรหัสผ่านเรียบร้อย");}catch(e){alert(e.message);}});
-    document.addEventListener("click",e=>{const dd=$("accountDropdown"),btn=$("accountButton");if(authUser&&dd&&!dd.classList.contains("hidden")&&!dd.contains(e.target)&&!btn?.contains(e.target))dd.classList.add("hidden");});
-    document.querySelectorAll(".admin-nav").forEach(b=>b.addEventListener("click",()=>switchAdminTab(b.dataset.adminTab)));
-    $("helpKeySelect")?.addEventListener("change",e=>loadHelpEditor(e.target.value));
-    $("helpEditorTitle")?.addEventListener("input",renderHelpPreview);
-    $("addHelpBlockButton")?.addEventListener("click",()=>{const root=$("helpBlockList");if(!root)return;root.appendChild(createHelpBlockElement({id:`block-${Date.now()}`,heading:"",description:""},root.children.length));renumberHelpBlocks();renderHelpPreview();});
-    $("saveHelpButton")?.addEventListener("click",saveHelpEditor);
-    $("saveDevicesButton")?.addEventListener("click",saveAdminDevices);
-    ["announcementEnabled","announcementSeverity","announcementTitle","announcementMessage"].forEach(id=>$(id)?.addEventListener(id==="announcementEnabled"||id==="announcementSeverity"?"change":"input",renderAnnouncementPreview));
-    $("saveAnnouncementButton")?.addEventListener("click",saveAnnouncement);
-  };
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run();
-})();
+
+/* =========================================================
+   V15 — HELP MODAL VISIBILITY FIX
+   V14 accidentally forced .help-popover to display:flex on
+   every phone, so the empty default dialog covered the page.
+   The dialog is now truly hidden until a ? button activates it.
+   ========================================================= */
+
+@media (max-width:1023px){
+  .help-popover:not(.active){
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  .help-popover.active{
+    display:flex!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+
+    position:fixed!important;
+    top:max(8px,env(safe-area-inset-top))!important;
+    right:8px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    left:8px!important;
+
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:auto!important;
+    max-height:none!important;
+
+    margin:0!important;
+    transform:none!important;
+    overflow:hidden!important;
+    flex-direction:column!important;
+  }
+
+  .help-popover.active .help-popover-header{
+    flex:0 0 auto!important;
+  }
+
+  .help-popover.active .help-popover-body{
+    display:block!important;
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+}
+
+@media (max-width:390px){
+  .help-popover.active{
+    top:max(6px,env(safe-area-inset-top))!important;
+    right:6px!important;
+    bottom:max(6px,env(safe-area-inset-bottom))!important;
+    left:6px!important;
+  }
+}
+
+
+/* =========================================================
+   V16 — PUBLIC UI POLISH
+   Cross-device density, typography and public-facing cleanup.
+   No data/API/forecast calculation changes.
+   ========================================================= */
+
+/* Section headings: keep title + ? aligned without squeezing. */
+.section-title-with-help,
+.chart-zone-heading{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.section-title-with-help > :first-child,
+.chart-zone-heading > :first-child{min-width:0!important}
+.section-title-with-help .help-trigger,
+.chart-zone-heading .help-trigger{flex:0 0 auto!important}
+
+/* Reduce decorative microcopy, but keep operational text readable. */
+.monitoring-status-hint,
+.overview-freshness,
+.history-range-caption,
+.metric-chart-subtitle,
+.metric-chart-legend,
+.ai-generated-at,
+.ai-forecast-generated{
+  font-size:13px!important;
+  line-height:1.55!important;
+}
+
+/* Public cards should not waste vertical space. */
+.monitoring-node-card,
+.node-card{
+  padding:16px!important;
+}
+.monitoring-node-card .node-metrics,
+.node-card .node-metrics{
+  gap:12px!important;
+}
+.monitoring-node-card .node-metric,
+.node-card .node-metric{
+  min-height:0!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+/* Forecast: area scope must remain visible; deeper explanation belongs in ?. */
+.forecast-scope-label{
+  font-size:13px!important;
+  line-height:1.45!important;
+  font-weight:700!important;
+}
+
+/* Help content hierarchy for general users. */
+.help-popover-body .help-section{
+  margin-bottom:16px!important;
+}
+.help-popover-body .help-section h4{
+  font-size:15px!important;
+  line-height:1.4!important;
+  margin-bottom:6px!important;
+}
+.help-popover-body .help-section p,
+.help-popover-body .help-section li{
+  line-height:1.7!important;
+}
+
+/* ---------- Desktop / Laptop ---------- */
+@media (min-width:1024px){
+  .monitoring-node-card,
+  .node-card{padding:18px!important}
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{gap:14px!important}
+  .dashboard-chart-card{min-width:0!important}
+  .chart-zone-heading{align-items:flex-start!important}
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width:761px) and (max-width:1023px){
+  .monitoring-node-card,
+  .node-card{padding:16px!important}
+  .chart-zone-heading{align-items:flex-start!important}
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width:760px){
+  .monitoring-node-card,
+  .node-card{
+    padding:14px!important;
+    border-radius:16px!important;
+  }
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{
+    gap:8px!important;
+  }
+  .monitoring-node-card .node-metric,
+  .node-card .node-metric{
+    padding:8px!important;
+  }
+
+  .section-title-with-help,
+  .chart-zone-heading{
+    align-items:flex-start!important;
+  }
+
+  /* Keep necessary context, remove only redundant decorative copy. */
+  .overview-eyebrow,
+  .chart-zone-eyebrow{
+    display:none!important;
+  }
+
+  .monitoring-status-hint,
+  .overview-freshness,
+  .history-range-caption,
+  .metric-chart-subtitle,
+  .metric-chart-legend{
+    font-size:13px!important;
+  }
+
+  /* Forecast empty-state should be one clear message rather than oversized blocks. */
+  .ai-forecast-status,
+  .forecast-empty-state{
+    min-height:0!important;
+    padding-top:12px!important;
+    padding-bottom:12px!important;
+  }
+
+  /* Help title remains visible while content scrolls. */
+  .help-popover-header{
+    position:sticky!important;
+    top:0!important;
+  }
+}
+
+/* Very small phones */
+@media (max-width:390px){
+  .monitoring-node-card .node-metrics,
+  .node-card .node-metrics{gap:7px!important}
+  .monitoring-node-card .node-metric,
+  .node-card .node-metric{padding:7px!important}
+}
+
+/* =========================================================
+   ADMIN MODE V2 — compact login + focused editor
+   ========================================================= */
+.admin-modal{
+    position:fixed;
+    inset:0;
+    z-index:12000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+}
+.admin-modal.active{display:flex}
+
+.admin-modal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(2,8,18,.76);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+}
+
+.admin-dialog{
+    position:relative;
+    z-index:1;
+    width:min(470px,calc(100vw - 36px));
+    max-height:min(640px,calc(100dvh - 36px));
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:22px;
+    background:linear-gradient(180deg,#0a1b2c 0%,#071522 100%);
+    box-shadow:0 30px 90px rgba(0,0,0,.58);
+    color:#eaf2fb;
+    transition:width .22s ease,max-height .22s ease;
+}
+
+/* หลัง Login ค่อยขยายเป็น Editor */
+.admin-modal.is-editor .admin-dialog{
+    width:min(1080px,calc(100vw - 36px));
+    height:min(820px,calc(100dvh - 36px));
+    max-height:min(820px,calc(100dvh - 36px));
+}
+
+.admin-dialog-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:18px 20px;
+    border-bottom:1px solid rgba(148,163,184,.13);
+    background:linear-gradient(180deg,rgba(14,165,233,.08),rgba(14,165,233,0));
+}
+.admin-dialog-header h2{
+    margin:2px 0 3px;
+    font-size:21px;
+    line-height:1.25;
+    font-weight:900;
+}
+.admin-dialog-header p{
+    margin:0;
+    max-width:720px;
+    color:#94a3b8;
+    font-size:12.5px;
+    line-height:1.5;
+}
+.admin-kicker{
+    color:#38bdf8;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.14em;
+}
+.admin-close-button{
+    flex:0 0 auto;
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:11px;
+    background:rgba(15,23,42,.68);
+    color:#e2e8f0;
+    font-size:24px;
+    line-height:1;
+    cursor:pointer;
+}
+.admin-close-button:hover{border-color:rgba(56,189,248,.45);background:rgba(14,165,233,.10)}
+
+.admin-login-view{
+    padding:22px;
+    overflow:visible;
+}
+.admin-login-card{
+    width:100%;
+    margin:0;
+    padding:8px 2px 2px;
+    border:0;
+    border-radius:0;
+    background:transparent;
+}
+.admin-lock-icon{
+    width:48px;
+    height:48px;
+    display:grid;
+    place-items:center;
+    margin-bottom:12px;
+    border:1px solid rgba(56,189,248,.20);
+    border-radius:14px;
+    background:rgba(14,165,233,.08);
+    font-size:24px;
+}
+.admin-login-card h3{
+    margin:0;
+    font-size:18px;
+    font-weight:900;
+}
+.admin-login-card>p{
+    margin:5px 0 17px;
+    color:#94a3b8;
+    font-size:12.5px;
+    line-height:1.55;
+}
+.admin-login-card .admin-primary-button{
+    width:100%;
+    margin-top:2px;
+}
+
+.admin-editor-view{
+    min-height:0;
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+}
+.admin-editor-toolbar{
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    align-items:center;
+    padding:10px 20px;
+    border-bottom:1px solid rgba(148,163,184,.11);
+    background:rgba(8,24,39,.72);
+}
+.admin-editor-toolbar b{
+    display:block;
+    font-size:13px;
+}
+.admin-editor-toolbar span{
+    display:block;
+    margin-top:2px;
+    color:#94a3b8;
+    font-size:11.5px;
+}
+
+.admin-tabs{
+    display:flex;
+    gap:7px;
+    padding:10px 20px;
+    overflow-x:auto;
+    border-bottom:1px solid rgba(148,163,184,.11);
+    scrollbar-width:none;
+}
+.admin-tabs::-webkit-scrollbar{display:none}
+.admin-tab{
+    min-height:38px;
+    padding:7px 13px;
+    border:1px solid rgba(148,163,184,.15);
+    border-radius:10px;
+    background:rgba(15,23,42,.55);
+    color:#cbd5e1;
+    font-weight:800;
+    font-size:12.5px;
+    white-space:nowrap;
+    cursor:pointer;
+}
+.admin-tab.active{
+    border-color:rgba(56,189,248,.5);
+    background:rgba(14,165,233,.13);
+    color:#7dd3fc;
+}
+
+.admin-editor-scroll{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:18px 20px 22px;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+}
+.admin-editor-scroll::-webkit-scrollbar{width:9px}
+.admin-editor-scroll::-webkit-scrollbar-track{background:transparent}
+.admin-editor-scroll::-webkit-scrollbar-thumb{
+    background:rgba(100,116,139,.35);
+    border:2px solid transparent;
+    background-clip:padding-box;
+    border-radius:999px;
+}
+
+.admin-tab-panel{display:none}
+.admin-tab-panel.active{display:block}
+
+.admin-section-head{
+    margin-bottom:14px;
+}
+.admin-section-head h3{
+    margin:0;
+    font-size:17px;
+    font-weight:900;
+}
+.admin-section-head p{
+    margin:4px 0 0;
+    color:#94a3b8;
+    font-size:12.5px;
+    line-height:1.55;
+}
+
+/* จุดตรวจวัดเรียงลงมาเป็นแถวกว้าง อ่านง่ายกว่า 3 คอลัมน์ */
+.admin-device-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+}
+.admin-device-card{
+    padding:15px 16px;
+    border:1px solid rgba(148,163,184,.13);
+    border-radius:15px;
+    background:rgba(15,23,42,.48);
+}
+.admin-device-card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:13px;
+    padding-bottom:11px;
+    border-bottom:1px solid rgba(148,163,184,.10);
+}
+.admin-device-card-head>div{
+    min-width:0;
+}
+.admin-device-index{
+    display:block;
+    margin-bottom:2px;
+    color:#94a3b8;
+    font-size:10.5px;
+    font-weight:800;
+}
+.admin-device-card-head strong{
+    display:block;
+    overflow:hidden;
+    color:#f8fafc;
+    font-size:15px;
+    font-weight:900;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.admin-device-id{
+    flex:0 0 auto;
+    margin:0;
+    padding:5px 8px;
+    border:1px solid rgba(56,189,248,.18);
+    border-radius:999px;
+    background:rgba(14,165,233,.07);
+    color:#7dd3fc;
+    font-size:10.5px;
+    font-weight:900;
+}
+.admin-device-fields{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:11px 13px;
+}
+.admin-field-wide{
+    grid-column:1 / -1;
+}
+
+.admin-field{
+    display:block;
+    margin:0 0 13px;
+}
+.admin-device-fields .admin-field{margin:0}
+.admin-field>span{
+    display:block;
+    margin-bottom:6px;
+    color:#cbd5e1;
+    font-size:12.5px;
+    font-weight:800;
+}
+.admin-field input,
+.admin-field textarea{
+    width:100%;
+    border:1px solid rgba(148,163,184,.17);
+    border-radius:10px;
+    background:#06131f;
+    color:#f8fafc;
+    padding:9px 10px;
+    outline:none;
+    font:inherit;
+    font-size:13.5px;
+    line-height:1.5;
+}
+.admin-field input{height:41px}
+.admin-field textarea{
+    min-height:72px;
+    resize:vertical;
+}
+.admin-field input:focus,
+.admin-field textarea:focus{
+    border-color:rgba(56,189,248,.65);
+    box-shadow:0 0 0 3px rgba(14,165,233,.09);
+}
+
+.admin-editor-footer{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:9px;
+    padding:11px 20px;
+    border-top:1px solid rgba(148,163,184,.13);
+    background:#081827;
+}
+.admin-message{
+    margin-right:auto;
+    font-size:12.5px;
+    line-height:1.45;
+}
+.admin-message.is-error{color:#fda4af}
+.admin-message.is-success{color:#86efac}
+
+.admin-primary-button,
+.admin-secondary-button,
+.admin-logout-button{
+    min-height:40px;
+    padding:8px 13px;
+    border-radius:10px;
+    font-size:12.5px;
+    font-weight:900;
+    cursor:pointer;
+}
+.admin-primary-button{
+    border:1px solid rgba(34,211,238,.52);
+    background:linear-gradient(135deg,rgba(14,165,233,.28),rgba(6,182,212,.17));
+    color:#cffafe;
+}
+.admin-secondary-button,
+.admin-logout-button{
+    border:1px solid rgba(148,163,184,.16);
+    background:rgba(15,23,42,.68);
+    color:#cbd5e1;
+}
+.admin-primary-button:hover{filter:brightness(1.08)}
+.admin-secondary-button:hover,
+.admin-logout-button:hover{border-color:rgba(148,163,184,.30)}
+.admin-primary-button:disabled,
+.admin-secondary-button:disabled{opacity:.55;cursor:not-allowed}
+
+/* Public metadata */
+.node-public-location{
+    margin-top:3px;
+    color:#7dd3fc;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.4;
+}
+.node-public-description{
+    margin-top:2px;
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:500;
+    line-height:1.4;
+}
+.overview-node-copy{
+    display:flex;
+    min-width:0;
+    flex-direction:column;
+}
+.overview-node-location{color:#7dd3fc!important}
+.public-about-intro{
+    max-width:900px;
+    margin-top:8px!important;
+    white-space:pre-line;
+}
+.admin-help-extra{
+    margin-bottom:14px;
+    padding:12px 13px;
+    border:1px solid rgba(56,189,248,.18);
+    border-radius:12px;
+    background:rgba(14,165,233,.08);
+}
+.admin-help-extra b{
+    display:block;
+    margin-bottom:5px;
+    color:#7dd3fc;
+}
+.admin-help-extra span{
+    display:block;
+    white-space:pre-line;
+    color:#dbeafe;
+    font-size:14px;
+    line-height:1.7;
+}
+
+/* Tablet */
+@media(max-width:900px){
+    .admin-modal.is-editor .admin-dialog{
+        width:min(760px,calc(100vw - 24px));
+    }
+}
+
+/* Mobile */
+@media(max-width:640px){
+    .admin-modal{
+        padding:max(6px,env(safe-area-inset-top)) 6px max(6px,env(safe-area-inset-bottom));
+    }
+    .admin-dialog{
+        width:min(460px,100%);
+        max-height:calc(100dvh - 12px);
+        border-radius:16px;
+    }
+    .admin-modal.is-editor .admin-dialog{
+        width:100%;
+        height:calc(100dvh - 12px);
+        max-height:calc(100dvh - 12px);
+    }
+    .admin-dialog-header{
+        padding:13px 14px;
+    }
+    .admin-dialog-header h2{font-size:18px}
+    .admin-dialog-header p{
+        max-width:260px;
+        font-size:11.5px;
+    }
+    .admin-close-button{
+        width:36px;
+        height:36px;
+    }
+    .admin-login-view{
+        padding:17px 15px 18px;
+    }
+    .admin-editor-toolbar{
+        align-items:flex-start;
+        padding:10px 14px;
+    }
+    .admin-editor-toolbar span{
+        max-width:240px;
+    }
+    .admin-tabs{
+        padding:9px 14px;
+    }
+    .admin-editor-scroll{
+        padding:14px;
+        scrollbar-gutter:auto;
+    }
+    .admin-device-card{
+        padding:13px;
+    }
+    .admin-device-fields{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+    .admin-field-wide{grid-column:auto}
+    .admin-editor-footer{
+        flex-wrap:wrap;
+        padding:9px 14px;
+    }
+    .admin-message{
+        width:100%;
+        margin:0 0 3px;
+    }
+    .admin-secondary-button,
+    .admin-primary-button{
+        flex:1 1 130px;
+    }
+}
+
+/* =========================================================
+   ADMIN MODE V3 — visibility fix
+   สำคัญ: ต้องอยู่หลัง .admin-login-view / .admin-editor-view
+   เพื่อไม่ให้ display:flex ของ editor เขียนทับ .hidden
+   ========================================================= */
+.admin-login-view.hidden,
+.admin-editor-view.hidden{
+    display:none !important;
+}
+
+/* =========================================================
+   ADMIN MODE V4 — fixed sidebar + non-scroll category menu
+   ========================================================= */
+
+/* Editor body */
+.admin-modal.is-editor .admin-dialog{
+    width:min(1120px,calc(100vw - 36px));
+    height:min(790px,calc(100dvh - 36px));
+    max-height:min(790px,calc(100dvh - 36px));
+}
+
+.admin-editor-view{
+    min-height:0;
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+}
+
+/* Toolbar is now one compact status strip */
+.admin-editor-toolbar{
+    flex:0 0 auto;
+    min-height:54px;
+    padding:9px 18px;
+}
+
+/* Main two-column workspace */
+.admin-workspace{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    overflow:hidden;
+}
+
+/* Sidebar never scrolls horizontally */
+.admin-sidebar{
+    min-width:0;
+    padding:16px 12px;
+    border-right:1px solid rgba(148,163,184,.12);
+    background:linear-gradient(180deg,rgba(8,24,39,.72),rgba(6,19,31,.90));
+    overflow:hidden;
+}
+.admin-sidebar-title{
+    margin:0 7px 10px;
+    color:#64748b;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+}
+
+/* Important: no horizontal scrolling on these 3 categories */
+.admin-tabs{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:7px;
+    width:100%;
+    padding:0;
+    overflow:visible;
+    border:0;
+}
+.admin-tab{
+    width:100%;
+    min-width:0;
+    min-height:64px;
+    display:grid;
+    grid-template-columns:36px minmax(0,1fr);
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    text-align:left;
+    white-space:normal;
+    border:1px solid transparent;
+    border-radius:12px;
+    background:transparent;
+    color:#94a3b8;
+}
+.admin-tab:hover{
+    border-color:rgba(148,163,184,.13);
+    background:rgba(15,23,42,.45);
+    color:#e2e8f0;
+}
+.admin-tab.active{
+    border-color:rgba(56,189,248,.24);
+    background:linear-gradient(135deg,rgba(14,165,233,.14),rgba(6,182,212,.06));
+    color:#e0f2fe;
+    box-shadow:inset 3px 0 0 rgba(34,211,238,.8);
+}
+.admin-tab-icon{
+    width:34px;
+    height:34px;
+    display:grid;
+    place-items:center;
+    border-radius:10px;
+    background:rgba(15,23,42,.72);
+    color:#7dd3fc;
+    font-size:15px;
+    font-weight:900;
+}
+.admin-tab.active .admin-tab-icon{
+    background:rgba(14,165,233,.16);
+}
+.admin-tab-copy{
+    min-width:0;
+    display:block;
+}
+.admin-tab-copy b{
+    display:block;
+    overflow:hidden;
+    font-size:12.5px;
+    line-height:1.35;
+    text-overflow:ellipsis;
+}
+.admin-tab-copy small{
+    display:block;
+    margin-top:2px;
+    color:#64748b;
+    font-size:9.5px;
+    line-height:1.35;
+}
+.admin-tab.active .admin-tab-copy small{
+    color:#94a3b8;
+}
+.admin-sidebar-note{
+    margin:14px 7px 0;
+    padding-top:12px;
+    border-top:1px solid rgba(148,163,184,.09);
+    color:#64748b;
+    font-size:10px;
+    line-height:1.55;
+}
+
+/* Only content area scrolls vertically */
+.admin-editor-scroll{
+    min-width:0;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:18px 22px 24px;
+    scrollbar-gutter:stable;
+}
+
+/* Better content width so it doesn't feel stretched */
+.admin-tab-panel{
+    width:min(760px,100%);
+    margin:0 auto;
+}
+.admin-tab-panel[data-admin-panel="devices"]{
+    width:min(800px,100%);
+}
+
+/* Slightly cleaner cards */
+.admin-device-card{
+    padding:14px 15px;
+    border-radius:14px;
+}
+.admin-device-fields{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+
+/* Help/About form widths */
+.admin-tab-panel[data-admin-panel="help"] .admin-field,
+.admin-tab-panel[data-admin-panel="about"] .admin-field{
+    margin-bottom:15px;
+}
+.admin-tab-panel[data-admin-panel="help"] textarea{
+    min-height:110px;
+}
+.admin-tab-panel[data-admin-panel="about"] textarea{
+    min-height:180px;
+}
+
+/* Footer stays fixed, outside scroll area */
+.admin-editor-footer{
+    flex:0 0 auto;
+    min-height:58px;
+    padding:9px 18px;
+}
+
+/* Tablet */
+@media(max-width:900px){
+    .admin-workspace{
+        grid-template-columns:190px minmax(0,1fr);
+    }
+    .admin-sidebar{
+        padding:13px 9px;
+    }
+    .admin-tab{
+        grid-template-columns:32px minmax(0,1fr);
+        gap:8px;
+        min-height:60px;
+        padding:8px;
+    }
+    .admin-tab-icon{
+        width:31px;
+        height:31px;
+    }
+    .admin-tab-copy small{
+        display:none;
+    }
+    .admin-editor-scroll{
+        padding:16px;
+    }
+}
+
+/* Mobile:
+   categories become 3 fixed equal buttons.
+   No horizontal swipe / no carousel / no overflow-x.
+*/
+@media(max-width:640px){
+    .admin-modal.is-editor .admin-dialog{
+        width:100%;
+        height:calc(100dvh - 12px);
+        max-height:calc(100dvh - 12px);
+    }
+
+    .admin-editor-toolbar{
+        min-height:auto;
+        padding:9px 12px;
+    }
+    .admin-editor-toolbar>div span{
+        display:none;
+    }
+
+    .admin-workspace{
+        display:flex;
+        flex-direction:column;
+        min-height:0;
+        overflow:hidden;
+    }
+
+    .admin-sidebar{
+        flex:0 0 auto;
+        padding:8px 10px 9px;
+        border-right:0;
+        border-bottom:1px solid rgba(148,163,184,.12);
+        overflow:hidden;
+        background:#081827;
+    }
+    .admin-sidebar-title,
+    .admin-sidebar-note{
+        display:none;
+    }
+
+    .admin-tabs{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+        padding:0;
+        overflow:visible;
+    }
+    .admin-tab{
+        min-width:0;
+        min-height:48px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:6px;
+        padding:7px 5px;
+        text-align:center;
+        border:1px solid rgba(148,163,184,.11);
+        border-radius:10px;
+        background:rgba(15,23,42,.45);
+        box-shadow:none;
+    }
+    .admin-tab.active{
+        border-color:rgba(56,189,248,.34);
+        background:rgba(14,165,233,.13);
+        box-shadow:inset 0 -2px 0 rgba(34,211,238,.8);
+    }
+    .admin-tab-icon{
+        flex:0 0 auto;
+        width:25px;
+        height:25px;
+        border-radius:7px;
+        font-size:11px;
+    }
+    .admin-tab-copy{
+        min-width:0;
+    }
+    .admin-tab-copy b{
+        font-size:10.5px;
+        line-height:1.2;
+        white-space:normal;
+    }
+    .admin-tab-copy small{
+        display:none;
+    }
+
+    .admin-editor-scroll{
+        flex:1 1 auto;
+        min-height:0;
+        padding:13px 12px 18px;
+        overflow-y:auto;
+        overflow-x:hidden;
+        scrollbar-gutter:auto;
+    }
+
+    .admin-tab-panel,
+    .admin-tab-panel[data-admin-panel="devices"]{
+        width:100%;
+        margin:0;
+    }
+
+    .admin-section-head{
+        margin-bottom:11px;
+    }
+    .admin-section-head h3{
+        font-size:15px;
+    }
+    .admin-section-head p{
+        font-size:11.5px;
+    }
+
+    .admin-device-fields{
+        grid-template-columns:1fr;
+    }
+    .admin-device-card-head{
+        margin-bottom:11px;
+    }
+
+    .admin-editor-footer{
+        min-height:auto;
+        padding:8px 10px max(8px,env(safe-area-inset-bottom));
+    }
+}
+
+/* Very narrow phones */
+@media(max-width:380px){
+    .admin-tabs{
+        gap:4px;
+    }
+    .admin-tab{
+        gap:4px;
+        padding:6px 3px;
+    }
+    .admin-tab-icon{
+        display:none;
+    }
+    .admin-tab-copy b{
+        font-size:10px;
+    }
+}
+
+
+/* =========================================================
+   ADMIN MODE V5 — category reset + display hints
+   ========================================================= */
+.admin-section-head-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+}
+.admin-section-head-row>div{min-width:0}
+.admin-reset-button{
+    flex:0 0 auto;
+    min-height:36px;
+    padding:7px 10px;
+    border:1px solid rgba(251,191,36,.22);
+    border-radius:10px;
+    background:rgba(245,158,11,.07);
+    color:#fcd34d;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+}
+.admin-reset-button:hover{
+    border-color:rgba(251,191,36,.45);
+    background:rgba(245,158,11,.12);
+}
+.admin-display-hint{
+    display:block;
+    margin-top:5px;
+    color:#64748b;
+    font-size:10.5px;
+    font-weight:600;
+    line-height:1.45;
+}
+.admin-field:focus-within .admin-display-hint{color:#7dd3fc}
+@media(max-width:640px){
+    .admin-section-head-row{gap:10px}
+    .admin-reset-button{
+        min-height:34px;
+        padding:6px 8px;
+        font-size:9.5px;
+    }
+    .admin-display-hint{font-size:9.5px}
+}
+
+/* ADMIN MODE V6 */
+.admin-preview-box{margin-top:18px;padding:13px;border:1px dashed rgba(56,189,248,.22);border-radius:14px;background:rgba(2,12,22,.38)}
+.admin-preview-label{margin-bottom:9px;color:#67e8f9;font-size:10px;font-weight:900;letter-spacing:.08em}
+.admin-preview-device,.admin-preview-about,.admin-preview-help{padding:13px;border:1px solid rgba(148,163,184,.13);border-radius:12px;background:#081827}
+.admin-preview-device strong,.admin-preview-device b{display:block}.admin-preview-device b{margin-top:6px;color:#7dd3fc;font-size:12px}
+.admin-preview-device p,.admin-preview-about p,.admin-preview-help p{margin:5px 0 0;color:#94a3b8;font-size:11.5px;line-height:1.55;white-space:pre-line}
+.admin-preview-help b{color:#7dd3fc}.admin-preview-about small{color:#22d3ee;font-weight:900}.admin-preview-about h3{margin:5px 0 0}
+.admin-toggle-field{display:flex;gap:10px;margin-bottom:15px;padding:12px;border:1px solid rgba(148,163,184,.13);border-radius:12px;background:rgba(15,23,42,.42)}
+.admin-toggle-field input{margin-top:3px;accent-color:#22d3ee}.admin-toggle-field b{display:block}.admin-toggle-field small{display:block;margin-top:2px;color:#64748b}
+.admin-field select{width:100%;height:41px;border:1px solid rgba(148,163,184,.17);border-radius:10px;background:#06131f;color:#f8fafc;padding:0 10px}
+.site-announcement-wrap{width:min(1536px,calc(100% - 32px));margin:12px auto 0}
+.site-announcement{display:flex;gap:11px;padding:11px 14px;border:1px solid rgba(56,189,248,.22);border-radius:13px;background:rgba(14,165,233,.08)}
+.site-announcement.is-warning{border-color:rgba(251,191,36,.30);background:rgba(245,158,11,.09)}
+.site-announcement.is-maintenance{border-color:rgba(167,139,250,.30);background:rgba(139,92,246,.09)}
+.site-announcement-icon{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.06)}
+.site-announcement strong{display:block;font-size:12.5px}.site-announcement p{margin:2px 0 0;color:#a8b5c7;font-size:11.5px;line-height:1.5;white-space:pre-line}
+.admin-audit-toolbar{display:flex;justify-content:flex-end;margin-bottom:10px}.admin-audit-list{display:grid;gap:8px}
+.admin-audit-item{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:11px 12px;border:1px solid rgba(148,163,184,.12);border-radius:11px;background:rgba(15,23,42,.42)}
+.admin-audit-time{color:#7dd3fc;font-size:10.5px;font-weight:800}.admin-audit-action{color:#dbeafe;font-size:11.5px}.admin-audit-empty{padding:22px;text-align:center;color:#64748b}
+@media(max-width:640px){.admin-sidebar .admin-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.admin-tab-copy b{font-size:8.5px}.site-announcement-wrap{width:calc(100% - 20px)}.admin-audit-item{grid-template-columns:1fr;gap:3px}}
+
+/* =========================================================
+   RESPONSIVE HARDENING V7
+   Device bands audited:
+   320 / 360 / 375 / 390 / 412 / 430 / 480
+   600 / 720 / 768 / 820 / 1024
+   1280 / 1366 / 1440 / 1600 / 1920+
+   ========================================================= */
+
+/* ---------- universal overflow safety ---------- */
+html,
+body{
+    width:100%;
+    max-width:100%;
+    overflow-x:clip;
+}
+body > .max-w-\[1800px\]{
+    width:100%;
+    max-width:1800px;
+    min-width:0;
+}
+.dashboard-pages,
+.dashboard-page,
+.glass,
+.card,
+.monitoring-card,
+.historical-section,
+.ai-intelligence-card,
+.ai-forecast-card,
+.about-detail-section,
+.admin-workspace,
+.admin-editor-scroll,
+.admin-tab-panel{
+    min-width:0;
+    max-width:100%;
+}
+img,
+svg,
+canvas{
+    max-width:100%;
+}
+button,
+input,
+textarea,
+select{
+    max-width:100%;
+}
+.dashboard-page-heading,
+.dashboard-page-heading h1,
+.dashboard-page-heading p,
+.overview-section-head,
+.overview-alert-head,
+.monitoring-status-card,
+.node-card,
+.smart-summary-card,
+.ai-intelligence-card,
+.ai-forecast-card,
+.about-detail-section,
+.admin-section-head,
+.admin-device-card{
+    overflow-wrap:anywhere;
+    word-break:normal;
+}
+
+/* ---------- wide screens ---------- */
+@media (min-width:1600px){
+    body > .max-w-\[1800px\]{
+        padding-left:28px!important;
+        padding-right:28px!important;
+    }
+    .dashboard-page-heading{
+        max-width:1500px;
+    }
+}
+
+/* ---------- laptop / desktop ---------- */
+@media (min-width:1101px) and (max-width:1599px){
+    body > .max-w-\[1800px\]{
+        padding-left:20px!important;
+        padding-right:20px!important;
+    }
+}
+
+/* ---------- tablet landscape / small laptop ---------- */
+@media (min-width:901px) and (max-width:1100px){
+    body > .max-w-\[1800px\]{
+        padding-left:16px!important;
+        padding-right:16px!important;
+    }
+    .dashboard-page-heading h1{
+        font-size:clamp(24px,3vw,32px)!important;
+    }
+    .site-announcement-wrap{
+        width:calc(100% - 32px)!important;
+    }
+}
+
+/* ---------- tablet portrait ---------- */
+@media (min-width:721px) and (max-width:900px){
+    body > .max-w-\[1800px\]{
+        padding:14px!important;
+    }
+    .dashboard-page-heading{
+        margin-bottom:14px!important;
+    }
+    .dashboard-page-heading h1{
+        font-size:clamp(23px,4vw,30px)!important;
+    }
+    .dashboard-page-heading p{
+        max-width:70ch;
+    }
+    .site-announcement-wrap{
+        width:calc(100% - 28px)!important;
+    }
+
+    /* Admin keeps a usable sidebar on tablet */
+    .admin-workspace{
+        grid-template-columns:180px minmax(0,1fr)!important;
+    }
+    .admin-sidebar{
+        min-width:0!important;
+    }
+}
+
+/* ---------- phone / phablet ---------- */
+@media (max-width:720px){
+    html,
+    body{
+        overflow-x:hidden!important;
+    }
+
+    body > .max-w-\[1800px\]{
+        width:100%!important;
+        padding:10px!important;
+    }
+
+    .dashboard-nav{
+        width:100%!important;
+        max-width:100%!important;
+    }
+    .dashboard-nav-inner{
+        width:100%!important;
+        min-width:0!important;
+    }
+    .dashboard-mobile-toggle{
+        min-height:44px!important;
+        min-width:44px!important;
+    }
+    .dashboard-nav-link{
+        min-height:44px!important;
+        white-space:normal!important;
+        line-height:1.25!important;
+    }
+
+    .dashboard-page-heading{
+        margin-bottom:12px!important;
+    }
+    .dashboard-page-heading h1{
+        font-size:clamp(22px,7vw,28px)!important;
+        line-height:1.18!important;
+    }
+    .dashboard-page-heading p{
+        font-size:12px!important;
+        line-height:1.6!important;
+    }
+
+    .glass.card,
+    .monitoring-card,
+    .historical-section,
+    .ai-intelligence-card,
+    .ai-forecast-card,
+    .about-detail-section{
+        border-radius:14px!important;
+    }
+
+    .overview-section-head,
+    .overview-alert-head{
+        gap:9px!important;
+    }
+    .overview-link-button{
+        min-height:40px!important;
+        white-space:normal!important;
+        text-align:center!important;
+    }
+
+    .monitoring-status-cluster,
+    .monitoring-nodes-grid,
+    .smart-summary-grid,
+    .about-detail-grid,
+    .about-interpretation-grid{
+        width:100%!important;
+        min-width:0!important;
+    }
+
+    /* Controls must never force the viewport wider */
+    .historical-section select,
+    .historical-section button,
+    .historical-section input,
+    .ai-forecast-card button{
+        max-width:100%!important;
+    }
+
+    #historyChartArea,
+    #forecastChartArea,
+    .chart-render-area,
+    .bottom-chart-wrap{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+    }
+
+    .site-announcement-wrap{
+        width:calc(100% - 20px)!important;
+        margin-top:9px!important;
+    }
+    .site-announcement{
+        padding:10px 11px!important;
+        border-radius:12px!important;
+    }
+    .site-announcement > div{
+        min-width:0!important;
+    }
+
+    /* Help dialogs/popovers stay inside viewport */
+    .help-popover,
+    .help-popover.active,
+    .chart-zoom-dialog,
+    #historyRangePanel{
+        max-width:calc(100vw - 20px)!important;
+    }
+
+    /* Admin: 5 categories wrap instead of squeezing into one row */
+    .admin-sidebar .admin-tabs{
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:6px!important;
+        width:100%!important;
+        overflow:visible!important;
+    }
+    .admin-sidebar .admin-tab{
+        min-width:0!important;
+        min-height:46px!important;
+        padding:7px 5px!important;
+    }
+    .admin-sidebar .admin-tab-copy b{
+        font-size:10px!important;
+        line-height:1.2!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+    }
+    .admin-sidebar .admin-tab-copy small{
+        display:none!important;
+    }
+
+    .admin-section-head-row{
+        align-items:flex-start!important;
+        gap:8px!important;
+    }
+    .admin-reset-button{
+        max-width:145px!important;
+        white-space:normal!important;
+        line-height:1.2!important;
+    }
+    .admin-editor-footer{
+        gap:7px!important;
+    }
+    .admin-editor-footer button{
+        min-height:42px!important;
+    }
+}
+
+/* ---------- common modern phones 391–430 ---------- */
+@media (min-width:391px) and (max-width:430px){
+    body > .max-w-\[1800px\]{
+        padding:10px!important;
+    }
+    .admin-sidebar .admin-tabs{
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    }
+}
+
+/* ---------- 360–390 phones ---------- */
+@media (min-width:361px) and (max-width:390px){
+    body > .max-w-\[1800px\]{
+        padding:9px!important;
+    }
+    .admin-sidebar .admin-tabs{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+    .admin-sidebar .admin-tab:last-child{
+        grid-column:1/-1;
+    }
+    .admin-reset-button{
+        max-width:128px!important;
+        font-size:9px!important;
+    }
+}
+
+/* ---------- narrow phones 320–360 ---------- */
+@media (max-width:360px){
+    body > .max-w-\[1800px\]{
+        padding:7px!important;
+    }
+
+    .dashboard-page-heading h1{
+        font-size:21px!important;
+    }
+    .dashboard-page-heading p{
+        font-size:11.5px!important;
+    }
+
+    .glass.card,
+    .monitoring-card,
+    .historical-section,
+    .ai-intelligence-card,
+    .ai-forecast-card,
+    .about-detail-section{
+        padding-left:11px!important;
+        padding-right:11px!important;
+    }
+
+    .site-announcement-wrap{
+        width:calc(100% - 14px)!important;
+    }
+    .site-announcement-icon{
+        width:26px!important;
+        height:26px!important;
+        flex:0 0 26px!important;
+    }
+
+    .admin-sidebar{
+        padding:7px!important;
+    }
+    .admin-sidebar .admin-tabs{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:5px!important;
+    }
+    .admin-sidebar .admin-tab:last-child{
+        grid-column:1/-1;
+    }
+    .admin-sidebar .admin-tab{
+        min-height:44px!important;
+    }
+    .admin-sidebar .admin-tab-icon{
+        display:none!important;
+    }
+    .admin-sidebar .admin-tab-copy b{
+        font-size:9.5px!important;
+    }
+
+    .admin-section-head-row{
+        flex-direction:column!important;
+    }
+    .admin-reset-button{
+        max-width:none!important;
+        width:100%!important;
+        min-height:38px!important;
+    }
+    .admin-editor-scroll{
+        padding:10px 9px 14px!important;
+    }
+    .admin-editor-footer{
+        flex-wrap:wrap!important;
+    }
+    .admin-editor-footer button{
+        flex:1 1 calc(50% - 4px)!important;
+        min-width:0!important;
+    }
+    .admin-editor-footer #adminSaveButton{
+        flex-basis:100%!important;
+    }
+}
+
+/* ---------- short-height phones / landscape phones ---------- */
+@media (max-height:520px) and (max-width:900px){
+    .dashboard-nav{
+        position:relative!important;
+        top:auto!important;
+    }
+    .admin-modal.is-editor .admin-dialog{
+        height:calc(100dvh - 6px)!important;
+        max-height:calc(100dvh - 6px)!important;
+    }
+    .admin-editor-toolbar{
+        padding-top:6px!important;
+        padding-bottom:6px!important;
+    }
+    .admin-editor-footer{
+        padding-top:6px!important;
+        padding-bottom:max(6px,env(safe-area-inset-bottom))!important;
+    }
+}
+
+/* ---------- touch targets on coarse pointers ---------- */
+@media (pointer:coarse){
+    .help-button,
+    .dashboard-mobile-toggle,
+    .dashboard-nav-link,
+    .overview-link-button,
+    .admin-tab,
+    .admin-reset-button,
+    .admin-secondary-button,
+    #adminSaveButton,
+    #adminReloadButton{
+        min-height:44px;
+    }
+}
+
+/* =========================================================
+   FULL QA V8 — final visual/runtime hardening
+   ========================================================= */
+
+/* Long dynamic values must never break cards */
+[id^="n"][id$="status"],
+[id^="lastUpdate"],
+#overallStatus,
+#forecastMessage,
+#aiSummary,
+#aiForecastDetails,
+#alerts,
+#siteAnnouncementTitle,
+#siteAnnouncementMessage{
+    overflow-wrap:anywhere;
+}
+
+/* Charts: stable responsive height without horizontal overflow */
+.chart-render-area{
+    position:relative;
+    width:100%;
+    min-width:0;
+    overflow:hidden;
+}
+.chart-render-area canvas{
+    display:block;
+    width:100%!important;
+    max-width:100%!important;
+}
+
+/* Export modal / tables remain usable on narrow devices */
+.export-modal-dialog{
+    max-width:min(1100px,calc(100vw - 24px));
+}
+.export-preview-table-wrap,
+.export-table-wrap{
+    max-width:100%;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+/* Form controls: avoid iOS zoom caused by tiny inputs */
+@media(max-width:720px){
+    .admin-field input,
+    .admin-field textarea,
+    .admin-field select,
+    .history-metric-select{
+        font-size:16px!important;
+    }
+}
+
+/* Safe-area support for notched phones */
+@supports(padding:max(0px)){
+    @media(max-width:720px){
+        body > .max-w-\[1800px\]{
+            padding-left:max(10px,env(safe-area-inset-left))!important;
+            padding-right:max(10px,env(safe-area-inset-right))!important;
+        }
+        .admin-editor-footer{
+            padding-bottom:max(10px,env(safe-area-inset-bottom))!important;
+        }
+    }
+}
+
+/* Very narrow 320px devices: toolbar/control stacks are allowed */
+@media(max-width:340px){
+    .history-toolbar,
+    .history-toolbar-actions,
+    .forecast-display-controls,
+    .chart-zone-heading-split{
+        flex-wrap:wrap!important;
+    }
+    .history-toolbar > *,
+    .history-toolbar-actions > *{
+        min-width:0!important;
+        max-width:100%!important;
+    }
+}
+
+/* Landscape phones: preserve actual content space */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+    .dashboard-page-heading{
+        margin-bottom:8px!important;
+    }
+    .dashboard-page-heading p{
+        display:none;
+    }
+}
+
+/* =========================================================
+   V9 — MOBILE FLOATING UI HARDENING
+   Fixes range picker / help / dialogs on devices whose
+   visual viewport differs from the layout viewport.
+   ========================================================= */
+
+/* History picker: desktop remains a true viewport modal. */
+#historyRangePanel.history-range-panel{
+    box-sizing:border-box!important;
+    position:fixed!important;
+    z-index:2147483000!important;
+}
+
+/* Help is also a viewport-level dialog. */
+#helpPopover.help-popover{
+    box-sizing:border-box!important;
+    position:fixed!important;
+    z-index:2147483000!important;
+}
+
+/* Other floating windows: cap them to the visible screen. */
+.export-modal-dialog,
+.admin-dialog,
+.credit-image-window,
+.chart-zoom-dialog{
+    box-sizing:border-box;
+    max-width:calc(100vw - 20px)!important;
+    max-height:calc(100dvh - 20px)!important;
+}
+
+/* Mobile fallback when VisualViewport JS is unavailable. */
+@media(max-width:760px){
+    #historyRangePanel.history-range-panel,
+    #helpPopover.help-popover{
+        position:fixed!important;
+        inset:8px!important;
+        left:8px!important;
+        right:8px!important;
+        top:8px!important;
+        bottom:8px!important;
+
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+        height:auto!important;
+        max-height:none!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        overflow:auto!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    #historyRangePanel .history-range-layout{
+        width:100%!important;
+        min-width:0!important;
+    }
+
+    #historyRangePanel input[type="datetime-local"]{
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    #historyRangePanel .history-range-calendar,
+    #historyRangePanel .history-range-quick,
+    #historyRangePanel > .border-t{
+        min-width:0!important;
+        max-width:100%!important;
+    }
+
+    #helpPopover .help-popover-header,
+    #helpPopover .help-popover-body{
+        min-width:0!important;
+        max-width:100%!important;
+    }
+}
+
+/* Very small phones. */
+@media(max-width:360px){
+    #historyRangePanel.history-range-panel,
+    #helpPopover.help-popover{
+        inset:5px!important;
+        left:5px!important;
+        right:5px!important;
+        top:5px!important;
+        bottom:5px!important;
+        border-radius:14px!important;
+    }
+
+    #historyRangePanel .history-range-calendar{
+        padding:12px 9px!important;
+    }
+
+    #historyRangePanel .history-range-quick{
+        padding:10px 9px 12px!important;
+    }
+
+    #historyRangePanel #quickRangeList.quick-range-list{
+        gap:5px!important;
+    }
+}
+
+/* Prevent old positioning rules from creating a tiny left-corner box. */
+@media(max-width:760px){
+    body > #historyRangePanel.history-range-panel,
+    body > #helpPopover.help-popover{
+        contain:none!important;
+        clip:auto!important;
+        float:none!important;
+    }
+}
+
+/* =========================================================
+   V10 — HISTORY RANGE MOBILE MODAL FINAL FIX
+   Do NOT size this dialog from VisualViewport JS.
+   CSS owns the entire geometry on mobile.
+   ========================================================= */
+
+@media (max-width:760px){
+
+    body.history-range-modal-open{
+        overflow:hidden!important;
+    }
+
+    body.history-range-modal-open::before{
+        content:""!important;
+        position:fixed!important;
+        inset:0!important;
+        width:100vw!important;
+        height:100dvh!important;
+        z-index:2147482000!important;
+        background:rgba(2,8,18,.88)!important;
+        backdrop-filter:none!important;
+        -webkit-backdrop-filter:none!important;
+        pointer-events:auto!important;
+    }
+
+    body > #historyRangePanel.history-range-panel{
+        position:fixed!important;
+
+        /* Explicit four-edge geometry; no translate / calculated width. */
+        inset:
+            max(6px,env(safe-area-inset-top))
+            max(6px,env(safe-area-inset-right))
+            max(6px,env(safe-area-inset-bottom))
+            max(6px,env(safe-area-inset-left))!important;
+
+        top:max(6px,env(safe-area-inset-top))!important;
+        right:max(6px,env(safe-area-inset-right))!important;
+        bottom:max(6px,env(safe-area-inset-bottom))!important;
+        left:max(6px,env(safe-area-inset-left))!important;
+
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+
+        height:auto!important;
+        min-height:0!important;
+        max-height:none!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        display:block;
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain!important;
+        -webkit-overflow-scrolling:touch;
+
+        border-radius:16px!important;
+        z-index:2147483000!important;
+        box-sizing:border-box!important;
+
+        /* Defeat any stale V9 inline geometry if browser restored page state. */
+        translate:none!important;
+    }
+
+    body > #historyRangePanel.history-range-panel.hidden{
+        display:none!important;
+    }
+
+    body > #historyRangePanel > .grid,
+    body > #historyRangePanel .history-range-layout{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+    }
+
+    body > #historyRangePanel > .grid > *,
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick,
+    body > #historyRangePanel > .border-t{
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    body > #historyRangePanel input,
+    body > #historyRangePanel select,
+    body > #historyRangePanel button{
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+    }
+
+    body > #historyRangePanel input[type="datetime-local"]{
+        width:100%!important;
+        font-size:16px!important;
+    }
+
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+        z-index:8!important;
+        background:#091827!important;
+    }
+}
+
+/* Extra-small devices */
+@media (max-width:360px){
+    body > #historyRangePanel.history-range-panel{
+        border-radius:12px!important;
+    }
+
+    body > #historyRangePanel #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
+
+/* =========================================================
+   V11 — HISTORY RANGE MOBILE COMPACT SHEET
+   V10 fixed the left-corner bug but stretched the panel to
+   almost the full screen height. V11 keeps it viewport-safe
+   while letting the panel fit its actual content.
+   ========================================================= */
+
+@media (max-width:760px){
+
+    body > #historyRangePanel.history-range-panel{
+        /* Anchor to the bottom instead of pinning all 4 edges. */
+        top:auto!important;
+        bottom:max(6px,env(safe-area-inset-bottom))!important;
+        left:max(6px,env(safe-area-inset-left))!important;
+        right:max(6px,env(safe-area-inset-right))!important;
+
+        width:auto!important;
+        height:auto!important;
+        min-height:0!important;
+        max-height:calc(100dvh - max(12px,env(safe-area-inset-top) + env(safe-area-inset-bottom)))!important;
+
+        margin:0!important;
+        transform:none!important;
+
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        border-radius:16px!important;
+    }
+
+    /* Keep the contents compact and natural-height. */
+    body > #historyRangePanel > .grid,
+    body > #historyRangePanel .history-range-layout{
+        height:auto!important;
+        min-height:0!important;
+        align-content:start!important;
+    }
+
+    body > #historyRangePanel .history-range-calendar,
+    body > #historyRangePanel .history-range-quick{
+        height:auto!important;
+        min-height:0!important;
+    }
+
+    /* Footer no longer needs to hold a full-height sheet together. */
+    body > #historyRangePanel > .border-t:last-child{
+        position:sticky!important;
+        bottom:0!important;
+    }
+}
+
+/* Short landscape phones: use nearly the full visible height,
+   but still never create an artificial blank area. */
+@media (max-width:900px) and (orientation:landscape) and (max-height:520px){
+    body > #historyRangePanel.history-range-panel{
+        top:6px!important;
+        bottom:6px!important;
+        max-height:none!important;
+        height:auto!important;
+    }
+}
+
+/* Very narrow phones: retain compact layout. */
+@media (max-width:360px){
+    body > #historyRangePanel.history-range-panel{
+        left:4px!important;
+        right:4px!important;
+        bottom:max(4px,env(safe-area-inset-bottom))!important;
+    }
+}
+
+/* =========================================================
+   V12 — HISTORY RANGE = EXPORT-STYLE MODAL
+   The range picker no longer behaves as a popover/sheet.
+   It uses the same stable fixed-modal architecture as Export.
+   ========================================================= */
+
+body.history-range-modal-open{
+    overflow:hidden!important;
+}
+
+.history-range-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483000!important;
+
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    width:100vw!important;
+    height:100dvh!important;
+    padding:18px!important;
+    margin:0!important;
+
+    box-sizing:border-box!important;
+}
+
+.history-range-modal.active{
+    display:flex!important;
+}
+
+.history-range-modal-backdrop{
+    position:absolute!important;
+    inset:0!important;
+    background:rgba(2,8,18,.76)!important;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+}
+
+.history-range-modal-dialog{
+    position:relative!important;
+    z-index:1!important;
+
+    width:min(760px,calc(100vw - 36px))!important;
+    max-width:760px!important;
+    max-height:calc(100dvh - 36px)!important;
+
+    display:flex!important;
+    flex-direction:column!important;
+
+    margin:0!important;
+    transform:none!important;
+    overflow:hidden!important;
+
+    border:1px solid rgba(148,163,184,.18)!important;
+    border-radius:20px!important;
+    background:linear-gradient(145deg,rgba(7,24,39,.995),rgba(7,22,36,.995))!important;
+    box-shadow:0 35px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.025)!important;
+    color:#eaf2f8!important;
+    box-sizing:border-box!important;
+}
+
+.history-range-modal-header{
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+    padding:18px 20px!important;
+    border-bottom:1px solid rgba(51,65,85,.72)!important;
+}
+
+.history-range-modal-title-wrap{
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+}
+
+.history-range-modal-icon{
+    flex:0 0 42px!important;
+    width:42px!important;
+    height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(34,211,238,.18)!important;
+    border-radius:12px!important;
+    background:rgba(34,211,238,.08)!important;
+    font-size:18px!important;
+}
+
+.history-range-modal-title{
+    margin:0!important;
+    color:#fff!important;
+    font-size:20px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+.history-range-modal-subtitle{
+    margin:3px 0 0!important;
+    color:#64748b!important;
+    font-size:11px!important;
+    line-height:1.45!important;
+}
+
+.history-range-modal-close{
+    flex:0 0 38px!important;
+    width:38px!important;
+    height:38px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid rgba(71,85,105,.55)!important;
+    border-radius:10px!important;
+    background:rgba(15,35,56,.78)!important;
+    color:#94a3b8!important;
+    font-family:inherit!important;
+    font-size:23px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+.history-range-modal-body{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    width:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain!important;
+    box-sizing:border-box!important;
+}
+
+/* Neutralize every old popover/sheet rule against this component. */
+body > #historyRangePanel.history-range-modal{
+    top:0!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    max-height:none!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    translate:none!important;
+}
+
+/* Internal content */
+.history-range-modal .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(210px,.62fr)!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+.history-range-modal .history-range-calendar,
+.history-range-modal .history-range-quick{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+.history-range-modal input[type="datetime-local"]{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+/* Mobile: exactly the same geometry strategy as Export. */
+@media(max-width:760px){
+
+    .history-range-modal{
+        padding:10px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:calc(100vw - 20px)!important;
+        max-width:none!important;
+        max-height:calc(100dvh - 20px)!important;
+        border-radius:16px!important;
+    }
+
+    .history-range-modal-header{
+        padding:13px 14px!important;
+        gap:10px!important;
+    }
+
+    .history-range-modal-icon{
+        width:38px!important;
+        height:38px!important;
+        flex-basis:38px!important;
+        font-size:17px!important;
+    }
+
+    .history-range-modal-title{
+        font-size:18px!important;
+    }
+
+    .history-range-modal-subtitle{
+        font-size:12px!important;
+        line-height:1.45!important;
+    }
+
+    .history-range-modal-close{
+        width:42px!important;
+        height:42px!important;
+        flex-basis:42px!important;
+    }
+
+    .history-range-modal .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    .history-range-modal .history-range-calendar{
+        padding:14px!important;
+    }
+
+    .history-range-modal .history-range-quick{
+        padding:12px 14px 15px!important;
+    }
+
+    .history-range-modal #quickRangeList.quick-range-list{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+
+    .history-range-modal input[type="datetime-local"]{
+        font-size:16px!important;
+        min-height:42px!important;
+    }
+
+    .history-range-modal #historyRangeCancel,
+    .history-range-modal #historyRangeApply{
+        min-height:44px!important;
+    }
+}
+
+@media(max-width:360px){
+
+    .history-range-modal{
+        padding:6px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:calc(100vw - 12px)!important;
+        max-height:calc(100dvh - 12px)!important;
+        border-radius:14px!important;
+    }
+
+    .history-range-modal #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+
+    .history-range-modal-title{
+        font-size:17px!important;
+    }
+}
+
+/* Landscape phones */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+    .history-range-modal{
+        padding:6px!important;
+    }
+
+    .history-range-modal-dialog{
+        width:min(760px,calc(100vw - 12px))!important;
+        max-height:calc(100dvh - 12px)!important;
+    }
+}
+
+/* =========================================================
+   V13 — HISTORY RANGE MODAL SCROLL FIX
+   Root fix:
+   - New modal ID isolates it from legacy #historyRangePanel rules.
+   - The DIALOG itself scrolls on mobile (most robust touch behavior).
+   - Header stays sticky; all hidden content can be reached.
+   ========================================================= */
+
+body.history-range-modal-open{
+    overflow:hidden!important;
+    touch-action:none;
+}
+
+#historyRangeModal.history-range-modal{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483000!important;
+    display:none!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100vw!important;
+    height:100dvh!important;
+    padding:18px!important;
+    margin:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    touch-action:auto!important;
+}
+
+#historyRangeModal.history-range-modal.active{
+    display:flex!important;
+}
+
+#historyRangeModal .history-range-modal-backdrop{
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    background:rgba(2,8,18,.78)!important;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+}
+
+#historyRangeModal .history-range-modal-dialog{
+    position:relative!important;
+    z-index:1!important;
+    width:min(760px,calc(100vw - 36px))!important;
+    max-width:760px!important;
+    max-height:calc(100dvh - 36px)!important;
+    margin:0!important;
+
+    /* V13: scroll the dialog itself, not a nested flex child. */
+    display:block!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-y!important;
+
+    border:1px solid rgba(148,163,184,.18)!important;
+    border-radius:20px!important;
+    background:linear-gradient(145deg,rgba(7,24,39,.995),rgba(7,22,36,.995))!important;
+    box-shadow:0 35px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.025)!important;
+    color:#eaf2f8!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-modal-header{
+    position:sticky!important;
+    top:0!important;
+    z-index:20!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+    padding:18px 20px!important;
+    border-bottom:1px solid rgba(51,65,85,.72)!important;
+    background:rgba(7,24,39,.985)!important;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+}
+
+#historyRangeModal .history-range-modal-title-wrap{
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+}
+
+#historyRangeModal .history-range-modal-icon{
+    flex:0 0 42px!important;
+    width:42px!important;
+    height:42px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(34,211,238,.18)!important;
+    border-radius:12px!important;
+    background:rgba(34,211,238,.08)!important;
+}
+
+#historyRangeModal .history-range-modal-title{
+    margin:0!important;
+    color:#fff!important;
+    font-size:20px!important;
+    font-weight:900!important;
+    line-height:1.25!important;
+}
+
+#historyRangeModal .history-range-modal-subtitle{
+    margin:3px 0 0!important;
+    color:#64748b!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+}
+
+#historyRangeModal .history-range-modal-close{
+    flex:0 0 40px!important;
+    width:40px!important;
+    height:40px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid rgba(71,85,105,.55)!important;
+    border-radius:10px!important;
+    background:rgba(15,35,56,.92)!important;
+    color:#94a3b8!important;
+    font-size:23px!important;
+    line-height:1!important;
+    cursor:pointer!important;
+}
+
+#historyRangeModal .history-range-modal-body{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 180px!important;
+    width:100%!important;
+    min-width:0!important;
+}
+
+#historyRangeModal .history-range-calendar{
+    min-width:0!important;
+    padding:16px!important;
+    border-right:1px solid #1e293b!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .history-range-quick{
+    min-width:0!important;
+    padding:12px!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #quickRangeList.quick-range-list{
+    display:flex!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    gap:5px!important;
+    width:100%!important;
+    margin-top:6px!important;
+}
+
+#historyRangeModal #quickRangeList .quick-range-option{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:40px!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    border:1px solid rgba(71,85,105,.45)!important;
+    border-radius:10px!important;
+    background:rgba(9,24,39,.7)!important;
+    color:#cbd5e1!important;
+    font-size:13px!important;
+    font-weight:800!important;
+    white-space:normal!important;
+    cursor:pointer!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #quickRangeList .quick-range-option.active,
+#historyRangeModal #quickRangeList .quick-range-option[aria-current="true"]{
+    background:rgba(34,211,238,.12)!important;
+    border-color:rgba(34,211,238,.38)!important;
+    color:#67e8f9!important;
+}
+
+#historyRangeModal .history-range-modal-body > .border-t{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal input[type="datetime-local"]{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+}
+
+/* Make final action area easy to reach after scrolling. */
+#historyRangeModal .history-range-modal-body > .border-t:last-child{
+    background:#091827!important;
+}
+
+/* ---------------- Mobile ---------------- */
+@media(max-width:760px){
+
+    body.history-range-modal-open{
+        overflow:hidden!important;
+        position:static!important;
+    }
+
+    #historyRangeModal.history-range-modal{
+        padding:
+            max(8px,env(safe-area-inset-top))
+            max(8px,env(safe-area-inset-right))
+            max(8px,env(safe-area-inset-bottom))
+            max(8px,env(safe-area-inset-left))!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        width:100%!important;
+        max-width:none!important;
+        max-height:calc(
+            100dvh
+            - max(16px,env(safe-area-inset-top) + env(safe-area-inset-bottom))
+        )!important;
+        border-radius:16px!important;
+    }
+
+    #historyRangeModal .history-range-modal-header{
+        padding:13px 14px!important;
+        gap:10px!important;
+    }
+
+    #historyRangeModal .history-range-modal-icon{
+        width:38px!important;
+        height:38px!important;
+        flex-basis:38px!important;
+    }
+
+    #historyRangeModal .history-range-modal-title{
+        font-size:18px!important;
+    }
+
+    #historyRangeModal .history-range-modal-subtitle{
+        font-size:12px!important;
+    }
+
+    #historyRangeModal .history-range-modal-close{
+        width:44px!important;
+        height:44px!important;
+        flex-basis:44px!important;
+    }
+
+    #historyRangeModal .history-range-layout{
+        grid-template-columns:1fr!important;
+    }
+
+    #historyRangeModal .history-range-calendar{
+        padding:14px!important;
+        border-right:0!important;
+        border-bottom:1px solid #1e293b!important;
+    }
+
+    #historyRangeModal .history-range-quick{
+        padding:12px 14px 14px!important;
+    }
+
+    #historyRangeModal #quickRangeList.quick-range-list{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:7px!important;
+    }
+
+    #historyRangeModal #quickRangeList .quick-range-option{
+        min-height:44px!important;
+        font-size:14px!important;
+    }
+
+    #historyRangeModal input[type="datetime-local"]{
+        min-height:44px!important;
+        font-size:16px!important;
+    }
+
+    #historyRangeModal #historyRangeCancel,
+    #historyRangeModal #historyRangeApply{
+        min-height:46px!important;
+    }
+}
+
+@media(max-width:360px){
+    #historyRangeModal.history-range-modal{
+        padding:5px!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        max-height:calc(100dvh - 10px)!important;
+        border-radius:13px!important;
+    }
+
+    #historyRangeModal #quickRangeList.quick-range-list{
+        grid-template-columns:1fr!important;
+    }
+}
+
+/* Short landscape phones */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+    #historyRangeModal.history-range-modal{
+        padding:5px!important;
+    }
+
+    #historyRangeModal .history-range-modal-dialog{
+        width:min(760px,100%)!important;
+        max-height:calc(100dvh - 10px)!important;
+    }
+}
+
+/* =========================================================
+   V14 — RANGE MODAL CLEANUP AFTER VIDEO QA
+   V13 scroll works, but the weekday row was still depending
+   on legacy utility styles tied to the old modal ID.
+   This block makes every calendar layout rule explicit.
+   ========================================================= */
+
+#historyRangeModal .range-calendar-weekdays{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0 0 8px!important;
+    color:#64748b!important;
+    text-align:center!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal .range-calendar-weekdays > div{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:28px!important;
+    padding:0!important;
+    margin:0!important;
+    font-size:11px!important;
+    font-weight:750!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+}
+
+#historyRangeModal #rangeCalendarGrid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+    grid-auto-rows:38px!important;
+    gap:5px!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day,
+#historyRangeModal #rangeCalendarGrid button{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    height:38px!important;
+    min-height:38px!important;
+    max-height:38px!important;
+    padding:0!important;
+    margin:0!important;
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+    background:transparent!important;
+    color:#dbe7f3!important;
+    font-size:12px!important;
+    font-weight:700!important;
+    line-height:1!important;
+    box-sizing:border-box!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-muted{
+    color:#475569!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-in-range{
+    background:rgba(34,211,238,.08)!important;
+}
+
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-start,
+#historyRangeModal #rangeCalendarGrid .range-calendar-day.is-end{
+    color:#ecfeff!important;
+    background:rgba(34,211,238,.24)!important;
+    border-color:rgba(103,232,249,.48)!important;
+    font-weight:900!important;
+}
+
+/* Keep month title/nav on one row. */
+#historyRangeModal .history-range-calendar > .flex.items-center.justify-between{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    width:100%!important;
+}
+
+#historyRangeModal #calendarPrev,
+#historyRangeModal #calendarNext{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    min-height:38px!important;
+    padding:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
+
+/* Custom range section: always a clean single column on phones. */
+@media(max-width:760px){
+    #historyRangeModal .range-calendar-weekdays{
+        gap:3px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays > div{
+        height:26px!important;
+        font-size:12px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid{
+        gap:4px!important;
+        grid-auto-rows:42px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid .range-calendar-day,
+    #historyRangeModal #rangeCalendarGrid button{
+        height:42px!important;
+        min-height:42px!important;
+        max-height:42px!important;
+        font-size:14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t.p-4{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:12px!important;
+        padding:14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t:last-child{
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        gap:10px!important;
+        padding:12px 14px 14px!important;
+    }
+
+    #historyRangeModal .history-range-modal-body > .border-t:last-child > .flex{
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:8px!important;
+        width:100%!important;
+    }
+
+    #historyRangeModal #historyRangeCancel,
+    #historyRangeModal #historyRangeApply{
+        width:100%!important;
+        margin:0!important;
+    }
+}
+
+/* 320–360px: keep 7 calendar columns, just reduce gaps/padding. */
+@media(max-width:360px){
+    #historyRangeModal .history-range-calendar{
+        padding:10px 8px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays{
+        gap:2px!important;
+    }
+
+    #historyRangeModal .range-calendar-weekdays > div{
+        font-size:10.5px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid{
+        gap:2px!important;
+        grid-auto-rows:38px!important;
+    }
+
+    #historyRangeModal #rangeCalendarGrid .range-calendar-day,
+    #historyRangeModal #rangeCalendarGrid button{
+        height:38px!important;
+        min-height:38px!important;
+        max-height:38px!important;
+        font-size:12px!important;
+        border-radius:8px!important;
+    }
+}
+
+/* =========================================================
+   V15 — NAV ALERT COUNT REMOVED
+   ป้ายตัวเลขสีแดงหลังสถานะระบบถูกยกเลิก
+   ========================================================= */
+#navAlertBadge,
+.dashboard-system-pill > .dashboard-alert-badge{
+    display:none!important;
+}
+
+
+/* =========================================================
+   V16 — FORECAST PROCESSING / TOGGLE FIX
+   ========================================================= */
+
+.forecast-processing-state{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-height:58px;
+    padding:12px 14px;
+    border:1px solid rgba(34,211,238,.18);
+    border-radius:14px;
+    background:rgba(34,211,238,.055);
+    color:#cbd5e1;
+}
+
+.forecast-processing-state b{
+    color:#67e8f9;
+}
+
+.forecast-processing-spinner{
+    flex:0 0 22px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    border:2px solid rgba(103,232,249,.22);
+    border-top-color:#67e8f9;
+    animation:forecastProcessingSpin .8s linear infinite;
+}
+
+@keyframes forecastProcessingSpin{
+    to{transform:rotate(360deg);}
+}
+
+@media (prefers-reduced-motion:reduce){
+    .forecast-processing-spinner{
+        animation:none;
+        border-top-color:rgba(103,232,249,.22);
+    }
+}
+
+
+/* =========================================================
+   V17 — DEEP SYSTEM AUDIT
+   ========================================================= */
+#historyRangeCaption{
+    line-height:1.6;
+}
+
+/* V18 INFORMATION & HELP */
+.context-help-button{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;margin-left:7px;padding:0;border:1px solid rgba(148,163,184,.3);border-radius:999px;background:rgba(15,23,42,.45);color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;vertical-align:middle}
+.context-help-button:hover,.context-help-button:focus-visible{color:#e2e8f0;border-color:rgba(103,232,249,.6);background:rgba(34,211,238,.09);outline:none}
+.help-technical,.v18-tech{margin-top:10px;padding:10px 12px;border:1px solid rgba(34,211,238,.16);border-radius:12px;background:rgba(34,211,238,.045);color:#a5f3fc;line-height:1.65}
+.v18-info-modal{position:fixed;inset:0;z-index:10100;display:none;align-items:center;justify-content:center;padding:18px}.v18-info-modal.active{display:flex}
+.v18-info-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.v18-info-dialog{position:relative;z-index:1;width:min(680px,100%);max-height:82vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(148,163,184,.22);border-radius:22px;background:rgba(7,17,31,.985);box-shadow:0 28px 80px rgba(0,0,0,.46)}
+.v18-info-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:17px 19px;border-bottom:1px solid rgba(148,163,184,.14);background:rgba(7,17,31,.96)}
+.v18-info-header small{color:#67e8f9;font-weight:800}.v18-info-header h2{margin:3px 0 0;color:#f8fafc;font-size:20px}.v18-info-header button{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid rgba(148,163,184,.2);border-radius:12px;background:rgba(15,23,42,.7);color:#cbd5e1;font-size:25px;cursor:pointer}
+.v18-info-body{padding:18px 20px 22px;color:#cbd5e1;line-height:1.75}.v18-info-body p{margin:0 0 12px}body.v18-modal-open{overflow:hidden}
+.v18-reading-guide{margin-top:18px}.v18-scope-warning{display:flex;gap:12px;margin-top:14px;padding:14px;border:1px solid rgba(245,158,11,.2);border-radius:15px;background:rgba(245,158,11,.055)}.v18-scope-warning>i{margin-top:4px;color:#fbbf24}.v18-scope-warning b{color:#fde68a}.v18-scope-warning p{margin:4px 0 0;color:#cbd5e1;line-height:1.7}
+@media(max-width:640px){.v18-info-modal{padding:10px;align-items:flex-end}.v18-info-dialog{max-height:88dvh;border-radius:20px 20px 14px 14px}.v18-info-header{padding:15px 16px}.v18-info-body{padding:15px 16px 20px}.context-help-button{width:29px;height:29px;margin-left:5px}}
+
+/* =========================================================
+   V19 — PUBLIC COMPETITION SAFE
+   ========================================================= */
+.about-standard-note{
+    margin:12px 0 0;
+    padding:11px 12px;
+    border:1px solid rgba(148,163,184,.16);
+    border-radius:12px;
+    background:rgba(15,23,42,.32);
+    color:#cbd5e1;
+    font-size:13px;
+    line-height:1.65;
+}
+
+
+/* =========================================================
+   V21 — UX POLISH BEFORE LOGIN
+   ========================================================= */
+
+/* Four references = four equal columns; no empty fifth slot. */
+.about-reference-links{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+
+/* All help triggers must be true circles. */
+.help-button,
+.context-help-button{
+    box-sizing:border-box!important;
+    width:28px!important;
+    height:28px!important;
+    min-width:28px!important;
+    min-height:28px!important;
+    max-width:28px!important;
+    max-height:28px!important;
+    flex:0 0 28px!important;
+    padding:0!important;
+    border-radius:50%!important;
+    aspect-ratio:1/1!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    line-height:1!important;
+}
+
+/* Historical graph starts loading immediately and explains its state. */
+.chart-loading-state{
+    min-height:220px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+}
+.chart-loading-state b{color:#e2e8f0;font-size:14px}
+.chart-loading-state span{color:#64748b;font-size:12px}
+
+/* Forecast intentionally communicates that analysis needs a short moment. */
+.forecast-wait-state{
+    min-height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:13px;
+    padding:24px;
+    text-align:left;
+    color:#94a3b8;
+}
+.forecast-wait-state > div{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    max-width:520px;
+}
+.forecast-wait-state b{
+    color:#e2e8f0;
+    font-size:15px;
+}
+.forecast-wait-state span{
+    color:#64748b;
+    font-size:12.5px;
+    line-height:1.65;
+}
+.forecast-wait-spinner{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    border:2px solid rgba(34,211,238,.18);
+    border-top-color:#22d3ee;
+    border-radius:50%;
+    animation:v21ForecastSpin .8s linear infinite;
+}
+.forecast-wait-state.is-idle .forecast-wait-spinner{display:none}
+@keyframes v21ForecastSpin{to{transform:rotate(360deg)}}
+
+@media(max-width:1000px){
+    .about-reference-links{
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+}
+@media(max-width:640px){
+    .about-reference-links{
+        grid-template-columns:1fr!important;
+    }
+    .forecast-wait-state{
+        min-height:220px;
+        padding:18px;
+    }
+}
+
+
+/* =========================================================
+   V22 — HISTORY / FORECAST RESPONSE STATES
+   ========================================================= */
+.chart-loading-state.is-error{
+    min-height:260px;
+}
+.chart-loading-state.is-error b{
+    color:#fca5a5;
+}
+.chart-state-retry{
+    margin-top:10px;
+    min-height:36px;
+    padding:0 16px;
+    border:1px solid rgba(34,211,238,.35);
+    border-radius:10px;
+    background:rgba(8,145,178,.10);
+    color:#a5f3fc;
+    font-weight:800;
+    cursor:pointer;
+}
+.chart-state-retry:hover{
+    background:rgba(8,145,178,.18);
+}
+.ai-ready-summary{
+    border:1px solid rgba(34,211,238,.18);
+    border-radius:12px;
+    padding:14px;
+    background:rgba(8,145,178,.05);
+    color:#cbd5e1;
+    line-height:1.65;
+}
+.ai-ready-summary b{
+    color:#e2e8f0;
+}
+
+
+/* V23 — history retry remains compact */
+.chart-state-retry{
+  touch-action:manipulation;
+}
+
+/* =========================================================
+   V27 — Temperature / Humidity status badges
+   ========================================================= */
+.overview-metric-status{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:3px 9px;border-radius:999px;font-size:11px;font-style:normal;font-weight:800;line-height:1.4;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.45);color:#cbd5e1}
+.overview-metric-status.normal{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.09)}
+.overview-metric-status.warning{color:#fde68a;border-color:rgba(245,158,11,.32);background:rgba(245,158,11,.09)}
+.overview-metric-status.critical{color:#fca5a5;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
+.overview-metric-status.info,.overview-metric-status.no_data{color:#94a3b8}
+@media(max-width:640px){.overview-metric-status{font-size:10.5px;padding:3px 8px}}
+
+/* =========================================================
+   V28 — SMART SUMMARY 6 CARDS + HELP AUDIT
+   ========================================================= */
+.smart-summary-grid.smart-summary-grid-six {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+.smart-summary-grid-six .smart-summary-stat {
+    min-width: 0;
+    height: 100%;
+}
+.smart-summary-temperature,
+.smart-summary-humidity,
+.smart-summary-activity-card {
+    position: relative;
+}
+.smart-summary-activity-card.is-watch {
+    border-color: rgba(251, 191, 36, .28);
+}
+.dashboard-page-heading > .section-title-with-help,
+.about-detail-head .section-title-with-help,
+.about-credit-note .section-title-with-help {
+    justify-content: flex-start;
+    gap: 10px;
+}
+@media (max-width: 980px) {
+    .smart-summary-grid.smart-summary-grid-six {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 640px) {
+    .smart-summary-grid.smart-summary-grid-six {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   V29 — balanced layouts + PM2.5/PM10 rotating overview
+   ========================================================= */
+.smart-summary-grid.smart-summary-grid-six{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+.about-standard-supporting{grid-column:1 / -1!important;}
+.about-supporting-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+.about-reference-links{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+.overview-main-value{transition:opacity .26s ease,border-color .26s ease;}
+.overview-main-value.is-switching{opacity:.38;}
+.overview-particle-value{transition:opacity .26s ease;}
+.about-credit-note p{display:none!important;}
+@media(max-width:980px){
+  .smart-summary-grid.smart-summary-grid-six,
+  .about-supporting-grid,
+  .about-reference-links{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media(max-width:640px){
+  .smart-summary-grid.smart-summary-grid-six,
+  .about-supporting-grid,
+  .about-reference-links{grid-template-columns:1fr!important;}
+}
+
+/* =========================================================
+   V30 — PM2.5 / PM10 synchronized air-quality summary
+   ========================================================= */
+.smart-summary-air-switch .smart-summary-stat-label,
+.smart-summary-air-switch .smart-summary-stat-value,
+.smart-summary-air-switch .smart-summary-stat-sub{
+  transition:opacity .28s ease, transform .28s ease;
+}
+
+/* =========================================================
+   V31 — LOGIN / ROLE / CMS
+   ========================================================= */
+.header-account-zone{position:relative;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:220px;gap:4px}
+.header-account-button{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.22);background:rgba(8,47,73,.22);color:#e5f7ff;padding:9px 12px;border-radius:12px;font-weight:800;cursor:pointer;transition:.2s}
+.header-account-button:hover{border-color:rgba(34,211,238,.45);background:rgba(8,47,73,.38)}
+.header-account-icon{font-size:15px}.header-account-chevron{font-size:11px;color:#7dd3fc}.header-account-role{font-size:10px;letter-spacing:.08em;color:#67e8f9;text-transform:uppercase}.header-clock{font-size:13px;font-weight:800;color:#f8fafc}
+.account-dropdown{position:absolute;right:0;top:58px;z-index:120;width:260px;padding:8px;border:1px solid rgba(148,163,184,.2);border-radius:16px;background:#091827;box-shadow:0 22px 60px rgba(0,0,0,.42)}
+.account-dropdown-profile{padding:10px 12px 12px;border-bottom:1px solid rgba(148,163,184,.14);margin-bottom:6px}.account-dropdown-profile strong{display:block;color:#f8fafc}.account-dropdown-profile span{display:block;margin-top:3px;font-size:11px;color:#67e8f9;letter-spacing:.08em}
+.account-menu-item{width:100%;text-align:left;border:0;background:transparent;color:#cbd5e1;padding:10px 11px;border-radius:10px;font-weight:700;cursor:pointer}.account-menu-item:hover{background:rgba(51,65,85,.48);color:#fff}.account-menu-danger{color:#fda4af}
+.auth-modal,.admin-center{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:18px}.auth-modal-backdrop,.admin-center-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.76);backdrop-filter:blur(8px)}
+.auth-dialog{position:relative;z-index:1;width:min(520px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(180deg,#0b1d2f,#071421);box-shadow:0 30px 100px rgba(0,0,0,.55);padding:28px}
+.auth-close,.admin-close{position:absolute;right:18px;top:16px;width:38px;height:38px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(15,23,42,.65);color:#e2e8f0;font-size:25px;cursor:pointer}
+.auth-brand-badge,.admin-eyebrow{font-size:11px;font-weight:900;letter-spacing:.14em;color:#22d3ee}.auth-brand h2{font-size:27px;margin:5px 0 4px;color:#f8fafc}.auth-brand p{color:#94a3b8;font-size:14px;line-height:1.65;margin:0 35px 18px 0}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:rgba(15,23,42,.62);border:1px solid rgba(148,163,184,.12);border-radius:14px;margin:16px 0}.auth-tab{border:0;background:transparent;color:#94a3b8;padding:9px;border-radius:10px;font-weight:800;cursor:pointer}.auth-tab.active{background:#102b40;color:#67e8f9}
+.auth-form{display:grid;gap:13px}.auth-form label,.admin-field{display:grid;gap:7px;color:#cbd5e1;font-weight:700;font-size:13px}.auth-form input,.admin-field input,.admin-field textarea,.admin-field select{width:100%;border:1px solid rgba(148,163,184,.2);background:#071624;color:#f8fafc;border-radius:11px;padding:11px 12px;outline:none}.auth-form input:focus,.admin-field input:focus,.admin-field textarea:focus,.admin-field select:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
+.auth-password-wrap{position:relative}.auth-password-wrap input{padding-right:48px}.auth-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:34px;border:0;background:transparent;cursor:pointer}.auth-primary-button,.admin-save-button{border:1px solid rgba(34,211,238,.35);background:linear-gradient(135deg,#0891b2,#0e7490);color:white;border-radius:12px;padding:11px 15px;font-weight:900;cursor:pointer}.auth-primary-button:hover,.admin-save-button:hover{filter:brightness(1.08)}.auth-primary-button:disabled,.admin-save-button:disabled{opacity:.5;cursor:wait}
+.auth-secondary-button,.auth-link-button,.admin-add-block{border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.55);color:#cbd5e1;border-radius:11px;padding:9px 12px;font-weight:800;cursor:pointer}.auth-link-button{border:0;background:transparent;color:#67e8f9}.auth-hint{color:#64748b;margin-top:-7px}.auth-message,.admin-inline-message{min-height:20px;font-size:13px;color:#94a3b8}.auth-message.is-error,.admin-inline-message.is-error{color:#fda4af}.auth-message.is-success,.admin-inline-message.is-success{color:#86efac}
+.auth-bootstrap{margin-top:17px;border-top:1px solid rgba(148,163,184,.13);padding-top:15px;display:flex;align-items:center;justify-content:space-between;gap:14px}.auth-bootstrap-head b{display:block;color:#e2e8f0;font-size:13px}.auth-bootstrap-head span{display:block;color:#64748b;font-size:11px;margin-top:3px}.auth-owner-form{margin-top:18px;padding-top:16px;border-top:1px solid rgba(148,163,184,.13)}
+.admin-center{place-items:stretch}.admin-center-shell{position:relative;z-index:1;width:min(1500px,100%);height:min(900px,calc(100vh - 36px));margin:auto;overflow:hidden;border:1px solid rgba(148,163,184,.18);border-radius:25px;background:#071421;box-shadow:0 35px 120px rgba(0,0,0,.58);display:flex;flex-direction:column}.admin-center-header{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:24px 28px;border-bottom:1px solid rgba(148,163,184,.13);background:linear-gradient(90deg,rgba(8,47,73,.28),rgba(15,23,42,.2))}.admin-center-header h2{font-size:26px;color:#f8fafc;margin:3px 0}.admin-center-header p{margin:0;color:#94a3b8}.admin-center-layout{min-height:0;flex:1;display:grid;grid-template-columns:240px 1fr}.admin-sidebar{padding:18px 14px;border-right:1px solid rgba(148,163,184,.13);background:rgba(3,12,22,.38)}.admin-nav{width:100%;text-align:left;border:0;background:transparent;color:#94a3b8;padding:11px 12px;border-radius:11px;font-weight:800;cursor:pointer;margin-bottom:5px}.admin-nav:hover,.admin-nav.active{background:rgba(8,145,178,.14);color:#67e8f9}.admin-main{overflow:auto;padding:22px}.admin-panel{display:none}.admin-panel.active{display:block}.admin-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.admin-panel-head h3{font-size:21px;color:#f8fafc;margin:0 0 3px}.admin-panel-head p{margin:0;color:#94a3b8;font-size:13px}.admin-role-pill{font-size:10px;letter-spacing:.12em;color:#67e8f9;border:1px solid rgba(34,211,238,.22);padding:5px 8px;border-radius:999px}
+.admin-help-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.9fr);gap:18px}.admin-editor-card,.admin-preview-card{border:1px solid rgba(148,163,184,.14);background:#091827;border-radius:18px;padding:16px}.admin-editor-card{display:grid;gap:14px}.admin-preview-label{font-size:10px;font-weight:900;letter-spacing:.13em;color:#22d3ee;margin-bottom:10px}.admin-live-preview{position:static!important;display:block!important;width:100%!important;max-width:none!important;transform:none!important;margin:0!important;opacity:1!important;visibility:visible!important;box-shadow:none!important}.admin-block-list{display:grid;gap:10px}.admin-help-block{border:1px solid rgba(148,163,184,.13);background:#071624;border-radius:13px;padding:12px;display:grid;gap:9px}.admin-help-block-head{display:flex;align-items:center;justify-content:space-between}.admin-help-block-head b{color:#cbd5e1;font-size:12px}.admin-remove-block{border:0;background:transparent;color:#fda4af;cursor:pointer;font-weight:900}.admin-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.admin-device-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.admin-device-card{border:1px solid rgba(148,163,184,.14);background:#091827;border-radius:16px;padding:15px}.admin-device-card h4{margin:0 0 11px;color:#67e8f9}.admin-device-id{font-size:10px;color:#64748b;margin-bottom:10px}.admin-device-card .admin-field{margin-bottom:10px}
+.admin-switch-row{display:flex;align-items:center;gap:9px;color:#cbd5e1;font-weight:800}.admin-switch-row input{width:18px;height:18px}.admin-user-list{display:grid;gap:8px}.admin-user-row{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(210px,1.5fr) 120px 130px auto;gap:10px;align-items:center;border:1px solid rgba(148,163,184,.13);background:#091827;border-radius:13px;padding:11px 12px}.admin-user-name b{display:block;color:#f8fafc}.admin-user-name small{color:#64748b}.admin-user-email{color:#cbd5e1;font-size:13px}.admin-user-row select{border:1px solid rgba(148,163,184,.18);background:#071624;color:#e2e8f0;border-radius:9px;padding:8px}.admin-user-save{border:1px solid rgba(34,211,238,.22);background:rgba(8,145,178,.12);color:#67e8f9;border-radius:9px;padding:8px 10px;font-weight:800;cursor:pointer}.admin-user-save:disabled{opacity:.35;cursor:not-allowed}.admin-empty{color:#64748b;padding:20px;text-align:center}
+
+@media(max-width:900px){.header-account-zone{min-width:0;align-items:flex-start}.account-dropdown{left:0;right:auto}.admin-center-layout{grid-template-columns:1fr}.admin-sidebar{display:flex;gap:6px;overflow:auto;border-right:0;border-bottom:1px solid rgba(148,163,184,.13)}.admin-nav{width:auto;white-space:nowrap;margin:0}.admin-help-layout{grid-template-columns:1fr}.admin-device-list{grid-template-columns:1fr}.admin-user-row{grid-template-columns:1fr 1fr}.admin-main{padding:15px}}
+@media(max-width:640px){.auth-dialog{padding:22px 16px}.admin-center{padding:6px}.admin-center-shell{height:calc(100vh - 12px);border-radius:18px}.admin-center-header{padding:18px 16px}.admin-main{padding:12px}.admin-user-row{grid-template-columns:1fr}.header-account-button{padding:8px 10px}.header-clock{font-size:12px}}
+
+
+/* =========================================================
+   V31 UI FIX 1 — smooth particle fade / spacing / alert title
+   ========================================================= */
+
+/* Temp/Humidity status badge: give it breathing room after the unit. */
+.overview-metric-status{
+    margin-left:10px;
+}
+
+/* Keep the help button next to "สิ่งที่ควรระวัง", not at the far edge. */
+.current-alerts-strip .section-title-with-help,
+.overview-alert-head .section-title-with-help{
+    display:inline-flex!important;
+    width:auto!important;
+    max-width:100%!important;
+    justify-content:flex-start!important;
+    align-items:center!important;
+    gap:8px!important;
+}
+
+/* Make the warning mark visibly yellow instead of inheriting white text. */
+.overview-warning-icon{
+    display:inline-block;
+    color:#fbbf24;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;
+    font-style:normal;
+    line-height:1;
+    vertical-align:-0.05em;
+}
+
+/* On narrow screens keep badge spacing natural without forcing a new row. */
+@media(max-width:640px){
+    .overview-metric-status{
+        margin-left:8px;
+    }
+}
+
+
+/* =========================================================
+   V31 UI FIX 2 — modal visibility
+   .admin-center/.auth-modal are declared after the generic
+   .hidden rule, so explicitly make hidden modals display:none.
+   ========================================================= */
+.auth-modal.hidden,
+.admin-center.hidden{
+    display:none!important;
+}
+
+
+/* =========================================================
+   V31 UI FIX 3 — AUTH VIEW CLEANUP
+   Only the selected auth view is allowed to render.
+   ========================================================= */
+
+/* Hidden sub-views were being overridden by .auth-form{display:grid}. */
+.auth-form.hidden,
+.auth-bootstrap.hidden,
+.auth-tabs.hidden,
+.auth-owner-form.hidden{
+    display:none!important;
+}
+
+/* Keep the login/register dialog compact and easy to scan. */
+.auth-dialog{
+    width:min(460px,100%)!important;
+    padding:24px!important;
+}
+
+.auth-brand h2{
+    margin-bottom:4px!important;
+}
+
+.auth-brand p{
+    margin:0 34px 14px 0!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+}
+
+.auth-tabs{
+    margin:14px 0!important;
+}
+
+.auth-form{
+    gap:12px!important;
+}
+
+.auth-form label{
+    gap:6px!important;
+}
+
+.auth-form input{
+    min-height:44px!important;
+}
+
+.auth-primary-button{
+    min-height:46px!important;
+    margin-top:2px!important;
+}
+
+/* Owner bootstrap is a recovery/setup path only, never part of normal login UI. */
+.auth-bootstrap{
+    margin-top:16px!important;
+    padding-top:14px!important;
+}
+
+
+/* =========================================================
+   V31 UI FIX 4 — PASSWORD EYE BUTTON
+   ========================================================= */
+.auth-eye{
+    color:#64748b!important;
+    background:transparent!important;
+    border:0!important;
+    opacity:1!important;
+    font-size:16px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    cursor:pointer!important;
+}
+
+.auth-eye:hover{
+    color:#0f172a!important;
+    background:rgba(148,163,184,.16)!important;
+}
+
+.auth-eye:focus-visible{
+    outline:2px solid #22d3ee!important;
+    outline-offset:1px!important;
+}
+
+
+/* =========================================================
+   V32 — ACCOUNT / PERMISSION
+   ========================================================= */
+
+.account-dropdown-profile small{
+    display:block;
+    margin-top:5px;
+    color:#94a3b8;
+    font-size:11px;
+}
+
+.auth-social{
+    display:grid;
+    gap:10px;
+    margin:12px 0 14px;
+}
+.auth-social.hidden{display:none!important}
+.auth-google-button{
+    min-height:44px;
+    display:flex;
+    justify-content:center;
+}
+.auth-divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#64748b;
+    font-size:11px;
+}
+.auth-divider::before,
+.auth-divider::after{
+    content:"";
+    height:1px;
+    flex:1;
+    background:rgba(148,163,184,.14);
+}
+
+.admin-users-head{
+    align-items:center!important;
+}
+.admin-add-admin-button{
+    min-height:40px;
+    padding:0 14px;
+    border-radius:11px;
+    border:1px solid rgba(34,211,238,.28);
+    background:rgba(34,211,238,.09);
+    color:#a5f3fc;
+    font:inherit;
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+}
+.admin-add-admin-button:hover{
+    background:rgba(34,211,238,.15);
+}
+
+.admin-user-toolbar{
+    display:grid;
+    grid-template-columns:minmax(240px,1fr) 160px 160px;
+    gap:10px;
+    margin:0 0 14px;
+}
+.admin-user-toolbar label{
+    display:grid;
+    gap:6px;
+}
+.admin-user-toolbar label>span{
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:800;
+}
+.admin-user-toolbar input,
+.admin-user-toolbar select{
+    width:100%;
+    min-height:42px;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:11px;
+    background:#071624;
+    color:#f8fafc;
+    padding:0 12px;
+    outline:none;
+}
+.admin-user-toolbar input:focus,
+.admin-user-toolbar select:focus{
+    border-color:rgba(34,211,238,.5);
+    box-shadow:0 0 0 3px rgba(34,211,238,.07);
+}
+
+.admin-add-mode-banner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+    padding:12px 14px;
+    border:1px solid rgba(34,211,238,.2);
+    border-radius:12px;
+    background:rgba(34,211,238,.06);
+}
+.admin-add-mode-banner.hidden{display:none!important}
+.admin-add-mode-banner b,
+.admin-add-mode-banner span{
+    display:block;
+}
+.admin-add-mode-banner b{color:#cffafe}
+.admin-add-mode-banner span{
+    margin-top:3px;
+    color:#94a3b8;
+    font-size:12px;
+}
+.admin-add-mode-banner button{
+    border:0;
+    background:transparent;
+    color:#94a3b8;
+    cursor:pointer;
+    font-weight:800;
+}
+
+.admin-user-card-list{
+    display:grid;
+    gap:10px;
+}
+.admin-user-card{
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:15px;
+    background:rgba(7,22,36,.68);
+    overflow:hidden;
+}
+.admin-user-main{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    align-items:center;
+    gap:12px;
+    padding:14px;
+}
+.admin-user-avatar{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(145deg,rgba(34,211,238,.17),rgba(14,165,233,.08));
+    border:1px solid rgba(34,211,238,.18);
+    color:#cffafe;
+    font-weight:900;
+}
+.admin-user-identity{min-width:0}
+.admin-user-title-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+}
+.admin-user-title-row b{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.admin-user-identity>span{
+    display:block;
+    margin-top:3px;
+    color:#94a3b8;
+    font-size:12px;
+    overflow-wrap:anywhere;
+}
+.admin-user-you{
+    padding:2px 7px;
+    border-radius:999px;
+    background:rgba(34,211,238,.1);
+    color:#67e8f9;
+    font-size:10px;
+    font-weight:900;
+}
+.admin-user-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+}
+.admin-user-meta i{
+    font-style:normal;
+    padding:3px 7px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:900;
+    border:1px solid rgba(148,163,184,.15);
+    color:#cbd5e1;
+}
+.admin-role-chip.is-owner{color:#f0abfc;border-color:rgba(217,70,239,.25);background:rgba(217,70,239,.07)}
+.admin-role-chip.is-admin{color:#67e8f9;border-color:rgba(34,211,238,.25);background:rgba(34,211,238,.07)}
+.admin-role-chip.is-user{color:#cbd5e1}
+.admin-status-chip.is-active{color:#86efac;border-color:rgba(34,197,94,.24);background:rgba(34,197,94,.06)}
+.admin-status-chip.is-disabled{color:#fca5a5;border-color:rgba(239,68,68,.24);background:rgba(239,68,68,.06)}
+.admin-status-chip.is-pending{color:#fde68a;border-color:rgba(245,158,11,.24);background:rgba(245,158,11,.06)}
+.admin-provider-chip{color:#bfdbfe!important}
+
+.admin-user-manage-button,
+.admin-promote-button{
+    min-height:38px;
+    padding:0 12px;
+    border-radius:10px;
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+}
+.admin-user-manage-button{
+    border:1px solid rgba(148,163,184,.18);
+    background:#102338;
+    color:#e2e8f0;
+}
+.admin-promote-button{
+    border:1px solid rgba(34,211,238,.28);
+    background:rgba(34,211,238,.1);
+    color:#a5f3fc;
+}
+.admin-user-self-lock,
+.admin-user-readonly,
+.admin-user-done{
+    color:#64748b;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+}
+.admin-user-done{color:#86efac}
+
+.admin-user-editor{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    align-items:end;
+    gap:10px;
+    padding:12px 14px 14px;
+    border-top:1px solid rgba(148,163,184,.1);
+    background:rgba(2,12,23,.26);
+}
+.admin-user-editor.hidden{display:none!important}
+.admin-user-editor label{
+    display:grid;
+    gap:5px;
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:800;
+}
+.admin-user-editor select{
+    min-height:40px;
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:10px;
+    background:#071624;
+    color:#f8fafc;
+    padding:0 10px;
+}
+.admin-user-save{
+    min-height:40px;
+    padding:0 14px;
+    border:1px solid rgba(34,211,238,.25);
+    border-radius:10px;
+    background:#0e7490;
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+}
+
+@media(max-width:760px){
+    .admin-user-toolbar{
+        grid-template-columns:1fr;
+    }
+    .admin-user-main{
+        grid-template-columns:auto minmax(0,1fr);
+    }
+    .admin-user-action{
+        grid-column:1/-1;
+    }
+    .admin-user-action>*{
+        width:100%;
+    }
+    .admin-user-editor{
+        grid-template-columns:1fr;
+    }
+}
