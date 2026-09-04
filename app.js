@@ -19,6 +19,9 @@ authMe:`${BASE}/api/auth/me`,
 authLogout:`${BASE}/api/auth/logout`,
 authBootstrapOwner:`${BASE}/api/auth/bootstrap_owner`,
 authChangePassword:`${BASE}/api/auth/change_password`,
+authForgotPassword:`${BASE}/api/auth/forgot_password`,
+authResetPassword:`${BASE}/api/auth/reset_password`,
+authProfileImage:`${BASE}/api/auth/profile_image`,
 manageHelp:`${BASE}/api/manage/help`,
 manageDevices:`${BASE}/api/manage/devices`,
 manageAnnouncement:`${BASE}/api/manage/announcement`,
@@ -2967,7 +2970,7 @@ list.push({icon:t.severity==="critical"?"🔴":"🟡",title:`จุดตรว�
 
 if(humState!=="normal"){
 const hu=humidityLevel(n?.humidity);
-list.push({icon:hu.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • ความชื้น ${hu.label}`,detail:`${fmt(n?.humidity)} % • เกณฑ์เฝ้าระวังของโครงการ ควรดูร่วมกับอุณหภูมิและ Heat Index`});
+list.push({icon:hu.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • ความชื้น ${hu.label}`,detail:`ความชื้นสัมพัทธ์ ${fmt(n?.humidity)} % • ควรดูร่วมกับอุณหภูมิอากาศและดัชนีความร้อน`});
 }
 
 if(
@@ -2993,10 +2996,10 @@ heatState==="critical"
 :"🟡",
 
 title:
-`จุดตรวจวัด ${i} • สภาพความร้อน`,
+`จุดตรวจวัด ${i} • ดัชนีความร้อน ${h.label}`,
 
 detail:
-`${fmt(hi)} °C • ${h.label}`
+`ดัชนีความร้อน ${fmt(hi)} °C • ${h.label}`
 
 });
 
@@ -3018,8 +3021,8 @@ hi
 if(h.level==="watch"){
 list.push({
 icon:"🟢",
-title:`จุดตรวจวัด ${i} • เฝ้าระวังความร้อน`,
-detail:`${fmt(hi)} °C • ${h.label}`
+title:`จุดตรวจวัด ${i} • ดัชนีความร้อนระดับเฝ้าระวัง`,
+detail:`ดัชนีความร้อน ${fmt(hi)} °C • ${h.label}`
 });
 }
 
@@ -3036,7 +3039,7 @@ if(pm10!==null&&pm10>120){
 list.push({
 icon:"🟡",
 title:`จุดตรวจวัด ${i} • PM10 ควรเฝ้าระวัง`,
-detail:`${fmt(pm10)} µg/m³ • ค่ารอบล่าสุดสูงกว่า 120; การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง`
+detail:`PM10 รอบล่าสุด ${fmt(pm10)} µg/m³ • ค่านี้เป็นสัญญาณให้ติดตามเพิ่มเติม ไม่ใช่ผลตัดสินมาตรฐาน 24 ชั่วโมง`
 });
 }
 
@@ -10159,7 +10162,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.
 // =========================================================
 // V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
 // =========================================================
-const AUTH_TOKEN_KEY="localAirAuthTokenV32";
+const AUTH_TOKEN_KEY="localAirAuthTokenV33";
 let authToken=sessionStorage.getItem(AUTH_TOKEN_KEY)||"";
 let authUser=null;
 let managedHelpCache={};
@@ -10205,12 +10208,31 @@ function setAuthMessage(id,text,type=""){
   el.classList.toggle("is-success",type==="success");
 }
 
+
+function authAvatarUrl(user){return String(user?.profile_image_url||user?.google_picture_url||"").trim();}
+function setAvatar(imgId,fallbackId,user){
+  const img=$(imgId),fallback=$(fallbackId),url=authAvatarUrl(user);if(!img||!fallback)return;
+  if(url){img.src=url;img.classList.remove("hidden");fallback.classList.add("hidden");img.onerror=()=>{img.classList.add("hidden");fallback.classList.remove("hidden");};}
+  else{img.removeAttribute("src");img.classList.add("hidden");fallback.classList.remove("hidden");}
+}
+async function resizeProfileImage(file){
+  if(!file||!/^image\/(png|jpeg|webp)$/i.test(file.type))throw new Error("รองรับเฉพาะ JPG, PNG หรือ WebP");
+  if(file.size>8*1024*1024)throw new Error("รูปมีขนาดใหญ่เกิน 8 MB");
+  const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
+  const img=await new Promise((resolve,reject)=>{const x=new Image();x.onload=()=>resolve(x);x.onerror=reject;x.src=data;});
+  const size=192,canvas=document.createElement("canvas");canvas.width=size;canvas.height=size;
+  const ctx=canvas.getContext("2d"),side=Math.min(img.width,img.height),sx=(img.width-side)/2,sy=(img.height-side)/2;
+  ctx.drawImage(img,sx,sy,side,side,0,0,size,size);return canvas.toDataURL("image/jpeg",0.82);
+}
+
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
   const menu=$("accountDropdown"),adminBtn=$("openAdminCenterButton"),changeBtn=$("changePasswordButton");
   if(!button||!text)return;
   if(authUser){
     text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
+    setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
+    setAvatar("accountMenuAvatarImage","accountMenuAvatarFallback",authUser);
     chev?.classList.remove("hidden");
     if(badge){badge.textContent=authRoleThai(authUser.role);badge.classList.remove("hidden");}
     const mn=$("accountMenuName"),mr=$("accountMenuRole"),mp=$("accountMenuProvider");
@@ -10219,8 +10241,10 @@ function updateAccountUI(){
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     adminBtn?.classList.toggle("hidden",!["admin","owner"].includes(authUser.role));
     changeBtn?.classList.toggle("hidden",authUser.auth_provider==="google");
+    $("useGoogleProfileImageButton")?.classList.toggle("hidden",!authUser.google_picture_url||!authUser.profile_image_url);
   }else{
     text.textContent="เข้าสู่ระบบ";
+    setAvatar("accountAvatarImage","accountAvatarFallback",null);
     chev?.classList.add("hidden");
     badge?.classList.add("hidden");
     menu?.classList.add("hidden");
@@ -10239,10 +10263,29 @@ function setAuthMode(mode){
   document.querySelectorAll("[data-auth-mode]").forEach(b=>b.classList.toggle("active",b.dataset.authMode===mode));
   $("loginForm")?.classList.toggle("hidden",mode!=="login");
   $("registerForm")?.classList.toggle("hidden",mode!=="register");
+  $("forgotPasswordForm")?.classList.add("hidden");
+  $("resetPasswordForm")?.classList.add("hidden");
   $("ownerSetupForm")?.classList.add("hidden");
   $("authTabs")?.classList.remove("hidden");
   const t=$("authTitle");if(t)t.textContent=mode==="register"?"สมัครสมาชิก":"เข้าสู่ระบบ";
 }
+
+function openForgotPassword(){
+  $("authModal")?.classList.remove("hidden");$("authModal")?.setAttribute("aria-hidden","false");
+  $("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");
+  $("ownerSetupForm")?.classList.add("hidden");$("resetPasswordForm")?.classList.add("hidden");$("forgotPasswordForm")?.classList.remove("hidden");
+  if($("authTitle"))$("authTitle").textContent="ลืมรหัสผ่าน";
+  const v=$("loginEmail")?.value||"";if(v&&$("forgotPasswordEmail"))$("forgotPasswordEmail").value=v;
+}
+function openResetPassword(){
+  $("authModal")?.classList.remove("hidden");$("authModal")?.setAttribute("aria-hidden","false");
+  $("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");
+  $("ownerSetupForm")?.classList.add("hidden");$("forgotPasswordForm")?.classList.add("hidden");$("resetPasswordForm")?.classList.remove("hidden");
+  if($("authTitle"))$("authTitle").textContent="ตั้งรหัสผ่านใหม่";
+}
+function resetTokenFromUrl(){return new URLSearchParams(location.search).get("reset_token")||"";}
+function clearResetTokenFromUrl(){const u=new URL(location.href);u.searchParams.delete("reset_token");history.replaceState(null,"",u.pathname+(u.search||"")+u.hash);}
+
 async function loadAuthStatus(){
   try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
 }
@@ -10598,6 +10641,14 @@ function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>
     document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
     document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
     document.querySelectorAll("[data-toggle-password]").forEach(x=>x.addEventListener("click",()=>{const input=$(x.dataset.togglePassword);if(input)input.type=input.type==="password"?"text":"password";}));
+    $("openForgotPasswordButton")?.addEventListener("click",openForgotPassword);
+    $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
+    $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
+    $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
+    $("changeProfileImageButton")?.addEventListener("click",()=>$("profileImageInput")?.click());
+    $("profileImageInput")?.addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const image=await resizeProfileImage(file);const j=await apiJson(API.authProfileImage,{method:"POST",body:JSON.stringify({image_data:image})});authUser=j.user||authUser;updateAccountUI();$("accountDropdown")?.classList.add("hidden");}catch(err){alert(err.message);}finally{e.target.value="";}});
+    $("useGoogleProfileImageButton")?.addEventListener("click",async()=>{try{const j=await apiJson(API.authProfileImage,{method:"DELETE"});authUser=j.user||authUser;updateAccountUI();}catch(err){alert(err.message);}});
+
     $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
     $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
     $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
@@ -10621,5 +10672,6 @@ function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>
     ["announcementEnabled","announcementSeverity","announcementTitle","announcementMessage"].forEach(id=>$(id)?.addEventListener(id==="announcementEnabled"||id==="announcementSeverity"?"change":"input",renderAnnouncementPreview));
     $("saveAnnouncementButton")?.addEventListener("click",saveAnnouncement);
   };
+  if(resetTokenFromUrl()){const oldRun=run;run=()=>{oldRun();setTimeout(openResetPassword,0);};}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run();
 })();
