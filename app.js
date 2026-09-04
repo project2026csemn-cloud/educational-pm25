@@ -26,7 +26,8 @@ manageHelp:`${BASE}/api/manage/help`,
 manageDevices:`${BASE}/api/manage/devices`,
 manageAnnouncement:`${BASE}/api/manage/announcement`,
 manageUsers:`${BASE}/api/manage/users`,
-manageUsersUpdate:`${BASE}/api/manage/users/update`
+manageUsersUpdate:`${BASE}/api/manage/users/update`,
+notificationPreferences:`${BASE}/api/auth/notification_preferences`
 };
 
 const TOTAL_NODES=3;
@@ -1088,7 +1089,8 @@ Date.now(),
 {
 cache:"no-store",
 headers:{
-Accept:"application/json"
+Accept:"application/json",
+...(typeof authToken!=="undefined"&&authToken?{Authorization:`Bearer ${authToken}`}:{})
 },
 signal:controller.signal
 }
@@ -5712,6 +5714,10 @@ button
 
 function setRange(key){
 
+// V34: Guest ดูข้อมูลย้อนหลังพื้นฐานได้ถึง 24 ชั่วโมง
+// ช่วง 7/30 วันเป็นสิทธิ์สมาชิกเพื่อให้ Login มีประโยชน์จริง
+if((key==="7d"||key==="30d")&&!requirePermission("history_extended","ข้อมูลย้อนหลัง 7/30 วัน"))return;
+
 const c=
 RANGE_CONFIG[key];
 
@@ -5774,6 +5780,9 @@ loadHistorical();
 }
 
 function applyCustomRange(){
+
+// V34: ช่วงวัน/เวลาแบบกำหนดเองเป็นฟังก์ชันสมาชิก
+if(!requirePermission("history_custom_range","การเลือกช่วงวันและเวลาแบบกำหนดเอง"))return;
 
 const start=
 dateFromRangeInput(
@@ -5936,7 +5945,7 @@ let offset=0;
 while(true){
 
 const j=
-await fetchJson(
+await apiJson(
 `${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
 );
 
@@ -6011,6 +6020,9 @@ $("exportExcelButton").disabled=
 
 function openExport(){
 
+// V34: Export เป็นสิทธิ์สมาชิก และ Worker ตรวจ session ซ้ำอีกชั้น
+if(!requirePermission("export_data","การส่งออกข้อมูล Excel"))return;
+
 const w=
 rangeWindow();
 
@@ -6073,7 +6085,13 @@ modal.setAttribute(
 
 }
 
-refreshExport();
+refreshExport().catch(err=>{
+  console.error("Export preview error:",err);
+  if($("exportError")){
+    $("exportError").textContent=err.message||"ไม่สามารถโหลดข้อมูลสำหรับส่งออกได้";
+    $("exportError").classList.remove("hidden");
+  }
+});
 
 }
 
@@ -6512,6 +6530,14 @@ ${esc(recommendation)}
 async function loadAI(
 force=false
 ){
+
+if(!authUser||!authToken){
+  if(force){openAuthModal("login");setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์สถานการณ์","error");}
+  const root=$("aiSummary");
+  if(root)root.innerHTML=`<div class="member-feature-lock"><b>🔒 AI Analysis</b><span>เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์สถานการณ์</span><button type="button" data-open-login-from-ai>เข้าสู่ระบบ</button></div>`;
+  root?.querySelector("[data-open-login-from-ai]")?.addEventListener("click",()=>openAuthModal("login"));
+  return;
+}
 
 if(
 aiLoading
@@ -7080,6 +7106,14 @@ d.confidence||
 async function loadAIForecast(
 force=false
 ){
+
+if(!authUser||!authToken){
+  if(force){openAuthModal("login");setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้ AI คาดการณ์แนวโน้ม","error");}
+  const message=$("forecastMessage");
+  if(message)message.innerHTML=`<div class="member-feature-lock"><b>🔒 AI Forecast</b><span>เข้าสู่ระบบเพื่อใช้ AI คาดการณ์แนวโน้ม</span><button type="button" data-open-login-from-forecast>เข้าสู่ระบบ</button></div>`;
+  message?.querySelector("[data-open-login-from-forecast]")?.addEventListener("click",()=>openAuthModal("login"));
+  return;
+}
 
 if(
 aiForecastLoading
@@ -7892,6 +7926,8 @@ closeHelp();
 closeCreditImage();
 
 closeHistoryRangePicker();
+
+closeProfileEditor();
 
 }
 
@@ -9204,13 +9240,17 @@ historyLoading=false;
 function activateAISection(){
 
 if(aiSectionActivated){
-return;
+  // กรณีเปิดหน้าไว้ตอนเป็น Guest แล้วค่อย Login
+  // ให้โหลด AI ได้ทันทีตามสิทธิ์ใหม่โดยไม่ต้อง Refresh หน้าเว็บ
+  if(authUser&&authToken&&!aiPayload&&!aiLoading)loadAI(false);
+  if(authUser&&authToken&&!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
+  return;
 }
 
 aiSectionActivated=true;
 
-loadAI(false);
-loadAIForecast(false);
+loadAI(false);          // ถ้าไม่มีสิทธิ์ ฟังก์ชันจะแสดงกล่องล็อกแทน
+loadAIForecast(false);  // และจะไม่เรียก API
 
 }
 
@@ -9318,6 +9358,7 @@ updateCurrent();
 updateSmart();
 
 updateAlertUI();
+checkSituationNotifications();
 
 // V15: warm Forecast cache/request หลังข้อมูลหลักพร้อม
 // เพื่อให้เมื่อเปิด "สถิติและกราฟ" กราฟคาดการณ์พร้อมเร็วขึ้น
@@ -9392,6 +9433,7 @@ updateCurrent();
 updateSmart();
 
 updateAlertUI();
+checkSituationNotifications();
 
 }catch(e){
 
@@ -9469,6 +9511,7 @@ updateCurrent();
 updateSmart();
 
 updateAlertUI();
+checkSituationNotifications();
 
 }catch(e){
 
@@ -9612,6 +9655,17 @@ function getDashboardPageFromHash(){
 
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
+
+  if(page==="analysis" && !(authUser&&authToken)){
+    if(!authUser){
+      openAuthModal("login");
+      setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้เมนูวิเคราะห์และคาดการณ์ด้วย AI","error");
+    }else{
+      alert("บัญชีนี้ไม่ได้รับสิทธิ์ใช้เมนู AI");
+    }
+    return;
+  }
+
   currentDashboardPage=page;
   document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
     panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
@@ -9635,7 +9689,7 @@ function openDashboardPage(page,{updateHash=true}={}){
     // V15:
     // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
     // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
-    if(typeof loadAIForecast==="function"){
+    if(typeof loadAIForecast==="function" && authUser&&authToken){
       loadAIForecast(false);
     }
   }
@@ -10215,19 +10269,268 @@ function setAvatar(imgId,fallbackId,user){
   if(url){img.src=url;img.classList.remove("hidden");fallback.classList.add("hidden");img.onerror=()=>{img.classList.add("hidden");fallback.classList.remove("hidden");};}
   else{img.removeAttribute("src");img.classList.add("hidden");fallback.classList.remove("hidden");}
 }
-async function resizeProfileImage(file){
-  if(!file||!/^image\/(png|jpeg|webp)$/i.test(file.type))throw new Error("รองรับเฉพาะ JPG, PNG หรือ WebP");
-  if(file.size>8*1024*1024)throw new Error("รูปมีขนาดใหญ่เกิน 8 MB");
-  const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});
-  const img=await new Promise((resolve,reject)=>{const x=new Image();x.onload=()=>resolve(x);x.onerror=reject;x.src=data;});
-  const size=192,canvas=document.createElement("canvas");canvas.width=size;canvas.height=size;
-  const ctx=canvas.getContext("2d"),side=Math.min(img.width,img.height),sx=(img.width-side)/2,sy=(img.height-side)/2;
-  ctx.drawImage(img,sx,sy,side,side,0,0,size,size);return canvas.toDataURL("image/jpeg",0.82);
+// =========================================================
+// V34 — PROFILE IMAGE EDITOR
+// เลือกรูป -> เปิดหน้าครอป -> ลาก/ซูม -> กดบันทึก
+// จะยังไม่ส่งรูปไป Worker จนกว่าผู้ใช้จะกดบันทึกเอง
+// =========================================================
+let profileEditorState={
+  image:null,
+  objectUrl:"",
+  zoom:1,
+  baseScale:1,
+  offsetX:0,
+  offsetY:0,
+  dragging:false,
+  pointerId:null,
+  lastX:0,
+  lastY:0
+};
+
+function closeProfileEditor(){
+  const modal=$("profileEditorModal");
+  if(!modal)return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+  $("profileCropStage")?.classList.remove("is-dragging");
+  profileEditorState.dragging=false;
+  profileEditorState.pointerId=null;
+  if(profileEditorState.objectUrl){
+    URL.revokeObjectURL(profileEditorState.objectUrl);
+    profileEditorState.objectUrl="";
+  }
 }
 
+function profileEditorGeometry(){
+  const stage=$("profileCropStage"),img=profileEditorState.image;
+  if(!stage||!img)return null;
+  const vw=stage.clientWidth,vh=stage.clientHeight;
+  const scale=profileEditorState.baseScale*profileEditorState.zoom;
+  return{
+    vw,vh,scale,
+    displayW:img.naturalWidth*scale,
+    displayH:img.naturalHeight*scale
+  };
+}
+
+function clampProfileOffsets(){
+  const g=profileEditorGeometry();if(!g)return;
+  const maxX=Math.max(0,(g.displayW-g.vw)/2);
+  const maxY=Math.max(0,(g.displayH-g.vh)/2);
+  profileEditorState.offsetX=Math.max(-maxX,Math.min(maxX,profileEditorState.offsetX));
+  profileEditorState.offsetY=Math.max(-maxY,Math.min(maxY,profileEditorState.offsetY));
+}
+
+function renderProfileCrop(){
+  const el=$("profileCropImage"),g=profileEditorGeometry();if(!el||!g)return;
+  clampProfileOffsets();
+  el.style.width=`${g.displayW}px`;
+  el.style.height=`${g.displayH}px`;
+  el.style.transform=`translate(-50%,-50%) translate(${profileEditorState.offsetX}px,${profileEditorState.offsetY}px)`;
+}
+
+async function openProfileEditorFromFile(file){
+  if(!file||!/^image\/(png|jpeg|webp)$/i.test(file.type))throw new Error("รองรับเฉพาะ JPG, PNG หรือ WebP");
+  if(file.size>8*1024*1024)throw new Error("รูปมีขนาดใหญ่เกิน 8 MB");
+
+  const modal=$("profileEditorModal"),stage=$("profileCropStage"),preview=$("profileCropImage");
+  if(!modal||!stage||!preview)throw new Error("ไม่พบหน้าปรับรูปโปรไฟล์");
+
+  if(profileEditorState.objectUrl)URL.revokeObjectURL(profileEditorState.objectUrl);
+  const objectUrl=URL.createObjectURL(file);
+  profileEditorState.objectUrl=objectUrl;
+
+  const img=await new Promise((resolve,reject)=>{
+    const x=new Image();
+    x.onload=()=>resolve(x);
+    x.onerror=()=>reject(new Error("ไม่สามารถอ่านไฟล์รูปภาพได้"));
+    x.src=objectUrl;
+  });
+
+  preview.src=objectUrl;
+  profileEditorState.image=img;
+  profileEditorState.zoom=1;
+  profileEditorState.offsetX=0;
+  profileEditorState.offsetY=0;
+  if($("profileZoomRange"))$("profileZoomRange").value="1";
+  if($("profileEditorMessage"))$("profileEditorMessage").textContent="";
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+
+  requestAnimationFrame(()=>{
+    const vw=stage.clientWidth,vh=stage.clientHeight;
+    profileEditorState.baseScale=Math.max(vw/img.naturalWidth,vh/img.naturalHeight);
+    renderProfileCrop();
+  });
+}
+
+function buildCroppedProfileImage(){
+  const img=profileEditorState.image,g=profileEditorGeometry();
+  if(!img||!g)throw new Error("ยังไม่มีรูปสำหรับบันทึก");
+
+  // แปลงตำแหน่งที่เห็นในกรอบกลับเป็นพิกัดของรูปต้นฉบับ
+  const sourceSide=Math.min(img.naturalWidth,img.naturalHeight,g.vw/g.scale);
+  const centerX=img.naturalWidth/2-profileEditorState.offsetX/g.scale;
+  const centerY=img.naturalHeight/2-profileEditorState.offsetY/g.scale;
+  const sx=Math.max(0,Math.min(img.naturalWidth-sourceSide,centerX-sourceSide/2));
+  const sy=Math.max(0,Math.min(img.naturalHeight-sourceSide,centerY-sourceSide/2));
+
+  const canvas=document.createElement("canvas");
+  canvas.width=256;canvas.height=256;
+  const ctx=canvas.getContext("2d");
+  ctx.drawImage(img,sx,sy,sourceSide,sourceSide,0,0,256,256);
+  return canvas.toDataURL("image/jpeg",0.84);
+}
+
+async function saveProfileEditor(){
+  const button=$("profileEditorSave"),message=$("profileEditorMessage");
+  const oldText=button?.textContent;
+  try{
+    if(button){button.disabled=true;button.textContent="กำลังบันทึก...";}
+    if(message)message.textContent="";
+    const image=buildCroppedProfileImage();
+    const j=await apiJson(API.authProfileImage,{method:"POST",body:JSON.stringify({profile_image:image})});
+    authUser=j.user||authUser;
+    updateAccountUI();
+    $("accountDropdown")?.classList.add("hidden");
+    closeProfileEditor();
+  }catch(err){
+    if(message)message.textContent=err.message||"บันทึกรูปไม่สำเร็จ";
+  }finally{
+    if(button){button.disabled=false;button.textContent=oldText||"บันทึกรูปโปรไฟล์";}
+  }
+}
+
+function setupProfileEditorInteraction(){
+  const stage=$("profileCropStage"),zoom=$("profileZoomRange");
+  if(!stage)return;
+
+  zoom?.addEventListener("input",()=>{
+    profileEditorState.zoom=Math.max(1,Math.min(3,Number(zoom.value)||1));
+    renderProfileCrop();
+  });
+
+  stage.addEventListener("pointerdown",e=>{
+    if(!profileEditorState.image)return;
+    profileEditorState.dragging=true;
+    profileEditorState.pointerId=e.pointerId;
+    profileEditorState.lastX=e.clientX;
+    profileEditorState.lastY=e.clientY;
+    stage.classList.add("is-dragging");
+    stage.setPointerCapture?.(e.pointerId);
+  });
+
+  stage.addEventListener("pointermove",e=>{
+    if(!profileEditorState.dragging||e.pointerId!==profileEditorState.pointerId)return;
+    profileEditorState.offsetX+=e.clientX-profileEditorState.lastX;
+    profileEditorState.offsetY+=e.clientY-profileEditorState.lastY;
+    profileEditorState.lastX=e.clientX;
+    profileEditorState.lastY=e.clientY;
+    renderProfileCrop();
+  });
+
+  const stop=e=>{
+    if(profileEditorState.pointerId!==null&&e.pointerId!==undefined&&e.pointerId!==profileEditorState.pointerId)return;
+    profileEditorState.dragging=false;
+    profileEditorState.pointerId=null;
+    stage.classList.remove("is-dragging");
+  };
+  stage.addEventListener("pointerup",stop);
+  stage.addEventListener("pointercancel",stop);
+}
+
+
+// =========================================================
+// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
+// Role เป็นค่าเริ่มต้น แต่ Owner สามารถเปิด/ปิดสิทธิ์รายบัญชี
+// ได้ละเอียดคล้าย Permission ของ Discord
+// =========================================================
+const PERMISSION_DEFINITIONS=[
+  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
+  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
+  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
+  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
+  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
+  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
+  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
+];
+
+const ROLE_PERMISSION_DEFAULTS={
+  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_users_view:false},
+  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_users_view:true},
+  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
+};
+
+function normalizedClientPermissions(user){
+  if(!user)return {};
+  const role=["user","admin","owner"].includes(user.role)?user.role:"user";
+  const base={...(ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user)};
+  if(role==="owner")return base;
+  const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
+  PERMISSION_DEFINITIONS.forEach(({key})=>{
+    if(typeof incoming[key]==="boolean")base[key]=incoming[key];
+  });
+  return base;
+}
+
+function hasPermission(key,user=authUser){
+  if(!user||!authToken)return false;
+  return Boolean(normalizedClientPermissions(user)[key]);
+}
+
+function requirePermission(key,featureName="ฟังก์ชันนี้"){
+  if(!authUser||!authToken){
+    openAuthModal("login");
+    setAuthMessage("loginMessage",`${featureName} ใช้ได้หลังเข้าสู่ระบบ`,"error");
+    return false;
+  }
+  if(hasPermission(key))return true;
+  alert(`บัญชีนี้ไม่มีสิทธิ์: ${featureName}`);
+  return false;
+}
+
+function requireMember(featureName="ฟังก์ชันนี้"){
+  return requirePermission("history_extended",featureName);
+}
+
+function updateMemberPermissionUI(){
+  // =====================================================
+  // V34 — MEMBER GATES
+  // Guest เห็นฟังก์ชันได้ แต่เมื่อกดฟังก์ชันสมาชิกจะเปิด Login
+  // AI ใช้ได้ทันทีสำหรับ User / Admin / Owner โดยไม่แยก Permission
+  // =====================================================
+  document.querySelectorAll("[data-member-only]").forEach(el=>{
+    let key=el.dataset.permission||"";
+    if(!key){
+      if(el.id==="exportButton")key="export_data";
+      else if(el.id==="historyRangeApply"||el.id==="customRangeStart"||el.id==="customRangeEnd")key="history_custom_range";
+      else if(el.dataset.range==="7d"||el.dataset.range==="30d")key="history_extended";
+    }
+    const allowed=key?hasPermission(key):Boolean(authUser&&authToken);
+    el.classList.toggle("member-locked",!allowed);
+    el.setAttribute("aria-disabled",allowed?"false":"true");
+    if(!allowed)el.title=authUser?"บัญชีนี้ไม่มีสิทธิ์ใช้งาน":"เข้าสู่ระบบเพื่อใช้งาน";
+    else if(el.title==="เข้าสู่ระบบเพื่อใช้งาน"||el.title==="บัญชีนี้ไม่มีสิทธิ์ใช้งาน")el.removeAttribute("title");
+  });
+
+  const aiAllowed=Boolean(authUser&&authToken);
+  document.querySelectorAll('[data-dashboard-page="analysis"]').forEach(el=>{
+    el.classList.toggle("member-locked",!aiAllowed);
+    el.setAttribute("aria-disabled",aiAllowed?"false":"true");
+    el.title=aiAllowed?"":"เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์และคาดการณ์";
+  });
+  [$('aiRefreshButton'),$('aiForecastRefreshButton')].forEach(btn=>{
+    if(!btn)return;
+    btn.disabled=false; // Guest ต้องกดได้ เพื่อให้ระบบเปิด Login Modal
+    btn.classList.toggle("member-locked",!aiAllowed);
+    btn.title=aiAllowed?"วิเคราะห์ใหม่ทันที":"เข้าสู่ระบบเพื่อใช้ AI";
+  });
+}
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
-  const menu=$("accountDropdown"),adminBtn=$("openAdminCenterButton"),changeBtn=$("changePasswordButton");
+  const menu=$("accountDropdown");
+  const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton");
   if(!button||!text)return;
   if(authUser){
     text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
@@ -10237,18 +10540,30 @@ function updateAccountUI(){
     if(badge){badge.textContent=authRoleThai(authUser.role);badge.classList.remove("hidden");}
     const mn=$("accountMenuName"),mr=$("accountMenuRole"),mp=$("accountMenuProvider");
     if(mn)mn.textContent=authUser.display_name||authUser.email;
+    if($("accountMenuEmail"))$("accountMenuEmail").textContent=authUser.email||"";
     if(mr)mr.textContent=`${authRoleLabel(authUser.role)} • ${authRoleThai(authUser.role)}`;
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
-    adminBtn?.classList.toggle("hidden",!["admin","owner"].includes(authUser.role));
-    changeBtn?.classList.toggle("hidden",authUser.auth_provider==="google");
-    $("useGoogleProfileImageButton")?.classList.toggle("hidden",!authUser.google_picture_url||!authUser.profile_image_url);
+    contentBtn?.classList.toggle("hidden",!["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key)));
+    usersBtn?.classList.toggle("hidden",!hasPermission("manage_users_view"));
+    syncMyAccountUI();
   }else{
     text.textContent="เข้าสู่ระบบ";
     setAvatar("accountAvatarImage","accountAvatarFallback",null);
     chev?.classList.add("hidden");
     badge?.classList.add("hidden");
     menu?.classList.add("hidden");
+
+    // Guest ต้องไม่เห็นผล AI ที่ค้างมาจาก session ก่อนหน้า
+    aiPayload=null;
+    aiForecastPayload=null;
+    if(typeof renderAIForecast==="function")renderAIForecast(null);
+    if(typeof loadAI==="function")loadAI(false);
+    if(typeof loadAIForecast==="function")loadAIForecast(false);
   }
+  updateMemberPermissionUI();
+
+  // หลัง Login ให้ส่วน AI ที่เคยถูกล็อกลองโหลดใหม่ตาม Permission
+  if(authUser&&aiSectionActivated)activateAISection();
 }
 
 function openAuthModal(mode="login"){
@@ -10487,13 +10802,52 @@ async function loadAdminUsers(){
 function filteredAdminUsers(){
   const q=String($("adminUserSearch")?.value||"").trim().toLowerCase();
   const role=$("adminUserRoleFilter")?.value||"all";
-  const status=$("adminUserStatusFilter")?.value||"all";
   return adminUsersCache.filter(u=>{
     const matchesText=!q||
       String(u.display_name||"").toLowerCase().includes(q)||
       String(u.email||"").toLowerCase().includes(q);
-    return matchesText&&(role==="all"||u.role===role)&&(status==="all"||u.status===status);
+    return matchesText&&(role==="all"||u.role===role);
   });
+}
+
+function permissionEditorHtml(user){
+  const perms=normalizedClientPermissions(user);
+  const groups=[...new Set(PERMISSION_DEFINITIONS.map(x=>x.group))];
+  return groups.map(group=>{
+    const items=PERMISSION_DEFINITIONS.filter(x=>x.group===group);
+    return `<section class="admin-permission-group">
+      <div class="admin-permission-group-head">
+        <b>${esc(group)}</b>
+        <span>${items.filter(x=>perms[x.key]).length} / ${items.length} เปิด</span>
+      </div>
+      <div class="admin-permission-list">
+        ${items.map(item=>`
+          <label class="admin-permission-item">
+            <span class="admin-permission-copy">
+              <b>${esc(item.title)}</b>
+              <small>${esc(item.desc)}</small>
+            </span>
+            <span class="admin-permission-switch">
+              <input class="admin-user-permission" type="checkbox" data-permission-key="${esc(item.key)}" ${perms[item.key]?"checked":""}>
+              <i></i>
+            </span>
+          </label>`).join("")}
+      </div>
+    </section>`;
+  }).join("");
+}
+
+function applyRoleDefaultsToEditor(card,role){
+  if(!card)return;
+  const defaults=ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user;
+  card.querySelectorAll(".admin-user-permission").forEach(input=>{
+    input.checked=Boolean(defaults[input.dataset.permissionKey]);
+    input.disabled=role==="owner";
+  });
+  const note=card.querySelector(".admin-permission-role-note");
+  if(note)note.textContent=role==="owner"
+    ?"Owner มีสิทธิ์ทั้งหมดโดยอัตโนมัติและไม่สามารถปิดสิทธิ์รายข้อได้"
+    :"เลือกเปิด/ปิดเพิ่มเติมได้อิสระจากค่าเริ่มต้นของ Role";
 }
 
 function renderAdminUsers(){
@@ -10507,7 +10861,6 @@ function renderAdminUsers(){
     const self=Number(u.id)===ownId;
     const provider=u.auth_provider==="google"?"Google":u.google_linked?"Email + Google":"Email";
     const roleClass=`is-${esc(u.role)}`;
-    const statusClass=`is-${esc(u.status)}`;
 
     let action="";
     if(self){
@@ -10517,7 +10870,7 @@ function renderAdminUsers(){
         ?`<div class="admin-user-done">เป็น Admin แล้ว</div>`
         :`<button class="admin-promote-button" type="button" data-promote-admin="${u.id}">ตั้งเป็น Admin</button>`;
     }else if(isOwner){
-      action=`<button class="admin-user-manage-button" type="button">จัดการสิทธิ์</button>`;
+      action=`<button class="admin-user-manage-button" type="button">⚙ จัดการสิทธิ์</button>`;
     }else{
       action=`<div class="admin-user-readonly">ดูอย่างเดียว</div>`;
     }
@@ -10533,7 +10886,6 @@ function renderAdminUsers(){
           <span>${esc(u.email)}</span>
           <div class="admin-user-meta">
             <i class="admin-role-chip ${roleClass}">${esc(authRoleLabel(u.role))}</i>
-            <i class="admin-status-chip ${statusClass}">${esc(authStatusThai(u.status))}</i>
             <i class="admin-provider-chip">${esc(provider)}</i>
           </div>
         </div>
@@ -10541,22 +10893,32 @@ function renderAdminUsers(){
       </div>
 
       ${(!self&&isOwner&&!adminAddMode)?`
-      <div class="admin-user-editor hidden">
-        <label>สิทธิ์
-          <select class="admin-user-role">
-            <option value="user" ${u.role==="user"?"selected":""}>User</option>
-            <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
-            <option value="owner" ${u.role==="owner"?"selected":""}>Owner</option>
-          </select>
-        </label>
-        <label>สถานะ
-          <select class="admin-user-status">
-            <option value="active" ${u.status==="active"?"selected":""}>ใช้งาน</option>
-            <option value="disabled" ${u.status==="disabled"?"selected":""}>ระงับ</option>
-            <option value="pending" ${u.status==="pending"?"selected":""}>รอยืนยัน</option>
-          </select>
-        </label>
-        <button class="admin-user-save" type="button">บันทึก</button>
+      <div class="admin-user-editor admin-user-editor-v35 hidden">
+        <div class="admin-user-editor-top">
+          <label>Role หลัก
+            <select class="admin-user-role">
+              <option value="user" ${u.role==="user"?"selected":""}>User</option>
+              <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
+              <option value="owner" ${u.role==="owner"?"selected":""}>Owner</option>
+            </select>
+          </label>
+          <button class="admin-permission-reset" type="button">↺ ใช้ค่าเริ่มต้นตาม Role</button>
+        </div>
+
+        <div class="admin-permission-role-note">${u.role==="owner"?"Owner มีสิทธิ์ทั้งหมดโดยอัตโนมัติและไม่สามารถปิดสิทธิ์รายข้อได้":"เลือกเปิด/ปิดสิทธิ์รายข้อได้ คล้าย Permission ของ Discord"}</div>
+
+        <div class="admin-permission-grid">
+          ${permissionEditorHtml(u)}
+        </div>
+
+        <div class="admin-user-danger-zone">
+          <div><b>ลบบัญชี</b><span>ลบบัญชีและเซสชันทั้งหมดอย่างถาวร การกระทำนี้ย้อนกลับไม่ได้</span></div>
+          <button class="admin-user-delete" type="button">ลบบัญชี</button>
+        </div>
+        <div class="admin-user-editor-footer">
+          <span>การเปลี่ยนสิทธิ์มีผลหลังบันทึก และฝั่ง Worker จะตรวจซ้ำก่อนอนุญาต</span>
+          <button class="admin-user-save" type="button">บันทึกสิทธิ์</button>
+        </div>
       </div>`:""}
     </article>`;
   }).join("")||'<div class="admin-empty">ไม่พบผู้ใช้ที่ตรงกับการค้นหา</div>';
@@ -10567,11 +10929,34 @@ function renderAdminUsers(){
       card?.querySelector(".admin-user-editor")?.classList.toggle("hidden");
     });
   });
+
+  root.querySelectorAll(".admin-user-role").forEach(select=>{
+    select.addEventListener("change",()=>{
+      const card=select.closest(".admin-user-card");
+      applyRoleDefaultsToEditor(card,select.value);
+    });
+  });
+
+  root.querySelectorAll(".admin-permission-reset").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const card=btn.closest(".admin-user-card");
+      applyRoleDefaultsToEditor(card,card?.querySelector(".admin-user-role")?.value||"user");
+    });
+  });
+
   root.querySelectorAll(".admin-user-save").forEach(btn=>{
     btn.addEventListener("click",()=>saveAdminUserRow(btn.closest(".admin-user-card")));
   });
+  root.querySelectorAll(".admin-user-delete").forEach(btn=>{
+    btn.addEventListener("click",()=>deleteAdminUser(btn.closest(".admin-user-card")));
+  });
   root.querySelectorAll("[data-promote-admin]").forEach(btn=>{
     btn.addEventListener("click",()=>promoteUserToAdmin(Number(btn.dataset.promoteAdmin)));
+  });
+
+  root.querySelectorAll(".admin-user-card").forEach(card=>{
+    const role=card.querySelector(".admin-user-role")?.value;
+    if(role==="owner")card.querySelectorAll(".admin-user-permission").forEach(x=>x.disabled=true);
   });
 }
 
@@ -10585,7 +10970,10 @@ async function saveAdminUserRow(row){
       body:JSON.stringify({
         user_id:Number(row.dataset.userId),
         role:row.querySelector(".admin-user-role")?.value,
-        status:row.querySelector(".admin-user-status")?.value
+        permissions:Object.fromEntries(
+          [...row.querySelectorAll(".admin-user-permission")]
+            .map(input=>[input.dataset.permissionKey,Boolean(input.checked)])
+        )
       })
     });
     setAuthMessage("userSaveMessage","อัปเดตสิทธิ์เรียบร้อย","success");
@@ -10597,6 +10985,22 @@ async function saveAdminUserRow(row){
   }
 }
 
+
+async function deleteAdminUser(row){
+  if(!row||authUser?.role!=="owner")return;
+  const userId=Number(row.dataset.userId||0);
+  const user=adminUsersCache.find(x=>Number(x.id)===userId);
+  if(!user)return;
+  const label=user.display_name||user.email||"บัญชีนี้";
+  if(!confirm(`ต้องการลบบัญชี “${label}” หรือไม่?\n\nบัญชีและเซสชันทั้งหมดจะถูกลบอย่างถาวร และไม่สามารถย้อนกลับได้`))return;
+  const btn=row.querySelector(".admin-user-delete"); if(btn)btn.disabled=true;
+  try{
+    await apiJson(`${API.manageUsers}/delete`,{method:"POST",body:JSON.stringify({user_id:userId})});
+    setAuthMessage("userSaveMessage",`ลบบัญชี ${label} เรียบร้อย`,"success");
+    await loadAdminUsers();
+  }catch(e){setAuthMessage("userSaveMessage",e.message,"error");if(btn)btn.disabled=false;}
+}
+
 async function promoteUserToAdmin(userId){
   if(authUser?.role!=="owner"||!userId)return;
   const user=adminUsersCache.find(x=>Number(x.id)===Number(userId));
@@ -10604,7 +11008,7 @@ async function promoteUserToAdmin(userId){
   try{
     await apiJson(API.manageUsersUpdate,{
       method:"POST",
-      body:JSON.stringify({user_id:userId,role:"admin",status:"active"})
+      body:JSON.stringify({user_id:userId,role:"admin"})
     });
     setAuthMessage("userSaveMessage",`ตั้ง ${user.display_name||user.email} เป็น Admin แล้ว`,"success");
     adminAddMode=false;
@@ -10620,22 +11024,197 @@ function setAdminAddMode(enabled){
   $("adminAddModeBanner")?.classList.toggle("hidden",!adminAddMode);
   if(adminAddMode){
     if($("adminUserRoleFilter"))$("adminUserRoleFilter").value="all";
-    if($("adminUserStatusFilter"))$("adminUserStatusFilter").value="active";
     $("adminUserSearch")?.focus();
   }
   renderAdminUsers();
 }
 
-function openAdminCenter(){
-  if(!["admin","owner"].includes(authUser?.role||""))return;const m=$("adminCenter");if(!m)return;m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);populateHelpKeySelect();renderAdminDevices();loadAnnouncementEditor();loadAdminUsers();
+function hasAnyManagementPermission(){
+  return ["manage_help","manage_devices","manage_announcement","manage_users_view"].some(key=>hasPermission(key));
+}
+
+function openAdminCenter(targetTab=null){
+  if(!hasAnyManagementPermission())return;const m=$("adminCenter");if(!m)return;m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
+  document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",!hasPermission("manage_help"));
+  document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",!hasPermission("manage_devices"));
+  document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",!hasPermission("manage_announcement"));
+  document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!hasPermission("manage_users_view"));
+  if(hasPermission("manage_help"))populateHelpKeySelect();
+  if(hasPermission("manage_devices"))renderAdminDevices();
+  if(hasPermission("manage_announcement"))loadAnnouncementEditor();
+  if(hasPermission("manage_users_view"))loadAdminUsers();
+  const allowedContent=["help","devices","announcement"].find(tab=>({help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"})[tab]&&hasPermission(({help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"})[tab]));
+  const chosen=targetTab==="users"&&hasPermission("manage_users_view")?"users":targetTab==="content"?allowedContent:null;
+  if(chosen)switchAdminTab(chosen);
 }
 function closeAdminCenter(){const m=$("adminCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
 function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
+
+// =====================================================
+// V34.1 — MY ACCOUNT CENTER
+// รวม Profile / Account / Security ไว้ในจุดเดียว
+// =====================================================
+function syncMyAccountUI(){
+  if(!authUser)return;
+  setAvatar("myAccountAvatarImage","myAccountAvatarFallback",authUser);
+  const name=authUser.display_name||authUser.email||"ผู้ใช้งาน";
+  const email=authUser.email||"--";
+  const role=`${authRoleLabel(authUser.role)} • ${authRoleThai(authUser.role)}`;
+  const provider=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
+  [["myAccountName",name],["myAccountEmail",email],["myAccountDisplayName",name],["myAccountEmailDetail",email],["myAccountRole",role],["myAccountRoleDetail",role],["myAccountProvider",authProviderLabel(authUser)],["myAccountProviderDetail",provider]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value;});
+  $("myAccountChangePassword")?.classList.toggle("hidden",authUser.auth_provider==="google");
+  $("myAccountUseGooglePhoto")?.classList.toggle("hidden",!authUser.google_picture_url||!authUser.profile_image_url);
+}
+function openMyAccount(){
+  if(!authUser){openAuthModal("login");return;}
+  syncMyAccountUI();
+  const m=$("myAccountCenter");if(!m)return;
+  m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");
+}
+function closeMyAccount(){const m=$("myAccountCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function openAccountSecurity(){
+  if(!authUser)return;
+  const m=$("accountSecurityModal");if(!m)return;
+  $("accountSecurityForm")?.reset();if($("accountSecurityMessage"))$("accountSecurityMessage").textContent="";
+  m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
+}
+function closeAccountSecurity(){const m=$("accountSecurityModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
+
+
+// =====================================================
+// V34.2 — NOTIFICATIONS
+// =====================================================
+const DEFAULT_NOTIFICATION_PREFS={enabled:true,dust:true,temperature:true,humidity:true,heat_index:true,device:true};
+let notificationPrefs={...DEFAULT_NOTIFICATION_PREFS};
+let notificationPrefsLoadedFor=null;
+let notificationCheckBusy=false;
+let notificationSeeded=false;
+let lastNotificationDetail=null;
+
+function notificationStorageKey(){return `pm25-notification-state-${authUser?.id||"guest"}`;}
+function notificationEventKey(device,type){return `${device}:${type}`;}
+function readNotificationStates(){try{return JSON.parse(localStorage.getItem(notificationStorageKey())||"{}");}catch(_){return {};}}
+function writeNotificationStates(v){try{localStorage.setItem(notificationStorageKey(),JSON.stringify(v));}catch(_){}}
+
+async function ensureNotificationPreferences(){
+  if(!authUser)return false;
+  if(notificationPrefsLoadedFor===authUser.id)return true;
+  try{
+    const j=await apiJson(API.notificationPreferences);
+    notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...(j.preferences||{})};
+    notificationPrefsLoadedFor=authUser.id;
+    return true;
+  }catch(_){return false;}
+}
+
+function syncNotificationSettingsUI(){
+  const map={notificationMaster:"enabled",notifyDust:"dust",notifyTemperature:"temperature",notifyHumidity:"humidity",notifyHeatIndex:"heat_index",notifyDevice:"device"};
+  Object.entries(map).forEach(([id,key])=>{if($(id))$(id).checked=notificationPrefs[key]!==false;});
+  updateNotificationPermissionUI();
+}
+
+async function openNotificationSettings(){
+  if(!authUser){openAuthModal("login");return;}
+  $("accountDropdown")?.classList.add("hidden");
+  await ensureNotificationPreferences();
+  syncNotificationSettingsUI();
+  const m=$("notificationSettingsModal");if(!m)return;m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
+}
+function closeNotificationSettings(){const m=$("notificationSettingsModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function closeNotificationDetail(){const m=$("notificationDetailModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+
+function updateNotificationPermissionUI(){
+  const card=$("notificationPermissionCard"),title=$("notificationPermissionTitle"),text=$("notificationPermissionText"),icon=$("notificationPermissionIcon"),btn=$("requestNotificationPermission");
+  if(!card)return;
+  card.classList.remove("is-granted","is-denied");
+  if(!("Notification" in window)){title.textContent="เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน";text.textContent="ยังสามารถใช้ Dashboard ได้ตามปกติ";icon.textContent="ℹ️";btn.hidden=true;return;}
+  btn.hidden=false;
+  if(Notification.permission==="granted"){card.classList.add("is-granted");title.textContent="อนุญาตการแจ้งเตือนแล้ว";text.textContent="ระบบพร้อมแจ้งเมื่อสถานการณ์ที่คุณเลือกมีการเปลี่ยนแปลง";icon.textContent="🔔";btn.textContent="อนุญาตแล้ว";btn.disabled=true;}
+  else if(Notification.permission==="denied"){card.classList.add("is-denied");title.textContent="การแจ้งเตือนถูกบล็อก";text.textContent="กรุณาอนุญาต Notification จากการตั้งค่าเว็บไซต์ของเบราว์เซอร์";icon.textContent="🔕";btn.textContent="ถูกบล็อก";btn.disabled=true;}
+  else{title.textContent="ยังไม่ได้อนุญาตการแจ้งเตือน";text.textContent="กดอนุญาตเพื่อรับข้อความแจ้งเตือนจากเบราว์เซอร์";icon.textContent="🔕";btn.textContent="อนุญาต";btn.disabled=false;}
+}
+
+async function requestBrowserNotificationPermission(){
+  if(!("Notification" in window))return;
+  try{await Notification.requestPermission();}catch(_){}
+  updateNotificationPermissionUI();
+  if(Notification.permission==="granted")await registerNotificationServiceWorker();
+}
+
+async function saveNotificationPreferences(){
+  const status=$("notificationSaveStatus");
+  const next={enabled:!!$("notificationMaster")?.checked,dust:!!$("notifyDust")?.checked,temperature:!!$("notifyTemperature")?.checked,humidity:!!$("notifyHumidity")?.checked,heat_index:!!$("notifyHeatIndex")?.checked,device:!!$("notifyDevice")?.checked};
+  if(status)status.textContent="กำลังบันทึก...";
+  try{const j=await apiJson(API.notificationPreferences,{method:"POST",body:JSON.stringify({preferences:next})});notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...j.preferences};notificationPrefsLoadedFor=authUser?.id||null;if(status)status.textContent="บันทึกแล้ว ✓";setTimeout(()=>{if(status)status.textContent="";},1800);}
+  catch(err){if(status)status.textContent=err.message;}
+}
+
+async function registerNotificationServiceWorker(){
+  if(!("serviceWorker" in navigator))return null;
+  try{return await navigator.serviceWorker.register("sw.js?v=342");}catch(_){return null;}
+}
+
+function notificationSituationFor(node){
+  const id=String(node?.device_id||node?.deviceID||"จุดตรวจวัด");
+  const out=[];
+  const status=String(node?.status||"").toLowerCase();
+  out.push({type:"device",active:status==="offline",level:status==="offline"?"offline":"online",icon:"📡",title:status==="offline"?"อุปกรณ์ขาดการเชื่อมต่อ":"อุปกรณ์กลับมา Online",message:status==="offline"?`${id} เปลี่ยนสถานะเป็น Offline`:`${id} กลับมาส่งข้อมูลตามปกติ`});
+  const pm25=finiteNumberOrNull(node?.pm25),pm10=finiteNumberOrNull(node?.pm10);
+  const pg=pm25Guidance(pm25);const dustActive=(pm25!==null&&(pg.level==="warning"||pg.level==="critical"))||(pm10!==null&&pm10>120);
+  out.push({type:"dust",active:dustActive,level:dustActive?`${pg.level}:${Math.round(pm25||0)}:${Math.round(pm10||0)}`:"normal",icon:"🌫️",title:"สถานการณ์ฝุ่นละออง",message:`${id} — PM2.5 ${pm25===null?"--":fmt(pm25)} µg/m³ • PM10 ${pm10===null?"--":fmt(pm10)} µg/m³`});
+  const t=finiteNumberOrNull(node?.temperature),tl=temperatureLevel(t);const tempActive=t!==null&&["hot","very_hot","cold","very_cold"].includes(tl.level);
+  out.push({type:"temperature",active:tempActive,level:tempActive?tl.level:"normal",icon:"🌡️",title:`อุณหภูมิ${tl.label?` — ${tl.label}`:""}`,message:`${id} วัดอุณหภูมิได้ ${t===null?"--":fmt(t)} °C`});
+  const h=finiteNumberOrNull(node?.humidity),hl=humidityLevel(h);const humActive=h!==null&&hl.level!=="normal";
+  out.push({type:"humidity",active:humActive,level:humActive?hl.level:"normal",icon:"💧",title:`ความชื้น${hl.label?` — ${hl.label}`:""}`,message:`${id} วัดความชื้นสัมพัทธ์ได้ ${h===null?"--":fmt(h)} %`});
+  const hi=heatIndexC(t,h),hil=heatLevel(hi);const heatActive=hi!==null&&["warning","critical"].includes(hil.level);
+  out.push({type:"heat_index",active:heatActive,level:heatActive?hil.level:"normal",icon:"☀️",title:`ดัชนีความร้อน${hil.label?` — ${hil.label}`:""}`,message:`${id} มี Heat Index ประมาณ ${hi===null?"--":fmt(hi)} °C`});
+  return out.map(x=>({...x,device:id}));
+}
+
+async function showSituationNotification(evt){
+  if(Notification.permission!=="granted")return;
+  lastNotificationDetail={...evt,time:new Date().toISOString()};
+  try{localStorage.setItem("pm25-last-notification",JSON.stringify(lastNotificationDetail));}catch(_){}
+  const reg=await registerNotificationServiceWorker();
+  const url=`${location.origin}${location.pathname}?notification=1&device=${encodeURIComponent(evt.device)}&type=${encodeURIComponent(evt.type)}`;
+  if(reg){await reg.showNotification(`${evt.icon} ${evt.title}`,{body:evt.message,tag:`pm25-${evt.device}-${evt.type}`,renotify:true,data:{url,device:evt.device,type:evt.type}});}
+}
+
+async function checkSituationNotifications(){
+  if(notificationCheckBusy||!authUser||!Array.isArray(latestNodes)||!latestNodes.length)return;
+  notificationCheckBusy=true;
+  try{
+    if(!(await ensureNotificationPreferences())||notificationPrefs.enabled===false)return;
+    const previous=readNotificationStates(),next={...previous},events=[];
+    latestNodes.forEach(node=>notificationSituationFor(node).forEach(evt=>{
+      const key=notificationEventKey(evt.device,evt.type),old=previous[key];next[key]=evt.level;
+      const allowed=notificationPrefs[evt.type]!==false;
+      if(notificationSeeded&&allowed&&old!==undefined&&old!==evt.level){
+        if(evt.type==="device" || evt.active)events.push(evt);
+      }
+    }));
+    writeNotificationStates(next);
+    if(!notificationSeeded){notificationSeeded=true;return;}
+    for(const evt of events.slice(0,3))await showSituationNotification(evt);
+  }finally{notificationCheckBusy=false;}
+}
+
+function openNotificationDetailFromUrl(){
+  const q=new URLSearchParams(location.search);if(q.get("notification")!=="1")return;
+  let d=null;try{d=JSON.parse(localStorage.getItem("pm25-last-notification")||"null");}catch(_){}
+  if(!d)return;
+  $("notificationDetailIcon").textContent=d.icon||"🔔";$("notificationDetailTitle").textContent=d.title||"การแจ้งเตือน";$("notificationDetailMessage").textContent=d.message||"";$("notificationDetailDevice").textContent=d.device||"--";$("notificationDetailTime").textContent=d.time?new Date(d.time).toLocaleString("th-TH"):"ล่าสุด";
+  const m=$("notificationDetailModal");if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
+  history.replaceState({},"",location.pathname+location.hash);
+}
 
 (function setupAuthCmsV31(){
   const run=async()=>{
     await restoreAuthSession();
     loadAuthConfig();
+    if(authUser){ensureNotificationPreferences();registerNotificationServiceWorker();}
+    setTimeout(openNotificationDetailFromUrl,150);
     $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
     document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
@@ -10645,23 +11224,61 @@ function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>
     $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
     $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
-    $("changeProfileImageButton")?.addEventListener("click",()=>$("profileImageInput")?.click());
-    $("profileImageInput")?.addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const image=await resizeProfileImage(file);const j=await apiJson(API.authProfileImage,{method:"POST",body:JSON.stringify({image_data:image})});authUser=j.user||authUser;updateAccountUI();$("accountDropdown")?.classList.add("hidden");}catch(err){alert(err.message);}finally{e.target.value="";}});
-    $("useGoogleProfileImageButton")?.addEventListener("click",async()=>{try{const j=await apiJson(API.authProfileImage,{method:"DELETE"});authUser=j.user||authUser;updateAccountUI();}catch(err){alert(err.message);}});
+    // =====================================================
+    // V34 — PROFILE IMAGE EVENTS
+    // เลือกรูปแล้วเปิด Editor ก่อน ไม่อัปโหลดทันที
+    // =====================================================
+    setupProfileEditorInteraction();
+    $("myAccountChangePhoto")?.addEventListener("click",chooseProfileImageFromAccount);
+    $("myAccountChangePhotoSecondary")?.addEventListener("click",chooseProfileImageFromAccount);
+    $("profileImageInput")?.addEventListener("change",async e=>{
+      const file=e.target.files?.[0];
+      if(!file)return;
+      try{await openProfileEditorFromFile(file);}catch(err){alert(err.message);}finally{e.target.value="";}
+    });
+    document.querySelectorAll("[data-profile-editor-close]").forEach(x=>x.addEventListener("click",closeProfileEditor));
+    $("profileEditorCancel")?.addEventListener("click",closeProfileEditor);
+    $("profileEditorSave")?.addEventListener("click",saveProfileEditor);
+    $("myAccountUseGooglePhoto")?.addEventListener("click",async()=>{
+      try{
+        const j=await apiJson(API.authProfileImage,{method:"DELETE"});
+        authUser=j.user||authUser;
+        updateAccountUI();
+        syncMyAccountUI();
+      }catch(err){alert(err.message);}
+    });
 
     $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
     $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
     $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
     $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
-    $("openAdminCenterButton")?.addEventListener("click",openAdminCenter);
+    $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
+    document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
+    document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
+    $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
+    $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
+    $("notificationDetailGo")?.addEventListener("click",()=>{closeNotificationDetail();document.querySelector('[data-go-page="monitoring"]')?.click();});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("openMyAccountButton")?.addEventListener("click",openMyAccount);
+    $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
+    $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
+    document.querySelectorAll("[data-my-account-close]").forEach(x=>x.addEventListener("click",closeMyAccount));
+    document.querySelectorAll("[data-security-close]").forEach(x=>x.addEventListener("click",closeAccountSecurity));
+    $("myAccountChangePassword")?.addEventListener("click",openAccountSecurity);
     $("adminUserSearch")?.addEventListener("input",renderAdminUsers);
     $("adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
-    $("adminUserStatusFilter")?.addEventListener("change",renderAdminUsers);
     $("addAdminModeButton")?.addEventListener("click",()=>setAdminAddMode(true));
     $("cancelAddAdminMode")?.addEventListener("click",()=>setAdminAddMode(false));
-    $("changePasswordButton")?.addEventListener("click",async()=>{if(!authUser)return;const current=prompt("กรอกรหัสผ่านปัจจุบัน");if(current===null)return;const next=prompt("กรอกรหัสผ่านใหม่ (อย่างน้อย 10 ตัวอักษร)");if(next===null)return;try{await apiJson(API.authChangePassword,{method:"POST",body:JSON.stringify({current_password:current,new_password:next})});alert("เปลี่ยนรหัสผ่านเรียบร้อย");}catch(e){alert(e.message);}});
+    $("accountSecurityForm")?.addEventListener("submit",async e=>{
+      e.preventDefault();
+      const current=$("accountCurrentPassword")?.value||"",next=$("accountNewPassword")?.value||"",confirm=$("accountConfirmPassword")?.value||"";
+      const msg=$("accountSecurityMessage");
+      if(next.length<10){if(msg)msg.textContent="รหัสผ่านใหม่ต้องมีอย่างน้อย 10 ตัวอักษร";return;}
+      if(next!==confirm){if(msg)msg.textContent="รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน";return;}
+      if(msg)msg.textContent="กำลังบันทึก...";
+      try{await apiJson(API.authChangePassword,{method:"POST",body:JSON.stringify({current_password:current,new_password:next})});if(msg)msg.textContent="เปลี่ยนรหัสผ่านเรียบร้อย";setTimeout(closeAccountSecurity,650);}catch(err){if(msg)msg.textContent=err.message;}
+    });
     document.addEventListener("click",e=>{const dd=$("accountDropdown"),btn=$("accountButton");if(authUser&&dd&&!dd.classList.contains("hidden")&&!dd.contains(e.target)&&!btn?.contains(e.target))dd.classList.add("hidden");});
     document.querySelectorAll(".admin-nav").forEach(b=>b.addEventListener("click",()=>switchAdminTab(b.dataset.adminTab)));
     $("helpKeySelect")?.addEventListener("change",e=>loadHelpEditor(e.target.value));
