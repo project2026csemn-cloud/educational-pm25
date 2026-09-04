@@ -10535,9 +10535,9 @@ function updateMemberPermissionUI(){
 
   const aiAllowed=Boolean(authUser&&authToken);
   document.querySelectorAll('[data-dashboard-page="analysis"]').forEach(el=>{
-    el.classList.remove("member-locked");
-    el.setAttribute("aria-disabled","false");
-    el.removeAttribute("title");
+    el.classList.toggle("member-locked",!aiAllowed);
+    el.setAttribute("aria-disabled",aiAllowed?"false":"true");
+    el.title=aiAllowed?"":"เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์และคาดการณ์";
   });
   [$('aiRefreshButton'),$('aiForecastRefreshButton')].forEach(btn=>{
     if(!btn)return;
@@ -10556,7 +10556,10 @@ function updateAccountUI(){
     setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
     setAvatar("accountMenuAvatarImage","accountMenuAvatarFallback",authUser);
     chev?.classList.remove("hidden");
-    if(badge){badge.textContent=authRoleLabel(authUser.role);badge.classList.remove("hidden");}
+    if(badge){
+      badge.textContent=authRoleLabel(authUser.role);
+      badge.classList.remove("hidden");
+    }
     $("headerNotificationButton")?.classList.remove("hidden");
     const mn=$("accountMenuName"),mr=$("accountMenuRole"),mp=$("accountMenuProvider");
     if(mn)mn.textContent=authUser.display_name||authUser.email;
@@ -10575,7 +10578,10 @@ function updateAccountUI(){
     $("headerNotificationButton")?.classList.add("hidden");
     $("headerNotificationBadge")?.classList.add("hidden");
 
-    // Guest ดูผลวิเคราะห์ที่ระบบมีได้ แต่กด "วิเคราะห์ใหม่" ต้อง Login
+    // Guest ต้องไม่เห็นผล AI ที่ค้างมาจาก session ก่อนหน้า
+    aiPayload=null;
+    aiForecastPayload=null;
+    if(typeof renderAIForecast==="function")renderAIForecast(null);
     if(typeof loadAI==="function")loadAI(false);
     if(typeof loadAIForecast==="function")loadAIForecast(false);
   }
