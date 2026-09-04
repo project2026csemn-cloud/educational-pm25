@@ -14252,3 +14252,400 @@ button.member-locked::after{
         flex-basis:38px;
     }
 }
+
+
+/* =====================================================
+   V34.9 — HEADER REBALANCE
+   ===================================================== */
+
+.site-header{
+    min-height:136px!important;
+    padding:22px 28px!important;
+}
+
+.site-brand{
+    gap:18px!important;
+}
+
+.site-brand-logos{
+    gap:10px!important;
+}
+
+.site-brand-logos img{
+    width:64px!important;
+    height:64px!important;
+}
+
+.site-brand-title{
+    font-size:clamp(22px,1.7vw,30px)!important;
+    line-height:1.12!important;
+}
+
+.site-brand-subtitle{
+    margin-top:5px!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+}
+
+.header-account-zone{
+    gap:16px!important;
+}
+
+.header-profile-stack{
+    min-width:172px!important;
+    gap:4px!important;
+}
+
+.header-account-button{
+    min-height:48px!important;
+    max-width:270px!important;
+    padding:5px 8px 5px 10px!important;
+    gap:9px!important;
+}
+
+#accountButtonText{
+    max-width:165px!important;
+    font-size:14px!important;
+}
+
+.header-account-avatar{
+    width:44px!important;
+    height:44px!important;
+    flex-basis:44px!important;
+}
+
+.header-account-role{
+    font-size:11px!important;
+    letter-spacing:.14em!important;
+}
+
+.header-clock{
+    font-size:12px!important;
+    color:#9fb1c7!important;
+}
+
+.header-notification-button{
+    width:46px!important;
+    height:46px!important;
+    flex-basis:46px!important;
+}
+
+.header-notification-button svg{
+    width:22px!important;
+    height:22px!important;
+}
+
+/* =====================================================
+   V34.9 — MODAL HEADERS WITHOUT BACK BUTTONS
+   ===================================================== */
+
+.my-account-header,
+.admin-center-header,
+.notification-settings-header,
+.profile-editor-header,
+.account-security-header{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:18px!important;
+}
+
+.my-account-header-copy,
+.admin-center-header-copy,
+.modal-header-copy{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    margin-left:0!important;
+}
+
+.modal-back-button,
+.my-account-back,
+.admin-back,
+.notification-detail-back{
+    display:none!important;
+}
+
+/* =====================================================
+   V34.9 — MY ACCOUNT ALIGNMENT
+   ===================================================== */
+
+.my-account-shell{
+    width:min(980px,96vw)!important;
+}
+
+.my-account-body{
+    padding:24px!important;
+}
+
+.my-account-hero{
+    grid-template-columns:90px minmax(0,1fr) auto!important;
+    gap:22px!important;
+    padding:22px!important;
+}
+
+.my-account-grid{
+    gap:16px!important;
+}
+
+.my-account-card{
+    min-height:280px;
+}
+
+.my-account-details>div,
+.my-account-action-row{
+    min-height:44px;
+}
+
+.my-account-badges span{
+    white-space:nowrap;
+}
+
+/* =====================================================
+   V34.9 — NOTIFICATION ALIGNMENT
+   ===================================================== */
+
+.notification-settings-header{
+    padding:24px 28px 20px!important;
+}
+
+.notification-title-wrap{
+    align-items:center!important;
+}
+
+.notification-settings-body{
+    padding:24px 28px 28px!important;
+}
+
+.notification-topic-card{
+    min-height:92px!important;
+}
+
+.notification-topic-copy b,
+.notification-topic-copy small{
+    line-height:1.45!important;
+}
+
+/* =====================================================
+   V34.9 — CONTENT / USER MANAGEMENT
+   ===================================================== */
+
+.admin-center-header{
+    padding:26px 30px!important;
+}
+
+.admin-center-header-copy{
+    padding-left:0!important;
+}
+
+.admin-center.admin-users-page .admin-main{
+    padding:28px 32px!important;
+}
+
+.admin-user-toolbar{
+    grid-template-columns:minmax(320px,1fr) 220px!important;
+    align-items:end!important;
+    gap:12px!important;
+}
+
+.admin-user-toolbar label{
+    min-width:0!important;
+}
+
+.admin-user-toolbar input,
+.admin-user-toolbar select{
+    width:100%!important;
+    height:46px!important;
+    min-height:46px!important;
+    box-sizing:border-box!important;
+}
+
+.admin-user-card{
+    min-height:104px!important;
+}
+
+.admin-help-layout{
+    align-items:start!important;
+}
+
+.admin-editor-card,
+.admin-preview-card{
+    min-width:0!important;
+}
+
+.admin-preview-card{
+    position:sticky;
+    top:0;
+}
+
+/* =====================================================
+   V34.9 — HISTORY RANGE FOOTER
+   ===================================================== */
+
+.history-range-footer{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:18px!important;
+    padding:16px 18px!important;
+    background:rgba(5,17,29,.36)!important;
+}
+
+.history-timezone-note{
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    min-width:0!important;
+    color:#94a3b8!important;
+}
+
+.history-timezone-icon{
+    display:grid;
+    place-items:center;
+    width:34px;
+    height:34px;
+    flex:0 0 34px;
+    border-radius:10px;
+    background:rgba(14,165,233,.08);
+    border:1px solid rgba(56,189,248,.11);
+}
+
+.history-timezone-note>div{
+    display:grid;
+    gap:1px;
+}
+
+.history-timezone-note b{
+    color:#cbd5e1;
+    font-size:12px;
+}
+
+.history-timezone-note span:not(.history-timezone-icon){
+    color:#64748b;
+    font-size:10px;
+}
+
+.history-range-footer-actions{
+    flex:0 0 auto;
+}
+
+/* =====================================================
+   V34.9 — AI PAGE
+   ===================================================== */
+
+.dashboard-page-heading .section-title-with-help{
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:9px!important;
+    vertical-align:middle!important;
+}
+
+.dashboard-page-heading .section-title-with-help h1{
+    margin:0!important;
+    line-height:1.12!important;
+}
+
+.dashboard-page-heading .help-button{
+    position:static!important;
+    transform:none!important;
+    align-self:center!important;
+    margin:0!important;
+}
+
+.ai-intelligence-header-compact{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:16px!important;
+    margin-bottom:18px!important;
+}
+
+.ai-intelligence-header-compact .ai-intelligence-statusline{
+    margin:0!important;
+}
+
+.ai-panel-head{
+    align-items:flex-start!important;
+}
+
+.ai-panel-head .section-title-with-help{
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    width:auto!important;
+}
+
+.ai-panel-head .section-title-with-help h3{
+    margin:0!important;
+    line-height:1.25!important;
+}
+
+.ai-panel-head .help-button{
+    position:static!important;
+    transform:none!important;
+    align-self:center!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+}
+
+/* =====================================================
+   V34.9 — MOBILE
+   ===================================================== */
+
+@media(max-width:760px){
+    .site-header{
+        min-height:auto!important;
+        padding:16px!important;
+    }
+
+    .site-brand-logos img{
+        width:52px!important;
+        height:52px!important;
+    }
+
+    .header-profile-stack{
+        min-width:126px!important;
+    }
+
+    .header-account-avatar{
+        width:38px!important;
+        height:38px!important;
+        flex-basis:38px!important;
+    }
+
+    .header-notification-button{
+        width:40px!important;
+        height:40px!important;
+        flex-basis:40px!important;
+    }
+
+    .my-account-hero{
+        grid-template-columns:72px minmax(0,1fr)!important;
+        gap:14px!important;
+    }
+
+    .history-range-footer{
+        align-items:stretch!important;
+        flex-direction:column!important;
+    }
+
+    .history-range-footer-actions{
+        width:100%;
+    }
+
+    .history-range-footer-actions button{
+        flex:1;
+    }
+
+    .ai-intelligence-header-compact{
+        align-items:flex-start!important;
+        flex-direction:column!important;
+    }
+
+    .admin-user-toolbar{
+        grid-template-columns:1fr!important;
+    }
+
+    .admin-preview-card{
+        position:static;
+    }
+}
