@@ -10605,6 +10605,22 @@ async function loadAuthStatus(){
   try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
 }
 
+// =========================================================
+// V34.5 — REFRESH ACCOUNT AFTER LOGIN
+// ดึงข้อมูลบัญชีล่าสุดทันที เพื่อให้ชื่อ/รูปโปรไฟล์อัปเดตโดยไม่ต้องรีเฟรชหน้า
+// =========================================================
+async function refreshAuthUserAfterLogin(){
+  if(!authToken)return null;
+  try{
+    const j=await apiJson(API.authMe);
+    if(j?.user)authUser=j.user;
+  }catch(_){
+    // ใช้ข้อมูลจากผล Login ต่อได้ หาก /auth/me ชั่วคราวไม่สำเร็จ
+  }
+  updateAccountUI();
+  return authUser;
+}
+
 async function loadAuthConfig(){
   try{
     const j=await apiJson(API.authConfig);
@@ -10667,7 +10683,7 @@ async function handleGoogleCredential(response){
     authToken=String(j.token||"");
     authUser=j.user||null;
     sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);
-    updateAccountUI();
+    await refreshAuthUserAfterLogin();
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
   }catch(e){
@@ -10683,8 +10699,11 @@ async function restoreAuthSession(){
 
 async function doLogin(email,password){
   const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
-  authToken=String(j.token||"");authUser=j.user||null;
-  sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);updateAccountUI();return j;
+  authToken=String(j.token||"");
+  authUser=j.user||null;
+  sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  await refreshAuthUserAfterLogin();
+  return j;
 }
 
 function applyManagedHelpOverrides(help){
