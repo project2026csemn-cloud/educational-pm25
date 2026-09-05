@@ -10998,7 +10998,12 @@ function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
   const menu=$("accountDropdown");
   const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton");
+  const header=document.querySelector(".site-header");
   if(!button||!text)return;
+
+  header?.classList.toggle("is-authenticated",Boolean(authUser));
+  header?.classList.toggle("is-guest",!authUser);
+
   if(authUser){
     text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
     setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
@@ -11140,9 +11145,12 @@ function renderGoogleIdentityButton(){
 
   const width=Math.max(
     200,
-    Math.min(328,available - 12)
+    Math.min(300,available - 28)
   );
   target.innerHTML="";
+  target.style.width=`${width}px`;
+  target.style.maxWidth="100%";
+  target.style.marginInline="auto";
 
   google.accounts.id.renderButton(target,{
     theme:"filled_black",
