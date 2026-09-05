@@ -5190,6 +5190,13 @@ end
 
 }
 
+function updateHistoryRangeMobileSelection(){
+const label=$("historyRangeMobileSelection");
+if(!label)return;
+const active=document.querySelector(".quick-range-option.active");
+label.textContent=active?active.textContent.trim():(averageRange==="custom"?"กำหนดช่วงเอง":"เลือกช่วงเวลา");
+}
+
 function updateQuickRangeUI(key){
 
 document
@@ -5226,6 +5233,8 @@ button.removeAttribute(
 
 }
 );
+
+updateHistoryRangeMobileSelection();
 
 }
 
@@ -7710,9 +7719,11 @@ $("customRangeStart")
 "change",
 ()=>{
 
+averageRange="custom";
 updateQuickRangeUI(
 null
 );
+updateHistoryRangeMobileSelection();
 
 const d=
 dateFromRangeInput(
