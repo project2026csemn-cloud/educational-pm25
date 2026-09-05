@@ -16613,3 +16613,362 @@ header.glass.card .header-user-copy{
     min-width:38px!important;
   }
 }
+
+
+/* =====================================================
+   V36.8 — HEADER RESPONSIVE FIX
+   ===================================================== */
+
+/* Tablet / iPad */
+@media (min-width:761px) and (max-width:1100px){
+  .site-header{
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:16px!important;
+    padding:16px 18px!important;
+  }
+
+  .site-brand{
+    grid-template-columns:auto minmax(0,1fr)!important;
+    gap:13px!important;
+    min-width:0!important;
+  }
+
+  .site-brand-logos{
+    gap:7px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:50px!important;
+    height:50px!important;
+  }
+
+  .site-brand-title{
+    font-size:21px!important;
+    line-height:1.16!important;
+  }
+
+  .site-brand-subtitle{
+    margin-top:4px!important;
+    font-size:11px!important;
+    line-height:1.4!important;
+  }
+
+  .header-account-zone{
+    width:auto!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:9px!important;
+  }
+
+  .header-profile-stack{
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:auto auto!important;
+    justify-content:end!important;
+    justify-items:end!important;
+    gap:2px 9px!important;
+  }
+
+  .header-account-button{
+    grid-column:1/-1!important;
+    max-width:220px!important;
+    min-height:40px!important;
+    padding:3px 4px 3px 7px!important;
+  }
+
+  #accountButtonText{
+    max-width:145px!important;
+    font-size:13px!important;
+  }
+
+  .header-account-avatar{
+    width:38px!important;
+    height:38px!important;
+    flex-basis:38px!important;
+  }
+
+  .header-notification-button{
+    width:40px!important;
+    height:40px!important;
+    flex-basis:40px!important;
+  }
+
+  .header-account-role{
+    font-size:9px!important;
+  }
+
+  .header-clock{
+    font-size:10px!important;
+  }
+}
+
+/* Phones */
+@media (max-width:760px){
+  .site-header{
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    align-items:stretch!important;
+    gap:10px!important;
+    padding:12px!important;
+    margin-bottom:12px!important;
+    border-radius:18px!important;
+  }
+
+  .site-brand{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:10px!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  .site-brand-logos{
+    display:flex!important;
+    align-items:center!important;
+    gap:5px!important;
+    padding:0!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+  }
+
+  .site-brand-title{
+    font-size:17px!important;
+    line-height:1.14!important;
+    letter-spacing:-.015em!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+
+  .site-brand-subtitle{
+    margin-top:4px!important;
+    font-size:10px!important;
+    line-height:1.38!important;
+  }
+
+  .header-account-zone{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    padding-top:9px!important;
+    border-top:1px solid rgba(51,65,85,.52)!important;
+  }
+
+  .header-profile-stack{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    justify-content:end!important;
+    justify-items:end!important;
+    align-items:center!important;
+    gap:2px 8px!important;
+  }
+
+  .header-account-button{
+    grid-column:1/-1!important;
+    justify-self:end!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:38px!important;
+    padding:2px 3px 2px 6px!important;
+    gap:7px!important;
+  }
+
+  .header-account-chevron{
+    font-size:10px!important;
+  }
+
+  #accountButtonText{
+    max-width:min(44vw,170px)!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+  }
+
+  .header-account-avatar{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px!important;
+    flex:0 0 36px!important;
+  }
+
+  .header-account-role{
+    margin:0!important;
+    font-size:9px!important;
+    line-height:1.15!important;
+    letter-spacing:.11em!important;
+  }
+
+  .header-clock{
+    margin:0!important;
+    font-size:9px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+
+  .header-notification-button{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    flex:0 0 38px!important;
+  }
+
+  .header-notification-button svg{
+    width:18px!important;
+    height:18px!important;
+  }
+
+  .account-dropdown{
+    left:auto!important;
+    right:0!important;
+    width:min(360px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+  }
+}
+
+/* Small phones */
+@media (max-width:430px){
+  .site-header{
+    padding:10px!important;
+    gap:8px!important;
+  }
+
+  .site-brand{
+    gap:8px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px!important;
+  }
+
+  .site-brand-title{
+    font-size:15.5px!important;
+    line-height:1.13!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:9px!important;
+    line-height:1.34!important;
+  }
+
+  .header-account-zone{
+    padding-top:7px!important;
+    gap:6px!important;
+  }
+
+  #accountButtonText{
+    max-width:42vw!important;
+    font-size:11px!important;
+  }
+
+  .header-account-avatar{
+    width:33px!important;
+    height:33px!important;
+    min-width:33px!important;
+    flex-basis:33px!important;
+  }
+
+  .header-notification-button{
+    width:35px!important;
+    height:35px!important;
+    min-width:35px!important;
+    flex-basis:35px!important;
+  }
+
+  .header-account-role,
+  .header-clock{
+    font-size:8.5px!important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width:360px){
+  .site-header{
+    padding:9px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+  }
+
+  .site-brand-title{
+    font-size:14px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:8.5px!important;
+  }
+
+  #accountButtonText{
+    max-width:38vw!important;
+    font-size:10px!important;
+  }
+
+  .header-account-avatar{
+    width:31px!important;
+    height:31px!important;
+    min-width:31px!important;
+    flex-basis:31px!important;
+  }
+
+  .header-notification-button{
+    width:33px!important;
+    height:33px!important;
+    min-width:33px!important;
+    flex-basis:33px!important;
+  }
+}
+
+/* Landscape phones */
+@media (max-height:520px) and (max-width:900px) and (orientation:landscape){
+  .site-header{
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:12px!important;
+    padding:9px 12px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:36px!important;
+    height:36px!important;
+  }
+
+  .site-brand-title{
+    font-size:15px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:8.5px!important;
+  }
+
+  .header-account-zone{
+    width:auto!important;
+    padding-top:0!important;
+    border-top:0!important;
+  }
+}
