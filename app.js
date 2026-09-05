@@ -1058,6 +1058,28 @@ return st==="offline"?"offline":"online";
 
 
 // =====================================================
+// AUTH STATE
+// ต้องประกาศก่อน fetchJson / loadInitial
+// =====================================================
+
+const AUTH_TOKEN_KEY="localAirAuthTokenV33";
+
+let authToken=
+  localStorage.getItem(AUTH_TOKEN_KEY)||
+  sessionStorage.getItem(AUTH_TOKEN_KEY)||
+  "";
+
+if(authToken){
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+let authUser=null;
+let authGoogleClientId="";
+let googleIdentityReady=false;
+
+
+// =====================================================
 // FETCH
 // =====================================================
 
@@ -9807,11 +9829,7 @@ updateSmart();
 updateAlertUI();
 checkSituationNotifications();
 
-// V15: warm Forecast cache/request หลังข้อมูลหลักพร้อม
-// เพื่อให้เมื่อเปิด "สถิติและกราฟ" กราฟคาดการณ์พร้อมเร็วขึ้น
-if(typeof loadAIForecast==="function"){
-  loadAIForecast(false);
-}
+// Forecast โหลดเมื่อผู้ใช้เปิดส่วนที่ต้องใช้จริง
 
 }catch(e){
 
@@ -10664,21 +10682,8 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.
 // =========================================================
 // V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
 // =========================================================
-const AUTH_TOKEN_KEY="localAirAuthTokenV33";
-let authToken=
-  localStorage.getItem(AUTH_TOKEN_KEY)||
-  sessionStorage.getItem(AUTH_TOKEN_KEY)||
-  "";
-
-if(authToken){
-  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-  localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);
-}
-let authUser=null;
 let managedHelpCache={};
 let currentHelpEditorKey="";
-let authGoogleClientId="";
-let googleIdentityReady=false;
 let adminUsersCache=[];
 let adminAddMode=false;
 
@@ -11973,8 +11978,7 @@ async function saveNotificationPreferences(){
 }
 
 async function registerNotificationServiceWorker(){
-  if(!("serviceWorker" in navigator))return null;
-  try{return await navigator.serviceWorker.register("sw.js?v=342");}catch(_){return null;}
+  return null;
 }
 
 function notificationSituationFor(node){
@@ -12034,8 +12038,7 @@ function openNotificationDetailFromUrl(){
 (function setupAuthCmsV31(){
   const run=async()=>{
     await restoreAuthSession();
-    loadAuthConfig();
-    if(authUser){ensureNotificationPreferences();registerNotificationServiceWorker();startNotificationInboxPolling();}
+    if(authUser){ensureNotificationPreferences();startNotificationInboxPolling();}
     setTimeout(openNotificationDetailFromUrl,150);
     $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
