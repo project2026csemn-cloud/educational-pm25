@@ -18577,3 +18577,63 @@ header.glass.card .header-user-copy{
     font-size:13px!important;
   }
 }
+
+
+/* =====================================================
+   V36.19 — TIMEZONE ICON GLYPH
+   ===================================================== */
+
+@media(max-width:760px){
+  #historyRangeModal .history-timezone-icon{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    flex:0 0 34px!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    padding:0!important;
+    margin:0!important;
+
+    font-family:"Noto Color Emoji","Segoe UI Emoji","Apple Color Emoji",sans-serif!important;
+    font-size:18px!important;
+    line-height:34px!important;
+
+    overflow:visible!important;
+    text-align:center!important;
+    vertical-align:middle!important;
+  }
+}
+
+@media(max-width:430px){
+  #historyRangeModal .history-timezone-icon{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    flex-basis:32px!important;
+    font-size:17px!important;
+    line-height:32px!important;
+  }
+}
+
+@media(max-width:360px){
+  #historyRangeModal .history-timezone-icon{
+    width:30px!important;
+    height:30px!important;
+    min-width:30px!important;
+    flex-basis:30px!important;
+    font-size:16px!important;
+    line-height:30px!important;
+  }
+}
+
+/* Desktop Google button can use the available login-card width. */
+@media(min-width:761px){
+  #googleSignInButton{
+    width:100%!important;
+    max-width:100%!important;
+    padding-inline:0!important;
+  }
+}
