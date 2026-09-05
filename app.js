@@ -11148,9 +11148,13 @@ function renderGoogleIdentityButton(){
 
   if(available<220)return false;
 
+  const isPhone=window.matchMedia("(max-width: 760px)").matches;
+  const maxWidth=isPhone?300:336;
+  const sideGutter=isPhone?36:16;
+
   const width=Math.max(
     220,
-    Math.min(320,available-36)
+    Math.min(maxWidth,available-sideGutter)
   );
 
   target.innerHTML="";
