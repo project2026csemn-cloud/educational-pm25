@@ -10086,6 +10086,10 @@ function getDashboardPageFromHash(){
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
 
+  // ข้อความผลลัพธ์จากการทำรายการเป็นสถานะชั่วคราว
+  // เมื่อเปลี่ยนหน้าแล้วกลับมา ต้องไม่ค้างจากครั้งก่อน
+  clearTransientUiMessages();
+
   currentDashboardPage=page;
   document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
     panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
@@ -10682,6 +10686,24 @@ function setAuthMessage(id,text,type=""){
   el.classList.toggle("is-success",type==="success");
 }
 
+const TRANSIENT_UI_MESSAGE_IDS=[
+  "loginMessage",
+  "registerMessage",
+  "forgotPasswordMessage",
+  "resetPasswordMessage",
+  "ownerSetupMessage",
+  "profileEditorMessage",
+  "accountSecurityMessage",
+  "helpSaveMessage",
+  "deviceSaveMessage",
+  "announcementSaveMessage",
+  "userSaveMessage"
+];
+
+function clearTransientUiMessages(ids=TRANSIENT_UI_MESSAGE_IDS){
+  ids.forEach(id=>setAuthMessage(id,""));
+}
+
 
 function authAvatarUrl(user){return String(user?.profile_image_url||user?.google_picture_url||"").trim();}
 function setAvatar(imgId,fallbackId,user){
@@ -11012,8 +11034,13 @@ function updateAccountUI(){
 }
 
 function clearAuthModalMessages(){
-  ["loginMessage","registerMessage","forgotPasswordMessage","resetPasswordMessage","ownerSetupMessage"]
-    .forEach(id=>setAuthMessage(id,""));
+  clearTransientUiMessages([
+    "loginMessage",
+    "registerMessage",
+    "forgotPasswordMessage",
+    "resetPasswordMessage",
+    "ownerSetupMessage"
+  ]);
 }
 
 function openAuthModal(mode="login"){
@@ -11024,7 +11051,11 @@ function openAuthModal(mode="login"){
   loadAuthStatus();
   loadAuthConfig();
 }
-function closeAuthModal(){const m=$("authModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function closeAuthModal(){
+  const m=$("authModal");if(!m)return;
+  clearAuthModalMessages();
+  m.classList.add("hidden");m.setAttribute("aria-hidden","true");
+}
 function setAuthMode(mode){
   clearAuthModalMessages();
   document.querySelectorAll("[data-auth-mode]").forEach(b=>b.classList.toggle("active",b.dataset.authMode===mode));
@@ -11545,6 +11576,12 @@ function hasAnyManagementPermission(){
 
 function openAdminCenter(targetTab=null){
   if(!hasAnyManagementPermission())return;
+  clearTransientUiMessages([
+    "helpSaveMessage",
+    "deviceSaveMessage",
+    "announcementSaveMessage",
+    "userSaveMessage"
+  ]);
   const m=$("adminCenter");if(!m)return;
   const userMode=targetTab==="users";
   if(userMode&&!hasPermission("manage_users_view"))return;
@@ -11570,8 +11607,23 @@ function openAdminCenter(targetTab=null){
   if(userMode){loadAdminUsers();switchAdminTab("users");}
   else{if(hasPermission("manage_help"))populateHelpKeySelect();if(hasPermission("manage_devices"))renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
 }
-function closeAdminCenter(){const m=$("adminCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
-function switchAdminTab(tab){document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
+function closeAdminCenter(){
+  const m=$("adminCenter");if(!m)return;
+  clearTransientUiMessages([
+    "helpSaveMessage",
+    "deviceSaveMessage",
+    "announcementSaveMessage",
+    "userSaveMessage"
+  ]);
+  m.classList.add("hidden");m.setAttribute("aria-hidden","true");
+}
+function switchAdminTab(tab){
+  clearTransientUiMessages([
+    "helpSaveMessage",
+    "deviceSaveMessage",
+    "announcementSaveMessage",
+    "userSaveMessage"
+  ]);document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
 
 // =====================================================
 // V34.1 — MY ACCOUNT CENTER
@@ -11590,11 +11642,16 @@ function syncMyAccountUI(){
 }
 function openMyAccount(){
   if(!authUser){openAuthModal("login");return;}
+  clearTransientUiMessages(["profileEditorMessage","accountSecurityMessage"]);
   syncMyAccountUI();
   const m=$("myAccountCenter");if(!m)return;
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");$("accountDropdown")?.classList.add("hidden");
 }
-function closeMyAccount(){const m=$("myAccountCenter");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function closeMyAccount(){
+  const m=$("myAccountCenter");if(!m)return;
+  clearTransientUiMessages(["profileEditorMessage","accountSecurityMessage"]);
+  m.classList.add("hidden");m.setAttribute("aria-hidden","true");
+}
 
 function reopenAccountMenu(){
   if(!authUser)return;
@@ -11616,7 +11673,11 @@ function openAccountSecurity(){
   $("accountSecurityForm")?.reset();if($("accountSecurityMessage"))$("accountSecurityMessage").textContent="";
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
 }
-function closeAccountSecurity(){const m=$("accountSecurityModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
+function closeAccountSecurity(){
+  const m=$("accountSecurityModal");if(!m)return;
+  clearTransientUiMessages(["accountSecurityMessage"]);
+  m.classList.add("hidden");m.setAttribute("aria-hidden","true");
+}
 function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
 
 
