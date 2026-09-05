@@ -34,8 +34,6 @@ notificationRead:`${BASE}/api/auth/notifications/read`
 
 const TOTAL_NODES=3;
 const MOTHER_OFFLINE_MS=60*1000;
-// Node offline timing is decided by the Worker using the expected-wake rule.
-// Dashboard trusts the normalized status returned by the API.
 
 const $=
 id=>
@@ -95,7 +93,6 @@ devices:[
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
-
 
 // =====================================================
 // RANGE
@@ -182,7 +179,6 @@ Number(v)
 
 // =====================================================
 // SAFE SENSOR NUMBER
-// Number(null) === 0 ใน JavaScript จึงต้องกัน null ก่อน
 // =====================================================
 function finiteNumberOrNull(value){
 if(value===null||value===undefined||value==="") return null;
@@ -300,10 +296,6 @@ false
 
 // =====================================================
 // NODE READING DATE / TIME
-// แสดงวันให้ชัดเมื่อข้อมูลไม่ได้มาจากวันนี้
-// วันนี้ -> วันนี้ 15:49:57
-// เมื่อวาน -> เมื่อวาน 18:09:19
-// เก่ากว่านั้น -> 1 ก.ย. 2569 18:09:19
 // =====================================================
 function thaiNodeReadingDateTime(v){
   const d=parseDate(v);
@@ -338,10 +330,8 @@ function thaiNodeReadingDateTime(v){
   return `${date} ${time}`;
 }
 
-
 // =====================================================
 // CHART DATE / TIME LABELS
-// แก้ปัญหากราฟช่วงยาวที่เห็นเฉพาะเวลาแต่ไม่รู้ว่าเป็นวันไหน
 // =====================================================
 
 function thaiChartDateTime(value, compact=false){
@@ -375,9 +365,6 @@ return d.toLocaleString("th-TH",opts);
 
 // =====================================================
 // ADAPTIVE TIME AXIS
-// มองช่วงยาว = เน้น "วันที่"
-// ซูมเข้า = เพิ่ม "เวลา" อัตโนมัติตามช่วงที่กำลังมอง
-// Tooltip ยังคงแสดงวัน/เวลาเต็มเสมอ
 // =====================================================
 function chartDayKey(value){
 const d=parseDate(value);
@@ -446,8 +433,6 @@ return formatAxisInterval(value,spanMs);
 
 // =====================================================
 // ADAPTIVE INTERVAL TICKS
-// แกน X แสดงเป็น "ช่วงเวลา" ที่ลงตัว เช่น 01:00–02:00
-// ซูมเข้าแล้วลดช่วงเป็น 30 นาที / 15 นาที / 5 นาที / 1 นาที
 // =====================================================
 function chartBucketKey(date,stepMs){
 const d=parseDate(date);
@@ -520,8 +505,6 @@ const raw=scale.getLabelForValue(value);
 const span=chartVisibleSpanMs(scale);
 const text=chartTickText(raw,span);
 
-// ช่วงยาว: ถ้า autoSkip เลือก timestamp หลายจุดในวันเดียวกัน
-// ให้แสดงชื่อวันนั้นเพียงครั้งเดียว เพื่อลดข้อความซ้ำบนแกน X
 const DAY=24*60*60*1000;
 if(span!==null&&span>=3*DAY&&index>0&&Array.isArray(ticks)){
 const prevValue=ticks[index-1]?.value;
@@ -544,9 +527,6 @@ finiteNumberOrNull(
 first?.parsed?.x
 );
 
-// Zoom/linear-time chart:
-// parsed.x is epoch milliseconds, so this is the exact timestamp
-// of the selected point for that dataset.
 if(
 parsedX!==null&&
 parsedX>100000000000
@@ -571,7 +551,6 @@ if(raw==null){
 return"";
 }
 
-// Forecast labels are not timestamps.
 if(
 /^\+\d+\s*นาที/
 .test(
@@ -617,7 +596,6 @@ const lastData=sorted.length
 ?parseDate(sorted.at(-1).timestamp)
 :null;
 
-// ถ้าระบบมีข้อมูลน้อยกว่าช่วงที่เลือก ให้เริ่มข้อความจากข้อมูลจริงชุดแรก
 const displayStart=
 firstData&&firstData>w.start
 ?firstData
@@ -676,7 +654,6 @@ ${latestText
 </div>`;
 }
 
-
 function historyLabelsToRangeEnd(rows=[]){
 const labels=(rows||[]).map(r=>r?.timestamp).filter(Boolean);
 const w=rangeWindow();
@@ -689,7 +666,6 @@ const last=labels.length
 ?parseDate(labels.at(-1))
 :null;
 
-// ให้แกน X แสดงปลายช่วงที่เลือกจริง แม้ข้อมูลล่าสุดจะหยุดก่อนเวลาปัจจุบัน
 if(!last||w.end.getTime()-last.getTime()>1000){
 labels.push(w.end.toISOString());
 }
@@ -854,10 +830,6 @@ cleanSensorNumber(
 d.light
 ),
 
-// NOTE:
-// recorded_at/timestamp จาก get_latest คือ "เวลาสถานะล่าสุด"
-// เพราะ API object รวม latest status + latest reading ไว้ด้วยกัน
-// ห้ามใช้ field นี้เป็นเวลาของ Sensor reading ใน UI
 timestamp:
 d.recorded_at||
 d.timestamp||
@@ -996,14 +968,6 @@ MOTHER_OFFLINE_MS
 
 // =====================================================
 // NODE STATUS RULE
-//
-// ระบบข้อมูล OFFLINE
-// -> Node ทุกตัว Offline
-//
-// ONLINE / SLEEP
-// -> Dashboard เชื่อสถานะที่ Worker คำนวณจาก Firmware timing
-//
-// Device state is normalized before display.
 // =====================================================
 
 function getNodeStatus(node){
@@ -1017,8 +981,6 @@ return "offline";
 
 const s=String(node.status||"offline").toLowerCase();
 
-// Offline/expected-wake decisions are made by the Worker.
-// Sleep is preserved internally and displayed as available by getNodeDisplayStatus().
 return s==="sleep"
 ?"sleep"
 :s==="online"
@@ -1046,9 +1008,6 @@ getNodeStatus(n)
 
 // =====================================================
 // DASHBOARD DISPLAY STATUS
-//
-// Backend ยังเก็บ online / sleep / offline ตามจริง
-// แต่ Dashboard แสดง sleep เป็น ONLINE
 // =====================================================
 
 function getNodeDisplayStatus(node){
@@ -1056,10 +1015,8 @@ const st=getNodeStatus(node);
 return st==="offline"?"offline":"online";
 }
 
-
 // =====================================================
 // AUTH STATE
-// ต้องประกาศก่อน fetchJson / loadInitial
 // =====================================================
 
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
@@ -1077,7 +1034,6 @@ if(authToken){
 let authUser=null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
-
 
 // =====================================================
 // FETCH
@@ -1462,16 +1418,10 @@ if(!node){
 return null;
 }
 
-// API ปัจจุบันแยกเวลาสถานะกับเวลาค่าตรวจวัดไว้แล้ว
-// เวลาที่อยู่ข้างค่าฝุ่น/อุณหภูมิ/ความชื้น/แสง
-// ต้องใช้ reading_recorded_at เท่านั้น
 if(node.reading_recorded_at){
 return node.reading_recorded_at;
 }
 
-// Legacy fallback:
-// ใช้ timestamp ได้เฉพาะเมื่อ object นั้นมี Sensor data จริง
-// เพื่อไม่ให้เวลา ONLINE/SLEEP ถูกนำมาแสดงเป็น "เวลาอัปเดตค่า"
 const hasReading=
 [
 "pm1",
@@ -1635,8 +1585,6 @@ if(
 field==="pm10"
 ){
 
-// 120 µg/m³ เป็นค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของไทย
-// การเทียบกับค่ารอบล่าสุดใช้เพื่อเฝ้าระวังเบื้องต้นเท่านั้น
 return n>120
 ?"warning"
 :"info";
@@ -1646,7 +1594,6 @@ return n>120
 if(field==="temperature") return temperatureLevel(n).severity;
 if(field==="humidity") return humidityLevel(n).severity;
 
-// PM1.0 / Light เป็นข้อมูลประกอบ
 return"info";
 
 }
@@ -1903,8 +1850,6 @@ if(n===null){
 return{level:"no_data",label:"ไม่มีข้อมูล"};
 }
 
-// เกณฑ์เฝ้าระวัง Heat Index ของไทย:
-// <27, 27.0–32.9, 33.0–41.9, 42.0–51.9, >=52.0 °C
 const apiLevels=
 standardsData?.heat_index?.levels;
 
@@ -2058,9 +2003,6 @@ humidity
 
 // =====================================================
 // สภาพแวดล้อมในพื้นที่ ANALYSIS
-// ใช้ Light เป็นตัวแปรสภาพแวดล้อมเฉพาะจุด
-// วิเคราะห์ความสัมพันธ์กับ Temperature / Humidity / PM2.5
-// ความสัมพันธ์ (correlation) ไม่ใช่หลักฐานของเหตุ–ผล
 // =====================================================
 
 function pearsonCorrelation(rows, xField, yField){
@@ -2151,8 +2093,6 @@ label:"ไม่มีข้อมูล"
 };
 }
 
-// 120 µg/m³ เป็นค่ามาตรฐาน PM10 เฉลี่ย 24 ชั่วโมงของไทย
-// การใช้กับค่ารอบล่าสุดเป็นเพียงการเฝ้าระวังเบื้องต้น
 if(n>120){
 return{
 level:"warning",
@@ -2667,9 +2607,6 @@ $("currentEnvironmentFooter").textContent=
 
 // =====================================================
 // PM10 — ค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงสำหรับการสื่อสารในสรุปสถานการณ์
-// ใช้ข้อมูลย้อนหลังแยกตามจุด แล้วเฉลี่ยพื้นที่เป็นช่วงเวลา 5 นาที
-// ก่อนนำช่วงเวลาเหล่านั้นมาเฉลี่ยอีกครั้ง เพื่อลดการให้น้ำหนักจุดที่ส่งข้อมูลถี่กว่า
-// 120 µg/m³ = ค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของประเทศไทย
 // =====================================================
 
 function pm10AreaAverage24h(){
@@ -3059,8 +2996,6 @@ detail:
 
 }else{
 
-// ระดับ "เฝ้าระวัง" (27.0–32.9°C) ไม่จำเป็นต้อง Telegram
-// แต่ควรแสดงบน Dashboard เพื่อให้ผู้ใช้วางแผนกิจกรรมได้
 const hi=
 heatIndexC(
 n?.temperature,
@@ -3082,8 +3017,6 @@ detail:`ดัชนีความร้อน ${fmt(hi)} °C • ${h.label}`
 
 }
 
-// PM10 > 120 รอบล่าสุด = สัญญาณเฝ้าระวังเบื้องต้นเท่านั้น
-// ไม่เรียกว่า "เกินมาตรฐาน 24 ชั่วโมง"
 const pm10=
 finiteNumberOrNull(
 n?.pm10
@@ -3360,7 +3293,6 @@ function isRealHistoryReading(row,field=null){
 
 if(!row)return false;
 
-// ใช้เฉพาะเส้นทางสร้างกราฟ ไม่แตะระบบสถานะจุดตรวจวัด
 if(String(row.status||"").toLowerCase()!=="online"){
 return false;
 }
@@ -3372,7 +3304,6 @@ return hasFiniteSensorValue(row[field]);
 return hasAnySensorData(row);
 
 }
-
 
 function selectedRecords(){
 
@@ -3561,7 +3492,6 @@ s.avg==null
 
 }
 
-
 const GRAPH_FIELDS=["pm1","pm25","pm10","temperature","humidity","light"];
 
 function metricColor(field){
@@ -3669,7 +3599,6 @@ const mobile=isMobileChart();
 return{maxTicksLimit:mobile?5:8,font:{size:mobile?12:12}};
 }
 
-
 function destroyChartSafe(chart){
 try{chart?.destroy();}catch{}
 }
@@ -3763,8 +3692,6 @@ forecastStart>=0
 ?forecastStart
 :labels.length;
 
-// Forecast ทั้ง 3 จุดยังอยู่บนกราฟและ Tooltip เหมือนเดิม
-// แต่ไม่แสดง +10/+20/+30 เป็น tick แยกบนแกน X เพราะพื้นที่กราฟย่อยไม่พอ
 if(
 /^\+\d+\s*นาที/.test(text)
 ){
@@ -3901,13 +3828,7 @@ function historyRowsForNode(rows,nodeId){
 return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
 }
 
-// UX RULE:
-// - compare = หลายเส้น แต่ Tooltip แสดงเฉพาะเส้นที่ชี้
-// - Number 1/2/3 = กรองเหลือข้อมูลของจุดที่เลือกจริง
-// - Zoom viewer สามารถกดชื่อจุดเพื่อ isolate เส้นเดียว
 function historyDisplayRows(rows){
-// compare และ average ต้องเห็นข้อมูลดิบของทั้ง 3 จุดก่อน
-// แล้วค่อยแยกเส้นหรือคำนวณค่าเฉลี่ยพื้นที่ในขั้นสร้างกราฟ
 if(historyNode==="compare"||historyNode==="average")return rows||[];
 return historyRowsForNode(rows,historyNode);
 }
@@ -4094,9 +4015,6 @@ drawForecast([]);
 return;
 }
 
-// ALL + ค่าเฉลี่ยพื้นที่: 6 กราฟ ตัวแปรละ 1 เส้น
-// ค่าในแต่ละช่วงคำนวณแบบ "เฉลี่ยแต่ละจุดก่อน แล้วจึงเฉลี่ยพื้นที่"
-// เพื่อไม่ให้จุดที่ส่งข้อมูลถี่กว่ามีน้ำหนักมากกว่า
 if(metric==="all"&&averageMode){
 const avgBase=areaAverageBase;
 if(!avgBase.length){
@@ -4143,7 +4061,6 @@ drawForecast(avgBase);
 return;
 }
 
-// ALL + เปรียบเทียบ 3 จุด: แยกเป็น 6 กราฟ ตัวแปรละ 1 กราฟ และในแต่ละกราฟมี 3 เส้นตามสถานที่
 if(metric==="all"&&compareMode){
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
@@ -4178,7 +4095,6 @@ drawForecast(spatialAverageRows(base));
 return;
 }
 
-// ALL + จุดเดียว: คงรูปแบบเดิม แต่ข้อมูลทุกเส้นมาจากจุดเดียวกันเท่านั้น
 if(metric==="all"){
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
@@ -4207,7 +4123,6 @@ create("historyDust",["pm1","pm25","pm10"],"µg/m³");
 create("historyTemp",["temperature"],"°C");
 create("historyHumidity",["humidity"],"%");
 create("historyLight",["light"],"lux");
-// Forecast เป็นภาพรวมพื้นที่ จึงใช้ข้อมูลภาพรวมพื้นที่ประกอบเสมอ
 drawForecast(spatialAverageRows(allBase));
 return;
 }
@@ -4246,7 +4161,6 @@ type:"line",
 data:{labels,datasets:[makeActualDataset(metric,padChartValuesToLabels(values,labels))]},
 options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
 });
-// Forecast เป็นภาพรวมพื้นที่ แม้กราฟย้อนหลังจะเลือกดูจุดเดียว
 drawForecast(spatialAverageRows(allBase,[metric]));
 }
 }
@@ -4383,10 +4297,6 @@ forecastVisible
 
 }
 
-// V16:
-// เดิมซ่อนเฉพาะ forecastChart ตัวเดียว
-// แต่ตอน ALL จะใช้ forecastGroupCharts หลายกราฟ
-// จึงทำให้กด OFF แล้วเส้น Forecast ยังอยู่
 const charts=[
 forecastChart,
 ...forecastGroupCharts
@@ -4460,7 +4370,6 @@ if(found){
 return found;
 }
 
-// backward compatibility: old Worker had AREA only
 if(scope==="AREA"&&aiForecastPayload?.data){
 return{
 scope:"AREA",
@@ -4910,7 +4819,6 @@ updateForecastToggle();
 return;
 }
 
-// ALL + AREA หรือจุดเดียว
 const rows=
 recentRowsForScope(
 allRows,
@@ -5100,7 +5008,6 @@ updateForecastToggle();
 return;
 }
 
-// ตัวแปรเดียว
 let rows;
 
 if(compareMode){
@@ -5516,8 +5423,6 @@ function openHistoryRangePicker(){
 const panel=
 $("historyRangeModal");
 
-// ทำงานแบบ Export modal: ย้าย modal ไปใต้ body โดยตรง
-// แล้วให้ CSS ของ modal คุมตำแหน่งทั้งหมด
 if(panel && panel.parentElement !== document.body){
     document.body.appendChild(panel);
 }
@@ -6237,7 +6142,6 @@ $("exportExcelButton").disabled=
 
 function openExport(){
 
-// V34: Export เป็นสิทธิ์สมาชิก และ Worker ตรวจ session ซ้ำอีกชั้น
 if(!requirePermission("export_data","การส่งออกข้อมูล Excel"))return;
 
 const w=
@@ -6514,7 +6418,6 @@ v||""
 
 }
 
-
 function cleanAIObservationList(items){
 
 const source=
@@ -6530,15 +6433,12 @@ return source
 .map(x=>String(x||"").trim())
 .filter(Boolean)
 
-// ตัดข้อความที่เป็นเพียงรายงานสถานะอุปกรณ์/โครงสร้างระบบ
-// เพราะหน้า "จุดตรวจวัด" มีหน้าที่แสดงข้อมูลเหล่านี้อยู่แล้ว
 .filter(x=>
 !/\b(?:Node|Number)\s*[123]\b/i.test(x)&&
 !/Gateway/i.test(x)&&
 !/ออนไลน์|ออฟไลน์|Sleep|OFFLINE|ONLINE/i.test(x)
 )
 
-// ตัดข้อความซ้ำ
 .filter(x=>{
 const key=x
 .toLowerCase()
@@ -6548,7 +6448,6 @@ seen.add(key);
 return true;
 })
 
-// หน้านี้ควรเป็นบทวิเคราะห์สั้น ๆ ไม่ใช่รายการข้อมูลดิบ
 .slice(0,3);
 
 }
@@ -6972,7 +6871,6 @@ ${esc(dust.summary)}
 
 }
 
-
 function normalizeProjectWording(value){
 
 if(value===null||value===undefined){
@@ -7051,7 +6949,6 @@ if(box){
 box.innerHTML=
 '<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
 }
-
 
 if(badge){
 badge.textContent=
@@ -7337,7 +7234,6 @@ return;
 aiForecastLoading=
 true;
 
-// แสดงสถานะรอทันทีในหน้ากราฟ ไม่ปล่อยข้อความเก่าค้างระหว่างประมวลผล
 const forecastMessageEl=
 $("forecastMessage");
 
@@ -7668,7 +7564,6 @@ closeHelp();
 
 }
 
-
 // =====================================================
 // CREDIT IMAGE VIEWER
 // =====================================================
@@ -7801,7 +7696,6 @@ setHistoryRangeMode(button.dataset.historyRangeMode);
 updateRangePickerPreviews();
 });
 });
-
 
 const currentSelect=
 $("currentMetric");
@@ -8077,7 +7971,6 @@ forecastVisible=
 
 updateForecastToggle();
 
-// redraw เพื่อให้ทุกกราฟย่อยใช้สถานะ ON/OFF เดียวกันทันที
 if(
 historyActivated&&
 typeof drawCharts==="function"
@@ -8204,20 +8097,8 @@ closeProfileEditor();
 
 }
 
-
 // =====================================================
 // INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
-//
-// Uses Chart.js only.
-// Desktop:
-// - Mouse wheel zoom
-// - Drag horizontally to pan
-// - Hover tooltip
-//
-// Mobile / Tablet:
-// - Pinch zoom
-// - Drag horizontally to pan
-// - Tap tooltip
 // =====================================================
 
 let chartInteractiveViewerReady=false;
@@ -8402,7 +8283,6 @@ let dragStartMax=0;
 let pinchStartDistance=0;
 let pinchStartSpan=0;
 let pinchCenterRatio=.5;
-
 
 function viewerNiceStepMs(span,width){
 
@@ -8800,7 +8680,6 @@ c=>c.canvas===canvas
 
 }
 
-
 function updateSeriesControlUI(){
 
 const wrap=
@@ -8981,8 +8860,6 @@ index
 return;
 }
 
-// เลือกเส้นเดียวให้ชัดเจน:
-// ผู้ใช้กด "จุดตรวจวัด 1" = เห็นเฉพาะจุด 1
 chartInteractiveInstance.data.datasets.forEach(
 (_,datasetIndex)=>{
 chartInteractiveInstance.setDatasetVisibility(
@@ -9573,7 +9450,6 @@ closeViewer();
 
 }
 
-
 // =====================================================
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 // =====================================================
@@ -9709,8 +9585,6 @@ historyLoading=false;
 function activateAISection(){
 
 if(aiSectionActivated){
-  // กรณีเปิดหน้าไว้ตอนเป็น Guest แล้วค่อย Login
-  // ให้โหลด AI ได้ทันทีตามสิทธิ์ใหม่โดยไม่ต้อง Refresh หน้าเว็บ
   if(authUser&&authToken&&!aiPayload&&!aiLoading)loadAI(false);
   if(authUser&&authToken&&!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
   return;
@@ -9725,8 +9599,6 @@ loadAIForecast(false);  // และจะไม่เรียก API
 
 function setupDeferredSections(){
 
-// Historical data is useful immediately after opening the dashboard.
-// Start preparing it in the background without waiting for the user to scroll.
 activateHistorySection();
 
 const aiTarget=
@@ -9777,28 +9649,10 @@ async function loadInitial(){
 
 try{
 
-const[
-latest,
-mother,
-alerts,
-standards
-]=
-await Promise.all([
-
+const[latest,mother,alerts]=await Promise.all([
 loadLatest(),
-
 loadMother(),
-
-loadAlerts()
-.catch(
-()=>[]
-),
-
-loadStandards()
-.catch(
-()=>null
-)
-
+loadAlerts().catch(()=>[])
 ]);
 
 apiConnectionOnline=
@@ -9813,9 +9667,6 @@ mother;
 alertStates=
 alerts;
 
-standardsData=
-standards;
-
 latestRecord=
 latestNodes.at(-1)||
 null;
@@ -9828,8 +9679,6 @@ updateSmart();
 
 updateAlertUI();
 checkSituationNotifications();
-
-// Forecast โหลดเมื่อผู้ใช้เปิดส่วนที่ต้องใช้จริง
 
 }catch(e){
 
@@ -10061,19 +9910,17 @@ updateClock,
 // REALTIME
 // =====================================================
 
-setInterval(
-loadRealtime,
-10000
-);
+setInterval(()=>{
+  if(document.visibilityState==="visible") loadRealtime();
+},15000);
 
 // =====================================================
 // HISTORICAL
 // =====================================================
 
-setInterval(
-loadHistorical,
-60000
-);
+setInterval(()=>{
+  if(document.visibilityState==="visible"&&historyActivated) loadHistorical();
+},60000);
 
 // =====================================================
 // STANDARDS
@@ -10101,7 +9948,6 @@ updateSmart();
 
 // =====================================================
 // NAVIGATION REDESIGN 2026-08-28
-// UI-only layer. Existing API, status, history, AI and export logic stay unchanged.
 // =====================================================
 const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
 let currentDashboardPage="overview";
@@ -10152,9 +9998,6 @@ function openDashboardPage(page,{updateHash=true}={}){
   if(page==="history"){
     if(typeof activateHistorySection==="function") activateHistorySection();
 
-    // V15:
-    // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
-    // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
     if(typeof loadAIForecast==="function"){
       loadAIForecast(false);
     }
@@ -10391,15 +10234,24 @@ function bindDashboardNavigation(){
 
 bindDashboardNavigation();
 updateNavigationDashboard();
-refreshPM10History24h();
-setInterval(updateNavigationDashboard,2000);
+
+const runWhenIdle=fn=>{
+  if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:3000});
+  else setTimeout(fn,1800);
+};
+
+runWhenIdle(()=>{
+  loadStandardsOnly();
+  refreshPM10History24h();
+});
+
+setInterval(updateNavigationDashboard,5000);
 setInterval(toggleOverviewParticleMetric,5000);
-setInterval(refreshPM10History24h,60000);
+setInterval(refreshPM10History24h,300000);
 
-
-// =========================================================
+// =====================================================
 // V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
-// =========================================================
+// =====================================================
 (function(){
   function fitHelpToViewport(){
     const popover=document.getElementById("helpPopover");
@@ -10417,13 +10269,11 @@ setInterval(refreshPM10History24h,60000);
       popover.style.setProperty("transform","none","important");
       popover.style.setProperty("margin","0","important");
     }else{
-      // Let the desktop CSS own positioning.
       ["position","top","right","bottom","left","width","max-width","max-height","transform","margin"]
         .forEach(function(prop){ popover.style.removeProperty(prop); });
     }
   }
 
-  // Run after the existing .help-button click handler has inserted content.
   document.addEventListener("click",function(e){
     if(!e.target.closest(".help-button")) return;
     requestAnimationFrame(fitHelpToViewport);
@@ -10435,9 +10285,9 @@ setInterval(refreshPM10History24h,60000);
   });
 })();
 
-// =========================================================
+// =====================================================
 // PUBLIC DISPLAY CONFIG
-// =========================================================
+// =====================================================
 function configDevice(deviceId){
 return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
 }
@@ -10523,12 +10373,9 @@ run();
 }
 })();
 
-// =========================================================
+// =====================================================
 // V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
-// Some mobile browsers use a visual viewport smaller or
-// offset from the CSS layout viewport. This keeps modal-like
-// UI inside the actually visible screen.
-// =========================================================
+// =====================================================
 (function setupVisualViewportFloatingUI(){
 
   const MOBILE_MAX = 760;
@@ -10560,8 +10407,6 @@ run();
   function fitFloating(el){
     if(!el || !isMobileViewport()) return;
 
-    // Portal to BODY. This avoids transformed/content-visibility ancestors
-    // becoming a fixed-position containing block on some browsers.
     if(el.parentElement !== document.body){
       document.body.appendChild(el);
     }
@@ -10585,9 +10430,6 @@ run();
   }
 
   function fitOpenFloatingUI(){
-    // V10: History Range ใช้ CSS full-screen mobile modal โดยตรง
-    // ห้ามคำนวณ width/left/top จาก VisualViewport เพราะบาง browser
-    // รายงานค่าชั่วคราวแคบมาก ทำให้ panel ไปกองมุมซ้าย
     const help = document.getElementById("helpPopover");
     if(help && help.classList.contains("active")){
       fitFloating(help);
@@ -10604,7 +10446,6 @@ run();
     else restoreDesktop();
   }
 
-  // Watch both dialogs so opening them from any existing code path is safe.
   ["helpPopover"].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
@@ -10640,7 +10481,6 @@ run();
     }
   });
 })();
-
 
 // =====================================================
 // V18 — CONTEXTUAL EXPLANATIONS
@@ -10679,9 +10519,9 @@ function v18CloseInfo(){const m=$("v18InfoModal");if(!m)return;m.classList.remov
 document.addEventListener("click",e=>{const b=e.target.closest("[data-v18-help]");if(b){e.preventDefault();v18OpenInfo(b.dataset.v18Help);return;}if(e.target.closest("[data-v18-info-close]")){e.preventDefault();v18CloseInfo();}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.classList.contains("active"))v18CloseInfo();});
 
-// =========================================================
+// =====================================================
 // V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
-// =========================================================
+// =====================================================
 let managedHelpCache={};
 let currentHelpEditorKey="";
 let adminUsersCache=[];
@@ -10723,7 +10563,6 @@ function setAuthMessage(id,text,type=""){
   el.classList.toggle("is-success",type==="success");
 }
 
-
 function authAvatarUrl(user){return String(user?.profile_image_url||user?.google_picture_url||"").trim();}
 function setAvatar(imgId,fallbackId,user){
   const img=$(imgId),fallback=$(fallbackId),url=authAvatarUrl(user);if(!img||!fallback)return;
@@ -10749,11 +10588,9 @@ function setAvatar(imgId,fallbackId,user){
   };
   preload.src=url;
 }
-// =========================================================
+// =====================================================
 // V34 — PROFILE IMAGE EDITOR
-// เลือกรูป -> เปิดหน้าครอป -> ลาก/ซูม -> กดบันทึก
-// จะยังไม่ส่งรูปไป Worker จนกว่าผู้ใช้จะกดบันทึกเอง
-// =========================================================
+// =====================================================
 let profileEditorState={
   image:null,
   objectUrl:"",
@@ -10849,7 +10686,6 @@ function buildCroppedProfileImage(){
   const img=profileEditorState.image,g=profileEditorGeometry();
   if(!img||!g)throw new Error("ยังไม่มีรูปสำหรับบันทึก");
 
-  // แปลงตำแหน่งที่เห็นในกรอบกลับเป็นพิกัดของรูปต้นฉบับ
   const sourceSide=Math.min(img.naturalWidth,img.naturalHeight,g.vw/g.scale);
   const centerX=img.naturalWidth/2-profileEditorState.offsetX/g.scale;
   const centerY=img.naturalHeight/2-profileEditorState.offsetY/g.scale;
@@ -10920,12 +10756,9 @@ function setupProfileEditorInteraction(){
   stage.addEventListener("pointercancel",stop);
 }
 
-
-// =========================================================
+// =====================================================
 // V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
-// Role เป็นค่าเริ่มต้น แต่ Owner สามารถเปิด/ปิดสิทธิ์รายบัญชี
-// ได้ละเอียดคล้าย Permission ของ Discord
-// =========================================================
+// =====================================================
 const PERMISSION_DEFINITIONS=[
   {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
   {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
@@ -10975,11 +10808,9 @@ function requireMember(featureName="ฟังก์ชันนี้"){
 }
 
 function updateMemberPermissionUI(){
-  // =====================================================
-  // V34 — MEMBER GATES
-  // Guest เห็นฟังก์ชันได้ แต่เมื่อกดฟังก์ชันสมาชิกจะเปิด Login
-  // AI ใช้ได้ทันทีสำหรับ User / Admin / Owner โดยไม่แยก Permission
-  // =====================================================
+// =====================================================
+// V34 — MEMBER GATES
+// =====================================================
   document.querySelectorAll("[data-member-only]").forEach(el=>{
     let key=el.dataset.permission||"";
     if(!key){
@@ -11052,7 +10883,6 @@ function updateAccountUI(){
     $("headerNotificationBadge")?.classList.add("hidden");
     document.querySelector(".account-management-section")?.classList.add("hidden");
 
-    // Guest ต้องไม่เห็นผล AI ที่ค้างมาจาก session ก่อนหน้า
     aiPayload=null;
     aiForecastPayload=null;
     if(typeof renderAIForecast==="function")renderAIForecast(null);
@@ -11061,7 +10891,6 @@ function updateAccountUI(){
   }
   updateMemberPermissionUI();
 
-  // หลัง Login ให้ส่วน AI ที่เคยถูกล็อกลองโหลดใหม่ตาม Permission
   if(authUser&&aiSectionActivated)activateAISection();
 }
 
@@ -11122,17 +10951,15 @@ async function loadAuthStatus(){
   try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
 }
 
-// =========================================================
+// =====================================================
 // V34.5 — REFRESH ACCOUNT AFTER LOGIN
-// ดึงข้อมูลบัญชีล่าสุดทันที เพื่อให้ชื่อ/รูปโปรไฟล์อัปเดตโดยไม่ต้องรีเฟรชหน้า
-// =========================================================
+// =====================================================
 async function refreshAuthUserAfterLogin(){
   if(!authToken)return null;
   try{
     const j=await apiJson(API.authMe);
     if(j?.user)authUser=j.user;
   }catch(_){
-    // ใช้ข้อมูลจากผล Login ต่อได้ หาก /auth/me ชั่วคราวไม่สำเร็จ
   }
   updateAccountUI();
   return authUser;
@@ -11610,7 +11437,6 @@ async function saveAdminUserRow(row){
   }
 }
 
-
 async function deleteAdminUser(row){
   if(!row||authUser?.role!=="owner")return;
   const userId=Number(row.dataset.userId||0);
@@ -11717,7 +11543,6 @@ function switchAdminTab(tab){
 
 // =====================================================
 // V34.1 — MY ACCOUNT CENTER
-// รวม Profile / Account / Security ไว้ในจุดเดียว
 // =====================================================
 function syncMyAccountUI(){
   if(!authUser)return;
@@ -11770,7 +11595,6 @@ function closeAccountSecurity(){
 }
 function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
 
-
 // =====================================================
 // V34.2 — NOTIFICATIONS
 // =====================================================
@@ -11782,8 +11606,6 @@ let notificationSeeded=false;
 let lastNotificationDetail=null;
 let notificationInboxItems=[];
 let notificationInboxTimer=null;
-
-
 
 function formatNotificationTime(value){
   const d=value?new Date(String(value).replace(" ","T")+"Z"):null;
@@ -12058,10 +11880,9 @@ function openNotificationDetailFromUrl(){
     $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
     $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
-    // =====================================================
-    // V34 — PROFILE IMAGE EVENTS
-    // เลือกรูปแล้วเปิด Editor ก่อน ไม่อัปโหลดทันที
-    // =====================================================
+// =====================================================
+// V34 — PROFILE IMAGE EVENTS
+// =====================================================
     setupProfileEditorInteraction();
     $("myAccountChangePhoto")?.addEventListener("click",chooseProfileImageFromAccount);
     $("myAccountChangePhotoSecondary")?.addEventListener("click",chooseProfileImageFromAccount);
