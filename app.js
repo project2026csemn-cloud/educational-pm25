@@ -5190,6 +5190,38 @@ end
 
 }
 
+function formatRangePickerPreview(value){
+const d=value?dateFromRangeInput(value):null;
+if(!d)return"--";
+return d.toLocaleString("th-TH",{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+});
+}
+
+function updateRangePickerPreviews(){
+const s=$("historyRangeStartPreview");
+const e=$("historyRangeEndPreview");
+if(s)s.textContent=formatRangePickerPreview("customRangeStart");
+if(e)e.textContent=formatRangePickerPreview("customRangeEnd");
+}
+
+function setHistoryRangeMode(mode){
+const next=mode==="custom"?"custom":"quick";
+document.querySelectorAll("[data-history-range-mode]").forEach(btn=>{
+const active=btn.dataset.historyRangeMode===next;
+btn.classList.toggle("active",active);
+btn.setAttribute("aria-selected",active?"true":"false");
+});
+document.querySelectorAll("[data-history-range-panel]").forEach(panel=>{
+panel.classList.toggle("active",panel.dataset.historyRangePanel===next);
+});
+}
+
 function updateHistoryRangeMobileSelection(){
 const label=$("historyRangeMobileSelection");
 if(!label)return;
@@ -5198,6 +5230,14 @@ label.textContent=active?active.textContent.trim():(averageRange==="custom"?"ก
 }
 
 function updateQuickRangeUI(key){
+
+document
+.querySelectorAll("[data-history-range-mode]")
+.forEach(button=>{
+button.addEventListener("click",()=>{
+setHistoryRangeMode(button.dataset.historyRangeMode);
+});
+});
 
 document
 .querySelectorAll(
@@ -5344,6 +5384,8 @@ averageRange==="custom"
 :averageRange
 );
 
+setHistoryRangeMode(averageRange==="custom"?"custom":"quick");
+updateRangePickerPreviews();
 renderRangeCalendar();
 
 panel.classList.add(
@@ -5706,9 +5748,12 @@ calendarSelectionStep=
 
 }
 
+averageRange="custom";
 updateQuickRangeUI(
 null
 );
+setHistoryRangeMode("custom");
+updateRangePickerPreviews();
 
 renderRangeCalendar();
 
@@ -7670,6 +7715,7 @@ button.addEventListener(
 "click",
 ()=>{
 
+setHistoryRangeMode("quick");
 setRange(
 button.dataset.range
 );
@@ -7724,6 +7770,8 @@ updateQuickRangeUI(
 null
 );
 updateHistoryRangeMobileSelection();
+setHistoryRangeMode("custom");
+updateRangePickerPreviews();
 
 const d=
 dateFromRangeInput(
