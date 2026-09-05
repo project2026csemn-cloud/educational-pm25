@@ -3334,6 +3334,24 @@ row[field]
 
 }
 
+function isRealHistoryReading(row,field=null){
+
+if(!row)return false;
+
+// ใช้เฉพาะเส้นทางสร้างกราฟ ไม่แตะระบบสถานะจุดตรวจวัด
+if(String(row.status||"").toLowerCase()!=="online"){
+return false;
+}
+
+if(field){
+return hasFiniteSensorValue(row[field]);
+}
+
+return hasAnySensorData(row);
+
+}
+
+
 function selectedRecords(){
 
 const w=
@@ -3352,7 +3370,7 @@ return(
 d&&
 d>=w.start&&
 d<=w.end&&
-hasAnySensorData(r)
+isRealHistoryReading(r)
 );
 
 }
@@ -3894,6 +3912,7 @@ const labelSet=new Set();
 for(const nodeId of HISTORY_NODES){
 const map=new Map();
 for(const r of historyRowsForNode(rows,nodeId)){
+if(!isRealHistoryReading(r,field))continue;
 const d=parseDate(r?.timestamp);
 const v=finiteNumberOrNull(r?.[field]);
 if(!d||v===null)continue;
@@ -3930,6 +3949,7 @@ const buckets=new Map();
 const validNodes=new Set(HISTORY_NODES);
 
 for(const r of rows||[]){
+if(!isRealHistoryReading(r))continue;
 const d=parseDate(r?.timestamp);
 const nodeId=String(r?.device_id??"").trim();
 if(!d||!validNodes.has(nodeId))continue;
@@ -4080,7 +4100,7 @@ groupedChartShell("ความชื้น","ค่าเฉลี่ยพื�
 groupedChartShell("แสง","ค่าเฉลี่ยพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
 
 const createAverage=(canvasId,field,yTitle)=>{
-const arr=avgBase.filter(r=>hasFiniteSensorValue(r[field]));
+const arr=avgBase.filter(r=>isRealHistoryReading(r,field));
 const labels=historyLabelsToRangeEnd(arr);
 const vals=arr.map(r=>finiteNumberOrNull(r[field]));
 const c=new Chart($(canvasId),{
@@ -4173,7 +4193,7 @@ return;
 area.innerHTML='<canvas id="historyChart"></canvas>';
 
 const sourceRows=averageMode?areaAverageBase:base;
-const chartRows=sourceRows.filter(r=>hasFiniteSensorValue(r[metric]));
+const chartRows=sourceRows.filter(r=>isRealHistoryReading(r,metric));
 const summaryRows=compareMode?spatialAverageRows(base,[metric]):chartRows;
 const summaryValues=summaryRows.map(r=>finiteNumberOrNull(r[metric])).filter(v=>v!==null);
 const s=stats(summaryRows,metric);
@@ -4190,7 +4210,7 @@ $("trend").textContent=averageMode&&trendText!=="ไม่มีข้อมู�
 }
 
 if(compareMode){
-const data=buildNodeComparisonData(base.filter(r=>hasFiniteSensorValue(r[metric])),metric);
+const data=buildNodeComparisonData(base.filter(r=>isRealHistoryReading(r,metric)),metric);
 historyChart=new Chart($("historyChart"),{
 type:"line",data,
 options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
@@ -8294,7 +8314,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-ซูมเข้าได้เรื่อย ๆ • เมื่อเหลือไม่เกิน 6 ชั่วโมง แกน X จะเปลี่ยนเป็น “เวลาที่มีข้อมูลจริง” • ชี้/แตะจุดเพื่อดูเวลาบันทึกแบบเต็ม
+จุดกราฟวางตามเวลาที่ข้อมูลเข้าจริง • ตัวเลขด้านล่างเป็นช่วงเวลาที่อ่านง่าย และจะละเอียดขึ้นเรื่อย ๆ เมื่อซูม • ชี้/แตะจุดเพื่อดูเวลาบันทึกจริง
 </div>
 </div>
 
@@ -8352,288 +8372,153 @@ let pinchStartSpan=0;
 let pinchCenterRatio=.5;
 
 
-function viewerVisibleActualTimes(scale){
+function viewerNiceStepMs(span,width){
 
-const chart=
-scale?.chart;
+const SECOND=1000;
+const MINUTE=60*SECOND;
+const HOUR=60*MINUTE;
+const DAY=24*HOUR;
 
-if(!chart){
-return[];
+const mobile=window.innerWidth<=640;
+const targetTicks=Math.max(
+3,
+Math.min(
+mobile?6:10,
+Math.floor(Math.max(320,width||0)/(mobile?72:105))
+)
+);
+
+const desired=Math.max(
+SECOND,
+span/targetTicks
+);
+
+const steps=[
+1*SECOND,
+5*SECOND,
+10*SECOND,
+15*SECOND,
+30*SECOND,
+1*MINUTE,
+2*MINUTE,
+5*MINUTE,
+10*MINUTE,
+15*MINUTE,
+30*MINUTE,
+1*HOUR,
+2*HOUR,
+3*HOUR,
+6*HOUR,
+12*HOUR,
+1*DAY,
+2*DAY,
+3*DAY,
+7*DAY
+];
+
+return steps.find(step=>step>=desired)||steps.at(-1);
+
 }
 
-const min=
-Number(scale.min);
+function viewerBangkokAlignedStart(min,step){
 
-const max=
-Number(scale.max);
+const BKK=7*60*60*1000;
+return Math.ceil((min+BKK)/step)*step-BKK;
 
-const values=
-[];
+}
 
-(chart.data.datasets||[]).forEach((ds,index)=>{
+function buildViewerPrettyTimeTicks(scale){
+
+const min=Number(scale?.min);
+const max=Number(scale?.max);
 
 if(
-typeof chart.isDatasetVisible==="function"&&
-!chart.isDatasetVisible(index)
+!Number.isFinite(min)||
+!Number.isFinite(max)||
+max<=min
 ){
 return;
 }
 
-for(const point of ds.data||[]){
+const span=max-min;
+const width=Math.max(
+1,
+Number(scale?.width||scale?.chart?.width||0)
+);
 
-if(
-!point||
-typeof point!=="object"
-){
-continue;
-}
+const step=viewerNiceStepMs(span,width);
+const first=viewerBangkokAlignedStart(min,step);
 
-const x=
-finiteNumberOrNull(point.x);
-
-const y=
-finiteNumberOrNull(point.y);
-
-if(
-x===null||
-y===null||
-x<min||
-x>max
-){
-continue;
-}
-
-values.push(x);
-
-}
-
-});
-
-return[
-...new Set(
-values.map(v=>Math.round(v))
-)
-].sort((a,b)=>a-b);
-
-}
-
-function reduceViewerActualTimes(times,maxTicks){
-
-if(
-!Array.isArray(times)||
-!times.length
-){
-return[];
-}
-
-if(times.length<=maxTicks){
-return times;
-}
-
-const result=[];
+const ticks=[];
 
 for(
-let i=0;
-i<maxTicks;
-i++
+let t=first;
+t<=max+1;
+t+=step
 ){
-
-const index=
-Math.round(
-i*(times.length-1)/
-Math.max(1,maxTicks-1)
-);
-
-const value=
-times[index];
-
-if(
-result.at(-1)!==value
-){
-result.push(value);
+ticks.push({value:t});
+if(ticks.length>40)break;
 }
 
+if(ticks.length){
+scale.ticks=ticks;
 }
-
-return result;
-
-}
-
-function buildViewerTimeTicks(scale){
-
-const span=
-Math.max(
-0,
-Number(scale.max)-
-Number(scale.min)
-);
-
-const HOUR=
-60*60*1000;
-
-const width=
-Math.max(
-1,
-Number(scale.width||scale.chart?.width||0)
-);
-
-const mobile=
-window.innerWidth<=640;
-
-// ช่วงกว้างให้ Chart.js สร้าง tick ภาพรวมเอง
-// เมื่อซูมเข้าถึง <= 6 ชั่วโมง เปลี่ยน tick เป็น timestamp ที่มีข้อมูลจริง
-if(
-span>6*HOUR
-){
-return;
-}
-
-const actual=
-viewerVisibleActualTimes(scale);
-
-if(!actual.length){
-return;
-}
-
-const minGap=
-mobile
-?72
-:92;
-
-const maxByWidth=
-Math.max(
-2,
-Math.floor(width/minGap)
-);
-
-const hardMax=
-mobile
-?6
-:12;
-
-const maxTicks=
-Math.max(
-2,
-Math.min(
-hardMax,
-maxByWidth
-)
-);
-
-const chosen=
-reduceViewerActualTimes(
-actual,
-maxTicks
-);
-
-scale.ticks=
-chosen.map(value=>({value}));
 
 }
 
 function viewerTimeTickText(value,scale){
 
-const n=
-finiteNumberOrNull(value);
+const n=finiteNumberOrNull(value);
+if(n===null)return"";
 
-if(n===null){
-return"";
-}
+const d=new Date(n);
+if(!Number.isFinite(d.getTime()))return"";
 
-const d=
-new Date(n);
-
-if(
-!Number.isFinite(d.getTime())
-){
-return"";
-}
-
-const span=
-Math.max(
+const span=Math.max(
 0,
-Number(scale?.max)-
-Number(scale?.min)
+Number(scale?.max)-Number(scale?.min)
 );
 
-const MINUTE=
-60*1000;
+const SECOND=1000;
+const MINUTE=60*SECOND;
+const HOUR=60*MINUTE;
+const DAY=24*HOUR;
 
-const HOUR=
-60*MINUTE;
-
-const DAY=
-24*HOUR;
-
-// ซูมลึก: แสดงเวลาจริงถึงวินาที
-if(span<=15*MINUTE){
-
-return d.toLocaleTimeString(
-"th-TH",
-{
+if(span<=2*MINUTE){
+return d.toLocaleTimeString("th-TH",{
 timeZone:"Asia/Bangkok",
 hour:"2-digit",
 minute:"2-digit",
 second:"2-digit",
 hour12:false
-}
-);
-
-}
-
-// <= 6 ชม. tick ถูก snap ไปยังเวลาที่มีข้อมูลจริง
-if(span<=6*HOUR){
-
-return d.toLocaleTimeString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-}
-);
-
+});
 }
 
 if(span<=DAY){
-
-return d.toLocaleTimeString(
-"th-TH",
-{
+return d.toLocaleTimeString("th-TH",{
 timeZone:"Asia/Bangkok",
 hour:"2-digit",
 minute:"2-digit",
 hour12:false
-}
-);
-
+});
 }
 
 if(span<3*DAY){
-
-return d.toLocaleString(
-"th-TH",
-{
+return d.toLocaleString("th-TH",{
 timeZone:"Asia/Bangkok",
 day:"2-digit",
 month:"short",
 hour:"2-digit",
 minute:"2-digit",
 hour12:false
-}
-);
-
+});
 }
 
-return d.toLocaleDateString(
-"th-TH",
-{
+return d.toLocaleDateString("th-TH",{
 timeZone:"Asia/Bangkok",
 day:"2-digit",
 month:"short"
-}
-);
+});
 
 }
 
@@ -8661,7 +8546,7 @@ const HOUR=
 if(span<=15*MINUTE){
 
 el.textContent=
-"แกนเวลา: เวลาจริง • ถึงวินาที";
+"แกนเวลา: ละเอียดถึงวินาที";
 
 return;
 }
@@ -8669,7 +8554,7 @@ return;
 if(span<=6*HOUR){
 
 el.textContent=
-"แกนเวลา: เวลาจริงของข้อมูล";
+"แกนเวลา: ละเอียดระดับนาที";
 
 return;
 }
@@ -9275,7 +9160,7 @@ min:fullMin,
 max:fullMax,
 
 afterBuildTicks(scale){
-buildViewerTimeTicks(scale);
+buildViewerPrettyTimeTicks(scale);
 },
 
 grid:{
