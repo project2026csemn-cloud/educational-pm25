@@ -7764,7 +7764,7 @@ window.addEventListener("resize",()=>{
   clearTimeout(googleButtonResizeTimer);
   googleButtonResizeTimer=setTimeout(()=>{
     if(!$("authModal")?.classList.contains("hidden")){
-      renderGoogleIdentityButton();
+      scheduleGoogleIdentityRender();
     }
   },120);
 });
@@ -11061,7 +11061,7 @@ function openAuthModal(mode="login"){
   setAuthMode(mode);
   loadAuthStatus();
   loadAuthConfig().finally(()=>{
-    requestAnimationFrame(()=>renderGoogleIdentityButton());
+    scheduleGoogleIdentityRender();
   });
 }
 function closeAuthModal(){
@@ -11124,7 +11124,7 @@ async function loadAuthConfig(){
     if(authGoogleClientId) await initGoogleIdentity();
     $("authSocialArea")?.classList.toggle("hidden",!authGoogleClientId);
     if(authGoogleClientId){
-      requestAnimationFrame(()=>renderGoogleIdentityButton());
+      scheduleGoogleIdentityRender();
     }
   }catch(_){
     $("authSocialArea")?.classList.add("hidden");
@@ -11138,27 +11138,45 @@ function renderGoogleIdentityButton(){
     !authGoogleClientId ||
     !window.google?.accounts?.id ||
     target.offsetParent===null
-  )return;
+  )return false;
 
-  const available=Math.floor(target.getBoundingClientRect().width);
-  if(!available)return;
+  const available=Math.floor(
+    target.parentElement?.getBoundingClientRect().width ||
+    target.getBoundingClientRect().width ||
+    0
+  );
+
+  if(available<220)return false;
 
   const width=Math.max(
-    200,
-    Math.min(300,available - 28)
+    220,
+    Math.min(320,available-36)
   );
+
   target.innerHTML="";
-  target.style.width=`${width}px`;
-  target.style.maxWidth="100%";
-  target.style.marginInline="auto";
+  target.removeAttribute("style");
 
   google.accounts.id.renderButton(target,{
+    type:"standard",
     theme:"filled_black",
     size:"large",
     shape:"pill",
     text:"continue_with",
+    logo_alignment:"right",
     width,
     locale:"th"
+  });
+
+  return true;
+}
+
+function scheduleGoogleIdentityRender(){
+  [0,80,240].forEach(delay=>{
+    setTimeout(()=>{
+      if(!$("authModal")?.classList.contains("hidden")){
+        renderGoogleIdentityButton();
+      }
+    },delay);
   });
 }
 
