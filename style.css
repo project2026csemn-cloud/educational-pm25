@@ -19684,3 +19684,245 @@ html body .site-header.is-authenticated #clock{
     font-size:10.5px!important;
   }
 }
+
+
+/* =====================================================
+   V36.26 — MOBILE HEADER / PROFILE BALANCE
+   ===================================================== */
+
+/* Keep the brand readable again */
+@media(max-width:760px){
+  .site-header{
+    padding:14px 14px 13px!important;
+    gap:12px!important;
+  }
+
+  .site-brand{
+    gap:12px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+  }
+
+  .site-brand-title{
+    font-size:18.5px!important;
+    line-height:1.14!important;
+    font-weight:900!important;
+    color:#f8fafc!important;
+  }
+
+  .site-brand-subtitle{
+    margin-top:5px!important;
+    font-size:11px!important;
+    line-height:1.42!important;
+    color:#aeb9c9!important;
+  }
+
+  /* Account row: do not let the profile chip stick to the far-right edge */
+  html body .site-header.is-authenticated .header-account-zone{
+    grid-template-columns:48px minmax(0,1fr)!important;
+    gap:14px!important;
+    padding-top:11px!important;
+  }
+
+  html body .site-header.is-authenticated .header-profile-stack{
+    width:max-content!important;
+    max-width:calc(100vw - 125px)!important;
+    justify-self:end!important;
+    margin-right:8px!important;
+    gap:7px!important;
+  }
+
+  /* Compact profile chip: content-sized, no empty stretched area */
+  html body .site-header.is-authenticated #accountButton{
+    width:max-content!important;
+    inline-size:max-content!important;
+    max-width:220px!important;
+    min-width:0!important;
+    min-height:48px!important;
+
+    padding:6px 7px 6px 10px!important;
+    gap:9px!important;
+
+    border-radius:14px!important;
+    background:rgba(15, 46, 67, .74)!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton .header-account-copy{
+    width:max-content!important;
+    max-width:135px!important;
+    gap:3px!important;
+  }
+
+  html body .site-header.is-authenticated #accountRoleBadge{
+    font-size:10px!important;
+    line-height:1.05!important;
+    letter-spacing:.11em!important;
+    color:#f8fafc!important;
+    font-weight:800!important;
+  }
+
+  html body .site-header.is-authenticated #accountButtonText{
+    max-width:135px!important;
+    font-size:12.5px!important;
+    line-height:1.18!important;
+    color:#ffffff!important;
+    font-weight:800!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton .header-account-avatar{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    flex-basis:38px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton .header-account-chevron{
+    font-size:11px!important;
+    color:#cbd5e1!important;
+  }
+
+  /* Clock stays separate and readable */
+  html body .site-header.is-authenticated #clock{
+    margin-right:8px!important;
+    font-size:12px!important;
+    line-height:1.25!important;
+    font-weight:800!important;
+    color:#f1f5f9!important;
+    letter-spacing:.01em!important;
+  }
+
+  /* Bell remains centered and slightly larger */
+  .header-notification-button{
+    width:46px!important;
+    height:46px!important;
+    min-width:46px!important;
+  }
+
+  .header-notification-button svg{
+    width:22px!important;
+    height:22px!important;
+  }
+}
+
+@media(max-width:430px){
+  .site-header{
+    padding:12px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+  }
+
+  .site-brand-title{
+    font-size:17px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:10px!important;
+  }
+
+  html body .site-header.is-authenticated .header-account-zone{
+    grid-template-columns:44px minmax(0,1fr)!important;
+    gap:11px!important;
+  }
+
+  html body .site-header.is-authenticated .header-profile-stack{
+    max-width:calc(100vw - 108px)!important;
+    margin-right:6px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton{
+    max-width:205px!important;
+    min-height:46px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton .header-account-copy,
+  html body .site-header.is-authenticated #accountButtonText{
+    max-width:118px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButtonText{
+    font-size:11.8px!important;
+  }
+
+  html body .site-header.is-authenticated #accountRoleBadge{
+    font-size:9.5px!important;
+  }
+
+  html body .site-header.is-authenticated #clock{
+    margin-right:6px!important;
+    font-size:11.5px!important;
+  }
+
+  .header-notification-button{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+  }
+}
+
+@media(max-width:360px){
+  .site-brand-title{
+    font-size:15.5px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:9.2px!important;
+  }
+
+  html body .site-header.is-authenticated .header-profile-stack{
+    max-width:calc(100vw - 96px)!important;
+    margin-right:4px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton{
+    max-width:188px!important;
+    min-height:44px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButton .header-account-copy,
+  html body .site-header.is-authenticated #accountButtonText{
+    max-width:102px!important;
+  }
+
+  html body .site-header.is-authenticated #accountButtonText{
+    font-size:11px!important;
+  }
+
+  html body .site-header.is-authenticated #accountRoleBadge{
+    font-size:9px!important;
+  }
+
+  html body .site-header.is-authenticated #clock{
+    font-size:11px!important;
+  }
+}
+
+/* Desktop/tablet clock & account text should remain easy to read too */
+@media(min-width:761px){
+  html body .site-header.is-authenticated #accountRoleBadge{
+    color:#f8fafc!important;
+    font-size:11px!important;
+    font-weight:800!important;
+  }
+
+  html body .site-header.is-authenticated #accountButtonText{
+    color:#ffffff!important;
+    font-size:14px!important;
+    font-weight:800!important;
+  }
+
+  html body .site-header.is-authenticated #clock{
+    color:#f1f5f9!important;
+    font-size:13.5px!important;
+    font-weight:800!important;
+  }
+}
