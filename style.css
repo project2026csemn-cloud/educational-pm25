@@ -17182,3 +17182,260 @@ header.glass.card .header-user-copy{
     max-width:38vw!important;
   }
 }
+
+
+/* =====================================================
+   V36.10 — MOBILE HEADER + GOOGLE ACCOUNT POLISH
+   ===================================================== */
+
+/* Header: slightly larger and more balanced on phones */
+@media (max-width:760px){
+  .site-header{
+    padding:13px 14px!important;
+    gap:11px!important;
+  }
+
+  .site-brand{
+    gap:11px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+  }
+
+  .site-brand-title{
+    font-size:18px!important;
+    line-height:1.15!important;
+    font-weight:900!important;
+  }
+
+  .site-brand-subtitle{
+    margin-top:4px!important;
+    font-size:10.5px!important;
+    line-height:1.4!important;
+  }
+
+  .header-account-zone{
+    padding-top:10px!important;
+  }
+
+  .header-account-button{
+    min-height:40px!important;
+    border-radius:12px!important;
+  }
+
+  #accountButtonText{
+    font-size:12.5px!important;
+  }
+
+  .header-account-avatar{
+    width:35px!important;
+    height:35px!important;
+    min-width:35px!important;
+    flex-basis:35px!important;
+  }
+
+  .header-notification-button{
+    width:39px!important;
+    height:39px!important;
+    min-width:39px!important;
+    flex-basis:39px!important;
+  }
+
+  .header-account-role,
+  .header-clock{
+    font-size:9px!important;
+  }
+}
+
+@media (max-width:430px){
+  .site-header{
+    padding:11px 12px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+  }
+
+  .site-brand-title{
+    font-size:16px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:9.4px!important;
+  }
+
+  #accountButtonText{
+    font-size:11.5px!important;
+  }
+}
+
+@media (max-width:360px){
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+  }
+
+  .site-brand-title{
+    font-size:14.5px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:8.6px!important;
+  }
+}
+
+/* Tablet/iPad */
+@media (min-width:761px) and (max-width:1100px){
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:56px!important;
+    height:56px!important;
+  }
+
+  .site-brand-title{
+    font-size:22px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:11.5px!important;
+  }
+}
+
+/* Google account chooser: no visual clipping */
+.google-account-option,
+.google-account-row,
+.google-account-card,
+.google-saved-account,
+.auth-google-account{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+}
+
+.google-account-option,
+.google-account-row,
+.google-account-card,
+.google-saved-account,
+.auth-google-account{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:10px 12px!important;
+}
+
+.google-account-option img,
+.google-account-row img,
+.google-account-card img,
+.google-saved-account img,
+.auth-google-account img{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  border-radius:999px!important;
+  object-fit:cover!important;
+}
+
+.google-account-option .google-account-text,
+.google-account-row .google-account-text,
+.google-account-card .google-account-text,
+.google-saved-account .google-account-text,
+.auth-google-account .google-account-text,
+.google-account-option .account-copy,
+.google-account-row .account-copy,
+.google-account-card .account-copy,
+.google-saved-account .account-copy,
+.auth-google-account .account-copy{
+  min-width:0!important;
+}
+
+.google-account-option .google-account-name,
+.google-account-row .google-account-name,
+.google-account-card .google-account-name,
+.google-saved-account .google-account-name,
+.auth-google-account .google-account-name,
+.google-account-option .account-name,
+.google-account-row .account-name,
+.google-account-card .account-name,
+.google-saved-account .account-name,
+.auth-google-account .account-name{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+.google-account-option .google-account-email,
+.google-account-row .google-account-email,
+.google-account-card .google-account-email,
+.google-saved-account .google-account-email,
+.auth-google-account .google-account-email,
+.google-account-option .account-email,
+.google-account-row .account-email,
+.google-account-card .account-email,
+.google-saved-account .account-email,
+.auth-google-account .account-email{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  opacity:.82!important;
+}
+
+.google-account-option .google-account-chevron,
+.google-account-row .google-account-chevron,
+.google-account-card .google-account-chevron,
+.google-saved-account .google-account-chevron,
+.auth-google-account .google-account-chevron,
+.google-account-option .account-chevron,
+.google-account-row .account-chevron,
+.google-account-card .account-chevron,
+.google-saved-account .account-chevron,
+.auth-google-account .account-chevron{
+  justify-self:end!important;
+  flex:0 0 auto!important;
+  min-width:18px!important;
+  width:18px!important;
+  overflow:visible!important;
+}
+
+/* Auth modal mobile spacing */
+@media (max-width:760px){
+  .auth-modal-dialog{
+    width:calc(100vw - 24px)!important;
+    max-width:620px!important;
+    padding:0!important;
+  }
+
+  .auth-modal-content,
+  .auth-panel{
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+
+  .auth-modal-dialog input,
+  .auth-modal-dialog button,
+  .auth-modal-dialog select{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  .google-account-option,
+  .google-account-row,
+  .google-account-card,
+  .google-saved-account,
+  .auth-google-account{
+    padding:9px 10px!important;
+    gap:9px!important;
+  }
+}
