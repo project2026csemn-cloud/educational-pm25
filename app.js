@@ -9543,6 +9543,10 @@ return;
 historyActivated=true;
 historyLoading=true;
 
+if(!chartInteractiveViewerReady){
+  setupChartZoomViewer();
+}
+
 setHistoryChartMessage(
 "กำลังโหลดข้อมูลย้อนหลัง",
 "กรุณารอสักครู่"
@@ -9598,8 +9602,6 @@ loadAIForecast(false);  // และจะไม่เรียก API
 }
 
 function setupDeferredSections(){
-
-activateHistorySection();
 
 const aiTarget=
 document.querySelector(".ai-intelligence-section");
@@ -9886,16 +9888,18 @@ renderAIForecast(
 null
 );
 
-bindEvents();
-
-bindHelp();
-setupChartZoomViewer();
-
-setupDeferredSections();
-
 updateClock();
-
 loadInitial();
+
+const scheduleStartup=(fn,delay)=>{
+  setTimeout(()=>{
+    try{fn();}catch(e){console.error("Startup task error:",e);}
+  },delay);
+};
+
+scheduleStartup(bindEvents,40);
+scheduleStartup(bindHelp,120);
+scheduleStartup(setupDeferredSections,220);
 
 // =====================================================
 // CLOCK
@@ -9935,16 +9939,12 @@ loadStandardsOnly,
 // LOCAL STATUS REFRESH
 // =====================================================
 
-setInterval(
-()=>{
-
-renderMonitoring();
-updateCurrent();
-updateSmart();
-
-},
-5000
-);
+setInterval(()=>{
+  if(document.visibilityState!=="visible")return;
+  renderMonitoring();
+  updateCurrent();
+  updateSmart();
+},15000);
 
 // =====================================================
 // NAVIGATION REDESIGN 2026-08-28
@@ -10365,7 +10365,7 @@ return publicDisplayConfig;
 }
 
 (function startPublicDisplayConfig(){
-const run=()=>loadPublicDisplayConfig();
+const run=()=>setTimeout(loadPublicDisplayConfig,350);
 if(document.readyState==="loading"){
 document.addEventListener("DOMContentLoaded",run,{once:true});
 }else{
