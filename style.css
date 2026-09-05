@@ -17686,3 +17686,288 @@ header.glass.card .header-user-copy{
     padding:7px 12px!important;
   }
 }
+
+
+/* =====================================================
+   V36.13 — GOOGLE GUTTER + MOBILE TIMEZONE FOOTER
+   ===================================================== */
+
+/* Keep Google's trailing G comfortably inside the login card. */
+#googleSignInButton{
+  padding-inline:6px!important;
+}
+
+#googleSignInButton>div,
+#googleSignInButton iframe{
+  margin-inline:auto!important;
+}
+
+/* Mobile date-range footer: timezone gets its own row.
+   Prevents "เวลาไทย" from collapsing one character per line. */
+@media(max-width:760px){
+  #historyRangeModal .history-range-footer-v35{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto!important;
+    gap:8px!important;
+    align-items:center!important;
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom))!important;
+  }
+
+  #historyRangeModal .history-timezone-note{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+  }
+
+  #historyRangeModal .history-timezone-note>div:not(#customRangeError){
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    white-space:nowrap!important;
+  }
+
+  #historyRangeModal .history-timezone-note b{
+    display:inline-block!important;
+    white-space:nowrap!important;
+    word-break:keep-all!important;
+    overflow-wrap:normal!important;
+    line-height:1.2!important;
+  }
+
+  #historyRangeModal .history-timezone-note span{
+    display:inline-block!important;
+    white-space:nowrap!important;
+  }
+
+  #historyRangeModal .history-range-footer-actions{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+
+  #historyRangeModal .history-range-secondary,
+  #historyRangeModal .history-range-primary{
+    width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+  }
+}
+
+@media(max-width:430px){
+  #historyRangeModal .history-range-footer-v35{
+    gap:7px!important;
+    padding:8px!important;
+  }
+
+  #historyRangeModal .history-timezone-note{
+    gap:6px!important;
+  }
+
+  #historyRangeModal .history-timezone-note b{
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-timezone-icon{
+    width:28px!important;
+    height:28px!important;
+    min-width:28px!important;
+  }
+}
+
+@media(max-width:360px){
+  #historyRangeModal .history-range-footer-actions{
+    gap:6px!important;
+  }
+
+  #historyRangeModal .history-range-secondary,
+  #historyRangeModal .history-range-primary{
+    min-height:40px!important;
+    font-size:9.5px!important;
+  }
+}
+
+
+/* =====================================================
+   V36.14 — LOGGED-IN MOBILE HEADER SPACING
+   ===================================================== */
+
+@media(max-width:760px){
+
+  /* Signed-in account block */
+  .header-account-zone:not(:has(.header-notification-button.hidden)){
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:12px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-notification-button{
+    grid-column:1!important;
+    grid-row:1!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    align-self:center!important;
+    justify-self:start!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-profile-stack{
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;
+    min-width:0!important;
+
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    column-gap:10px!important;
+    row-gap:5px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-button{
+    grid-column:1/-1!important;
+    grid-row:1!important;
+    justify-self:stretch!important;
+
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+
+    padding:3px 4px 3px 10px!important;
+    gap:8px!important;
+    border-radius:12px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    max-width:none!important;
+
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+
+    text-align:right!important;
+    font-size:12px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-chevron{
+    flex:0 0 auto!important;
+    order:-1!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-avatar{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px!important;
+    flex:0 0 36px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-role{
+    grid-column:1!important;
+    grid-row:2!important;
+
+    justify-self:start!important;
+    margin:0!important;
+
+    font-size:9px!important;
+    line-height:1.2!important;
+    letter-spacing:.12em!important;
+    white-space:nowrap!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-clock{
+    grid-column:2!important;
+    grid-row:2!important;
+
+    justify-self:end!important;
+    margin:0!important;
+
+    font-size:9px!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+  }
+}
+
+@media(max-width:430px){
+  .header-account-zone:not(:has(.header-notification-button.hidden)){
+    grid-template-columns:40px minmax(0,1fr)!important;
+    gap:9px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-notification-button{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-button{
+    min-height:40px!important;
+    padding-left:8px!important;
+    gap:6px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    font-size:11px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-avatar{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    flex-basis:34px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-role,
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-clock{
+    font-size:8.5px!important;
+  }
+}
+
+@media(max-width:360px){
+  .header-account-zone:not(:has(.header-notification-button.hidden)){
+    grid-template-columns:36px minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-notification-button{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-button{
+    min-height:38px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    font-size:10px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-avatar{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    flex-basis:32px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-role,
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-clock{
+    font-size:8px!important;
+  }
+}
