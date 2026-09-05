@@ -16972,3 +16972,213 @@ header.glass.card .header-user-copy{
     border-top:0!important;
   }
 }
+
+
+/* =====================================================
+   V36.9 — MOBILE HEADER BALANCE
+   ===================================================== */
+
+@media (max-width:760px){
+
+  .site-header{
+    gap:9px!important;
+    padding:11px 12px!important;
+  }
+
+  .site-brand{
+    align-items:center!important;
+    gap:9px!important;
+  }
+
+  .site-brand-logos{
+    gap:4px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+  }
+
+  .site-brand-title{
+    font-size:16px!important;
+    line-height:1.14!important;
+  }
+
+  .site-brand-subtitle{
+    margin-top:3px!important;
+    font-size:9.5px!important;
+    line-height:1.35!important;
+  }
+
+  .header-account-zone{
+    padding-top:8px!important;
+    border-top:1px solid rgba(51,65,85,.48)!important;
+    gap:8px!important;
+  }
+
+  /* Guest */
+  .header-account-zone:has(.header-notification-button.hidden){
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) .header-profile-stack{
+    grid-column:1/-1!important;
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:8px!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) .header-account-button{
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:start!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:36px!important;
+    padding:2px 3px 2px 10px!important;
+    border-radius:11px!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) #accountButtonText{
+    max-width:none!important;
+    font-size:12px!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) .header-account-avatar{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    flex-basis:32px!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) .header-clock{
+    grid-column:2!important;
+    grid-row:1!important;
+    align-self:center!important;
+    justify-self:end!important;
+    font-size:9.5px!important;
+    color:#94a3b8!important;
+  }
+
+  /* Signed in */
+  .header-account-zone:not(:has(.header-notification-button.hidden)){
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:center!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-notification-button{
+    grid-column:1!important;
+    grid-row:1!important;
+    align-self:center!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-profile-stack{
+    grid-column:2!important;
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:end!important;
+    gap:2px 8px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-button{
+    grid-column:1/-1!important;
+    grid-row:1!important;
+    justify-self:end!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:36px!important;
+    padding:2px 3px 2px 7px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    max-width:min(48vw,190px)!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:12px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-role{
+    grid-column:1!important;
+    grid-row:2!important;
+    justify-self:end!important;
+    font-size:8.5px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-clock{
+    grid-column:2!important;
+    grid-row:2!important;
+    justify-self:end!important;
+    font-size:8.5px!important;
+    color:#94a3b8!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) .header-account-avatar{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    flex-basis:32px!important;
+  }
+}
+
+@media (max-width:430px){
+  .site-header{
+    padding:10px!important;
+  }
+
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+  }
+
+  .site-brand-title{
+    font-size:14.5px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:8.7px!important;
+  }
+
+  .header-account-zone:has(.header-notification-button.hidden) #accountButtonText,
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    font-size:11px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    max-width:44vw!important;
+  }
+}
+
+@media (max-width:360px){
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:31px!important;
+    height:31px!important;
+    min-width:31px!important;
+  }
+
+  .site-brand-title{
+    font-size:13.5px!important;
+  }
+
+  .site-brand-subtitle{
+    font-size:8.2px!important;
+  }
+
+  .header-account-zone:not(:has(.header-notification-button.hidden)) #accountButtonText{
+    max-width:38vw!important;
+  }
+}
