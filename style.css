@@ -16357,3 +16357,259 @@ button,input,select,textarea{max-width:100%;min-width:0}
     min-height:27px!important;
   }
 }
+
+
+/* =====================================================
+   V36.7 — RESPONSIVE HEADER
+   ===================================================== */
+
+header.glass.card{
+  min-width:0;
+}
+
+header.glass.card .header-brand,
+header.glass.card .header-user,
+header.glass.card .header-user-main,
+header.glass.card .header-user-copy{
+  min-width:0;
+}
+
+/* Tablet */
+@media (min-width:761px) and (max-width:1100px){
+  header.glass.card{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:14px!important;
+  }
+
+  header.glass.card .flex.items-center.gap-4:first-child{
+    min-width:0!important;
+  }
+
+  header.glass.card img.w-20{
+    width:58px!important;
+    height:58px!important;
+    flex:0 0 58px!important;
+  }
+
+  header.glass.card .text-xl,
+  header.glass.card .md\:text-2xl{
+    font-size:1.15rem!important;
+    line-height:1.18!important;
+  }
+
+  header.glass.card .header-user,
+  header.glass.card .header-account,
+  header.glass.card .profile-area{
+    max-width:310px!important;
+    min-width:0!important;
+  }
+}
+
+/* Phones — guest and signed-in */
+@media (max-width:760px){
+  header.glass.card{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+    padding:14px!important;
+    border-radius:18px!important;
+  }
+
+  /* Brand */
+  header.glass.card>.flex.items-center.gap-4:first-child{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:start!important;
+    gap:11px!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  header.glass.card>.flex.items-center.gap-4:first-child>div:first-child{
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    flex-wrap:nowrap!important;
+  }
+
+  header.glass.card img.w-20{
+    width:46px!important;
+    height:46px!important;
+    min-width:46px!important;
+    flex:0 0 46px!important;
+  }
+
+  header.glass.card .text-xl,
+  header.glass.card .md\:text-2xl{
+    font-size:1.02rem!important;
+    line-height:1.16!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  header.glass.card .text-sm,
+  header.glass.card .md\:text-base{
+    font-size:.76rem!important;
+    line-height:1.45!important;
+  }
+
+  /* Right/account zone */
+  header.glass.card>.flex.items-center.gap-3,
+  header.glass.card>.flex.items-center.gap-4:last-child,
+  header.glass.card .header-user,
+  header.glass.card .header-account,
+  header.glass.card .profile-area{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  header.glass.card .header-user,
+  header.glass.card .header-account,
+  header.glass.card .profile-area{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:9px!important;
+  }
+
+  header.glass.card .header-user-copy,
+  header.glass.card .profile-copy,
+  header.glass.card .user-copy{
+    min-width:0!important;
+    text-align:left!important;
+  }
+
+  header.glass.card .header-user-copy *,
+  header.glass.card .profile-copy *,
+  header.glass.card .user-copy *{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /* Bell and avatar stay fixed; text gets remaining space. */
+  header.glass.card button[id*="notification"],
+  header.glass.card button[class*="notification"],
+  header.glass.card .notification-bell,
+  header.glass.card .header-bell{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    flex:0 0 42px!important;
+  }
+
+  header.glass.card .avatar,
+  header.glass.card [class*="avatar"]{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    flex:0 0 42px!important;
+  }
+
+  /* Guest login/register area must not overflow. */
+  header.glass.card .guest-actions,
+  header.glass.card .auth-actions{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    width:100%!important;
+    gap:8px!important;
+  }
+
+  header.glass.card .guest-actions button,
+  header.glass.card .auth-actions button{
+    width:100%!important;
+    min-width:0!important;
+    white-space:normal!important;
+  }
+
+  /* Date/time becomes secondary information. */
+  header.glass.card [id*="clock"],
+  header.glass.card [id*="time"],
+  header.glass.card .header-time{
+    max-width:100%!important;
+    white-space:normal!important;
+    font-size:.72rem!important;
+  }
+}
+
+/* Small phones */
+@media (max-width:430px){
+  header.glass.card{
+    padding:12px!important;
+    gap:10px!important;
+  }
+
+  header.glass.card img.w-20{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    flex-basis:40px!important;
+  }
+
+  header.glass.card .text-xl,
+  header.glass.card .md\:text-2xl{
+    font-size:.93rem!important;
+  }
+
+  header.glass.card .text-sm,
+  header.glass.card .md\:text-base{
+    font-size:.7rem!important;
+  }
+
+  header.glass.card button[id*="notification"],
+  header.glass.card button[class*="notification"],
+  header.glass.card .notification-bell,
+  header.glass.card .header-bell,
+  header.glass.card .avatar,
+  header.glass.card [class*="avatar"]{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width:360px){
+  header.glass.card{
+    padding:10px!important;
+  }
+
+  header.glass.card>.flex.items-center.gap-4:first-child{
+    gap:8px!important;
+  }
+
+  header.glass.card img.w-20{
+    width:36px!important;
+    height:36px!important;
+    min-width:36px!important;
+    flex-basis:36px!important;
+  }
+
+  header.glass.card .text-xl,
+  header.glass.card .md\:text-2xl{
+    font-size:.86rem!important;
+  }
+
+  header.glass.card .guest-actions,
+  header.glass.card .auth-actions{
+    grid-template-columns:1fr!important;
+  }
+}
+
+/* Landscape phones */
+@media (max-height:520px) and (max-width:900px) and (orientation:landscape){
+  header.glass.card{
+    grid-template-columns:minmax(0,1fr) minmax(220px,.75fr)!important;
+    align-items:center!important;
+    padding:10px 12px!important;
+    gap:12px!important;
+  }
+
+  header.glass.card img.w-20{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+  }
+}
