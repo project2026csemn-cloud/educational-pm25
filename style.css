@@ -15664,3 +15664,262 @@ button.member-locked::after{
 #chartZoomResolution{
   white-space:nowrap;
 }
+
+
+/* =========================================================
+   V36.5 — CROSS-DEVICE SAFETY
+   ========================================================= */
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+img,svg,video,canvas{max-width:100%}
+button,input,select,textarea{max-width:100%;min-width:0}
+.min-w-0{min-width:0!important}
+
+.dashboard-page,
+.dashboard-page-panel,
+.historical-section,
+.dashboard-chart-card,
+.metric-chart-panel,
+.metric-chart-head,
+.metric-chart-canvas-wrap,
+.monitoring-card,
+.node,
+.about-card,
+.ai-analysis-card,
+.ai-forecast-card{
+  min-width:0!important;
+  max-width:100%!important;
+}
+
+/* Text and controls must wrap instead of escaping their cards. */
+.dashboard-page-heading,
+.section-title-with-help,
+.chart-zone-heading,
+.metric-chart-head,
+.history-toolbar,
+.monitoring-status-cluster,
+.ai-analysis-header,
+.ai-forecast-topbar{
+  min-width:0!important;
+}
+.dashboard-page-heading *,
+.section-title-with-help *,
+.chart-zone-heading *,
+.metric-chart-head *,
+.monitoring-status-cluster *,
+.ai-analysis-header *,
+.ai-forecast-topbar *{
+  min-width:0;
+}
+.dashboard-page-heading p,
+.overview-subtitle,
+.monitoring-status-hint,
+.current-environment-detail,
+.ai-result-summary,
+.ai-forecast-details,
+.about-card p,
+.about-card li{
+  overflow-wrap:anywhere;
+}
+
+/* Graph headers: legend can never collide with graph/open hint. */
+.metric-chart-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+  gap:8px 12px!important;
+}
+.metric-chart-legend{
+  max-width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  gap:7px 12px!important;
+}
+.metric-chart-canvas-wrap{
+  width:100%!important;
+  overflow:hidden!important;
+}
+.metric-chart-canvas-wrap canvas{
+  width:100%!important;
+  max-width:100%!important;
+}
+
+/* Medium devices / tablets */
+@media (min-width:761px) and (max-width:1100px){
+  body>.max-w-\[1800px\]{padding-left:14px!important;padding-right:14px!important}
+  .history-toolbar{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .history-toolbar>*{width:100%!important;min-width:0!important}
+  .dashboard-charts-zone,
+  .metric-chart-grid-3{grid-template-columns:1fr!important}
+  .metric-chart-head{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .metric-chart-legend{justify-content:flex-start!important}
+}
+
+/* Phones */
+@media (max-width:760px){
+  body>.max-w-\[1800px\]{
+    width:100%!important;
+    max-width:100%!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  header.glass.card,
+  .dashboard-nav,
+  .dashboard-page-panel,
+  .historical-section,
+  .dashboard-chart-card,
+  .monitoring-card,
+  .node,
+  .about-card{
+    max-width:100%!important;
+  }
+
+  /* Header brand stays readable from 320px upward. */
+  header .flex.items-center.gap-4{
+    width:100%!important;
+    min-width:0!important;
+  }
+  header .flex.items-center.gap-4>div:last-child{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+  header .text-xl{
+    overflow-wrap:anywhere!important;
+  }
+
+  /* One-column operational controls prevent squeezing. */
+  .history-toolbar{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  .history-toolbar>*,
+  .history-toolbar select,
+  .history-toolbar button,
+  #historyRangePicker,
+  #historyRangeButton{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+
+  /* Compare selector + action stack on narrow screens. */
+  .compare-toolbar,
+  .node-compare-controls,
+  .comparison-controls{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+
+  /* Graph title and legend get their own rows. */
+  .metric-chart-head{
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+  .metric-chart-legend{
+    justify-content:flex-start!important;
+    width:100%!important;
+    margin-top:0!important;
+    padding-right:0!important;
+  }
+  .metric-chart-legend span{
+    white-space:normal!important;
+  }
+
+  /* The floating hint was covering legends on phones. */
+  .metric-chart-canvas-wrap::after,
+  .bottom-chart-wrap::after{
+    display:none!important;
+    content:none!important;
+  }
+
+  .metric-chart-canvas-wrap{
+    height:250px!important;
+    min-height:250px!important;
+  }
+  .chart-render-area{
+    width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+
+  /* Headings/buttons can wrap instead of pushing outside. */
+  .section-title-with-help,
+  .chart-zone-heading,
+  .ai-analysis-header,
+  .ai-forecast-topbar{
+    flex-wrap:wrap!important;
+  }
+  .section-title-with-help .help-trigger,
+  .chart-zone-heading .help-trigger{
+    flex:0 0 auto!important;
+  }
+
+  /* Cards and grids */
+  .monitoring-status-cluster,
+  .overview-metrics-grid,
+  .overview-node-grid,
+  .dashboard-charts-zone,
+  .metric-chart-grid-3,
+  .ai-forecast-grid,
+  .smart-summary-grid{
+    grid-template-columns:1fr!important;
+  }
+
+  /* Modal/dialog safety for different browser bars and device heights. */
+  .auth-modal-dialog,
+  .admin-dialog,
+  .my-account-dialog,
+  .account-security-dialog,
+  .export-modal-dialog,
+  .chart-zoom-dialog{
+    width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;
+    max-height:calc(100dvh - 16px)!important;
+  }
+}
+
+/* Small phones */
+@media (max-width:480px){
+  body>.max-w-\[1800px\]{padding-left:8px!important;padding-right:8px!important}
+
+  .dashboard-page-heading h1,
+  .overview-title{font-size:21px!important}
+  .section-title-with-help h2,
+  .chart-zone-title{font-size:19px!important}
+
+  .historical-section,
+  .dashboard-chart-card,
+  .monitoring-card,
+  .about-card{padding:12px!important}
+
+  .metric-chart-panel{padding:10px!important}
+  .metric-chart-canvas-wrap{height:235px!important;min-height:235px!important}
+
+  .history-toolbar-button,
+  .history-metric-select,
+  select,
+  button{
+    min-width:0!important;
+  }
+}
+
+/* Very small phones */
+@media (max-width:360px){
+  header img.w-20{width:40px!important;height:40px!important}
+  header .text-xl{font-size:15px!important}
+  .dashboard-page-heading h1,
+  .overview-title{font-size:20px!important}
+  .metric-chart-canvas-wrap{height:220px!important;min-height:220px!important}
+}
