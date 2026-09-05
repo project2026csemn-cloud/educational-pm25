@@ -11138,7 +11138,10 @@ function renderGoogleIdentityButton(){
   const available=Math.floor(target.getBoundingClientRect().width);
   if(!available)return;
 
-  const width=Math.max(200,Math.min(336,available));
+  const width=Math.max(
+    200,
+    Math.min(328,available - 12)
+  );
   target.innerHTML="";
 
   google.accounts.id.renderButton(target,{
