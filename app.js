@@ -5716,10 +5716,6 @@ button
 
 function setRange(key){
 
-// V34: Guest ดูข้อมูลย้อนหลังพื้นฐานได้ถึง 24 ชั่วโมง
-// ช่วง 7/30 วันเป็นสิทธิ์สมาชิกเพื่อให้ Login มีประโยชน์จริง
-if((key==="7d"||key==="30d")&&!requirePermission("history_extended","ข้อมูลย้อนหลัง 7/30 วัน"))return;
-
 const c=
 RANGE_CONFIG[key];
 
@@ -5782,9 +5778,6 @@ loadHistorical();
 }
 
 function applyCustomRange(){
-
-// V34: ช่วงวัน/เวลาแบบกำหนดเองเป็นฟังก์ชันสมาชิก
-if(!requirePermission("history_custom_range","การเลือกช่วงวันและเวลาแบบกำหนดเอง"))return;
 
 const start=
 dateFromRangeInput(
