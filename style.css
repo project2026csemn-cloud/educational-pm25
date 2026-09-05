@@ -18513,3 +18513,94 @@ html body .site-header.is-authenticated #accountRoleBadge{
     color:#67e8f9!important;
   }
 }
+
+
+/* =====================================================
+   V36.31 — MOBILE TBT / CLS
+   ===================================================== */
+
+.site-header,
+.dashboard-nav{
+  contain:layout paint;
+}
+
+.overview-guidance{
+  min-height:1.6em;
+}
+
+.overview-freshness{
+  min-height:1.45em;
+}
+
+.overview-main-value{
+  min-height:150px;
+}
+
+.overview-quality-badge{
+  min-width:118px;
+  min-height:42px;
+}
+
+.overview-node-card{
+  min-height:76px;
+}
+
+@media(max-width:760px){
+  .site-header{
+    min-height:292px;
+  }
+
+  .header-account-zone{
+    min-height:72px;
+  }
+
+  .dashboard-nav{
+    min-height:132px;
+  }
+
+  .overview-hero{
+    min-height:560px;
+  }
+
+  .overview-guidance{
+    min-height:3.1em;
+  }
+
+  .overview-freshness{
+    min-height:1.5em;
+  }
+
+  .overview-main-value{
+    min-height:205px;
+  }
+
+  .overview-metrics-grid,
+  .overview-node-grid,
+  .overview-alert-card{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 320px;
+  }
+}
+
+@media(max-width:430px){
+  .site-header{
+    min-height:286px;
+  }
+
+  .dashboard-nav{
+    min-height:126px;
+  }
+
+  .overview-hero{
+    min-height:545px;
+  }
+}
+
+@media(min-width:761px){
+  .overview-metrics-grid,
+  .overview-node-grid,
+  .overview-alert-card{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 220px;
+  }
+}
