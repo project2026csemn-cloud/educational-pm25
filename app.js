@@ -27,7 +27,9 @@ manageDevices:`${BASE}/api/manage/devices`,
 manageAnnouncement:`${BASE}/api/manage/announcement`,
 manageUsers:`${BASE}/api/manage/users`,
 manageUsersUpdate:`${BASE}/api/manage/users/update`,
-notificationPreferences:`${BASE}/api/auth/notification_preferences`
+notificationPreferences:`${BASE}/api/auth/notification_preferences`,
+notifications:`${BASE}/api/auth/notifications`,
+notificationRead:`${BASE}/api/auth/notifications/read`
 };
 
 const TOTAL_NODES=3;
@@ -10815,8 +10817,47 @@ async function saveHelpEditor(){
 }
 
 function renderAdminDevices(){
-  const root=$("adminDeviceList");if(!root)return;const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}"><h4>📍 จุดตรวจวัด ${i+1}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div><label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label><label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label><label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description" maxlength="300" rows="3">${esc(d.description||"")}</textarea></label></div>`).join("");
+  const root=$("adminDeviceList");if(!root)return;
+  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
+  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}">
+    <h4>📍 จุดตรวจวัด ${i+1}</h4>
+    <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div>
+    <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label>
+    <label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label>
+    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description" maxlength="300" rows="3">${esc(d.description||"")}</textarea></label>
+  </div>`).join("");
+  root.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderAdminDevicePreview));
+  const sel=$("adminDevicePreviewSelect");
+  if(sel){
+    sel.innerHTML=devices.map((d,i)=>`<option value="${esc(d.device_id)}">${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</option>`).join("");
+    sel.onchange=renderAdminDevicePreview;
+  }
+  renderAdminDevicePreview();
+}
+
+function renderAdminDevicePreview(){
+  const cards=[...document.querySelectorAll(".admin-device-card")];
+  if(!cards.length)return;
+  const sel=$("adminDevicePreviewSelect");
+  let card=cards.find(x=>x.dataset.deviceId===sel?.value)||cards[0];
+  const name=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
+  const location=(card.querySelector(".admin-device-location")?.value||"").trim();
+  const description=(card.querySelector(".admin-device-description")?.value||"").trim();
+  if($("adminDevicePreviewName"))$("adminDevicePreviewName").textContent=name;
+  if($("adminDevicePreviewLocation")){
+    $("adminDevicePreviewLocation").textContent=location;
+    $("adminDevicePreviewLocation").classList.toggle("hidden",!location);
+  }
+  if($("adminDevicePreviewDescription")){
+    $("adminDevicePreviewDescription").textContent=description;
+    $("adminDevicePreviewDescription").classList.toggle("hidden",!description);
+  }
+  if(sel){
+    [...sel.options].forEach(opt=>{
+      const c=cards.find(x=>x.dataset.deviceId===opt.value);
+      if(c)opt.textContent=(c.querySelector(".admin-device-display")?.value||opt.value).trim();
+    });
+  }
 }
 async function saveAdminDevices(){
   const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||""}));
@@ -11170,6 +11211,105 @@ let notificationPrefsLoadedFor=null;
 let notificationCheckBusy=false;
 let notificationSeeded=false;
 let lastNotificationDetail=null;
+let notificationInboxItems=[];
+let notificationInboxTimer=null;
+
+
+
+function formatNotificationTime(value){
+  const d=value?new Date(String(value).replace(" ","T")+"Z"):null;
+  if(!d||Number.isNaN(d.getTime()))return "--";
+  const diff=Date.now()-d.getTime();
+  if(diff>=0&&diff<60000)return "เมื่อสักครู่";
+  if(diff>=60000&&diff<3600000)return `${Math.floor(diff/60000)} นาทีที่แล้ว`;
+  if(diff>=3600000&&diff<86400000)return `${Math.floor(diff/3600000)} ชั่วโมงที่แล้ว`;
+  return d.toLocaleString("th-TH",{timeZone:"Asia/Bangkok",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+}
+
+function updateNotificationBadge(unread=0){
+  const badge=$("headerNotificationBadge");
+  if(!badge)return;
+  const n=Math.max(0,Number(unread)||0);
+  badge.textContent=n>9?"9+":String(n);
+  badge.classList.toggle("hidden",n===0||!authUser);
+}
+
+function renderNotificationInbox(){
+  const root=$("notificationInboxList");if(!root)return;
+  if(!notificationInboxItems.length){
+    root.innerHTML=`<div class="notification-inbox-empty"><span>🔕</span><b>ยังไม่มีการแจ้งเตือน</b><small>เมื่อสถานการณ์เปลี่ยน ระบบจะแสดงรายการไว้ที่นี่</small></div>`;
+    return;
+  }
+  root.innerHTML=notificationInboxItems.map(n=>`
+    <button type="button" class="notification-inbox-item ${n.is_read?"":"is-unread"}" data-notification-id="${Number(n.id)}">
+      <span class="notification-inbox-item-icon">${esc(n.icon||"🔔")}</span>
+      <span class="notification-inbox-item-copy">
+        <b>${esc(n.title||"การแจ้งเตือน")}</b>
+        <span>${esc(n.message||"")}</span>
+        <small>${esc(n.device_id?deviceDisplayName(n.device_id):"ระบบ")} • ${esc(formatNotificationTime(n.created_at))}</small>
+      </span>
+      <i></i>
+    </button>`).join("");
+  root.querySelectorAll("[data-notification-id]").forEach(btn=>btn.addEventListener("click",()=>openInboxNotificationDetail(Number(btn.dataset.notificationId))));
+}
+
+async function loadNotificationInbox({silent=false}={}){
+  if(!authUser)return;
+  const root=$("notificationInboxList");
+  if(!silent&&root)root.innerHTML=`<div class="notification-inbox-empty">กำลังโหลดการแจ้งเตือน...</div>`;
+  try{
+    const j=await apiJson(`${API.notifications}?limit=20`);
+    notificationInboxItems=Array.isArray(j.notifications)?j.notifications:[];
+    updateNotificationBadge(j.unread_count||0);
+    renderNotificationInbox();
+  }catch(err){
+    if(!silent&&root)root.innerHTML=`<div class="notification-inbox-empty"><b>โหลดการแจ้งเตือนไม่สำเร็จ</b><small>${esc(err.message||"")}</small></div>`;
+  }
+}
+
+async function markNotificationRead(id=null,all=false){
+  if(!authUser)return;
+  try{
+    await apiJson(API.notificationRead,{method:"POST",body:JSON.stringify(all?{all:true}:{id})});
+    await loadNotificationInbox({silent:true});
+  }catch(_){}
+}
+
+function closeNotificationInbox(){
+  const box=$("notificationInbox");if(!box)return;
+  box.classList.add("hidden");box.setAttribute("aria-hidden","true");
+  $("headerNotificationButton")?.setAttribute("aria-expanded","false");
+}
+
+async function openNotificationInbox(){
+  if(!authUser)return;
+  const box=$("notificationInbox");if(!box)return;
+  const opening=box.classList.contains("hidden");
+  if(!opening){closeNotificationInbox();return;}
+  $("accountDropdown")?.classList.add("hidden");
+  box.classList.remove("hidden");box.setAttribute("aria-hidden","false");
+  $("headerNotificationButton")?.setAttribute("aria-expanded","true");
+  await loadNotificationInbox();
+}
+
+async function openInboxNotificationDetail(id){
+  const item=notificationInboxItems.find(x=>Number(x.id)===Number(id));if(!item)return;
+  await markNotificationRead(item.id,false);
+  closeNotificationInbox();
+  $("notificationDetailIcon").textContent=item.icon||"🔔";
+  $("notificationDetailTitle").textContent=item.title||"การแจ้งเตือน";
+  $("notificationDetailMessage").textContent=item.message||"";
+  $("notificationDetailDevice").textContent=item.device_id?deviceDisplayName(item.device_id):"ระบบ";
+  $("notificationDetailTime").textContent=item.created_at?new Date(String(item.created_at).replace(" ","T")+"Z").toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"--";
+  const m=$("notificationDetailModal");if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
+}
+
+function startNotificationInboxPolling(){
+  if(notificationInboxTimer)clearInterval(notificationInboxTimer);
+  if(!authUser)return;
+  loadNotificationInbox({silent:true});
+  notificationInboxTimer=setInterval(()=>{if(authUser)loadNotificationInbox({silent:true});},60000);
+}
 
 function notificationStorageKey(){return `pm25-notification-state-${authUser?.id||"guest"}`;}
 function notificationEventKey(device,type){return `${device}:${type}`;}
@@ -11331,7 +11471,7 @@ function openNotificationDetailFromUrl(){
   const run=async()=>{
     await restoreAuthSession();
     loadAuthConfig();
-    if(authUser){ensureNotificationPreferences();registerNotificationServiceWorker();}
+    if(authUser){ensureNotificationPreferences();registerNotificationServiceWorker();startNotificationInboxPolling();}
     setTimeout(openNotificationDetailFromUrl,150);
     $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
@@ -11382,19 +11522,19 @@ function openNotificationDetailFromUrl(){
     $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
     $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
+    $("notificationInboxSettings")?.addEventListener("click",()=>{closeNotificationInbox();openNotificationSettings();});
+    $("notificationMarkAllRead")?.addEventListener("click",()=>markNotificationRead(null,true));
+
     document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
     document.querySelectorAll("[data-notification-back]").forEach(x=>x.addEventListener("click",backFromNotificationSettings));
     document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
     document.querySelectorAll("[data-notification-detail-back]").forEach(x=>x.addEventListener("click",backFromNotificationDetail));
-    $("headerNotificationButton")?.addEventListener("click",()=>{
-      if(!authUser)return;
-      openNotificationSettings();
-    });
+    $("headerNotificationButton")?.addEventListener("click",openNotificationInbox);
     $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
     $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
     $("notificationDetailGo")?.addEventListener("click",()=>{closeNotificationDetail();document.querySelector('[data-go-page="monitoring"]')?.click();});
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];updateNotificationBadge(0);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
@@ -11415,6 +11555,10 @@ function openNotificationDetailFromUrl(){
       if(next!==confirm){if(msg)msg.textContent="รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน";return;}
       if(msg)msg.textContent="กำลังบันทึก...";
       try{await apiJson(API.authChangePassword,{method:"POST",body:JSON.stringify({current_password:current,new_password:next})});if(msg)msg.textContent="เปลี่ยนรหัสผ่านเรียบร้อย";setTimeout(closeAccountSecurity,650);}catch(err){if(msg)msg.textContent=err.message;}
+    });
+    document.addEventListener("click",e=>{
+      const box=$("notificationInbox"),bell=$("headerNotificationButton");
+      if(box&&!box.classList.contains("hidden")&&!box.contains(e.target)&&!bell?.contains(e.target))closeNotificationInbox();
     });
     document.addEventListener("click",e=>{const dd=$("accountDropdown"),btn=$("accountButton");if(authUser&&dd&&!dd.classList.contains("hidden")&&!dd.contains(e.target)&&!btn?.contains(e.target))dd.classList.add("hidden");});
     document.querySelectorAll(".admin-nav").forEach(b=>b.addEventListener("click",()=>switchAdminTab(b.dataset.adminTab)));
