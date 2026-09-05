@@ -3121,6 +3121,101 @@ averageRange
 
 }
 
+function historyRangeButtonText(){
+
+if(
+averageRange!=="custom"||
+!customRangeStart||
+!customRangeEnd
+){
+
+return rangeLabel();
+
+}
+
+const start=
+customRangeStart;
+
+const end=
+customRangeEnd;
+
+const sameDay=
+start.getFullYear()===end.getFullYear()&&
+start.getMonth()===end.getMonth()&&
+start.getDate()===end.getDate();
+
+const dayFmt=
+new Intl.DateTimeFormat(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+day:"numeric",
+month:"short"
+}
+);
+
+const yearFmt=
+new Intl.DateTimeFormat(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+year:"2-digit"
+}
+);
+
+const timeFmt=
+new Intl.DateTimeFormat(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+
+if(sameDay){
+
+return`${dayFmt.format(start)} • ${timeFmt.format(start)}–${timeFmt.format(end)}`;
+
+}
+
+const sameMonth=
+start.getFullYear()===end.getFullYear()&&
+start.getMonth()===end.getMonth();
+
+if(sameMonth){
+
+return`${start.getDate()}–${end.getDate()} ${new Intl.DateTimeFormat("th-TH",{timeZone:"Asia/Bangkok",month:"short"}).format(end)} ${yearFmt.format(end)}`;
+
+}
+
+return`${dayFmt.format(start)}–${dayFmt.format(end)} ${yearFmt.format(end)}`;
+
+}
+
+function updateHistoryRangeButtonLabel(){
+
+const label=
+$("historyRangeButtonLabel");
+
+if(!label){
+return;
+}
+
+const text=
+historyRangeButtonText();
+
+label.textContent=
+text;
+
+label.title=
+averageRange==="custom"
+?rangeLabel()
+:text;
+
+}
+
 function rangeWindow(){
 
 if(
@@ -5836,14 +5931,7 @@ updateQuickRangeUI(
 key
 );
 
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
+updateHistoryRangeButtonLabel();
 
 closeHistoryRangePicker();
 
@@ -5934,14 +6022,7 @@ updateQuickRangeUI(
 null
 );
 
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
+updateHistoryRangeButtonLabel();
 
 closeHistoryRangePicker();
 
@@ -9666,14 +9747,7 @@ timeStyle:
 // START
 // =====================================================
 
-if(
-$("historyRangeButtonLabel")
-){
-
-$("historyRangeButtonLabel").textContent=
-rangeLabel();
-
-}
+updateHistoryRangeButtonLabel();
 
 updateQuickRangeUI(
 averageRange
