@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260905-v355" rel="stylesheet"/>
+<link href="style.css?v=20260905-v356" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -574,19 +574,19 @@ DASHBOARD NAVIGATION
             <span>เลือกจากปฏิทินหรือกรอกวันและเวลา</span>
           </div>
 
-          <div class="history-range-custom-card">
-            <label class="history-range-custom-field">
-              <span class="history-range-custom-icon">↗</span>
-              <span class="history-range-custom-copy"><small>เริ่มต้น</small><b id="historyRangeStartPreview">--</b></span>
-              <input id="customRangeStart" type="datetime-local"/>
+          <div class="history-range-custom-card history-range-custom-card-v356">
+            <label class="history-range-custom-input-field">
+              <span class="history-range-custom-input-head"><span class="history-range-custom-icon">↗</span><b>เริ่มต้น</b></span>
+              <input id="customRangeStart" type="datetime-local" aria-label="วันและเวลาเริ่มต้น"/>
+              <small id="historyRangeStartPreview">--</small>
             </label>
 
             <div class="history-range-custom-line"><span></span><b>ถึง</b><span></span></div>
 
-            <label class="history-range-custom-field">
-              <span class="history-range-custom-icon">↘</span>
-              <span class="history-range-custom-copy"><small>สิ้นสุด</small><b id="historyRangeEndPreview">--</b></span>
-              <input id="customRangeEnd" type="datetime-local"/>
+            <label class="history-range-custom-input-field">
+              <span class="history-range-custom-input-head"><span class="history-range-custom-icon">↘</span><b>สิ้นสุด</b></span>
+              <input id="customRangeEnd" type="datetime-local" aria-label="วันและเวลาสิ้นสุด"/>
+              <small id="historyRangeEndPreview">--</small>
             </label>
           </div>
 
@@ -1577,7 +1577,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260905-v355"></script>
+<script defer src="app.js?v=20260905-v356"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
