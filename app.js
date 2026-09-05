@@ -11027,8 +11027,15 @@ function updateAccountUI(){
     if($("accountMenuEmail"))$("accountMenuEmail").textContent=authUser.email||"";
     if(mr)mr.textContent=authRoleLabel(authUser.role);
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
-    contentBtn?.classList.toggle("hidden",!["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key)));
-    usersBtn?.classList.toggle("hidden",!hasPermission("manage_users_view"));
+    const canManageContent=["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key));
+    const canManageUsers=hasPermission("manage_users_view");
+
+    contentBtn?.classList.toggle("hidden",!canManageContent);
+    usersBtn?.classList.toggle("hidden",!canManageUsers);
+
+    const managementSection=document.querySelector(".account-management-section");
+    managementSection?.classList.toggle("hidden",!(canManageContent||canManageUsers));
+
     syncMyAccountUI();
   }else{
     text.textContent="เข้าสู่ระบบ";
@@ -11038,6 +11045,7 @@ function updateAccountUI(){
     menu?.classList.add("hidden");
     $("headerNotificationButton")?.classList.add("hidden");
     $("headerNotificationBadge")?.classList.add("hidden");
+    document.querySelector(".account-management-section")?.classList.add("hidden");
 
     // Guest ต้องไม่เห็นผล AI ที่ค้างมาจาก session ก่อนหน้า
     aiPayload=null;
