@@ -15656,3 +15656,11 @@ button.member-locked::after{
     font-size:8px;
   }
 }
+
+
+/* =====================================================
+   V36.1 — REAL POINT TIME / PRETTY ADAPTIVE AXIS
+   ===================================================== */
+#chartZoomResolution{
+  white-space:nowrap;
+}
