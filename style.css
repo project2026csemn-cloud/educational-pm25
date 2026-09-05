@@ -15068,3 +15068,143 @@ button.member-locked::after{
     font-size:11px!important;
   }
 }
+
+
+/* =====================================================
+   V35.4 — RESPONSIVE DATE / TIME PICKER
+   ===================================================== */
+.history-range-mobile-selection{display:none}
+
+#historyRangeModal .history-range-modal-dialog-v35{
+  width:min(920px,calc(100vw - 28px))!important;
+  max-height:min(680px,calc(100dvh - 24px))!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;
+}
+#historyRangeModal .history-range-modal-body-v35{min-height:0!important;overflow:hidden!important}
+#historyRangeModal .history-range-main-v35{
+  min-height:0!important;
+  display:grid!important;
+  grid-template-columns:minmax(430px,1.08fr) minmax(350px,.92fr)!important;
+}
+#historyRangeModal .history-range-calendar-v35{padding:14px 18px 10px!important}
+#historyRangeModal .history-range-side-v35{padding:14px 16px!important;gap:12px!important}
+#historyRangeModal #rangeCalendarGrid{gap:3px!important}
+#historyRangeModal #rangeCalendarGrid .range-calendar-day{height:36px!important;min-height:36px!important}
+#historyRangeModal #quickRangeList{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+#historyRangeModal #quickRangeList .quick-range-option{height:38px!important;min-height:38px!important;padding:5px!important}
+#historyRangeModal .history-range-datetime-v35{grid-template-columns:1fr 1fr!important;gap:8px!important}
+#historyRangeModal .history-range-footer-v35{padding:10px 14px!important}
+
+/* Tablet / iPad portrait */
+@media (min-width:601px) and (max-width:899px){
+  #historyRangeModal .history-range-modal-dialog-v35{
+    width:min(720px,calc(100vw - 20px))!important;
+    max-height:calc(100dvh - 16px)!important;
+  }
+  #historyRangeModal .history-range-modal-header{padding:11px 14px!important}
+  #historyRangeModal .history-range-main-v35{grid-template-columns:minmax(0,1fr) 292px!important}
+  #historyRangeModal .history-range-calendar-v35{padding:10px 11px 8px!important}
+  #historyRangeModal .history-range-side-v35{padding:10px!important;gap:8px!important}
+  #historyRangeModal #rangeCalendarGrid{gap:2px!important}
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{height:31px!important;min-height:31px!important;font-size:11px!important}
+  #historyRangeModal .history-calendar-hint{display:none!important}
+  #historyRangeModal #quickRangeList{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important}
+  #historyRangeModal #quickRangeList .quick-range-option{height:33px!important;min-height:33px!important;font-size:10px!important}
+  #historyRangeModal .history-range-datetime-v35{grid-template-columns:1fr!important;gap:6px!important}
+  #historyRangeModal .history-datetime-input{padding:6px 8px!important}
+}
+
+/* Mobile: split view + fixed bottom actions, no vertical hunt for Apply */
+@media (max-width:600px){
+  #historyRangeModal{padding:0!important;align-items:flex-end!important}
+  #historyRangeModal .history-range-modal-dialog-v35{
+    width:100%!important;max-width:none!important;
+    height:100dvh!important;max-height:100dvh!important;
+    margin:0!important;border-radius:18px 18px 0 0!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+  }
+  #historyRangeModal .history-range-modal-header{
+    padding:9px 10px!important;min-height:56px!important
+  }
+  #historyRangeModal .history-range-modal-title-wrap{gap:8px!important;padding-right:42px!important}
+  #historyRangeModal .history-range-modal-icon{width:34px!important;height:34px!important;min-width:34px!important;border-radius:10px!important;font-size:16px!important}
+  #historyRangeModal .history-range-modal-title{font-size:15px!important;line-height:1.15!important}
+  #historyRangeModal .history-range-modal-subtitle{display:none!important}
+  #historyRangeModal .history-range-mobile-selection{display:block!important;margin-top:2px!important;color:#22d3ee!important;font-size:9px!important;font-weight:800!important}
+  #historyRangeModal .history-range-modal-close{position:absolute!important;right:9px!important;top:9px!important;width:34px!important;height:34px!important;min-width:34px!important}
+
+  #historyRangeModal .history-range-modal-body-v35{overflow:hidden!important;min-height:0!important}
+  #historyRangeModal .history-range-main-v35{
+    height:100%!important;min-height:0!important;
+    grid-template-columns:minmax(0,1.12fr) minmax(145px,.88fr)!important;
+  }
+  #historyRangeModal .history-range-calendar-v35{
+    min-width:0!important;min-height:0!important;
+    padding:7px 6px 5px!important;
+    border-right:1px solid rgba(51,65,85,.65)!important;border-bottom:0!important;
+    overflow:hidden!important
+  }
+  #historyRangeModal .history-range-side-v35{
+    min-width:0!important;min-height:0!important;
+    padding:7px 6px!important;gap:6px!important;overflow:hidden!important
+  }
+  #historyRangeModal .history-calendar-toolbar{margin-bottom:4px!important}
+  #historyRangeModal .history-calendar-toolbar b{font-size:9px!important}
+  #historyRangeModal .history-calendar-nav{width:27px!important;height:27px!important;border-radius:8px!important}
+  #historyRangeModal .range-calendar-weekdays{font-size:7.5px!important;margin-bottom:1px!important}
+  #historyRangeModal #rangeCalendarGrid{gap:1px!important}
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{
+    width:100%!important;min-width:0!important;height:28px!important;min-height:28px!important;
+    padding:0!important;border-radius:7px!important;font-size:8.5px!important
+  }
+  #historyRangeModal .history-calendar-hint{display:none!important}
+
+  #historyRangeModal .history-range-side-label{font-size:7.5px!important;margin-bottom:4px!important}
+  #historyRangeModal #quickRangeList{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important
+  }
+  #historyRangeModal #quickRangeList .quick-range-option{
+    width:100%!important;min-width:0!important;height:29px!important;min-height:29px!important;
+    padding:2px!important;border-radius:8px!important;font-size:8px!important;white-space:nowrap!important
+  }
+  #historyRangeModal .history-range-datetime-v35{grid-template-columns:1fr!important;gap:4px!important}
+  #historyRangeModal .history-range-datetime-v35 label{min-width:0!important;gap:2px!important;font-size:7.5px!important}
+  #historyRangeModal .history-datetime-input{min-width:0!important;padding:4px 5px!important;border-radius:8px!important}
+  #historyRangeModal .history-datetime-input input{width:100%!important;min-width:0!important;font-size:7.5px!important;letter-spacing:-.03em!important}
+
+  #historyRangeModal .history-range-footer-v35{
+    position:relative!important;z-index:5!important;
+    min-height:54px!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;gap:6px!important;
+    padding:7px 9px calc(7px + env(safe-area-inset-bottom))!important;
+    background:rgba(4,18,31,.995)!important
+  }
+  #historyRangeModal .history-timezone-note{min-width:0!important;gap:6px!important}
+  #historyRangeModal .history-timezone-icon{width:28px!important;height:28px!important;min-width:28px!important}
+  #historyRangeModal .history-timezone-note b{font-size:8.5px!important}
+  #historyRangeModal .history-timezone-note span{font-size:6.5px!important}
+  #historyRangeModal .history-range-footer-actions{display:flex!important;flex-wrap:nowrap!important;gap:4px!important}
+  #historyRangeModal .history-range-secondary,
+  #historyRangeModal .history-range-primary{
+    min-height:34px!important;padding:5px 9px!important;border-radius:8px!important;font-size:8.5px!important;white-space:nowrap!important
+  }
+}
+
+/* Very small phones */
+@media (max-width:390px){
+  #historyRangeModal .history-range-main-v35{grid-template-columns:minmax(0,1.08fr) minmax(132px,.92fr)!important}
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{height:26px!important;min-height:26px!important;font-size:8px!important}
+  #historyRangeModal #quickRangeList .quick-range-option{height:27px!important;min-height:27px!important;font-size:7.5px!important}
+  #historyRangeModal .history-datetime-input input{font-size:7px!important}
+}
+
+/* Landscape / short screens */
+@media (max-height:650px) and (max-width:899px){
+  #historyRangeModal .history-range-modal-header{min-height:48px!important;padding-block:6px!important}
+  #historyRangeModal .history-range-main-v35{grid-template-columns:minmax(0,1.18fr) minmax(245px,.82fr)!important}
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{height:24px!important;min-height:24px!important}
+  #historyRangeModal .history-range-footer-v35{min-height:46px!important;padding-block:4px!important}
+}
