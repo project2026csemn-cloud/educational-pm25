@@ -7759,6 +7759,16 @@ closeCreditImage();
 // EVENTS
 // =====================================================
 
+let googleButtonResizeTimer=null;
+window.addEventListener("resize",()=>{
+  clearTimeout(googleButtonResizeTimer);
+  googleButtonResizeTimer=setTimeout(()=>{
+    if(!$("authModal")?.classList.contains("hidden")){
+      renderGoogleIdentityButton();
+    }
+  },120);
+});
+
 function bindEvents(){
 
 document
@@ -11045,7 +11055,9 @@ function openAuthModal(mode="login"){
   modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
   setAuthMode(mode);
   loadAuthStatus();
-  loadAuthConfig();
+  loadAuthConfig().finally(()=>{
+    requestAnimationFrame(()=>renderGoogleIdentityButton());
+  });
 }
 function closeAuthModal(){
   const m=$("authModal");if(!m)return;
@@ -11106,13 +11118,42 @@ async function loadAuthConfig(){
     authGoogleClientId=String(j?.google_client_id||"");
     if(authGoogleClientId) await initGoogleIdentity();
     $("authSocialArea")?.classList.toggle("hidden",!authGoogleClientId);
+    if(authGoogleClientId){
+      requestAnimationFrame(()=>renderGoogleIdentityButton());
+    }
   }catch(_){
     $("authSocialArea")?.classList.add("hidden");
   }
 }
 
+function renderGoogleIdentityButton(){
+  const target=$("googleSignInButton");
+  if(
+    !target ||
+    !authGoogleClientId ||
+    !window.google?.accounts?.id ||
+    target.offsetParent===null
+  )return;
+
+  const available=Math.floor(target.getBoundingClientRect().width);
+  if(!available)return;
+
+  const width=Math.max(200,Math.min(336,available));
+  target.innerHTML="";
+
+  google.accounts.id.renderButton(target,{
+    theme:"filled_black",
+    size:"large",
+    shape:"pill",
+    text:"continue_with",
+    width,
+    locale:"th"
+  });
+}
+
 async function initGoogleIdentity(){
-  if(googleIdentityReady||!authGoogleClientId)return;
+  if(!authGoogleClientId)return;
+
   if(!window.google?.accounts?.id){
     await new Promise((resolve,reject)=>{
       let s=document.querySelector('script[data-google-identity="1"]');
@@ -11131,38 +11172,20 @@ async function initGoogleIdentity(){
       document.head.appendChild(s);
     });
   }
-  if(!window.google?.accounts?.id)return;
-  google.accounts.id.initialize({
-    client_id:authGoogleClientId,
-    callback:handleGoogleCredential,
-    auto_select:false,
-    cancel_on_tap_outside:true
-  });
-  const target=$("googleSignInButton");
-  if(target){
-    target.innerHTML="";
-    const googleButtonWidth=Math.max(
-      200,
-      Math.min(
-        336,
-        Math.floor(
-          (target.getBoundingClientRect().width ||
-           target.parentElement?.getBoundingClientRect().width ||
-           336) - 2
-        )
-      )
-    );
 
-    google.accounts.id.renderButton(target,{
-      theme:"filled_black",
-      size:"large",
-      shape:"pill",
-      text:"continue_with",
-      width:googleButtonWidth,
-      locale:"th"
+  if(!window.google?.accounts?.id)return;
+
+  if(!googleIdentityReady){
+    google.accounts.id.initialize({
+      client_id:authGoogleClientId,
+      callback:handleGoogleCredential,
+      auto_select:false,
+      cancel_on_tap_outside:true
     });
+    googleIdentityReady=true;
   }
-  googleIdentityReady=true;
+
+  renderGoogleIdentityButton();
 }
 
 async function handleGoogleCredential(response){
