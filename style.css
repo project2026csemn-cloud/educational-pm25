@@ -19926,3 +19926,22 @@ html body .site-header.is-authenticated #clock{
     font-weight:800!important;
   }
 }
+
+
+/* =====================================================
+   V36.27 — ROLE COLOR + DESKTOP CLOCK POSITION
+   ===================================================== */
+
+/* USER / ADMIN / OWNER กลับเป็นสีฟ้าเดิมทุกแพลตฟอร์ม */
+html body .site-header.is-authenticated #accountRoleBadge{
+  color:#67e8f9!important;
+}
+
+/* เฉพาะคอม: ขยับเวลาเข้าซ้ายเล็กน้อยและลงอีกนิด */
+@media(min-width:1101px){
+  html body .site-header.is-authenticated #clock{
+    position:relative!important;
+    right:12px!important;
+    top:5px!important;
+  }
+}
