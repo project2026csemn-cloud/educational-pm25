@@ -8294,7 +8294,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-เลือกเส้นที่ต้องการด้านล่าง • ชี้/แตะจุดเพื่อดู “ค่าของเส้นนั้น” และเวลาที่ข้อมูลจุดนั้นถูกบันทึก
+ซูมเข้าได้เรื่อย ๆ • เมื่อเหลือไม่เกิน 6 ชั่วโมง แกน X จะเปลี่ยนเป็น “เวลาที่มีข้อมูลจริง” • ชี้/แตะจุดเพื่อดูเวลาบันทึกแบบเต็ม
 </div>
 </div>
 
@@ -8310,6 +8310,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-statusbar">
 <span>🔎 ซูมช่วงเวลา</span>
 <span>↔ ลากเพื่อเลื่อน</span>
+<span id="chartZoomResolution">แกนเวลา: ภาพรวม</span>
 <span>● ชี้จุด = ค่า + เวลาจริงของจุดนั้น</span>
 </div>
 
@@ -8349,6 +8350,342 @@ let dragStartMax=0;
 let pinchStartDistance=0;
 let pinchStartSpan=0;
 let pinchCenterRatio=.5;
+
+
+function viewerVisibleActualTimes(scale){
+
+const chart=
+scale?.chart;
+
+if(!chart){
+return[];
+}
+
+const min=
+Number(scale.min);
+
+const max=
+Number(scale.max);
+
+const values=
+[];
+
+(chart.data.datasets||[]).forEach((ds,index)=>{
+
+if(
+typeof chart.isDatasetVisible==="function"&&
+!chart.isDatasetVisible(index)
+){
+return;
+}
+
+for(const point of ds.data||[]){
+
+if(
+!point||
+typeof point!=="object"
+){
+continue;
+}
+
+const x=
+finiteNumberOrNull(point.x);
+
+const y=
+finiteNumberOrNull(point.y);
+
+if(
+x===null||
+y===null||
+x<min||
+x>max
+){
+continue;
+}
+
+values.push(x);
+
+}
+
+});
+
+return[
+...new Set(
+values.map(v=>Math.round(v))
+)
+].sort((a,b)=>a-b);
+
+}
+
+function reduceViewerActualTimes(times,maxTicks){
+
+if(
+!Array.isArray(times)||
+!times.length
+){
+return[];
+}
+
+if(times.length<=maxTicks){
+return times;
+}
+
+const result=[];
+
+for(
+let i=0;
+i<maxTicks;
+i++
+){
+
+const index=
+Math.round(
+i*(times.length-1)/
+Math.max(1,maxTicks-1)
+);
+
+const value=
+times[index];
+
+if(
+result.at(-1)!==value
+){
+result.push(value);
+}
+
+}
+
+return result;
+
+}
+
+function buildViewerTimeTicks(scale){
+
+const span=
+Math.max(
+0,
+Number(scale.max)-
+Number(scale.min)
+);
+
+const HOUR=
+60*60*1000;
+
+const width=
+Math.max(
+1,
+Number(scale.width||scale.chart?.width||0)
+);
+
+const mobile=
+window.innerWidth<=640;
+
+// ช่วงกว้างให้ Chart.js สร้าง tick ภาพรวมเอง
+// เมื่อซูมเข้าถึง <= 6 ชั่วโมง เปลี่ยน tick เป็น timestamp ที่มีข้อมูลจริง
+if(
+span>6*HOUR
+){
+return;
+}
+
+const actual=
+viewerVisibleActualTimes(scale);
+
+if(!actual.length){
+return;
+}
+
+const minGap=
+mobile
+?72
+:92;
+
+const maxByWidth=
+Math.max(
+2,
+Math.floor(width/minGap)
+);
+
+const hardMax=
+mobile
+?6
+:12;
+
+const maxTicks=
+Math.max(
+2,
+Math.min(
+hardMax,
+maxByWidth
+)
+);
+
+const chosen=
+reduceViewerActualTimes(
+actual,
+maxTicks
+);
+
+scale.ticks=
+chosen.map(value=>({value}));
+
+}
+
+function viewerTimeTickText(value,scale){
+
+const n=
+finiteNumberOrNull(value);
+
+if(n===null){
+return"";
+}
+
+const d=
+new Date(n);
+
+if(
+!Number.isFinite(d.getTime())
+){
+return"";
+}
+
+const span=
+Math.max(
+0,
+Number(scale?.max)-
+Number(scale?.min)
+);
+
+const MINUTE=
+60*1000;
+
+const HOUR=
+60*MINUTE;
+
+const DAY=
+24*HOUR;
+
+// ซูมลึก: แสดงเวลาจริงถึงวินาที
+if(span<=15*MINUTE){
+
+return d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit",
+hour12:false
+}
+);
+
+}
+
+// <= 6 ชม. tick ถูก snap ไปยังเวลาที่มีข้อมูลจริง
+if(span<=6*HOUR){
+
+return d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+
+}
+
+if(span<=DAY){
+
+return d.toLocaleTimeString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+
+}
+
+if(span<3*DAY){
+
+return d.toLocaleString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+
+}
+
+return d.toLocaleDateString(
+"th-TH",
+{
+timeZone:"Asia/Bangkok",
+day:"2-digit",
+month:"short"
+}
+);
+
+}
+
+function updateViewerResolutionLabel(){
+
+const el=
+$("chartZoomResolution");
+
+if(!el){
+return;
+}
+
+const span=
+Math.max(
+0,
+viewMax-viewMin
+);
+
+const MINUTE=
+60*1000;
+
+const HOUR=
+60*MINUTE;
+
+if(span<=15*MINUTE){
+
+el.textContent=
+"แกนเวลา: เวลาจริง • ถึงวินาที";
+
+return;
+}
+
+if(span<=6*HOUR){
+
+el.textContent=
+"แกนเวลา: เวลาจริงของข้อมูล";
+
+return;
+}
+
+if(span<=24*HOUR){
+
+el.textContent=
+"แกนเวลา: ชั่วโมง";
+
+return;
+}
+
+el.textContent=
+"แกนเวลา: ภาพรวม";
+
+}
 
 function destroyInteractiveChart(){
 
@@ -8413,6 +8750,8 @@ chartInteractiveInstance.options.scales.x.max=
 viewMax;
 
 chartInteractiveInstance.update("none");
+
+updateViewerResolutionLabel();
 
 const total=
 Math.max(
@@ -8818,6 +9157,8 @@ fullMax=Math.max(...validTimes);
 viewMin=fullMin;
 viewMax=fullMax;
 
+updateViewerResolutionLabel();
+
 $("chartZoomTitle").textContent=
 chartViewerTitleForCanvas(canvas);
 
@@ -8933,6 +9274,10 @@ type:"linear",
 min:fullMin,
 max:fullMax,
 
+afterBuildTicks(scale){
+buildViewerTimeTicks(scale);
+},
+
 grid:{
 color:"rgba(148,163,184,.09)"
 },
@@ -8940,43 +9285,16 @@ color:"rgba(148,163,184,.09)"
 ticks:{
 color:"#94a3b8",
 maxRotation:0,
-autoSkip:true,
+autoSkip:false,
 maxTicksLimit:isTouch?7:14,
 font:{
 size:isTouch?12:12
 },
 callback:function(value){
-const span=Math.max(0,Number(this.max)-Number(this.min));
-const d=new Date(Number(value));
-if(!Number.isFinite(d.getTime()))return"";
-
-const DAY=24*60*60*1000;
-if(span>=3*DAY){
-return d.toLocaleDateString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short"
-});
-}
-
-if(span>=DAY){
-return d.toLocaleString("th-TH",{
-timeZone:"Asia/Bangkok",
-day:"2-digit",
-month:"short",
-hour:"2-digit",
-minute:"2-digit",
-hour12:false
-});
-}
-
-return d.toLocaleTimeString("th-TH",{
-timeZone:"Asia/Bangkok",
-hour:"2-digit",
-minute:"2-digit",
-second:span<=10*60*1000?"2-digit":undefined,
-hour12:false
-});
+return viewerTimeTickText(
+value,
+this
+);
 }
 },
 
