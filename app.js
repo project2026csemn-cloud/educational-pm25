@@ -11141,7 +11141,18 @@ async function initGoogleIdentity(){
   const target=$("googleSignInButton");
   if(target){
     target.innerHTML="";
-    const googleButtonWidth=Math.max(220,Math.min(336,Math.floor((target.parentElement?.clientWidth||target.clientWidth||336)-12)));
+    const googleButtonWidth=Math.max(
+      200,
+      Math.min(
+        336,
+        Math.floor(
+          (target.getBoundingClientRect().width ||
+           target.parentElement?.getBoundingClientRect().width ||
+           336) - 2
+        )
+      )
+    );
+
     google.accounts.id.renderButton(target,{
       theme:"filled_black",
       size:"large",
