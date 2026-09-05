@@ -1,9 +1,3 @@
-/* =========================================================
-   PM2.5 DASHBOARD - CUSTOM CSS
-   Tailwind utility classes used by the original dashboard
-   have been converted to local CSS. No Tailwind CDN required.
-   ========================================================= */
-
 * {
     box-sizing: border-box;
 }
@@ -20,10 +14,6 @@ body {
         #07111f;
     color: #eaf2f8;
 }
-
-/* -------------------------
-   Original project components
-   ------------------------- */
 
 .glass {
     background: rgba(13,27,45,.88);
@@ -130,10 +120,6 @@ canvas {
     color: #b7df09;
 }
 
-/* -------------------------
-   Layout utilities converted from Tailwind
-   ------------------------- */
-
 .max-w-\[1800px\] {
     max-width: 1800px;
 }
@@ -195,11 +181,6 @@ canvas {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-/* =========================================================
-   เพิ่มเฉพาะส่วนนี้
-   สำหรับ Historical Data & Trend
-   ========================================================= */
-
 .grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
@@ -207,8 +188,6 @@ canvas {
 .grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
 }
-
-/* gaps */
 
 .gap-2 {
     gap: .5rem;
@@ -233,8 +212,6 @@ canvas {
 .gap-y-2 {
     row-gap: .5rem;
 }
-
-/* spacing */
 
 .p-4 {
     padding: 1rem;
@@ -316,8 +293,6 @@ canvas {
     margin-left: .25rem;
 }
 
-/* sizing */
-
 .w-20 {
     width: 5rem;
 }
@@ -346,8 +321,6 @@ canvas {
     min-width: 180px;
 }
 
-/* borders / radius */
-
 .border {
     border-width: 1px;
     border-style: solid;
@@ -368,8 +341,6 @@ canvas {
 .rounded-full {
     border-radius: 9999px;
 }
-
-/* typography */
 
 .text-xs {
     font-size: .75rem;
@@ -438,8 +409,6 @@ canvas {
     line-height: 1.75rem;
 }
 
-/* colors */
-
 .text-white {
     color: #fff;
 }
@@ -504,10 +473,6 @@ canvas {
     background-color: rgba(6,182,212,.10);
 }
 
-/* -------------------------
-   Responsive utilities
-   ------------------------- */
-
 @media (min-width: 768px) {
 
 .md\:block {
@@ -565,10 +530,6 @@ canvas {
 
 }
 
-/* =========================================================
-   Small project-specific helpers for JS-generated content
-   ========================================================= */
-
 .status-text {
     font-size: .75rem;
     font-weight: 700;
@@ -589,10 +550,6 @@ canvas {
 
 }
 
-/* =========================
-   Forecast Status Badge
-   ========================= */
-
 #forecastBadge {
     display: inline-flex;
     align-items: center;
@@ -607,10 +564,6 @@ canvas {
     white-space: nowrap;
     box-sizing: border-box;
 }
-
-/* =====================================================
-   CREDIT BAR
-   ===================================================== */
 
 .credit-bar {
     position: relative;
@@ -664,10 +617,6 @@ canvas {
     box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
 }
 
-/* =====================================================
-   CREDIT GLOW
-   ===================================================== */
-
 .credit-glow {
     position: absolute;
     width: 260px;
@@ -689,10 +638,6 @@ canvas {
     bottom: -190px;
     background: #0ea5e9;
 }
-
-/* =====================================================
-   CREDIT LAYOUT
-   ===================================================== */
 
 .credit-inner {
     position: relative;
@@ -724,10 +669,6 @@ canvas {
     border-right: none;
 }
 
-/* =====================================================
-   ICON FRAME
-   ===================================================== */
-
 .credit-icon {
     position: relative;
     flex: 0 0 52px;
@@ -756,10 +697,6 @@ canvas {
         box-shadow 0.3s ease;
 }
 
-/* =====================================================
-   CREDIT IMAGES
-   ===================================================== */
-
 .credit-icon img {
     display: block;
     width: 100%;
@@ -775,37 +712,17 @@ canvas {
     transition: transform 0.25s ease;
 }
 
-/* =====================================================
-   IMAGE BUTTON
-   ===================================================== */
-
 .credit-image-button {
     cursor: pointer;
 }
-
-/*
- * เมื่อเอาเมาส์ชี้รูป
- * ให้ขยายรูปเล็กน้อยเท่านั้น
- *
- * ไม่มีคำว่า "ดูรูป"
- * มาทับรูปอีกแล้ว
- */
 
 .credit-image-button:hover img {
     transform: scale(1.06);
 }
 
-/*
- * ลบป้าย "ดูรูป" เดิมออก
- */
-
 .credit-image-button::after {
     content: none;
 }
-
-/* =====================================================
-   COLLEGE
-   ===================================================== */
 
 .credit-college .credit-icon img {
     width: 100%;
@@ -816,10 +733,6 @@ canvas {
     transform: scale(1.20);
 }
 
-/* =====================================================
-   DEPARTMENT
-   ===================================================== */
-
 .credit-department .credit-icon img {
     width: 100%;
     height: 100%;
@@ -828,10 +741,6 @@ canvas {
     box-sizing: border-box;
     transform: scale(1.18);
 }
-
-/* =====================================================
-   DEVELOPER
-   ===================================================== */
 
 .credit-developer .credit-icon {
     overflow: hidden;
@@ -861,10 +770,6 @@ canvas {
 .credit-developer .credit-icon:hover img {
     transform: scale(1.18);
 }
-
-/* =====================================================
-   CREDIT CONTENT
-   ===================================================== */
 
 .credit-content {
     min-width: 0;
@@ -902,10 +807,6 @@ canvas {
     letter-spacing: 1px;
     color: #64748b;
 }
-
-/* =====================================================
-   CREDIT LINKS
-   ===================================================== */
 
 .credit-links {
     display: flex;
@@ -948,10 +849,6 @@ canvas {
     transform: translate(2px, -2px);
 }
 
-/* =====================================================
-   HOVER
-   ===================================================== */
-
 .credit-box:hover {
     background: linear-gradient(
             135deg,
@@ -973,10 +870,6 @@ canvas {
 .credit-developer:hover .credit-icon {
     border-color: rgba(56, 189, 248, 0.50);
 }
-
-/* =====================================================
-   SYSTEM STATUS
-   ===================================================== */
 
 .credit-bottom {
     position: relative;
@@ -1024,10 +917,6 @@ canvas {
     height: 1px;
     background: rgba(34, 211, 238, 0.25);
 }
-
-/* =====================================================
-   IMAGE MODAL
-   ===================================================== */
 
 .credit-image-modal {
     display: none;
@@ -1142,10 +1031,6 @@ to {
     }
 }
 
-/* =====================================================
-   TABLET
-   ===================================================== */
-
 @media (max-width: 1100px) {
 
 .credit-inner {
@@ -1166,10 +1051,6 @@ to {
 }
 
 }
-
-/* =====================================================
-   MOBILE
-   ===================================================== */
 
 @media (max-width: 768px) {
 
@@ -1258,10 +1139,6 @@ to {
 
 }
 
-/* =====================================================
-   SMALL MOBILE
-   ===================================================== */
-
 @media (max-width: 420px) {
 
 .credit-box {
@@ -1333,10 +1210,6 @@ to {
     color: #64748b;
 }
 
-/* =========================================================
-   EXPORT MODAL
-========================================================= */
-
 .export-modal {
     position: fixed;
     inset: 0;
@@ -1352,8 +1225,6 @@ to {
     display: flex;
 }
 
-/* Background */
-
 .export-modal-backdrop {
     position: absolute;
     inset: 0;
@@ -1361,8 +1232,6 @@ to {
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
 }
-
-/* Dialog */
 
 .export-dialog {
     position: relative;
@@ -1376,8 +1245,6 @@ to {
     border-radius: 20px;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
 }
-
-/* Header */
 
 .export-header {
     display: flex;
@@ -1418,8 +1285,6 @@ to {
     background: #24364c;
     color: #ffffff;
 }
-
-/* Date */
 
 .export-filter {
     display: flex;
@@ -1462,8 +1327,6 @@ to {
     height: 42px;
 }
 
-/* Summary */
-
 .export-summary {
     display: flex;
     gap: 12px;
@@ -1490,8 +1353,6 @@ to {
     font-size: 20px;
     color: #22d3ee;
 }
-
-/* Preview */
 
 .export-preview {
     min-height: 0;
@@ -1544,8 +1405,6 @@ to {
     background: rgba(34, 211, 238, 0.035);
 }
 
-/* แถวคั่นระหว่างกลุ่มอุปกรณ์ (N1 / N2 / N3) */
-
 .export-table tbody tr.export-group-divider {
     background: transparent;
 }
@@ -1559,8 +1418,6 @@ to {
     border-top: 2px solid rgba(34, 211, 238, 0.25);
     border-bottom: none;
 }
-
-/* Footer */
 
 .export-footer {
     display: flex;
@@ -1596,8 +1453,6 @@ to {
     background: #06b6d4;
 }
 
-/* Mobile */
-
 @media (max-width: 640px) {
 
 .export-filter {
@@ -1623,8 +1478,6 @@ to {
 
 }
 
-/* Export modal refinements */
-
 #exportBtn:hover {
     background: #0e7490;
     border-color: #22d3ee;
@@ -1644,10 +1497,6 @@ to {
 }
 
 }
-
-/* =====================================================
-   ADVISOR
-   ===================================================== */
 
 .credit-advisor .credit-icon {
     overflow: hidden;
@@ -1682,25 +1531,17 @@ to {
     border-color: rgba(34, 211, 238, 0.50);
 }
 
-/* =====================================================
-   TABLET
-   ===================================================== */
-
 @media (max-width: 1100px) {
 
 .credit-box:nth-child(even) {
     border-right: none;
 }
 
-.credit-box:nth-child(-n/**/+3) {
+.credit-box:nth-child(-n+3) {
     border-bottom: 1px solid rgba(148, 163, 184, 0.13);
 }
 
 }
-
-/* =====================================================
-   MOBILE
-   ===================================================== */
 
 @media (max-width: 768px) {
 
@@ -1721,10 +1562,6 @@ to {
 
 }
 
-/* =====================================================
-   SMALL MOBILE
-   ===================================================== */
-
 @media (max-width: 420px) {
 
 .credit-advisor .credit-icon {
@@ -1744,19 +1581,10 @@ to {
 
 }
 
-/* =========================================================
-   HISTORICAL DATE / TIME RANGE PICKER
-   ใช้กับ Dashboard เวอร์ชัน Date/Time Range Picker
-   ========================================================= */
-
-/* ตัวครอบปุ่มเลือกช่วงเวลา */
-
 #historyRangePicker {
     position: relative;
     z-index: 80;
 }
-
-/* ปุ่มหลักด้านบน เช่น "24 ชั่วโมง" */
 
 #historyRangeButton {
     display: inline-flex;
@@ -1798,10 +1626,6 @@ to {
         0 12px 30px rgba(0, 0, 0, 0.18);
 }
 
-/* =========================================================
-   PICKER PANEL
-   ========================================================= */
-
 #historyRangePanel {
     position: absolute !important;
     top: calc(100% + 8px) !important;
@@ -1840,17 +1664,9 @@ to {
     border-radius: 999px;
 }
 
-/* สำคัญมาก:
-   เมื่อ JS ใส่ class hidden ต้องปิด Panel จริง */
-
 #historyRangePanel.hidden {
     display: none !important;
 }
-
-/* =========================================================
-   MAIN LAYOUT
-   ซ้าย = ปฏิทิน / ขวา = Quick Range
-   ========================================================= */
 
 #historyRangePanel > .grid {
     display: grid !important;
@@ -1859,15 +1675,11 @@ to {
     width: 100% !important;
 }
 
-/* ฝั่งปฏิทิน */
-
 #historyRangePanel > .grid > div:first-child {
     min-width: 0 !important;
     padding: 14px 14px 12px !important;
     border-right: 1px solid rgba(51, 65, 85, 0.68) !important;
 }
-
-/* ฝั่ง Quick Range */
 
 #historyRangePanel > .grid > div:last-child {
     min-width: 0 !important;
@@ -1875,18 +1687,12 @@ to {
     background: rgba(2, 6, 23, 0.10) !important;
 }
 
-/* =========================================================
-   CALENDAR HEADER
-   ========================================================= */
-
 #rangeCalendarTitle {
     color: #e2e8f0 !important;
     font-size: 13px !important;
     font-weight: 800 !important;
     text-transform: none;
 }
-
-/* ปุ่มเดือนก่อน / เดือนถัดไป */
 
 #calendarPrev,
 #calendarNext {
@@ -1916,13 +1722,6 @@ to {
     border-color: rgba(34, 211, 238, 0.36);
 }
 
-/* =========================================================
-   CALENDAR GRID
-   ========================================================= */
-
-/* บังคับ 7 คอลัมน์จริง
-   ป้องกันปัญหาวันเรียงลงแนวตั้ง */
-
 #rangeCalendarGrid {
     display: grid !important;
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
@@ -1930,8 +1729,6 @@ to {
     width: 100% !important;
     grid-auto-rows: 32px !important;
 }
-
-/* ปุ่มแต่ละวัน */
 
 #rangeCalendarGrid button {
     appearance: none;
@@ -1963,10 +1760,6 @@ to {
     border-color: rgba(34, 211, 238, 0.14) !important;
     color: #cffafe !important;
 }
-
-/* =========================================================
-   QUICK RANGE
-   ========================================================= */
 
 #quickRangeList {
     display: flex !important;
@@ -2004,12 +1797,6 @@ to {
     border-color: rgba(34, 211, 238, 0.10) !important;
 }
 
-/* =========================================================
-   START / END
-   ========================================================= */
-
-/* ส่วน Start / End เป็น div border-t ตัวแรก */
-
 #historyRangePanel > .border-t.grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -2030,8 +1817,6 @@ to {
     font-size: 9px !important;
 }
 
-/* กล่องครอบ input */
-
 #historyRangePanel label > div {
     display: flex;
     align-items: center;
@@ -2048,8 +1833,6 @@ to {
     border-color: rgba(34, 211, 238, 0.58) !important;
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
 }
-
-/* datetime-local */
 
 #customRangeStart,
 #customRangeEnd {
@@ -2079,12 +1862,6 @@ to {
     cursor: pointer;
 }
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
-/* footer คือ border-t ตัวสุดท้าย */
-
 #historyRangePanel > .border-t:last-child {
     display: flex !important;
     flex-direction: row !important;
@@ -2097,8 +1874,6 @@ to {
     background: rgba(2, 6, 23, 0.13) !important;
 }
 
-/* Error */
-
 #customRangeError {
     color: #f87171;
     font-size: 9px !important;
@@ -2109,10 +1884,6 @@ to {
 #customRangeError.hidden {
     display: none !important;
 }
-
-/* =========================================================
-   APPLY / CANCEL BUTTON
-   ========================================================= */
 
 #historyRangeCancel,
 #historyRangeApply {
@@ -2161,10 +1932,6 @@ to {
         ) !important;
     transform: translateY(-1px);
 }
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
 
 @media (max-width: 900px) {
 
@@ -2276,20 +2043,11 @@ to {
 
 }
 
-/* =========================================================
-   DATE/TIME PICKER - CALENDAR ALIGNMENT FIX
-   แก้หัววัน อา จ อ พ พฤ ศ ส ที่เรียงลงแนวตั้ง
-   ========================================================= */
-
-/* แถวชื่อวันเหนือปฏิทิน */
-
 #historyRangePanel .grid-cols-7 {
     display: grid !important;
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
     width: 100% !important;
 }
-
-/* เฉพาะแถวชื่อวัน ไม่กระทบช่องวันที่ */
 
 #historyRangePanel .grid-cols-7:not(#rangeCalendarGrid) {
     gap: 3px !important;
@@ -2312,8 +2070,6 @@ to {
     text-align: center !important;
 }
 
-/* Desktop: panel ไม่ใหญ่เกินจำเป็น */
-
 @media (min-width: 901px) {
 
 #historyRangePanel {
@@ -2322,10 +2078,6 @@ to {
 }
 
 }
-
-/* =========================================================
-   EXPORT MODAL
-   ========================================================= */
 
 body.export-modal-open {
     overflow: hidden;
@@ -2354,10 +2106,6 @@ body.export-modal-open {
         inset 0 1px 0 rgba(255, 255, 255, 0.025);
     color: #eaf2f8;
 }
-
-/* -------------------------
-   Header
-   ------------------------- */
 
 .export-modal-header {
     flex: 0 0 auto;
@@ -2429,10 +2177,6 @@ body.export-modal-open {
     border-color: rgba(148, 163, 184, 0.35);
 }
 
-/* -------------------------
-   Body
-   ------------------------- */
-
 .export-modal-body {
     flex: 1 1 auto;
     min-height: 0;
@@ -2451,10 +2195,6 @@ body.export-modal-open {
     background: #1e4b66;
     border-radius: 999px;
 }
-
-/* -------------------------
-   Date range
-   ------------------------- */
 
 .export-date-grid {
     display: grid;
@@ -2499,10 +2239,6 @@ body.export-modal-open {
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.07);
 }
 
-/* -------------------------
-   Summary
-   ------------------------- */
-
 .export-summary-row {
     display: flex;
     align-items: stretch;
@@ -2545,10 +2281,6 @@ body.export-modal-open {
     line-height: 1.6;
 }
 
-/* -------------------------
-   Preview title
-   ------------------------- */
-
 .export-preview-head {
     display: flex;
     align-items: center;
@@ -2575,10 +2307,6 @@ body.export-modal-open {
 .export-loading.hidden {
     display: none;
 }
-
-/* -------------------------
-   Preview table
-   ------------------------- */
 
 .export-table-wrap {
     width: 100%;
@@ -2617,10 +2345,6 @@ body.export-modal-open {
 .export-error.hidden {
     display: none;
 }
-
-/* -------------------------
-   Footer
-   ------------------------- */
 
 .export-modal-footer {
     flex: 0 0 auto;
@@ -2684,10 +2408,6 @@ body.export-modal-open {
     box-shadow: none;
 }
 
-/* =========================================================
-   EXPORT RESPONSIVE
-   ========================================================= */
-
 @media (max-width: 760px) {
 
 .export-modal {
@@ -2736,11 +2456,6 @@ body.export-modal-open {
 
 }
 
-/* =========================================================
-   HISTORICAL TOOLBAR CONTROLS
-   PM2.5 / DATE RANGE / EXPORT
-   ========================================================= */
-
 .history-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -2748,10 +2463,6 @@ body.export-modal-open {
     justify-content: flex-end;
     gap: 8px;
 }
-
-/* ---------------------------------------------------------
-   ตัวเลือกตัวแปร เช่น PM2.5
-   --------------------------------------------------------- */
 
 .history-metric-select {
     height: 42px;
@@ -2784,16 +2495,10 @@ body.export-modal-open {
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
 }
 
-/* ทำ dropdown option ให้อยู่ในธีมเข้ม */
-
 .history-metric-select option {
     background: #102338;
     color: #eaf2f8;
 }
-
-/* ---------------------------------------------------------
-   ปุ่มร่วมของ Range + Export
-   --------------------------------------------------------- */
 
 .history-toolbar-button {
     height: 42px;
@@ -2828,10 +2533,6 @@ body.export-modal-open {
     transform: translateY(1px);
 }
 
-/* ---------------------------------------------------------
-   Icon + Arrow
-   --------------------------------------------------------- */
-
 .history-control-icon {
     display: inline-flex;
     align-items: center;
@@ -2851,10 +2552,6 @@ body.export-modal-open {
     transition: transform 0.18s ease,
         color 0.18s ease;
 }
-
-/* ---------------------------------------------------------
-   ปุ่มเลือกช่วงเวลา
-   --------------------------------------------------------- */
 
 #historyRangeButton.history-toolbar-button {
     min-width: 132px;
@@ -2884,10 +2581,6 @@ body.export-modal-open {
     transform: rotate(180deg);
 }
 
-/* ---------------------------------------------------------
-   ปุ่มส่งออก
-   --------------------------------------------------------- */
-
 #exportButton.history-export-button {
     min-width: 106px;
     border-color: rgba(34, 211, 238, 0.40);
@@ -2914,10 +2607,6 @@ body.export-modal-open {
 #exportButton.history-export-button:active {
     transform: translateY(1px);
 }
-
-/* ---------------------------------------------------------
-   Responsive
-   --------------------------------------------------------- */
 
 @media (max-width: 720px) {
 
@@ -2970,21 +2659,15 @@ body.export-modal-open {
 
 }
 
-/* Calendar header */
-
 #historyRangePanel .mb-4 {
     margin-bottom: 10px !important;
 }
-
-/* ข้อความช่วยใต้ปฏิทิน */
 
 #rangeCalendarGrid + div {
     margin-top: 7px !important;
     color: #64748b !important;
     font-size: 9px !important;
 }
-
-/* Quick range title */
 
 #historyRangePanel > .grid > div:last-child > div:first-child {
     padding: 0 2px 6px !important;
@@ -2993,8 +2676,6 @@ body.export-modal-open {
     font-weight: 800 !important;
     letter-spacing: 0.08em !important;
 }
-
-/* ให้ selected quick range เด่นชัด */
 
 .quick-range-option.active,
 .quick-range-option[aria-current="true"] {
@@ -3017,8 +2698,6 @@ body.export-modal-open {
     gap: 7px !important;
 }
 
-/* Mobile */
-
 @media (max-width: 720px) {
 
 #historyRangePanel > .border-t:last-child > div:first-child {
@@ -3026,10 +2705,6 @@ body.export-modal-open {
 }
 
 }
-
-/* =========================================================
-   FORECAST DISPLAY TOGGLE
-   ========================================================= */
 
 .forecast-display-panel {
     margin-top: 16px;
@@ -3212,8 +2887,6 @@ body.export-modal-open {
     letter-spacing: 0.04em;
 }
 
-/* ON */
-
 .forecast-switch.is-on {
     border-color: rgba(52, 211, 153, 0.34);
     background: rgba(52, 211, 153, 0.10);
@@ -3238,8 +2911,6 @@ body.export-modal-open {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30),
         0 0 8px rgba(236, 253, 245, 0.22);
 }
-
-/* OFF */
 
 .forecast-switch.is-off {
     border-color: rgba(71, 85, 105, 0.50);
@@ -3294,10 +2965,6 @@ body.export-modal-open {
 
 }
 
-/* =========================================================
-   PRE-AI SYSTEM HEALTH POLISH
-   ========================================================= */
-
 #gatewayStatusTop {
     letter-spacing: .03em;
 }
@@ -3313,10 +2980,6 @@ body.export-modal-open {
 }
 
 }
-
-/* =========================================================
-   SECTION HELP / INFO SYSTEM
-   ========================================================= */
 
 .section-title-with-help {
     display: inline-flex;
@@ -3520,10 +3183,6 @@ body.export-modal-open {
 .help-status-dot.offline {
     background: #f87171;
 }
-
-/* =========================================================
-   CURRENT AIR QUALITY + ENVIRONMENT
-   ========================================================= */
 
 .current-environment-card {
     min-width: 0;
@@ -3771,12 +3430,6 @@ body.export-modal-open {
     text-align : center !important;
 }
 
-/* =========================================================
-   FINAL HISTORY DATE/TIME RANGE PICKER
-   Quick ranges = one vertical column
-   Removed ranges: 3 hours / 3 days
-   ========================================================= */
-
 #historyRangePicker {
     position: relative;
 }
@@ -3940,9 +3593,6 @@ body.export-modal-open {
     }
 }
 
-/* =========================================================
-   SMART SUMMARY — EXPANDED RULE ENGINE
-   ========================================================= */
 .smart-summary-card{justify-content:flex-start!important;min-height:100%;}
 .smart-summary-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
 .smart-summary-title-wrap{display:flex;align-items:center;gap:12px;min-width:0;}
@@ -3962,9 +3612,6 @@ body.export-modal-open {
 .smart-summary-note.danger{color:#fca5a5;background:rgba(127,29,29,.14)}
 .smart-summary-note.info{color:#bae6fd;background:rgba(8,47,73,.18)}
 
-/* =========================================================
-   AI ANALYSIS — GEMINI CONNECTED UI
-   ========================================================= */
 .ai-analysis-card{display:flex;flex-direction:column;min-height:100%;}
 .ai-analysis-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
 .ai-analysis-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
@@ -3993,24 +3640,16 @@ body.export-modal-open {
 .ai-analysis-footer{margin-top:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#475569;font-size:9px;line-height:1.4;}
 @media(max-width:900px){.ai-analysis-header{flex-direction:column}.ai-analysis-actions{width:100%;justify-content:flex-start}.smart-summary-grid{grid-template-columns:1fr}}
 
-/* =========================================================
-   2026-08-25 UI UPGRADE — SMART SUMMARY + AI FORECAST
-   ========================================================= */
 .smart-summary-headline{font-size:15px;font-weight:900;line-height:1.45;margin-bottom:12px;color:#eaf2f8}.smart-summary-headline.normal{color:#86efac}.smart-summary-headline.watch{color:#fde68a}.smart-summary-headline.critical,.smart-summary-headline.offline{color:#fca5a5}.smart-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.smart-summary-stat{min-width:0;padding:12px;border:1px solid rgba(148,163,184,.12);border-radius:14px;background:linear-gradient(145deg,rgba(8,25,41,.88),rgba(8,20,34,.76));box-shadow:inset 0 1px 0 rgba(255,255,255,.02)}.smart-summary-stat-label{font-size:9px;font-weight:900;letter-spacing:.11em;color:#64748b}.smart-summary-stat-value{margin-top:5px;font-size:13px;font-weight:800;line-height:1.45;color:#e2e8f0}.smart-summary-stat-sub{margin-top:4px;font-size:9px;color:#64748b}.smart-summary-air{border-color:rgba(34,211,238,.14)}.smart-summary-heat{border-color:rgba(251,191,36,.14)}.smart-summary-environment{border-color:rgba(125,211,252,.14)}.smart-summary-system{border-color:rgba(52,211,153,.14)}.smart-summary-activity{margin-top:10px;padding:12px 13px;border:1px solid rgba(34,211,238,.15);border-radius:14px;background:rgba(34,211,238,.045);font-size:11px;line-height:1.65;color:#cbd5e1}.smart-summary-activity-label{margin-bottom:4px;font-size:10px;font-weight:900;color:#67e8f9;letter-spacing:.04em}.smart-summary-notes{display:grid;gap:6px;margin-top:9px}.smart-summary-note{display:flex;gap:7px;align-items:flex-start;padding:8px 10px;border-radius:10px;font-size:10px;line-height:1.5;background:rgba(15,35,56,.42);color:#94a3b8}.smart-summary-note.warn{border:1px solid rgba(251,191,36,.14);color:#fde68a}.smart-summary-note.danger{border:1px solid rgba(248,113,113,.14);color:#fca5a5}.ai-forecast-shell{position:relative;overflow:hidden;border:1px solid rgba(34,211,238,.18);border-radius:17px;background:linear-gradient(145deg,rgba(6,23,38,.96),rgba(7,35,48,.84));box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 12px 30px rgba(0,0,0,.12)}.ai-forecast-shell:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#22d3ee,#34d399)}.ai-forecast-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;border-bottom:1px solid rgba(148,163,184,.09)}.ai-forecast-kicker{font-size:10px;font-weight:900;letter-spacing:.12em;color:#67e8f9}.ai-forecast-subtitle{margin-top:3px;font-size:10px;color:#64748b}.ai-forecast-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.ai-forecast-status{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid rgba(34,211,238,.16);border-radius:999px;background:rgba(34,211,238,.06);font-size:10px;font-weight:800;color:#67e8f9}.ai-forecast-refresh,.ai-refresh-button{min-height:32px;padding:0 11px;border:1px solid rgba(148,163,184,.18);border-radius:9px;background:#102338;color:#cbd5e1;font:inherit;font-size:10px;font-weight:800;cursor:pointer;transition:.18s}.ai-forecast-refresh:hover,.ai-refresh-button:hover{border-color:rgba(34,211,238,.45);color:#cffafe;background:#0d2a40}.ai-forecast-details{padding:14px 15px;color:#cbd5e1;font-size:11px;line-height:1.7}.ai-forecast-headline{margin-bottom:11px;font-size:14px;font-weight:900;color:#fff}.ai-forecast-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ai-forecast-item{padding:11px;border:1px solid rgba(148,163,184,.1);border-radius:12px;background:rgba(5,18,31,.68);color:#cbd5e1}.ai-forecast-label{margin-bottom:5px;font-size:9px;font-weight:900;letter-spacing:.08em;color:#67e8f9}.ai-forecast-generated{padding:0 15px 12px;font-size:9px;color:#475569}.forecast-base-label{margin-top:14px;margin-bottom:-8px;font-size:9px;font-weight:900;letter-spacing:.11em;color:#475569}.ai-analysis-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto;margin-right:8px}.ai-generated-at{font-size:9px;color:#64748b}.ai-meta-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.1);font-size:9px;color:#64748b}.ai-confidence{color:#67e8f9;font-weight:800}.ai-result-headline{font-size:15px;font-weight:900;color:#fff}.ai-result-summary{margin-top:6px;color:#cbd5e1}.ai-result-section{margin-top:13px}.ai-result-label{margin-bottom:5px;font-size:10px;font-weight:900;letter-spacing:.06em;color:#67e8f9}.ai-observation-list{display:grid;gap:5px}.ai-observation{padding:7px 9px;border-radius:9px;background:rgba(15,35,56,.42)}.ai-recommendation{padding:10px 11px;border:1px solid rgba(52,211,153,.12);border-radius:11px;background:rgba(52,211,153,.045);color:#d1fae5}.ai-loading-state{display:flex;align-items:center;gap:8px;color:#67e8f9}.ai-loading-dot{width:8px;height:8px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,.7);animation:aiPulse 1.1s infinite ease-in-out}@keyframes aiPulse{50%{opacity:.35;transform:scale(.8)}}
 @media(max-width:900px){.smart-summary-grid,.ai-forecast-grid{grid-template-columns:1fr}.ai-forecast-topbar{align-items:flex-start;flex-direction:column}.ai-forecast-actions{justify-content:flex-start}.ai-analysis-actions{align-items:flex-start;margin:8px 0 0}}
 @media(max-width:560px){.smart-summary-stat{padding:10px}.smart-summary-stat-value{font-size:12px}.ai-forecast-details{padding:12px}.ai-forecast-grid{gap:7px}}
-/* FINAL DASHBOARD LAYOUT CLEANUP */
+
 section.grid { align-items: start; }
 .smart-summary-card,.current-environment-card,.alerts-card,.ai-analysis-card { height:auto; min-height:0; }
 .section-title-with-help { align-items:center; }
 .help-button { flex:0 0 auto; }
 .ai-analysis-footer { justify-content:flex-start; }
 
-
-/* =========================================================
-   2026-08-25 FINAL LAYOUT BALANCE
-   ลดช่องว่างจาก grid stretch และทำให้แต่ละการ์ดสูงตามเนื้อหา
-   ========================================================= */
 .dashboard-top-row,
 .dashboard-current-row,
 .dashboard-ai-row{
@@ -4030,7 +3669,6 @@ section.grid { align-items: start; }
     max-height:none!important;
 }
 
-/* Monitoring: ไม่ให้กล่องถูกยืดตาม Smart Summary */
 .monitoring-card{
     display:block!important;
 }
@@ -4039,7 +3677,6 @@ section.grid { align-items: start; }
     min-height:0!important;
 }
 
-/* Smart Summary: กระชับ แต่ยังอ่านง่าย */
 .smart-summary-card{
     padding:16px!important;
 }
@@ -4072,7 +3709,6 @@ section.grid { align-items: start; }
     padding:7px 9px!important;
 }
 
-/* Current / Alerts: card สูงตามข้อมูลจริง */
 .current-environment-card,
 .alerts-card{
     display:block!important;
@@ -4082,7 +3718,6 @@ section.grid { align-items: start; }
     min-height:0!important;
 }
 
-/* AI: ป้องกันสองฝั่งบังคับความสูงเท่ากัน */
 .ai-analysis-card,
 .ai-forecast-card{
     display:block!important;
@@ -4097,7 +3732,6 @@ section.grid { align-items: start; }
     height:auto!important;
 }
 
-/* กราฟเป็นข้อมูลเชิงลึก จึงกระชับและอยู่ช่วงล่าง */
 #forecastChart{
     width:100%!important;
     max-height:230px!important;
@@ -4110,7 +3744,6 @@ section.grid { align-items: start; }
     margin-top:0!important;
 }
 
-/* ช่องไฟระหว่าง section ให้สม่ำเสมอ */
 .dashboard-top-row,
 .dashboard-current-row,
 .dashboard-ai-row,
@@ -4138,11 +3771,6 @@ section.grid { align-items: start; }
     }
 }
 
-
-/* =========================================================
-   PRIORITY LAYOUT — NO EMPTY TRACKS
-   2026-08-25
-   ========================================================= */
 .dashboard-monitoring-section,
 .dashboard-summary-section,
 .dashboard-current-section,
@@ -4150,19 +3778,15 @@ section.grid { align-items: start; }
 .historical-section,
 .dashboard-charts-zone{width:100%;}
 
-/* Each major block owns a full row. This removes the large blank areas
-   created when a short card shared a CSS-grid row with a taller card. */
 .monitoring-card,.smart-summary-card,.current-environment-card,
 .ai-analysis-card,.ai-forecast-card,.historical-section,.dashboard-chart-card{
     width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
 }
 
-/* 1. Monitoring */
 .monitoring-card{padding:18px!important;}
 .monitoring-card > .grid{gap:12px!important;}
 .monitoring-card .node{min-height:0!important;padding:14px!important;}
 
-/* 2. Smart Summary — wide horizontal status center */
 .smart-summary-card{padding:18px!important;}
 .smart-summary-body{margin-top:12px!important;gap:8px!important;}
 .smart-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;}
@@ -4171,7 +3795,6 @@ section.grid { align-items: start; }
 .smart-summary-notes{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-top:7px!important;}
 .smart-summary-note{height:100%;margin:0!important;}
 
-/* 3. Current + Alerts are one coherent section */
 .current-environment-card{padding:18px!important;}
 .current-environment-grid{margin-top:16px!important;}
 .current-alerts-strip{margin-top:14px;padding-top:14px;border-top:1px solid rgba(148,163,184,.10);}
@@ -4181,7 +3804,6 @@ section.grid { align-items: start; }
 .current-alerts-strip #alerts > *{margin:0!important;}
 .current-environment-footer{margin-top:12px!important;}
 
-/* 4. AI blocks are stacked, never forced into equal-height columns */
 .dashboard-ai-stack{display:grid;grid-template-columns:1fr;gap:16px;}
 .dashboard-ai-block{margin:0!important;}
 .ai-analysis-card,.ai-forecast-card{padding:18px!important;}
@@ -4190,13 +3812,11 @@ section.grid { align-items: start; }
 #forecastMessage{margin-top:12px!important;}
 .forecast-base-label{margin-top:12px!important;}
 
-/* 5. Historical statistics before all graphs */
 .historical-section{padding:18px!important;}
 .historical-section .soft{padding:14px!important;}
 .historical-section .grid.grid-cols-6{gap:18px!important;}
 .historical-section .grid.grid-cols-5{gap:18px!important;}
 
-/* 6. Graphs live at the bottom */
 .dashboard-charts-zone{display:grid;grid-template-columns:1fr;gap:16px;margin-top:0!important;}
 .dashboard-chart-card{padding:18px!important;}
 .chart-zone-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
@@ -4207,7 +3827,6 @@ section.grid { align-items: start; }
 #forecastChart{width:100%!important;max-height:280px!important;margin-top:12px!important;}
 .forecast-display-panel{margin-top:0!important;}
 
-/* Global section rhythm */
 .dashboard-monitoring-section,.dashboard-summary-section,.dashboard-current-section,
 .dashboard-ai-stack,.historical-section,.dashboard-charts-zone{margin-bottom:16px!important;}
 
@@ -4226,10 +3845,6 @@ section.grid { align-items: start; }
   .historical-section .grid.grid-cols-6,.historical-section .grid.grid-cols-5{grid-template-columns:1fr!important;}
 }
 
-
-/* =========================================================
-   AI ENVIRONMENTAL INTELLIGENCE / AI TREND
-   ========================================================= */
 .ai-intelligence-section{align-self:start;min-height:0!important;height:auto!important;overflow:visible}
 .ai-intelligence-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
 .ai-intelligence-statusline{margin-top:6px;font-size:11px;color:#64748b;letter-spacing:.04em}
@@ -4259,11 +3874,6 @@ section.grid { align-items: start; }
 @media(max-width:1100px){.ai-intelligence-grid{grid-template-columns:1fr}.ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-trend-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.ai-intelligence-header,.ai-panel-head{flex-direction:column}.ai-intelligence-badges{justify-content:flex-start}.ai-model-strip,.ai-trend-summary{grid-template-columns:1fr}}
 
-
-/* =========================================================
-   LOCAL ENVIRONMENT — FEATURED ENVIRONMENT CARD
-   Make weather/local environmental information visually more prominent.
-   ========================================================= */
 @media (min-width: 901px){
   .smart-summary-grid{
     grid-template-columns:repeat(6,minmax(0,1fr))!important;
@@ -4328,19 +3938,9 @@ section.grid { align-items: start; }
   }
 }
 
-
-/* =========================================================
-   NODE STATUS DISPLAY POLICY
-   Dashboard shows only ONLINE / OFFLINE.
-   Internal SLEEP remains in backend logic.
-   ========================================================= */
 .status-sleep{color:#34d399!important;}
 .status-sleep-dot{color:#34d399!important;}
 
-
-/* =========================================================
-   COMPACT AI + SMART SUMMARY
-   ========================================================= */
 .ai-intelligence-section,
 .ai-environmental-intelligence{
   min-height:0!important;
@@ -4383,10 +3983,6 @@ section.grid { align-items: start; }
   }
 }
 
-
-/* =========================================================
-   FINAL COMPACT FIX
-   ========================================================= */
 .ai-intelligence-section,
 .ai-environmental-intelligence,
 .ai-intelligence-card,
@@ -4426,12 +4022,6 @@ section.grid { align-items: start; }
   }
 }
 
-
-/* =========================================================
-   TEACHER REVISION — RESPONSIVE TYPOGRAPHY + GRAPH LEGIBILITY
-   2026-08-26
-   ========================================================= */
-
 html{
   -webkit-text-size-adjust:100%;
   text-size-adjust:100%;
@@ -4442,7 +4032,6 @@ body{
   line-height:1.55;
 }
 
-/* General readable minimums */
 .text-\[8px\]{font-size:11px!important;}
 .text-\[9px\]{font-size:11px!important;}
 .text-\[10px\]{font-size:12px!important;}
@@ -4543,13 +4132,11 @@ input[type="datetime-local"]{
   font-size:12px!important;
 }
 
-/* Chart canvases remain readable without creating oversized layout */
 #historyChart,
 #forecastChart{
   min-height:260px;
 }
 
-/* Mobile typography and touch layout */
 @media(max-width:640px){
   body{
     font-size:16px!important;
@@ -4668,16 +4255,11 @@ input[type="datetime-local"]{
   }
 }
 
-/* =========================================================
-   MOBILE UX REDESIGN — 2026-08-26
-   Fixes long cards, cramped graphs and unreadable mobile layout
-   ========================================================= */
 @media (max-width:640px){
   .max-w-\[1800px\]{padding-left:12px!important;padding-right:12px!important}
   .glass.card{border-radius:22px!important}
   .historical-section,.dashboard-chart-card{padding:16px!important}
 
-  /* Historical: 6 averages become a compact 2 x 3 grid even on narrow phones */
   .historical-section .grid.grid-cols-6{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:0!important;
@@ -4690,7 +4272,6 @@ input[type="datetime-local"]{
   .historical-section .grid.grid-cols-6 b.block.text-2xl{font-size:24px!important;margin-top:4px!important}
   .historical-section .grid.grid-cols-6 .truncate{white-space:normal!important;overflow:visible!important}
 
-  /* ALL has no meaningful single-variable avg/max/min; keep summary compact */
   .historical-section .grid.grid-cols-5{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:10px!important;
@@ -4702,7 +4283,6 @@ input[type="datetime-local"]{
   .history-toolbar .history-export-button{grid-column:1/-1!important;width:100%!important}
   .history-toolbar select,.history-toolbar-button{width:100%!important;min-width:0!important}
 
-  /* Chart cards: give the data area room and stop labels from crushing the plot */
   .chart-zone-heading{display:block!important;margin-bottom:10px!important}
   .chart-zone-title{font-size:20px!important;line-height:1.25!important}
   .chart-zone-subtitle{font-size:14px!important;line-height:1.45!important;margin-top:5px!important}
@@ -4715,7 +4295,6 @@ input[type="datetime-local"]{
   .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important}
   .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;min-width:0!important;padding:10px 12px!important}
 
-  /* AI section: reduce dead vertical space without shrinking readable text */
   .ai-intelligence-panel{padding:12px!important}
   .ai-details-panel,.ai-forecast-details{padding:14px!important;line-height:1.55!important}
   .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
@@ -4723,7 +4302,6 @@ input[type="datetime-local"]{
   .ai-model-strip-label{font-size:12px!important}
   .ai-model-strip b{font-size:15px!important;line-height:1.4!important}
 
-  /* Secondary copy was too dim on a phone */
   .text-slate-500,.chart-zone-subtitle,.forecast-display-subtitle,.smart-summary-stat-sub,.current-environment-detail{
     color:#94a3b8!important;
   }
@@ -4733,7 +4311,7 @@ input[type="datetime-local"]{
 }
 
 @media (max-width:380px){
-  /* Keep useful two-column summaries; previous rule made the page unnecessarily long */
+  
   .historical-section .grid.grid-cols-6,
   .historical-section .grid.grid-cols-5,
   .ai-model-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
@@ -4741,10 +4319,6 @@ input[type="datetime-local"]{
   #historyChart,#forecastChart{height:320px!important}
 }
 
-
-/* =========================================================
-   GROUPED GRAPH REDESIGN — DESKTOP + MOBILE
-   ========================================================= */
 .chart-render-area{width:100%;}
 .metric-chart-panel{
   border:1px solid rgba(56,189,248,.12);
@@ -4807,7 +4381,7 @@ input[type="datetime-local"]{
 }
 
 @media(max-width:640px){
-  /* Larger, clearer mobile text */
+  
   body{font-size:17px!important;}
   .section-title-with-help h2,
   .chart-zone-title,
@@ -4829,7 +4403,6 @@ input[type="datetime-local"]{
   .credit-title{font-size:17px!important;}
   .credit-role,.credit-link{font-size:14px!important;}
 
-  /* Historical statistics: 2 columns instead of one very long stack */
   .historical-section .grid.grid-cols-6{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:14px!important;
@@ -4841,13 +4414,11 @@ input[type="datetime-local"]{
     background:rgba(2,12,27,.28);
   }
 
-  /* ALL selected detail should be compact */
   .historical-section .grid.grid-cols-5{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:12px!important;
   }
 
-  /* Grouped charts */
   .dashboard-chart-card{padding:14px!important;}
   .chart-zone-heading{display:block!important;}
   .chart-zone-title{margin-bottom:5px;}
@@ -4865,7 +4436,6 @@ input[type="datetime-local"]{
   .metric-chart-canvas-wrap{height:260px;}
   .metric-chart-grid-3{grid-template-columns:1fr;gap:10px;}
 
-  /* Forecast control: compact on mobile */
   .forecast-display-panel{padding:12px!important;}
   .forecast-display-controls{
     display:grid!important;
@@ -4875,7 +4445,6 @@ input[type="datetime-local"]{
   }
   .forecast-actual-legend,.forecast-toggle-wrap{width:100%!important;}
 
-  /* AI section less vertically wasteful */
   .ai-model-strip{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:10px!important;
@@ -4888,10 +4457,6 @@ input[type="datetime-local"]{
   .historical-section .grid.grid-cols-5{grid-template-columns:1fr 1fr!important;}
   .metric-chart-canvas-wrap{height:245px;}
 }
-
-/* =========================================================
-   HUMAN-CENTERED DASHBOARD TWEAKS
-   ========================================================= */
 
 .smart-summary-stat.smart-summary-environment{
     background:
@@ -4919,11 +4484,6 @@ input[type="datetime-local"]{
         grid-template-columns:1fr!important;
     }
 }
-
-
-/* =========================================================
-   DETAILED HELP DIALOG — HUMAN FRIENDLY
-   ========================================================= */
 
 .help-popover{
     left:50%!important;
@@ -5072,11 +4632,6 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* =========================================================
-   CREDIT BAR — PREMIUM CARD REDESIGN
-   ========================================================= */
-
 .credit-bar{
     margin-top:42px!important;
     padding:18px 18px 0!important;
@@ -5151,7 +4706,6 @@ input[type="datetime-local"]{
         0 0 28px rgba(34,211,238,.055)!important;
 }
 
-/* Order: College → Department → Developer 1 → Developer 2 → Advisor */
 .credit-college{order:1;}
 .credit-department{order:2;}
 .credit-developer{order:3;}
@@ -5303,10 +4857,6 @@ input[type="datetime-local"]{
     }
 }
 
-/* =========================================================
-   HELP — SENSOR CRITERIA CARDS
-   ========================================================= */
-
 .help-sensor-card{
     margin:10px 0;
     padding:13px 14px;
@@ -5364,11 +4914,6 @@ input[type="datetime-local"]{
         gap:6px;
     }
 }
-
-
-/* =========================================================
-   CREDIT — SINGLE-LINE NAMES + IMAGE VIEWER FIX
-   ========================================================= */
 
 .credit-inner{
     grid-template-columns:
@@ -5455,14 +5000,6 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* =========================================================
-   CREDIT FINAL POLISH
-   - College/Department: wrap naturally
-   - Developer/Advisor names: single line
-   - Hover image label: "ดูรูป"
-   ========================================================= */
-
 .credit-inner{
     grid-template-columns:
         minmax(300px,1.28fr)
@@ -5473,7 +5010,6 @@ input[type="datetime-local"]{
     gap:12px!important;
 }
 
-/* Give each card breathing room */
 .credit-box{
     min-width:0!important;
     overflow:hidden!important;
@@ -5481,7 +5017,6 @@ input[type="datetime-local"]{
     gap:13px!important;
 }
 
-/* College + Department can wrap naturally */
 .credit-college .credit-title,
 .credit-department .credit-title{
     white-space:normal!important;
@@ -5492,7 +5027,6 @@ input[type="datetime-local"]{
     text-wrap:balance;
 }
 
-/* Person names stay on one line */
 .credit-developer .credit-title,
 .credit-advisor .credit-title{
     white-space:nowrap!important;
@@ -5503,7 +5037,6 @@ input[type="datetime-local"]{
     line-height:1.4!important;
 }
 
-/* Keep content inside card */
 .credit-content{
     min-width:0!important;
     overflow:hidden!important;
@@ -5512,10 +5045,6 @@ input[type="datetime-local"]{
 .credit-role{
     max-width:100%!important;
 }
-
-/* =========================================================
-   IMAGE HOVER — SHOW "ดูรูป"
-   ========================================================= */
 
 .credit-image-button{
     position:relative!important;
@@ -5574,7 +5103,6 @@ input[type="datetime-local"]{
     transform:translate(-50%,0)!important;
 }
 
-/* Preserve each image's own base crop/scale while hovering */
 .credit-college .credit-image-button:hover img{
     transform:scale(1.24)!important;
 }
@@ -5588,7 +5116,6 @@ input[type="datetime-local"]{
     transform:scale(1.18)!important;
 }
 
-/* Slight hover lift only on the image itself */
 .credit-image-button:hover{
     border-color:rgba(103,232,249,.55)!important;
     box-shadow:
@@ -5596,7 +5123,6 @@ input[type="datetime-local"]{
         0 0 18px rgba(34,211,238,.10)!important;
 }
 
-/* Medium screens: use two columns and allow names to wrap if needed */
 @media(max-width:1500px){
     .credit-inner{
         grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -5611,7 +5137,6 @@ input[type="datetime-local"]{
     }
 }
 
-/* Mobile */
 @media(max-width:720px){
     .credit-inner{
         grid-template-columns:1fr!important;
@@ -5622,20 +5147,11 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* =========================================================
-   CREDIT RESPONSIVE LAYOUT — FINAL
-   Desktop: 5 cards in one row
-   Mobile: 5 cards stacked vertically
-   ========================================================= */
-
-/* ---------- DESKTOP / LAPTOP ---------- */
 @media (min-width: 1101px){
 
     .credit-inner{
         display:grid!important;
 
-        /* College | Department | Dev 1 | Dev 2 | Advisor */
         grid-template-columns:
             minmax(300px,1.28fr)
             minmax(320px,1.34fr)
@@ -5655,7 +5171,6 @@ input[type="datetime-local"]{
         overflow:hidden!important;
     }
 
-    /* Keep logos/photos compact enough to preserve text size */
     .credit-icon,
     .credit-developer .credit-icon,
     .credit-advisor .credit-icon{
@@ -5678,14 +5193,12 @@ input[type="datetime-local"]{
         overflow:hidden!important;
     }
 
-    /* Labels can stay compact */
     .credit-label{
         margin-bottom:6px!important;
         font-size:9px!important;
         letter-spacing:1.7px!important;
     }
 
-    /* College / Department get more room and may wrap to 2 lines */
     .credit-college .credit-title,
     .credit-department .credit-title{
         white-space:normal!important;
@@ -5695,7 +5208,6 @@ input[type="datetime-local"]{
         line-height:1.42!important;
     }
 
-    /* Person names stay readable and on one line */
     .credit-developer .credit-title,
     .credit-advisor .credit-title{
         white-space:nowrap!important;
@@ -5724,8 +5236,6 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* ---------- TABLET ---------- */
 @media (min-width: 721px) and (max-width: 1100px){
 
     .credit-inner{
@@ -5745,8 +5255,6 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* ---------- MOBILE ---------- */
 @media (max-width: 720px){
 
     .credit-bar{
@@ -5756,7 +5264,6 @@ input[type="datetime-local"]{
     .credit-inner{
         display:grid!important;
 
-        /* 5 cards from top to bottom */
         grid-template-columns:1fr!important;
         grid-template-rows:auto!important;
 
@@ -5792,7 +5299,6 @@ input[type="datetime-local"]{
         font-size:9px!important;
     }
 
-    /* On mobile, allow every long title to wrap naturally */
     .credit-title,
     .credit-college .credit-title,
     .credit-department .credit-title,
@@ -5825,12 +5331,6 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* =========================================================
-   LIGHTHOUSE / RENDERING PERFORMANCE
-   ========================================================= */
-
-/* Heavy below-the-fold areas are skipped until near viewport. */
 .ai-intelligence-section,
 .historical-section,
 .dashboard-charts-zone,
@@ -5843,14 +5343,12 @@ input[type="datetime-local"]{
     contain-intrinsic-size:auto 230px;
 }
 
-/* New dust-profile card gets a neutral atmospheric accent. */
 .smart-summary-stat.smart-summary-environment{
     background:
         linear-gradient(135deg,rgba(100,116,139,.09),rgba(15,23,42,.18))!important;
     border-color:rgba(148,163,184,.20)!important;
 }
 
-/* Avoid expensive paint work when motion is reduced. */
 @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{
         scroll-behavior:auto!important;
@@ -5860,17 +5358,10 @@ input[type="datetime-local"]{
     }
 }
 
-/* =========================================================
-   HISTORY RANGE PICKER — CLEAN MODAL POPOVER
-   แก้ปัญหาปฏิทินกางทับสถิติ/ดูเหมือน UI แตก
-   ========================================================= */
-
-/* ตัว parent ไม่ต้องเป็นกรอบอ้างอิงของ panel อีกต่อไป */
 #historyRangePicker{
     position:relative!important;
 }
 
-/* เปิดเป็นกล่องลอยกลางหน้าจอ */
 #historyRangePanel.history-range-panel{
     position:fixed!important;
     left:50%!important;
@@ -5904,26 +5395,22 @@ input[type="datetime-local"]{
         0 0 0 100vmax rgba(2,6,23,.68)!important;
 }
 
-/* ปิดจริงเมื่อมี hidden */
 #historyRangePanel.history-range-panel.hidden{
     display:none!important;
 }
 
-/* Calendar + Quick range */
 #historyRangePanel .history-range-layout{
     display:grid!important;
     grid-template-columns:minmax(0,1fr) 172px!important;
     min-height:0!important;
 }
 
-/* ฝั่งปฏิทิน */
 #historyRangePanel .history-range-calendar{
     min-width:0!important;
     padding:20px!important;
     border-right:1px solid rgba(71,85,105,.45)!important;
 }
 
-/* ฝั่งตัวเลือกด่วน */
 #historyRangePanel .history-range-quick{
     min-width:0!important;
     padding:16px 12px!important;
@@ -5987,7 +5474,6 @@ input[type="datetime-local"]{
     border-color:rgba(34,211,238,.32)!important;
 }
 
-/* Calendar header */
 #rangeCalendarTitle{
     color:#e2e8f0!important;
     font-size:14px!important;
@@ -6001,12 +5487,10 @@ input[type="datetime-local"]{
     border-radius:9px!important;
 }
 
-/* Day names */
 #historyRangePanel .grid-cols-7:not(#rangeCalendarGrid){
     color:#64748b!important;
 }
 
-/* Calendar dates */
 #rangeCalendarGrid{
     display:grid!important;
     grid-template-columns:repeat(7,minmax(0,1fr))!important;
@@ -6051,26 +5535,20 @@ input[type="datetime-local"]{
     font-weight:850!important;
 }
 
-/* Start / End fields */
 #historyRangePanel input[type="datetime-local"]{
     color:#e2e8f0!important;
     color-scheme:dark!important;
 }
 
-/* Footer ปุ่ม */
 #historyRangePanel #historyRangeCancel,
 #historyRangePanel #historyRangeApply{
     min-height:38px!important;
 }
 
-/* ให้ panel ไม่ได้รับผลจาก content-visibility ของ section */
 .historical-section:has(#historyRangePanel:not(.hidden)){
     content-visibility:visible!important;
 }
 
-/* =========================================================
-   TABLET / MOBILE
-   ========================================================= */
 @media(max-width:700px){
 
     #historyRangePanel.history-range-panel{
@@ -6138,12 +5616,6 @@ input[type="datetime-local"]{
     }
 }
 
-/* =========================================================
-   AI TREND — COMPACT LAYOUT
-   Dust = full width
-   Temp / Humidity / Light = 3 equal cards below
-   ========================================================= */
-
 .ai-trend-summary{
     display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -6151,14 +5623,12 @@ input[type="datetime-local"]{
     align-items:start!important;
 }
 
-/* ฝุ่นกินเต็มแถว ไม่บังคับการ์ดอื่นสูงตาม */
 .ai-trend-dust{
     grid-column:1 / -1!important;
     min-height:0!important;
     padding:11px 12px!important;
 }
 
-/* PM1 / PM2.5 / PM10 อยู่ในแถวเดียว */
 .ai-dust-trend-grid{
     display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -6209,14 +5679,12 @@ input[type="datetime-local"]{
     line-height:1.5!important;
 }
 
-/* Temp / Humidity / Light ไม่ยืดสูงเกินเนื้อหา */
 .ai-trend-summary > .ai-trend-item:not(.ai-trend-dust){
     min-height:0!important;
     height:auto!important;
     align-self:start!important;
 }
 
-/* การ์ด Forecast ด้านล่างให้เตี้ยลงนิดหน่อย */
 .ai-forecast-grid{
     align-items:start!important;
 }
@@ -6226,7 +5694,6 @@ input[type="datetime-local"]{
     padding:10px 11px!important;
 }
 
-/* Tablet */
 @media(max-width:1000px){
 
     .ai-trend-summary{
@@ -6242,7 +5709,6 @@ input[type="datetime-local"]{
     }
 }
 
-/* Mobile */
 @media(max-width:640px){
 
     .ai-trend-summary{
@@ -6262,26 +5728,16 @@ input[type="datetime-local"]{
     }
 }
 
-
-/* =========================================================
-   AI SECTION — FONT SIZE / READABILITY FINAL
-   เพิ่มขนาดตัวอักษรทั้ง Desktop และ Mobile
-   โดยไม่เปลี่ยนโครงสร้างหรือ logic ของ AI
-   ========================================================= */
-
-/* หัวข้อหลักของโซน */
 .ai-intelligence-section .section-title-with-help h2{
     font-size:clamp(24px,1.65vw,30px)!important;
     line-height:1.25!important;
 }
 
-/* ข้อความรองใต้หัวข้อ */
 .ai-intelligence-statusline{
     font-size:13px!important;
     line-height:1.55!important;
 }
 
-/* Badge AI ด้านขวาบน */
 .ai-status-badge,
 .ai-forecast-status{
     font-size:11px!important;
@@ -6289,20 +5745,17 @@ input[type="datetime-local"]{
     padding:7px 10px!important;
 }
 
-/* Kicker เช่น "สถานการณ์ปัจจุบัน" / "แนวโน้ม 30 นาที" */
 .ai-panel-kicker{
     font-size:12px!important;
     line-height:1.4!important;
     letter-spacing:.08em!important;
 }
 
-/* หัวข้อ "ตอนนี้เป็นอย่างไร" / "อีก 30 นาทีเป็นอย่างไร" */
 .ai-panel-head h3{
     font-size:18px!important;
     line-height:1.35!important;
 }
 
-/* ปุ่มวิเคราะห์ใหม่ */
 .ai-refresh-button,
 .ai-forecast-refresh{
     font-size:12px!important;
@@ -6310,7 +5763,6 @@ input[type="datetime-local"]{
     padding:10px 13px!important;
 }
 
-/* เนื้อหาฝั่ง Current Situation */
 .ai-details-panel{
     font-size:14px!important;
     line-height:1.72!important;
@@ -6321,7 +5773,6 @@ input[type="datetime-local"]{
     font-size:inherit!important;
 }
 
-/* headline/summary ของ AI */
 .ai-headline,
 .ai-summary,
 .ai-section-title,
@@ -6337,7 +5788,6 @@ input[type="datetime-local"]{
     font-size:14px!important;
 }
 
-/* รายการสิ่งที่ระบบพบ */
 .ai-findings,
 .ai-findings li,
 .ai-details-panel li{
@@ -6345,12 +5795,10 @@ input[type="datetime-local"]{
     line-height:1.6!important;
 }
 
-/* คำแนะนำ */
 .ai-recommendation{
     font-size:13px!important;
 }
 
-/* meta / เวลาวิเคราะห์ */
 .ai-analysis-footer,
 .ai-forecast-generated,
 .ai-meta-row{
@@ -6358,16 +5806,11 @@ input[type="datetime-local"]{
     line-height:1.45!important;
 }
 
-/* =========================================================
-   FORECAST CARDS
-   ========================================================= */
-
 .ai-forecast-details{
     font-size:14px!important;
     line-height:1.65!important;
 }
 
-/* หัวข้อใน Forecast */
 .ai-forecast-headline{
     font-size:17px!important;
     line-height:1.45!important;
@@ -6388,7 +5831,6 @@ input[type="datetime-local"]{
     line-height:1.55!important;
 }
 
-/* PM1 / PM2.5 / PM10 */
 .ai-dust-mini-label{
     font-size:12px!important;
 }
@@ -6408,13 +5850,11 @@ input[type="datetime-local"]{
     line-height:1.55!important;
 }
 
-/* ปัจจัยเด่น / สิ่งผิดปกติ */
 .ai-trend-driver{
     font-size:12px!important;
     line-height:1.6!important;
 }
 
-/* การ์ดสรุปด้านล่าง: คุณภาพอากาศ/ความร้อน/พื้นที่/กิจกรรม */
 .ai-forecast-item{
     font-size:13px!important;
     line-height:1.6!important;
@@ -6426,15 +5866,10 @@ input[type="datetime-local"]{
     margin-bottom:4px!important;
 }
 
-/* ข้อความ AI Trend ด้านล่าง */
 .ai-numeric-base{
     font-size:13px!important;
     line-height:1.6!important;
 }
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
 
 @media(max-width:720px){
 
@@ -6565,12 +6000,6 @@ input[type="datetime-local"]{
         line-height:1.65!important;
     }
 }
-
-
-
-/* =========================================================
-   MOBILE / TABLET FINAL POLISH
-   ========================================================= */
 
 @media(max-width:760px){
 
@@ -6735,10 +6164,6 @@ input[type="datetime-local"]{
     }
 }
 
-/* =========================================================
-   FULLSCREEN CHART ZOOM VIEWER
-   ========================================================= */
-
 .chart-zoom-viewer{
     position:fixed;
     inset:0;
@@ -6900,18 +6325,11 @@ body.chart-zoom-open{
     }
 }
 
-
-/* =========================================================
-   INTERACTIVE CHART VIEWER — FINAL OVERRIDES
-   ========================================================= */
-
-/* Graphs are interactive-open targets on every device */
 #historyChartArea canvas,
 #forecastChartArea canvas{
     cursor:zoom-in!important;
 }
 
-/* Desktop hint */
 @media(min-width:1101px){
 
     .bottom-chart-wrap{
@@ -6937,10 +6355,6 @@ body.chart-zoom-open{
     }
 }
 
-/*
-  Viewer now contains a REAL Chart.js canvas.
-  Disable old image-viewer assumptions.
-*/
 .chart-zoom-stage{
     position:relative!important;
     flex:1 1 auto!important;
@@ -7003,12 +6417,10 @@ body.chart-zoom-open{
     display:none!important;
 }
 
-/* Reset button needs more room than old 100% label */
 .chart-zoom-actions #chartZoomReset{
     min-width:58px!important;
 }
 
-/* Mobile */
 @media(max-width:720px){
 
     .chart-zoom-dialog{
@@ -7061,7 +6473,6 @@ body.chart-zoom-open{
     }
 }
 
-/* Tablet */
 @media(min-width:721px) and (max-width:1100px){
 
     .chart-zoom-dialog{
@@ -7077,12 +6488,6 @@ body.chart-zoom-open{
     }
 }
 
-
-
-/* =========================================================
-   INTERACTIVE VIEWER — NO PLUGIN CURSOR POLISH
-   ========================================================= */
-
 .chart-zoom-stage{
     cursor:grab;
 }
@@ -7094,12 +6499,6 @@ body.chart-zoom-open{
 .chart-zoom-stage canvas{
     touch-action:none!important;
 }
-
-
-/* =========================================================
-   INTERACTIVE GRAPH — DATA SERIES CONTROLS
-   คนทั่วไปเห็นชัดว่าเส้นกราฟเปิด/ปิดได้
-   ========================================================= */
 
 .chart-series-controls{
     flex:0 0 auto;
@@ -7240,7 +6639,6 @@ body.chart-zoom-open{
     margin-bottom:6px;
 }
 
-/* Mobile */
 @media(max-width:720px){
 
     .chart-series-controls{
@@ -7292,11 +6690,6 @@ body.chart-zoom-open{
     }
 }
 
-
-/* =========================================================
-   NAVIGATION REDESIGN 2026-08-28
-   Keeps the existing dashboard theme and logic.
-   ========================================================= */
 .dashboard-nav{position:sticky;top:10px;z-index:80;margin:-4px 0 20px;border-radius:18px;backdrop-filter:blur(18px);background:rgba(7,17,31,.92)}
 .dashboard-nav-inner{min-height:62px;padding:8px 10px;display:flex;align-items:center;gap:12px}
 .dashboard-nav-links{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
@@ -7316,11 +6709,6 @@ body.chart-zoom-open{
 @media(max-width:760px){.dashboard-nav{top:6px}.dashboard-nav-inner{padding:8px}.dashboard-mobile-toggle{display:inline-flex}.dashboard-nav-links{display:none;order:3;flex-basis:100%;flex-direction:column;align-items:stretch;overflow:visible}.dashboard-nav-links.open{display:flex}.dashboard-nav-link{text-align:left;width:100%}.dashboard-system-pill{font-size:.7rem;padding:0 10px}.overview-hero{padding:20px}.overview-title-row{display:block}.overview-quality-badge{margin-top:12px}.overview-metrics-grid,.overview-node-grid,.about-grid{grid-template-columns:1fr}.about-card-wide{grid-column:auto}.overview-section-head,.overview-alert-head{align-items:flex-start;flex-direction:column}.overview-main-value strong{font-size:3rem}.system-flow{align-items:stretch}.system-flow i{align-self:center}.about-credit-note{align-items:flex-start}.dashboard-page-heading{margin-top:2px}}
 @media(prefers-reduced-motion:reduce){.dashboard-page.active,.node.navigation-highlight{animation:none}.overview-node-card{transition:none}}
 
-
-/* =========================================================
-   HISTORY RANGE CONTEXT — 2026-08-28
-   แสดงวัน/เวลาเริ่ม-สิ้นสุดของกราฟให้ชัด โดยเฉพาะ 7/30 วัน
-   ========================================================= */
 .history-range-caption{
     margin-top: 12px;
     padding: 10px 12px;
@@ -7367,9 +6755,6 @@ body.chart-zoom-open{
     font-size: 9px;
 }
 
-/* =========================================================
-   ABOUT — MEASUREMENT CRITERIA & REFERENCES
-   ========================================================= */
 .about-standards-section{
     margin-top: 14px;
     padding: 22px;
@@ -7574,10 +6959,6 @@ body.chart-zoom-open{
     }
 }
 
-
-/* =========================================================
-   ABOUT PROJECT — DETAILED DOCUMENTATION 2026-08-28 V3
-   ========================================================= */
 .about-chip-list-spaced{margin-top:14px}
 .about-card-subtext{margin-top:12px!important}
 .about-detail-section{margin-top:14px;padding:24px}
@@ -7597,11 +6978,6 @@ body.chart-zoom-open{
 
 @media(max-width:900px){.about-status-rules{grid-template-columns:1fr}.about-detail-grid,.about-interpretation-grid{grid-template-columns:1fr}}
 @media(max-width:640px){.about-detail-section{padding:18px}.about-detail-head{flex-direction:column}.about-detail-head .about-standard-badge{align-self:flex-start}}
-
-/* =========================================================
-   HISTORY RANGE PICKER — VIEWPORT-CENTERED MODAL
-   2026-08-28
-   ========================================================= */
 
 body.history-range-modal-open {
     overflow: hidden;
@@ -7644,17 +7020,11 @@ body.history-range-modal-open::before {
     }
 }
 
-/* =========================================================
-   RESPONSIVE READABILITY & UI AUDIT — 2026-08-28 V5
-   เป้าหมาย: อ่านได้จริงบนมือถือ/แท็บเล็ต/คอม โดยไม่เปลี่ยน logic
-   ========================================================= */
-
 html{
     -webkit-text-size-adjust:100%;
     text-size-adjust:100%;
 }
 
-/* ป้องกันข้อความ/คอนโทรลล้นการ์ด */
 body,
 button,
 input,
@@ -7665,7 +7035,6 @@ textarea{
 
 img,canvas,svg{max-width:100%;}
 
-/* ---------- Tablet / small laptop ---------- */
 @media (min-width:761px) and (max-width:1100px){
     body{font-size:15px;line-height:1.55;}
     .dashboard-nav-link{font-size:.92rem;}
@@ -7683,7 +7052,6 @@ img,canvas,svg{max-width:100%;}
     .export-summary-note{font-size:12px;}
 }
 
-/* ---------- Mobile readability baseline ---------- */
 @media (max-width:760px){
     body{
         font-size:15px;
@@ -7700,7 +7068,6 @@ img,canvas,svg{max-width:100%;}
     .p-5{padding:16px;}
     .p-4{padding:14px;}
 
-    /* Utility text ที่เดิมเล็กเกินไปบนมือถือ */
     .text-xs{font-size:13px!important;line-height:1.45!important;}
     .text-sm{font-size:14px!important;line-height:1.55!important;}
     .text-\[8px\],
@@ -7713,7 +7080,6 @@ img,canvas,svg{max-width:100%;}
     .text-xl{font-size:18px!important;line-height:1.35!important;}
     .text-lg{font-size:16px!important;line-height:1.4!important;}
 
-    /* Touch target ขั้นต่ำใกล้ 44px */
     button,
     select,
     input[type="button"],
@@ -7725,17 +7091,15 @@ img,canvas,svg{max-width:100%;}
     input[type="datetime-local"],
     input[type="text"],
     input[type="number"]{
-        font-size:16px!important; /* กัน iOS auto zoom */
+        font-size:16px!important; 
     }
 
-    /* Header */
     header.glass.card{padding:14px!important;gap:12px!important;}
     header .w-20{width:54px!important;height:54px!important;}
     header .text-xl,
     header .md\:text-2xl{font-size:18px!important;line-height:1.25!important;}
     header .text-sm{font-size:13px!important;}
 
-    /* Navigation */
     .dashboard-nav{margin-bottom:14px;}
     .dashboard-nav-inner{gap:8px;}
     .dashboard-mobile-toggle{font-size:14px;padding:0 13px;min-height:44px;}
@@ -7743,12 +7107,10 @@ img,canvas,svg{max-width:100%;}
     .dashboard-system-pill{font-size:12px!important;min-height:38px;padding:0 10px;}
     .dashboard-alert-badge{font-size:11px!important;min-width:20px;height:20px;}
 
-    /* Page headings */
     .dashboard-page-heading h1{font-size:27px!important;}
     .dashboard-page-heading p{font-size:14px!important;line-height:1.65;}
     .overview-eyebrow{font-size:11px!important;}
 
-    /* Overview */
     .overview-hero{padding:17px!important;gap:16px;}
     .overview-title{font-size:25px!important;}
     .overview-subtitle{font-size:14px;line-height:1.65;}
@@ -7770,7 +7132,6 @@ img,canvas,svg{max-width:100%;}
     .overview-node-card b{font-size:15px;}
     .overview-node-card small{font-size:13px;line-height:1.45;}
 
-    /* Monitoring cards */
     .node{padding:15px!important;}
     .node b.text-xl{font-size:18px!important;}
     .node .grid.text-sm{font-size:14px!important;line-height:1.6;}
@@ -7779,7 +7140,6 @@ img,canvas,svg{max-width:100%;}
     #gatewayStatusTop{font-size:14px;}
     #nodesActiveTop{font-size:12px!important;}
 
-    /* Smart summary + AI */
     .smart-summary-mode,
     .smart-summary-stat-label,
     .smart-summary-stat-sub,
@@ -7820,7 +7180,6 @@ img,canvas,svg{max-width:100%;}
     .ai-forecast-refresh{font-size:13px!important;min-height:42px!important;}
     .ai-forecast-status{font-size:12px!important;min-height:34px;}
 
-    /* Historical toolbar / cards */
     .history-toolbar{justify-content:stretch;gap:8px;}
     .history-toolbar>select,
     .history-toolbar>button{font-size:14px!important;}
@@ -7828,7 +7187,6 @@ img,canvas,svg{max-width:100%;}
     .help-button{width:36px!important;height:36px!important;flex-basis:36px!important;font-size:15px!important;}
     .history-range-caption{font-size:12px!important;}
 
-    /* Chart UI around canvas */
     .metric-chart-title,
     .chart-zone-title{font-size:15px!important;}
     .metric-chart-subtitle,
@@ -7843,7 +7201,6 @@ img,canvas,svg{max-width:100%;}
     .chart-series-single-label,
     .chart-series-show-all{min-height:40px!important;}
 
-    /* History range modal */
     #historyRangePanel.history-range-panel{
         left:8px!important;
         right:8px!important;
@@ -7863,7 +7220,6 @@ img,canvas,svg{max-width:100%;}
     #historyRangePanel #historyRangeCancel,
     #historyRangePanel #historyRangeApply{min-height:44px!important;font-size:14px!important;}
 
-    /* Help modal/popover */
     .help-popover{
         left:8px!important;
         right:8px!important;
@@ -7885,7 +7241,6 @@ img,canvas,svg{max-width:100%;}
     .help-formula,.help-warning,.help-sources,.help-sources a{font-size:13px!important;line-height:1.6;}
     .help-threshold-grid{font-size:13px!important;}
 
-    /* Export modal */
     .export-modal{padding:8px!important;}
     .export-modal-dialog{width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;border-radius:15px;}
     .export-modal-header{padding-top:13px;padding-bottom:13px;gap:10px;}
@@ -7903,7 +7258,6 @@ img,canvas,svg{max-width:100%;}
     .export-modal-footer{gap:8px;}
     .export-cancel-button,.export-excel-button{min-height:44px;font-size:14px!important;padding:0 12px;}
 
-    /* Chart fullscreen */
     .chart-zoom-dialog{inset:5px!important;border-radius:14px;}
     .chart-zoom-toolbar{padding:9px!important;gap:8px;}
     .chart-zoom-title{font-size:16px!important;}
@@ -7911,7 +7265,6 @@ img,canvas,svg{max-width:100%;}
     .chart-zoom-actions button{min-width:42px!important;height:42px!important;font-size:16px!important;}
     .chart-zoom-actions #chartZoomReset{font-size:12px!important;min-width:58px!important;}
 
-    /* About project */
     .about-card{padding:17px;gap:13px;}
     .about-card-icon{width:40px;height:40px;flex-basis:40px;}
     .about-card h2{font-size:17px!important;line-height:1.4;}
@@ -7924,7 +7277,6 @@ img,canvas,svg{max-width:100%;}
     .about-standard-badge{font-size:12px!important;}
     .about-credit-note{padding:16px;}
 
-    /* Credit cards */
     .credit-box{min-height:0!important;padding:16px!important;gap:12px;}
     .credit-label{font-size:11px!important;}
     .credit-title{font-size:14px!important;line-height:1.45!important;}
@@ -7934,7 +7286,6 @@ img,canvas,svg{max-width:100%;}
     .credit-footer-note{font-size:11px!important;}
 }
 
-/* ---------- Very narrow phones ---------- */
 @media (max-width:390px){
     body{font-size:14px;}
     .dashboard-system-pill{max-width:170px;overflow:hidden;text-overflow:ellipsis;}
@@ -7946,7 +7297,6 @@ img,canvas,svg{max-width:100%;}
     #historyRangePanel #quickRangeList.quick-range-list{grid-template-columns:1fr!important;}
 }
 
-/* Desktop: keep dense layout but never use microscopic UI text */
 @media (min-width:1101px){
     .help-popover-body{font-size:13px;}
     .export-modal-subtitle,
@@ -7955,14 +7305,6 @@ img,canvas,svg{max-width:100%;}
     .dashboard-system-pill{font-size:.8rem;}
 }
 
-
-/* =========================================================
-   V7 — FINAL UI REPAIR / SUMMARY / MONITORING / ABOUT
-   2026-08-28
-   ========================================================= */
-
-/* 1) History range modal: always above the dim/blur layer.
-   JS moves #historyRangePanel directly under body when opened. */
 body.history-range-modal-open::before{
     z-index:999900!important;
     background:rgba(2,8,18,.70)!important;
@@ -7982,8 +7324,6 @@ body > #historyRangePanel.history-range-panel *{
     filter:none!important;
 }
 
-/* 2) Smart Summary — all 4 information cards use the same footprint.
-   Dust card no longer pretends to be weather/cloud information. */
 @media (min-width:901px){
     .smart-summary-grid{
         grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -8008,7 +7348,6 @@ body > #historyRangePanel.history-range-panel *{
     }
 }
 
-/* 3) Outdoor activity must read like a recommendation, not a footnote. */
 .smart-summary-activity{
     margin-top:14px!important;
     padding:15px 17px!important;
@@ -8041,7 +7380,6 @@ body > #historyRangePanel.history-range-panel *{
     .smart-summary-activity-label{justify-self:start!important;}
 }
 
-/* 4-5) Monitoring status: separate the main receiving station from node count. */
 .monitoring-status-cluster{
     display:grid;
     grid-template-columns:repeat(2,minmax(155px,1fr));
@@ -8097,7 +7435,6 @@ body > #historyRangePanel.history-range-panel *{
     .monitoring-status-cluster{grid-template-columns:1fr;}
 }
 
-/* 6) Standards: compact supporting data into one useful card. */
 .about-standards-grid{align-items:start!important;}
 .about-standard-supporting{grid-column:span 2;}
 .about-supporting-grid{
@@ -8143,7 +7480,6 @@ body > #historyRangePanel.history-range-panel *{
     .about-supporting-item small{font-size:12px;}
 }
 
-/* 7) Project participants heading + credit cards are one section. */
 .about-credit-section{
     margin-top:18px;
     overflow:hidden;
@@ -8183,13 +7519,6 @@ body > #historyRangePanel.history-range-panel *{
     #page-about .about-credit-section .about-credit-note p{font-size:13px;}
 }
 
-
-/* =========================================================
-   V8 — HISTORY LABEL READABILITY + MOBILE RANGE MODAL
-   2026-08-28
-   ========================================================= */
-
-/* ช่วงยาวไม่ต้องแสดง timestamp ระดับวินาทีในแถบสรุปใต้กราฟ */
 .history-range-caption .history-range-edge b{
     font-variant-numeric:tabular-nums;
     white-space:nowrap;
@@ -8198,16 +7527,12 @@ body > #historyRangePanel.history-range-panel *{
     white-space:nowrap;
 }
 
-/* มือถือ: ใช้เป็น full-screen sheet เกือบเต็มจอแทนการคำนวณ top:50%.
-   วิธีนี้ไม่ขึ้นกับ layout viewport / address bar ของ browser มือถือ */
 @media (max-width:700px){
     body.history-range-modal-open{
         overflow:hidden!important;
         touch-action:none;
     }
 
-    /* บนมือถือปิด backdrop-filter เพราะบาง browser สร้าง compositing layer
-       ที่ทำให้ fixed modal ถูก blur/หายตาม backdrop ได้ */
     body.history-range-modal-open::before{
         position:fixed!important;
         inset:0!important;
@@ -8251,7 +7576,6 @@ body > #historyRangePanel.history-range-panel *{
         grid-template-columns:repeat(2,minmax(0,1fr))!important;
     }
 
-    /* ปุ่มยกเลิก/ใช้งานอยู่ให้เห็นง่ายแม้เนื้อหายาว */
     body > #historyRangePanel > .border-t:last-child{
         position:sticky!important;
         bottom:0!important;
@@ -8275,12 +7599,6 @@ body > #historyRangePanel.history-range-panel *{
     }
 }
 
-
-/* =========================================================
-   V9 FINAL RESPONSIVE / MODAL HARDENING
-   ========================================================= */
-
-/* Keep all dashboard dialogs above chart/canvas stacking contexts. */
 #historyRangePanel,
 #exportModal,
 #helpModal,
@@ -8290,7 +7608,6 @@ body > #historyRangePanel.history-range-panel *{
     isolation: isolate;
 }
 
-/* Avoid tiny secondary text on compact screens. */
 @media (max-width: 760px) {
     body { font-size: 14px; }
 
@@ -8346,10 +7663,6 @@ body > #historyRangePanel.history-range-panel *{
     }
 }
 
-
-/* =========================================================
-   HISTORY NODE COMPARISON — 2026-08-28
-   ========================================================= */
 .history-toolbar .history-metric-select{min-width:150px;}
 #historyNode{min-width:190px;}
 .metric-chart-grid-3{align-items:start;}
@@ -8357,10 +7670,6 @@ body > #historyRangePanel.history-range-panel *{
   .history-toolbar .history-metric-select,#historyNode{width:100%;min-width:0;}
 }
 
-
-/* =========================================================
-   PUBLIC GUIDE / HELP READABILITY — 2026-08-28
-   ========================================================= */
 .about-section-lead{
     margin-top:8px;
     max-width:900px;
@@ -8470,10 +7779,6 @@ body > #historyRangePanel.history-range-panel *{
     .help-simple-grid{grid-template-columns:1fr}
 }
 
-
-/* =========================================================
-   UX CLARITY — STATUS + FORECAST EXPLANATION
-   ========================================================= */
 .dashboard-system-dot.is-warning{
   background:#f59e0b;
   box-shadow:0 0 0 4px rgba(245,158,11,.12),0 0 16px rgba(245,158,11,.35);
@@ -8527,11 +7832,6 @@ body > #historyRangePanel.history-range-panel *{
   .forecast-accuracy-note span{font-size:11px}
 }
 
-
-/* =========================================================
-   V11 MOBILE UX / READABILITY / HELP CONSOLIDATION
-   Final override layer for compact screens.
-   ========================================================= */
 html,body{max-width:100%;overflow-x:clip}
 .section-title-with-help{min-width:0}
 .overview-title-help,.chart-title-with-help{display:flex;align-items:center;gap:10px;min-width:0}
@@ -8539,7 +7839,6 @@ html,body{max-width:100%;overflow-x:clip}
 .forecast-display-panel-compact{padding:12px 14px!important}
 .forecast-display-panel-compact .forecast-display-controls{width:100%;margin:0!important}
 
-/* Important secondary text should never be microscopic. */
 .monitoring-status-label,
 .monitoring-status-hint,
 .current-environment-detail,
@@ -8563,17 +7862,14 @@ html,body{max-width:100%;overflow-x:clip}
   body{font-size:15px!important;line-height:1.55}
   body>.max-w-\[1800px\]{padding:10px!important}
 
-  /* Header */
   header.glass.card{padding:13px!important;margin-bottom:10px!important;gap:10px!important}
   header .flex.items-center.gap-4{gap:11px!important;align-items:center!important}
   header img.w-20{width:54px!important;height:54px!important}
   header .text-xl{font-size:17px!important;line-height:1.35!important}
   header .text-sm{font-size:13px!important;line-height:1.5!important}
 
-  /* Decorative English eyebrows are unnecessary on a phone. */
   .overview-eyebrow{display:none!important}
 
-  /* Navigation: never truncate the status message. */
   .dashboard-nav{top:max(4px,env(safe-area-inset-top))!important;margin-bottom:12px!important}
   .dashboard-nav-inner{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;gap:8px!important;padding:8px!important;align-items:center!important}
   .dashboard-mobile-toggle{grid-column:1!important;min-height:44px!important;font-size:14px!important}
@@ -8582,12 +7878,10 @@ html,body{max-width:100%;overflow-x:clip}
   .dashboard-nav-links{grid-column:1/-1!important;width:100%!important;margin:0!important}
   .dashboard-nav-link{min-height:46px!important;font-size:15px!important;padding:11px 13px!important}
 
-  /* Page headings */
   .dashboard-page-heading{margin:6px 0 12px!important}
   .dashboard-page-heading h1{font-size:24px!important;line-height:1.3!important}
   .dashboard-page-heading p{font-size:14px!important;line-height:1.65!important;margin-top:5px!important}
 
-  /* Overview */
   .overview-hero{padding:16px!important;gap:15px!important}
   .overview-title-row{display:block!important}
   .overview-title-help{align-items:flex-start!important}
@@ -8613,7 +7907,6 @@ html,body{max-width:100%;overflow-x:clip}
   .overview-node-card b{font-size:15px!important}
   .overview-node-card small{font-size:13px!important}
 
-  /* Summary */
   .smart-summary-card{padding:15px!important}
   .smart-summary-header{align-items:flex-start!important}
   .smart-summary-mode{display:none!important}
@@ -8625,7 +7918,6 @@ html,body{max-width:100%;overflow-x:clip}
   .smart-summary-activity{font-size:14px!important}
   .smart-summary-note{font-size:13px!important}
 
-  /* Monitoring */
   .monitoring-card{padding:15px!important}
   .monitoring-card>.flex.justify-between{display:block!important}
   .monitoring-status-cluster{grid-template-columns:1fr!important;min-width:0!important;width:100%!important;margin-top:12px!important}
@@ -8638,7 +7930,6 @@ html,body{max-width:100%;overflow-x:clip}
   .node [id$="status"]{font-size:13px!important}
   .badge{font-size:12.5px!important;min-height:32px!important}
 
-  /* History controls and statistics */
   .historical-section{padding:15px!important}
   .historical-section h2{font-size:20px!important}
   .history-toolbar{display:grid!important;grid-template-columns:1fr!important;width:100%!important;gap:9px!important;margin-top:2px!important}
@@ -8653,7 +7944,6 @@ html,body{max-width:100%;overflow-x:clip}
   .historical-section>.soft .grid-cols-5 b{font-size:21px!important;margin-top:4px!important;overflow-wrap:anywhere}
   #selectedMetricLabel{font-size:14px!important}
 
-  /* Charts */
   .dashboard-charts-zone{grid-template-columns:1fr!important;gap:12px!important}
   .dashboard-chart-card{padding:14px!important;overflow:hidden!important}
   .chart-zone-heading{margin-bottom:8px!important}
@@ -8672,7 +7962,6 @@ html,body{max-width:100%;overflow-x:clip}
   .history-range-caption{font-size:13px!important;line-height:1.5!important;grid-template-columns:1fr!important;text-align:left!important}
   .history-range-caption>*{text-align:left!important}
 
-  /* Forecast face: only controls stay visible; explanation lives in ?. */
   .forecast-display-panel{padding:11px!important;margin-top:8px!important}
   .forecast-display-copy{display:none!important}
   .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
@@ -8682,7 +7971,6 @@ html,body{max-width:100%;overflow-x:clip}
   .forecast-switch{min-height:42px!important;flex-shrink:0!important}
   .forecast-accuracy-note{display:none!important}
 
-  /* Analysis: make meaningful text readable; hide decorative micro labels. */
   .ai-forecast-kicker,.forecast-base-label{display:none!important}
   .ai-forecast-topbar{padding:13px!important}
   .ai-forecast-subtitle{font-size:13px!important}
@@ -8694,7 +7982,6 @@ html,body{max-width:100%;overflow-x:clip}
   .ai-forecast-generated,.ai-generated-at,.ai-meta-row,.ai-analysis-footer{font-size:12px!important;line-height:1.5!important}
   .ai-confidence small{font-size:11px!important;line-height:1.45!important}
 
-  /* Help becomes a readable near-fullscreen sheet. */
   .help-popover{position:fixed!important;inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;border-radius:18px!important;overflow:hidden!important}
   .help-popover-header{position:sticky!important;top:0!important;z-index:2!important;padding:14px 15px!important;background:#091827!important}
   .help-popover-eyebrow{display:none!important}
@@ -8714,7 +8001,6 @@ html,body{max-width:100%;overflow-x:clip}
   .help-steps li{align-items:flex-start!important}
   .help-steps li>span{flex:0 0 30px!important;width:30px!important;height:30px!important;font-size:13px!important}
 
-  /* Date-range modal */
   body>#historyRangePanel.history-range-panel{inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)) 8px!important;width:auto!important;height:auto!important;max-height:none!important;border-radius:18px!important;padding:0!important}
   #historyRangePanel .history-range-calendar{padding:14px!important}
   #historyRangePanel .history-range-quick{padding:12px 14px!important}
@@ -8724,7 +8010,6 @@ html,body{max-width:100%;overflow-x:clip}
   #historyRangePanel .text-\[11px\],#historyRangePanel .text-xs{font-size:13px!important}
   #historyRangePanel input{font-size:16px!important;min-height:42px!important}
 
-  /* Export modal */
   .export-modal{padding:8px!important}
   .export-modal-dialog{width:calc(100vw - 16px)!important;max-width:none!important;max-height:calc(100dvh - 16px)!important}
   .export-modal-title{font-size:19px!important}
@@ -8736,7 +8021,6 @@ html,body{max-width:100%;overflow-x:clip}
   .export-modal-footer{display:grid!important;grid-template-columns:1fr 1fr!important}
   .export-cancel-button,.export-excel-button{font-size:14px!important;min-height:46px!important}
 
-  /* About / credits */
   .about-reader-card p,.about-reading-tip span,.about-detail-section p,.about-detail-section li{font-size:14px!important;line-height:1.75!important}
   .about-reader-card b,.about-card h2{font-size:16px!important}
   .credit-label,.credit-role,.credit-bottom{display:none!important}
@@ -8775,7 +8059,6 @@ html,body{max-width:100%;overflow-x:clip}
   .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
 }
 
-/* V11.1 — final tiny-text and header-brand guard */
 @media (max-width:760px){
   .text-\[8px\],.text-\[9px\],.text-\[10px\],.text-\[11px\],.text-xs{
     font-size:13px!important;
@@ -8793,13 +8076,6 @@ html,body{max-width:100%;overflow-x:clip}
   header .flex.items-center.gap-4{align-items:flex-start!important}
 }
 
-
-/* =========================================================
-   V12 — CROSS-DEVICE UI / UX AUDIT
-   Desktop + Laptop + Tablet + Mobile + Landscape
-   Visual/readability layer only. No API/calculation changes.
-   ========================================================= */
-
 :root{
   --ui-readable-xs:12px;
   --ui-readable-sm:13px;
@@ -8807,11 +8083,9 @@ html,body{max-width:100%;overflow-x:clip}
   --ui-readable-lg:16px;
 }
 
-/* Prevent accidental horizontal page overflow at every viewport. */
 html,body{max-width:100%;overflow-x:hidden}
 img,svg,canvas{max-width:100%}
 
-/* ---------- Global readable microcopy ---------- */
 .smart-summary-mode,
 .smart-summary-stat-label,
 .smart-summary-stat-sub,
@@ -8846,7 +8120,6 @@ img,svg,canvas{max-width:100%}
   line-height:1.55!important;
 }
 
-/* Tiny uppercase labels are decorative; keep them subtle but readable. */
 .ai-panel-kicker,
 .ai-model-strip-label,
 .ai-trend-variable,
@@ -8857,7 +8130,6 @@ img,svg,canvas{max-width:100%}
   letter-spacing:.06em!important;
 }
 
-/* Core analysis copy should never be micro-text on desktop either. */
 .ai-result-summary,
 .ai-forecast-details,
 .ai-observation,
@@ -8871,7 +8143,6 @@ img,svg,canvas{max-width:100%}
 .smart-summary-headline{font-size:16px!important}
 .smart-summary-stat-value{font-size:14px!important}
 
-/* Buttons / clickable targets */
 .help-trigger,
 .dashboard-alert-button,
 .ai-refresh-button,
@@ -8884,7 +8155,6 @@ img,svg,canvas{max-width:100%}
 }
 .help-trigger{min-width:34px;min-height:34px}
 
-/* ---------- Desktop >= 1280 ---------- */
 @media (min-width:1280px){
   body{font-size:15px;line-height:1.55}
   .dashboard-page-heading h1{font-size:30px;line-height:1.25}
@@ -8914,7 +8184,6 @@ img,svg,canvas{max-width:100%}
   .help-choice-list span{font-size:13.5px;line-height:1.7}
 }
 
-/* ---------- Laptop / small desktop 1024–1279 ---------- */
 @media (min-width:1024px) and (max-width:1279px){
   body{font-size:14.5px}
   .dashboard-page-heading h1{font-size:27px}
@@ -8931,7 +8200,6 @@ img,svg,canvas{max-width:100%}
   .help-popover{width:min(660px,calc(100vw - 36px));max-height:82vh}
 }
 
-/* ---------- Tablet 761–1023 ---------- */
 @media (min-width:761px) and (max-width:1023px){
   body{font-size:14.5px}
   .dashboard-page-heading h1{font-size:26px}
@@ -8953,12 +8221,10 @@ img,svg,canvas{max-width:100%}
   .export-modal-dialog{width:min(94vw,900px)}
 }
 
-/* ---------- Mobile <= 760 ---------- */
 @media (max-width:760px){
   body{font-size:15px!important;line-height:1.58!important}
   body>.max-w-\[1800px\]{padding-left:10px!important;padding-right:10px!important}
 
-  /* Header / nav */
   .dashboard-nav-inner{grid-template-columns:auto minmax(0,1fr)!important}
   .dashboard-system-pill{
     font-size:13px!important;
@@ -8968,7 +8234,6 @@ img,svg,canvas{max-width:100%}
   }
   .dashboard-nav-link{font-size:15px!important}
 
-  /* Main hierarchy */
   .dashboard-page-heading h1{font-size:24px!important}
   .dashboard-page-heading p{font-size:14px!important}
   .overview-title{font-size:23px!important}
@@ -8980,7 +8245,6 @@ img,svg,canvas{max-width:100%}
   .overview-metric-card>span{font-size:14px!important}
   .overview-metric-card small{font-size:13px!important}
 
-  /* Do not hide meaningful chart context on mobile; keep one short readable line. */
   .chart-zone-subtitle{
     display:block!important;
     font-size:13px!important;
@@ -8988,7 +8252,6 @@ img,svg,canvas{max-width:100%}
     margin-top:4px!important;
   }
 
-  /* Analysis */
   .smart-summary-stat-label,
   .smart-summary-stat-sub,
   .ai-result-label,
@@ -9008,33 +8271,26 @@ img,svg,canvas{max-width:100%}
     line-height:1.7!important;
   }
 
-  /* Controls */
   .history-metric-select,.history-toolbar-button{font-size:15px!important;min-height:46px!important}
   .help-trigger{min-width:40px!important;min-height:40px!important;font-size:17px!important}
   .chart-series-button,.chart-series-show-all,.chart-series-single-label{font-size:13.5px!important;min-height:42px!important}
 
-  /* Charts */
   .chart-render-area{min-height:310px!important}
   .metric-chart-title{font-size:16px!important}
   .metric-chart-subtitle,.metric-chart-legend{font-size:13px!important}
   .history-range-caption{font-size:13px!important}
 
-  /* Forecast controls: explanatory paragraphs stay in ? */
   .forecast-display-copy,.forecast-accuracy-note{display:none!important}
   .forecast-actual-label,.forecast-toggle-name{font-size:14px!important}
   .forecast-actual-note,.forecast-toggle-status{font-size:13px!important}
 
-  /* Help */
   .help-popover-body{font-size:15px!important}
   .help-popover-body .help-section p{font-size:14px!important}
   .help-simple-grid span,.help-choice-list span,.help-steps small,.help-muted{font-size:13.5px!important}
 
-  /* Export remains horizontally scrollable because six sensor columns cannot
-     be compressed legibly into a phone width. */
   .export-table{font-size:13px!important}
 }
 
-/* ---------- Very small phones <= 390 ---------- */
 @media (max-width:390px){
   body>.max-w-\[1800px\]{padding-left:8px!important;padding-right:8px!important}
   .dashboard-nav-inner{grid-template-columns:1fr!important}
@@ -9047,7 +8303,6 @@ img,svg,canvas{max-width:100%}
   .help-popover-header h3{font-size:18px!important}
 }
 
-/* ---------- Wide screens: avoid cards becoming excessively stretched ---------- */
 @media (min-width:1600px){
   .dashboard-page-heading p{max-width:1000px}
   .dashboard-chart-card{padding:20px}
@@ -9055,7 +8310,6 @@ img,svg,canvas{max-width:100%}
   .help-popover{width:700px}
 }
 
-/* ---------- Short landscape screens ---------- */
 @media (orientation:landscape) and (max-height:650px) and (max-width:1100px){
   .help-popover{
     position:fixed!important;
@@ -9069,7 +8323,6 @@ img,svg,canvas{max-width:100%}
   .export-modal-dialog{max-height:calc(100dvh - 12px)!important}
 }
 
-/* ---------- Accessibility / interaction ---------- */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{
     scroll-behavior:auto!important;
@@ -9079,19 +8332,8 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-
-/* =========================================================
-   V13 — REAL-DEVICE MOBILE FIX
-   Based on Android portrait recordings/screenshots.
-   Fixes range sheet, export sheet, vertical density and
-   nested-scroll problems without changing data/API logic.
-   ========================================================= */
-
 @media (max-width:760px){
 
-  /* ---------- History date/range sheet ----------
-     One scroll container only; quick ranges are compact chips.
-     This prevents the very tall one-option-per-row sheet. */
   body > #historyRangePanel.history-range-panel{
     display:flex!important;
     flex-direction:column!important;
@@ -9152,7 +8394,6 @@ img,svg,canvas{max-width:100%}
     border:1px solid rgba(148,163,184,.16)!important;
   }
 
-  /* Date/time fields stay compact and readable. */
   body > #historyRangePanel > .border-t.p-4{
     padding:10px 14px!important;
     gap:8px!important;
@@ -9164,7 +8405,6 @@ img,svg,canvas{max-width:100%}
     font-size:13px!important;
   }
 
-  /* Footer must never disappear below the phone viewport. */
   body > #historyRangePanel > .border-t:last-child{
     position:relative!important;
     flex:0 0 auto!important;
@@ -9182,11 +8422,6 @@ img,svg,canvas{max-width:100%}
     font-size:14px!important;
   }
 
-  /* ---------- Export sheet ----------
-     The desktop table preview is not useful on a narrow phone:
-     it forces a ~700px table inside a ~400px viewport and creates
-     a second horizontal scroll area. Keep count + date selection,
-     then export directly. */
   .export-modal{
     padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))!important;
     overflow:hidden!important;
@@ -9217,8 +8452,6 @@ img,svg,canvas{max-width:100%}
     box-shadow:0 -8px 20px rgba(2,8,18,.48)!important;
   }
 
-  /* Hide only the sample table on phones. The export itself still contains
-     all selected records and columns. */
   .export-preview,
   .export-preview-section,
   .export-table-wrap{
@@ -9234,8 +8467,6 @@ img,svg,canvas{max-width:100%}
     line-height:1.55!important;
   }
 
-  /* ---------- Monitoring cards ----------
-     Preserve all measurements but reduce unnecessary vertical travel. */
   .monitoring-node-card,
   .node-card{
     padding-top:16px!important;
@@ -9246,7 +8477,6 @@ img,svg,canvas{max-width:100%}
     row-gap:12px!important;
   }
 
-  /* Long section headings + ? must not squeeze each other. */
   .section-title-with-help,
   .chart-zone-heading,
   .monitoring-section-heading{
@@ -9258,7 +8488,6 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-/* Small phones: range dates stack, quick ranges remain 2 columns. */
 @media (max-width:390px){
   body > #historyRangePanel > .border-t.p-4{
     grid-template-columns:1fr!important;
@@ -9272,7 +8501,6 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-/* Tablet portrait: keep the range chooser compact rather than full-height. */
 @media (min-width:761px) and (max-width:1023px){
   #historyRangePanel #quickRangeList.quick-range-list{
     display:grid!important;
@@ -9281,8 +8509,6 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-/* Desktop/laptop export preview stays available and scrolls only inside
-   its own preview area if the table is wider than the card. */
 @media (min-width:761px){
   .export-table-wrap{
     max-width:100%!important;
@@ -9291,16 +8517,8 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-
-/* =========================================================
-   V14 — MOBILE HELP MODAL FIX
-   Every ? opens as a viewport modal on phones/tablets.
-   No button-anchored positioning on narrow screens.
-   ========================================================= */
-
 @media (max-width:1023px){
 
-  /* Backdrop covers the viewport and locks the visual context. */
   .help-popover-backdrop,
   .help-backdrop{
     position:fixed!important;
@@ -9313,8 +8531,6 @@ img,svg,canvas{max-width:100%}
     -webkit-backdrop-filter:blur(4px)!important;
   }
 
-  /* The help panel itself is a centered viewport modal.
-     Reset all desktop anchoring/transform values explicitly. */
   .help-popover{
     position:fixed!important;
     top:max(10px,env(safe-area-inset-top))!important;
@@ -9341,7 +8557,6 @@ img,svg,canvas{max-width:100%}
     box-shadow:0 24px 70px rgba(0,0,0,.55)!important;
   }
 
-  /* Remove any pseudo-arrow used by desktop popovers. */
   .help-popover::before,
   .help-popover::after{
     display:none!important;
@@ -9383,7 +8598,6 @@ img,svg,canvas{max-width:100%}
     padding-bottom:calc(18px + env(safe-area-inset-bottom))!important;
   }
 
-  /* Make long help content comfortable to read on real devices. */
   .help-popover-body,
   .help-popover-body p,
   .help-popover-body li,
@@ -9398,7 +8612,6 @@ img,svg,canvas{max-width:100%}
     line-height:1.72!important;
   }
 
-  /* Any legacy positional classes/inline anchoring helpers must not win. */
   .help-popover.is-top,
   .help-popover.is-bottom,
   .help-popover.is-left,
@@ -9424,14 +8637,6 @@ img,svg,canvas{max-width:100%}
   .help-popover-body{padding:12px!important}
   .help-popover-header h3{font-size:18px!important}
 }
-
-
-/* =========================================================
-   V15 — HELP MODAL VISIBILITY FIX
-   V14 accidentally forced .help-popover to display:flex on
-   every phone, so the empty default dialog covered the page.
-   The dialog is now truly hidden until a ? button activates it.
-   ========================================================= */
 
 @media (max-width:1023px){
   .help-popover:not(.active){
@@ -9486,14 +8691,6 @@ img,svg,canvas{max-width:100%}
   }
 }
 
-
-/* =========================================================
-   V16 — PUBLIC UI POLISH
-   Cross-device density, typography and public-facing cleanup.
-   No data/API/forecast calculation changes.
-   ========================================================= */
-
-/* Section headings: keep title + ? aligned without squeezing. */
 .section-title-with-help,
 .chart-zone-heading{
   display:flex!important;
@@ -9506,7 +8703,6 @@ img,svg,canvas{max-width:100%}
 .section-title-with-help .help-trigger,
 .chart-zone-heading .help-trigger{flex:0 0 auto!important}
 
-/* Reduce decorative microcopy, but keep operational text readable. */
 .monitoring-status-hint,
 .overview-freshness,
 .history-range-caption,
@@ -9518,7 +8714,6 @@ img,svg,canvas{max-width:100%}
   line-height:1.55!important;
 }
 
-/* Public cards should not waste vertical space. */
 .monitoring-node-card,
 .node-card{
   padding:16px!important;
@@ -9534,14 +8729,12 @@ img,svg,canvas{max-width:100%}
   padding-bottom:10px!important;
 }
 
-/* Forecast: area scope must remain visible; deeper explanation belongs in ?. */
 .forecast-scope-label{
   font-size:13px!important;
   line-height:1.45!important;
   font-weight:700!important;
 }
 
-/* Help content hierarchy for general users. */
 .help-popover-body .help-section{
   margin-bottom:16px!important;
 }
@@ -9555,7 +8748,6 @@ img,svg,canvas{max-width:100%}
   line-height:1.7!important;
 }
 
-/* ---------- Desktop / Laptop ---------- */
 @media (min-width:1024px){
   .monitoring-node-card,
   .node-card{padding:18px!important}
@@ -9565,14 +8757,12 @@ img,svg,canvas{max-width:100%}
   .chart-zone-heading{align-items:flex-start!important}
 }
 
-/* ---------- Tablet ---------- */
 @media (min-width:761px) and (max-width:1023px){
   .monitoring-node-card,
   .node-card{padding:16px!important}
   .chart-zone-heading{align-items:flex-start!important}
 }
 
-/* ---------- Mobile ---------- */
 @media (max-width:760px){
   .monitoring-node-card,
   .node-card{
@@ -9593,7 +8783,6 @@ img,svg,canvas{max-width:100%}
     align-items:flex-start!important;
   }
 
-  /* Keep necessary context, remove only redundant decorative copy. */
   .overview-eyebrow,
   .chart-zone-eyebrow{
     display:none!important;
@@ -9607,7 +8796,6 @@ img,svg,canvas{max-width:100%}
     font-size:13px!important;
   }
 
-  /* Forecast empty-state should be one clear message rather than oversized blocks. */
   .ai-forecast-status,
   .forecast-empty-state{
     min-height:0!important;
@@ -9615,14 +8803,12 @@ img,svg,canvas{max-width:100%}
     padding-bottom:12px!important;
   }
 
-  /* Help title remains visible while content scrolls. */
   .help-popover-header{
     position:sticky!important;
     top:0!important;
   }
 }
 
-/* Very small phones */
 @media (max-width:390px){
   .monitoring-node-card .node-metrics,
   .node-card .node-metrics{gap:7px!important}
@@ -9630,9 +8816,6 @@ img,svg,canvas{max-width:100%}
   .node-card .node-metric{padding:7px!important}
 }
 
-/* =========================================================
-   ADMIN MODE V2 — compact login + focused editor
-   ========================================================= */
 .admin-modal{
     position:fixed;
     inset:0;
@@ -9668,7 +8851,6 @@ img,svg,canvas{max-width:100%}
     transition:width .22s ease,max-height .22s ease;
 }
 
-/* หลัง Login ค่อยขยายเป็น Editor */
 .admin-modal.is-editor .admin-dialog{
     width:min(1080px,calc(100vw - 36px));
     height:min(820px,calc(100dvh - 36px));
@@ -9847,7 +9029,6 @@ img,svg,canvas{max-width:100%}
     line-height:1.55;
 }
 
-/* จุดตรวจวัดเรียงลงมาเป็นแถวกว้าง อ่านง่ายกว่า 3 คอลัมน์ */
 .admin-device-grid{
     display:grid;
     grid-template-columns:1fr;
@@ -9987,7 +9168,6 @@ img,svg,canvas{max-width:100%}
 .admin-primary-button:disabled,
 .admin-secondary-button:disabled{opacity:.55;cursor:not-allowed}
 
-/* Public metadata */
 .node-public-location{
     margin-top:3px;
     color:#7dd3fc;
@@ -10033,14 +9213,12 @@ img,svg,canvas{max-width:100%}
     line-height:1.7;
 }
 
-/* Tablet */
 @media(max-width:900px){
     .admin-modal.is-editor .admin-dialog{
         width:min(760px,calc(100vw - 24px));
     }
 }
 
-/* Mobile */
 @media(max-width:640px){
     .admin-modal{
         padding:max(6px,env(safe-area-inset-top)) 6px max(6px,env(safe-area-inset-bottom));
@@ -10106,21 +9284,11 @@ img,svg,canvas{max-width:100%}
     }
 }
 
-/* =========================================================
-   ADMIN MODE V3 — visibility fix
-   สำคัญ: ต้องอยู่หลัง .admin-login-view / .admin-editor-view
-   เพื่อไม่ให้ display:flex ของ editor เขียนทับ .hidden
-   ========================================================= */
 .admin-login-view.hidden,
 .admin-editor-view.hidden{
     display:none !important;
 }
 
-/* =========================================================
-   ADMIN MODE V4 — fixed sidebar + non-scroll category menu
-   ========================================================= */
-
-/* Editor body */
 .admin-modal.is-editor .admin-dialog{
     width:min(1120px,calc(100vw - 36px));
     height:min(790px,calc(100dvh - 36px));
@@ -10134,14 +9302,12 @@ img,svg,canvas{max-width:100%}
     flex-direction:column;
 }
 
-/* Toolbar is now one compact status strip */
 .admin-editor-toolbar{
     flex:0 0 auto;
     min-height:54px;
     padding:9px 18px;
 }
 
-/* Main two-column workspace */
 .admin-workspace{
     flex:1 1 auto;
     min-height:0;
@@ -10150,7 +9316,6 @@ img,svg,canvas{max-width:100%}
     overflow:hidden;
 }
 
-/* Sidebar never scrolls horizontally */
 .admin-sidebar{
     min-width:0;
     padding:16px 12px;
@@ -10167,7 +9332,6 @@ img,svg,canvas{max-width:100%}
     text-transform:uppercase;
 }
 
-/* Important: no horizontal scrolling on these 3 categories */
 .admin-tabs{
     display:grid;
     grid-template-columns:1fr;
@@ -10248,7 +9412,6 @@ img,svg,canvas{max-width:100%}
     line-height:1.55;
 }
 
-/* Only content area scrolls vertically */
 .admin-editor-scroll{
     min-width:0;
     min-height:0;
@@ -10258,7 +9421,6 @@ img,svg,canvas{max-width:100%}
     scrollbar-gutter:stable;
 }
 
-/* Better content width so it doesn't feel stretched */
 .admin-tab-panel{
     width:min(760px,100%);
     margin:0 auto;
@@ -10267,7 +9429,6 @@ img,svg,canvas{max-width:100%}
     width:min(800px,100%);
 }
 
-/* Slightly cleaner cards */
 .admin-device-card{
     padding:14px 15px;
     border-radius:14px;
@@ -10276,7 +9437,6 @@ img,svg,canvas{max-width:100%}
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
 }
 
-/* Help/About form widths */
 .admin-tab-panel[data-admin-panel="help"] .admin-field,
 .admin-tab-panel[data-admin-panel="about"] .admin-field{
     margin-bottom:15px;
@@ -10288,14 +9448,12 @@ img,svg,canvas{max-width:100%}
     min-height:180px;
 }
 
-/* Footer stays fixed, outside scroll area */
 .admin-editor-footer{
     flex:0 0 auto;
     min-height:58px;
     padding:9px 18px;
 }
 
-/* Tablet */
 @media(max-width:900px){
     .admin-workspace{
         grid-template-columns:190px minmax(0,1fr);
@@ -10321,10 +9479,6 @@ img,svg,canvas{max-width:100%}
     }
 }
 
-/* Mobile:
-   categories become 3 fixed equal buttons.
-   No horizontal swipe / no carousel / no overflow-x.
-*/
 @media(max-width:640px){
     .admin-modal.is-editor .admin-dialog{
         width:100%;
@@ -10444,7 +9598,6 @@ img,svg,canvas{max-width:100%}
     }
 }
 
-/* Very narrow phones */
 @media(max-width:380px){
     .admin-tabs{
         gap:4px;
@@ -10461,10 +9614,6 @@ img,svg,canvas{max-width:100%}
     }
 }
 
-
-/* =========================================================
-   ADMIN MODE V5 — category reset + display hints
-   ========================================================= */
 .admin-section-head-row{
     display:flex;
     align-items:flex-start;
@@ -10507,7 +9656,6 @@ img,svg,canvas{max-width:100%}
     .admin-display-hint{font-size:9.5px}
 }
 
-/* ADMIN MODE V6 */
 .admin-preview-box{margin-top:18px;padding:13px;border:1px dashed rgba(56,189,248,.22);border-radius:14px;background:rgba(2,12,22,.38)}
 .admin-preview-label{margin-bottom:9px;color:#67e8f9;font-size:10px;font-weight:900;letter-spacing:.08em}
 .admin-preview-device,.admin-preview-about,.admin-preview-help{padding:13px;border:1px solid rgba(148,163,184,.13);border-radius:12px;background:#081827}
@@ -10528,15 +9676,6 @@ img,svg,canvas{max-width:100%}
 .admin-audit-time{color:#7dd3fc;font-size:10.5px;font-weight:800}.admin-audit-action{color:#dbeafe;font-size:11.5px}.admin-audit-empty{padding:22px;text-align:center;color:#64748b}
 @media(max-width:640px){.admin-sidebar .admin-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.admin-tab-copy b{font-size:8.5px}.site-announcement-wrap{width:calc(100% - 20px)}.admin-audit-item{grid-template-columns:1fr;gap:3px}}
 
-/* =========================================================
-   RESPONSIVE HARDENING V7
-   Device bands audited:
-   320 / 360 / 375 / 390 / 412 / 430 / 480
-   600 / 720 / 768 / 820 / 1024
-   1280 / 1366 / 1440 / 1600 / 1920+
-   ========================================================= */
-
-/* ---------- universal overflow safety ---------- */
 html,
 body{
     width:100%;
@@ -10591,7 +9730,6 @@ select{
     word-break:normal;
 }
 
-/* ---------- wide screens ---------- */
 @media (min-width:1600px){
     body > .max-w-\[1800px\]{
         padding-left:28px!important;
@@ -10602,7 +9740,6 @@ select{
     }
 }
 
-/* ---------- laptop / desktop ---------- */
 @media (min-width:1101px) and (max-width:1599px){
     body > .max-w-\[1800px\]{
         padding-left:20px!important;
@@ -10610,7 +9747,6 @@ select{
     }
 }
 
-/* ---------- tablet landscape / small laptop ---------- */
 @media (min-width:901px) and (max-width:1100px){
     body > .max-w-\[1800px\]{
         padding-left:16px!important;
@@ -10624,7 +9760,6 @@ select{
     }
 }
 
-/* ---------- tablet portrait ---------- */
 @media (min-width:721px) and (max-width:900px){
     body > .max-w-\[1800px\]{
         padding:14px!important;
@@ -10642,7 +9777,6 @@ select{
         width:calc(100% - 28px)!important;
     }
 
-    /* Admin keeps a usable sidebar on tablet */
     .admin-workspace{
         grid-template-columns:180px minmax(0,1fr)!important;
     }
@@ -10651,7 +9785,6 @@ select{
     }
 }
 
-/* ---------- phone / phablet ---------- */
 @media (max-width:720px){
     html,
     body{
@@ -10721,7 +9854,6 @@ select{
         min-width:0!important;
     }
 
-    /* Controls must never force the viewport wider */
     .historical-section select,
     .historical-section button,
     .historical-section input,
@@ -10750,7 +9882,6 @@ select{
         min-width:0!important;
     }
 
-    /* Help dialogs/popovers stay inside viewport */
     .help-popover,
     .help-popover.active,
     .chart-zoom-dialog,
@@ -10758,7 +9889,6 @@ select{
         max-width:calc(100vw - 20px)!important;
     }
 
-    /* Admin: 5 categories wrap instead of squeezing into one row */
     .admin-sidebar .admin-tabs{
         display:grid!important;
         grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -10798,7 +9928,6 @@ select{
     }
 }
 
-/* ---------- common modern phones 391–430 ---------- */
 @media (min-width:391px) and (max-width:430px){
     body > .max-w-\[1800px\]{
         padding:10px!important;
@@ -10808,7 +9937,6 @@ select{
     }
 }
 
-/* ---------- 360–390 phones ---------- */
 @media (min-width:361px) and (max-width:390px){
     body > .max-w-\[1800px\]{
         padding:9px!important;
@@ -10825,7 +9953,6 @@ select{
     }
 }
 
-/* ---------- narrow phones 320–360 ---------- */
 @media (max-width:360px){
     body > .max-w-\[1800px\]{
         padding:7px!important;
@@ -10900,7 +10027,6 @@ select{
     }
 }
 
-/* ---------- short-height phones / landscape phones ---------- */
 @media (max-height:520px) and (max-width:900px){
     .dashboard-nav{
         position:relative!important;
@@ -10920,7 +10046,6 @@ select{
     }
 }
 
-/* ---------- touch targets on coarse pointers ---------- */
 @media (pointer:coarse){
     .help-button,
     .dashboard-mobile-toggle,
@@ -10935,11 +10060,6 @@ select{
     }
 }
 
-/* =========================================================
-   FULL QA V8 — final visual/runtime hardening
-   ========================================================= */
-
-/* Long dynamic values must never break cards */
 [id^="n"][id$="status"],
 [id^="lastUpdate"],
 #overallStatus,
@@ -10952,7 +10072,6 @@ select{
     overflow-wrap:anywhere;
 }
 
-/* Charts: stable responsive height without horizontal overflow */
 .chart-render-area{
     position:relative;
     width:100%;
@@ -10965,7 +10084,6 @@ select{
     max-width:100%!important;
 }
 
-/* Export modal / tables remain usable on narrow devices */
 .export-modal-dialog{
     max-width:min(1100px,calc(100vw - 24px));
 }
@@ -10976,7 +10094,6 @@ select{
     -webkit-overflow-scrolling:touch;
 }
 
-/* Form controls: avoid iOS zoom caused by tiny inputs */
 @media(max-width:720px){
     .admin-field input,
     .admin-field textarea,
@@ -10986,7 +10103,6 @@ select{
     }
 }
 
-/* Safe-area support for notched phones */
 @supports(padding:max(0px)){
     @media(max-width:720px){
         body > .max-w-\[1800px\]{
@@ -10999,7 +10115,6 @@ select{
     }
 }
 
-/* Very narrow 320px devices: toolbar/control stacks are allowed */
 @media(max-width:340px){
     .history-toolbar,
     .history-toolbar-actions,
@@ -11014,7 +10129,6 @@ select{
     }
 }
 
-/* Landscape phones: preserve actual content space */
 @media(max-width:900px) and (orientation:landscape) and (max-height:520px){
     .dashboard-page-heading{
         margin-bottom:8px!important;
@@ -11024,27 +10138,18 @@ select{
     }
 }
 
-/* =========================================================
-   V9 — MOBILE FLOATING UI HARDENING
-   Fixes range picker / help / dialogs on devices whose
-   visual viewport differs from the layout viewport.
-   ========================================================= */
-
-/* History picker: desktop remains a true viewport modal. */
 #historyRangePanel.history-range-panel{
     box-sizing:border-box!important;
     position:fixed!important;
     z-index:2147483000!important;
 }
 
-/* Help is also a viewport-level dialog. */
 #helpPopover.help-popover{
     box-sizing:border-box!important;
     position:fixed!important;
     z-index:2147483000!important;
 }
 
-/* Other floating windows: cap them to the visible screen. */
 .export-modal-dialog,
 .admin-dialog,
 .credit-image-window,
@@ -11054,7 +10159,6 @@ select{
     max-height:calc(100dvh - 20px)!important;
 }
 
-/* Mobile fallback when VisualViewport JS is unavailable. */
 @media(max-width:760px){
     #historyRangePanel.history-range-panel,
     #helpPopover.help-popover{
@@ -11105,7 +10209,6 @@ select{
     }
 }
 
-/* Very small phones. */
 @media(max-width:360px){
     #historyRangePanel.history-range-panel,
     #helpPopover.help-popover{
@@ -11130,7 +10233,6 @@ select{
     }
 }
 
-/* Prevent old positioning rules from creating a tiny left-corner box. */
 @media(max-width:760px){
     body > #historyRangePanel.history-range-panel,
     body > #helpPopover.help-popover{
@@ -11139,12 +10241,6 @@ select{
         float:none!important;
     }
 }
-
-/* =========================================================
-   V10 — HISTORY RANGE MOBILE MODAL FINAL FIX
-   Do NOT size this dialog from VisualViewport JS.
-   CSS owns the entire geometry on mobile.
-   ========================================================= */
 
 @media (max-width:760px){
 
@@ -11168,7 +10264,6 @@ select{
     body > #historyRangePanel.history-range-panel{
         position:fixed!important;
 
-        /* Explicit four-edge geometry; no translate / calculated width. */
         inset:
             max(6px,env(safe-area-inset-top))
             max(6px,env(safe-area-inset-right))
@@ -11201,7 +10296,6 @@ select{
         z-index:2147483000!important;
         box-sizing:border-box!important;
 
-        /* Defeat any stale V9 inline geometry if browser restored page state. */
         translate:none!important;
     }
 
@@ -11249,7 +10343,6 @@ select{
     }
 }
 
-/* Extra-small devices */
 @media (max-width:360px){
     body > #historyRangePanel.history-range-panel{
         border-radius:12px!important;
@@ -11260,17 +10353,10 @@ select{
     }
 }
 
-/* =========================================================
-   V11 — HISTORY RANGE MOBILE COMPACT SHEET
-   V10 fixed the left-corner bug but stretched the panel to
-   almost the full screen height. V11 keeps it viewport-safe
-   while letting the panel fit its actual content.
-   ========================================================= */
-
 @media (max-width:760px){
 
     body > #historyRangePanel.history-range-panel{
-        /* Anchor to the bottom instead of pinning all 4 edges. */
+        
         top:auto!important;
         bottom:max(6px,env(safe-area-inset-bottom))!important;
         left:max(6px,env(safe-area-inset-left))!important;
@@ -11289,7 +10375,6 @@ select{
         border-radius:16px!important;
     }
 
-    /* Keep the contents compact and natural-height. */
     body > #historyRangePanel > .grid,
     body > #historyRangePanel .history-range-layout{
         height:auto!important;
@@ -11303,15 +10388,12 @@ select{
         min-height:0!important;
     }
 
-    /* Footer no longer needs to hold a full-height sheet together. */
     body > #historyRangePanel > .border-t:last-child{
         position:sticky!important;
         bottom:0!important;
     }
 }
 
-/* Short landscape phones: use nearly the full visible height,
-   but still never create an artificial blank area. */
 @media (max-width:900px) and (orientation:landscape) and (max-height:520px){
     body > #historyRangePanel.history-range-panel{
         top:6px!important;
@@ -11321,7 +10403,6 @@ select{
     }
 }
 
-/* Very narrow phones: retain compact layout. */
 @media (max-width:360px){
     body > #historyRangePanel.history-range-panel{
         left:4px!important;
@@ -11329,12 +10410,6 @@ select{
         bottom:max(4px,env(safe-area-inset-bottom))!important;
     }
 }
-
-/* =========================================================
-   V12 — HISTORY RANGE = EXPORT-STYLE MODAL
-   The range picker no longer behaves as a popover/sheet.
-   It uses the same stable fixed-modal architecture as Export.
-   ========================================================= */
 
 body.history-range-modal-open{
     overflow:hidden!important;
@@ -11466,7 +10541,6 @@ body.history-range-modal-open{
     box-sizing:border-box!important;
 }
 
-/* Neutralize every old popover/sheet rule against this component. */
 body > #historyRangePanel.history-range-modal{
     top:0!important;
     right:0!important;
@@ -11484,7 +10558,6 @@ body > #historyRangePanel.history-range-modal{
     translate:none!important;
 }
 
-/* Internal content */
 .history-range-modal .history-range-layout{
     display:grid!important;
     grid-template-columns:minmax(0,1fr) minmax(210px,.62fr)!important;
@@ -11506,7 +10579,6 @@ body > #historyRangePanel.history-range-modal{
     box-sizing:border-box!important;
 }
 
-/* Mobile: exactly the same geometry strategy as Export. */
 @media(max-width:760px){
 
     .history-range-modal{
@@ -11595,7 +10667,6 @@ body > #historyRangePanel.history-range-modal{
     }
 }
 
-/* Landscape phones */
 @media(max-width:900px) and (orientation:landscape) and (max-height:520px){
     .history-range-modal{
         padding:6px!important;
@@ -11606,14 +10677,6 @@ body > #historyRangePanel.history-range-modal{
         max-height:calc(100dvh - 12px)!important;
     }
 }
-
-/* =========================================================
-   V13 — HISTORY RANGE MODAL SCROLL FIX
-   Root fix:
-   - New modal ID isolates it from legacy #historyRangePanel rules.
-   - The DIALOG itself scrolls on mobile (most robust touch behavior).
-   - Header stays sticky; all hidden content can be reached.
-   ========================================================= */
 
 body.history-range-modal-open{
     overflow:hidden!important;
@@ -11657,7 +10720,6 @@ body.history-range-modal-open{
     max-height:calc(100dvh - 36px)!important;
     margin:0!important;
 
-    /* V13: scroll the dialog itself, not a nested flex child. */
     display:block!important;
     overflow-x:hidden!important;
     overflow-y:auto!important;
@@ -11818,12 +10880,10 @@ body.history-range-modal-open{
     box-sizing:border-box!important;
 }
 
-/* Make final action area easy to reach after scrolling. */
 #historyRangeModal .history-range-modal-body > .border-t:last-child{
     background:#091827!important;
 }
 
-/* ---------------- Mobile ---------------- */
 @media(max-width:760px){
 
     body.history-range-modal-open{
@@ -11925,7 +10985,6 @@ body.history-range-modal-open{
     }
 }
 
-/* Short landscape phones */
 @media(max-width:900px) and (orientation:landscape) and (max-height:520px){
     #historyRangeModal.history-range-modal{
         padding:5px!important;
@@ -11936,13 +10995,6 @@ body.history-range-modal-open{
         max-height:calc(100dvh - 10px)!important;
     }
 }
-
-/* =========================================================
-   V14 — RANGE MODAL CLEANUP AFTER VIDEO QA
-   V13 scroll works, but the weekday row was still depending
-   on legacy utility styles tied to the old modal ID.
-   This block makes every calendar layout rule explicit.
-   ========================================================= */
 
 #historyRangeModal .range-calendar-weekdays{
     display:grid!important;
@@ -12020,7 +11072,6 @@ body.history-range-modal-open{
     font-weight:900!important;
 }
 
-/* Keep month title/nav on one row. */
 #historyRangeModal .history-range-calendar > .flex.items-center.justify-between{
     display:flex!important;
     align-items:center!important;
@@ -12041,7 +11092,6 @@ body.history-range-modal-open{
     justify-content:center!important;
 }
 
-/* Custom range section: always a clean single column on phones. */
 @media(max-width:760px){
     #historyRangeModal .range-calendar-weekdays{
         gap:3px!important;
@@ -12094,7 +11144,6 @@ body.history-range-modal-open{
     }
 }
 
-/* 320–360px: keep 7 calendar columns, just reduce gaps/padding. */
 @media(max-width:360px){
     #historyRangeModal .history-range-calendar{
         padding:10px 8px!important;
@@ -12123,19 +11172,10 @@ body.history-range-modal-open{
     }
 }
 
-/* =========================================================
-   V15 — NAV ALERT COUNT REMOVED
-   ป้ายตัวเลขสีแดงหลังสถานะระบบถูกยกเลิก
-   ========================================================= */
 #navAlertBadge,
 .dashboard-system-pill > .dashboard-alert-badge{
     display:none!important;
 }
-
-
-/* =========================================================
-   V16 — FORECAST PROCESSING / TOGGLE FIX
-   ========================================================= */
 
 .forecast-processing-state{
     display:flex;
@@ -12174,15 +11214,10 @@ body.history-range-modal-open{
     }
 }
 
-
-/* =========================================================
-   V17 — DEEP SYSTEM AUDIT
-   ========================================================= */
 #historyRangeCaption{
     line-height:1.6;
 }
 
-/* V18 INFORMATION & HELP */
 .context-help-button{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;margin-left:7px;padding:0;border:1px solid rgba(148,163,184,.3);border-radius:999px;background:rgba(15,23,42,.45);color:#94a3b8;font-size:13px;font-weight:800;cursor:pointer;vertical-align:middle}
 .context-help-button:hover,.context-help-button:focus-visible{color:#e2e8f0;border-color:rgba(103,232,249,.6);background:rgba(34,211,238,.09);outline:none}
 .help-technical,.v18-tech{margin-top:10px;padding:10px 12px;border:1px solid rgba(34,211,238,.16);border-radius:12px;background:rgba(34,211,238,.045);color:#a5f3fc;line-height:1.65}
@@ -12195,9 +11230,6 @@ body.history-range-modal-open{
 .v18-reading-guide{margin-top:18px}.v18-scope-warning{display:flex;gap:12px;margin-top:14px;padding:14px;border:1px solid rgba(245,158,11,.2);border-radius:15px;background:rgba(245,158,11,.055)}.v18-scope-warning>i{margin-top:4px;color:#fbbf24}.v18-scope-warning b{color:#fde68a}.v18-scope-warning p{margin:4px 0 0;color:#cbd5e1;line-height:1.7}
 @media(max-width:640px){.v18-info-modal{padding:10px;align-items:flex-end}.v18-info-dialog{max-height:88dvh;border-radius:20px 20px 14px 14px}.v18-info-header{padding:15px 16px}.v18-info-body{padding:15px 16px 20px}.context-help-button{width:29px;height:29px;margin-left:5px}}
 
-/* =========================================================
-   V19 — PUBLIC COMPETITION SAFE
-   ========================================================= */
 .about-standard-note{
     margin:12px 0 0;
     padding:11px 12px;
@@ -12209,17 +11241,10 @@ body.history-range-modal-open{
     line-height:1.65;
 }
 
-
-/* =========================================================
-   V21 — UX POLISH BEFORE LOGIN
-   ========================================================= */
-
-/* Four references = four equal columns; no empty fifth slot. */
 .about-reference-links{
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
 }
 
-/* All help triggers must be true circles. */
 .help-button,
 .context-help-button{
     box-sizing:border-box!important;
@@ -12239,7 +11264,6 @@ body.history-range-modal-open{
     line-height:1!important;
 }
 
-/* Historical graph starts loading immediately and explains its state. */
 .chart-loading-state{
     min-height:220px;
     display:flex;
@@ -12252,7 +11276,6 @@ body.history-range-modal-open{
 .chart-loading-state b{color:#e2e8f0;font-size:14px}
 .chart-loading-state span{color:#64748b;font-size:12px}
 
-/* Forecast intentionally communicates that analysis needs a short moment. */
 .forecast-wait-state{
     min-height:300px;
     display:flex;
@@ -12305,10 +11328,6 @@ body.history-range-modal-open{
     }
 }
 
-
-/* =========================================================
-   V22 — HISTORY / FORECAST RESPONSE STATES
-   ========================================================= */
 .chart-loading-state.is-error{
     min-height:260px;
 }
@@ -12341,15 +11360,10 @@ body.history-range-modal-open{
     color:#e2e8f0;
 }
 
-
-/* V23 — history retry remains compact */
 .chart-state-retry{
   touch-action:manipulation;
 }
 
-/* =========================================================
-   V27 — Temperature / Humidity status badges
-   ========================================================= */
 .overview-metric-status{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:3px 9px;border-radius:999px;font-size:11px;font-style:normal;font-weight:800;line-height:1.4;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.45);color:#cbd5e1}
 .overview-metric-status.normal{color:#86efac;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.09)}
 .overview-metric-status.warning{color:#fde68a;border-color:rgba(245,158,11,.32);background:rgba(245,158,11,.09)}
@@ -12357,9 +11371,6 @@ body.history-range-modal-open{
 .overview-metric-status.info,.overview-metric-status.no_data{color:#94a3b8}
 @media(max-width:640px){.overview-metric-status{font-size:10.5px;padding:3px 8px}}
 
-/* =========================================================
-   V28 — SMART SUMMARY 6 CARDS + HELP AUDIT
-   ========================================================= */
 .smart-summary-grid.smart-summary-grid-six {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -12394,10 +11405,6 @@ body.history-range-modal-open{
     }
 }
 
-
-/* =========================================================
-   V29 — balanced layouts + PM2.5/PM10 rotating overview
-   ========================================================= */
 .smart-summary-grid.smart-summary-grid-six{
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:14px!important;
@@ -12420,18 +11427,12 @@ body.history-range-modal-open{
   .about-reference-links{grid-template-columns:1fr!important;}
 }
 
-/* =========================================================
-   V30 — PM2.5 / PM10 synchronized air-quality summary
-   ========================================================= */
 .smart-summary-air-switch .smart-summary-stat-label,
 .smart-summary-air-switch .smart-summary-stat-value,
 .smart-summary-air-switch .smart-summary-stat-sub{
   transition:opacity .28s ease, transform .28s ease;
 }
 
-/* =========================================================
-   V31 — LOGIN / ROLE / CMS
-   ========================================================= */
 .header-account-zone{position:relative;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:220px;gap:4px}
 .header-account-button{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.22);background:rgba(8,47,73,.22);color:#e5f7ff;padding:9px 12px;border-radius:12px;font-weight:800;cursor:pointer;transition:.2s}
 .header-account-button:hover{border-color:rgba(34,211,238,.45);background:rgba(8,47,73,.38)}
@@ -12456,17 +11457,10 @@ body.history-range-modal-open{
 @media(max-width:900px){.header-account-zone{min-width:0;align-items:flex-start}.account-dropdown{left:0;right:auto}.admin-center-layout{grid-template-columns:1fr}.admin-sidebar{display:flex;gap:6px;overflow:auto;border-right:0;border-bottom:1px solid rgba(148,163,184,.13)}.admin-nav{width:auto;white-space:nowrap;margin:0}.admin-help-layout{grid-template-columns:1fr}.admin-device-list{grid-template-columns:1fr}.admin-user-row{grid-template-columns:1fr 1fr}.admin-main{padding:15px}}
 @media(max-width:640px){.auth-dialog{padding:22px 16px}.admin-center{padding:6px}.admin-center-shell{height:calc(100vh - 12px);border-radius:18px}.admin-center-header{padding:18px 16px}.admin-main{padding:12px}.admin-user-row{grid-template-columns:1fr}.header-account-button{padding:8px 10px}.header-clock{font-size:12px}}
 
-
-/* =========================================================
-   V31 UI FIX 1 — smooth particle fade / spacing / alert title
-   ========================================================= */
-
-/* Temp/Humidity status badge: give it breathing room after the unit. */
 .overview-metric-status{
     margin-left:10px;
 }
 
-/* Keep the help button next to "สิ่งที่ควรระวัง", not at the far edge. */
 .current-alerts-strip .section-title-with-help,
 .overview-alert-head .section-title-with-help{
     display:inline-flex!important;
@@ -12477,7 +11471,6 @@ body.history-range-modal-open{
     gap:8px!important;
 }
 
-/* Make the warning mark visibly yellow instead of inheriting white text. */
 .overview-warning-icon{
     display:inline-block;
     color:#fbbf24;
@@ -12487,31 +11480,17 @@ body.history-range-modal-open{
     vertical-align:-0.05em;
 }
 
-/* On narrow screens keep badge spacing natural without forcing a new row. */
 @media(max-width:640px){
     .overview-metric-status{
         margin-left:8px;
     }
 }
 
-
-/* =========================================================
-   V31 UI FIX 2 — modal visibility
-   .admin-center/.auth-modal are declared after the generic
-   .hidden rule, so explicitly make hidden modals display:none.
-   ========================================================= */
 .auth-modal.hidden,
 .admin-center.hidden{
     display:none!important;
 }
 
-
-/* =========================================================
-   V31 UI FIX 3 — AUTH VIEW CLEANUP
-   Only the selected auth view is allowed to render.
-   ========================================================= */
-
-/* Hidden sub-views were being overridden by .auth-form{display:grid}. */
 .auth-form.hidden,
 .auth-bootstrap.hidden,
 .auth-tabs.hidden,
@@ -12519,7 +11498,6 @@ body.history-range-modal-open{
     display:none!important;
 }
 
-/* Keep the login/register dialog compact and easy to scan. */
 .auth-dialog{
     width:min(460px,100%)!important;
     padding:24px!important;
@@ -12556,16 +11534,11 @@ body.history-range-modal-open{
     margin-top:2px!important;
 }
 
-/* Owner bootstrap is a recovery/setup path only, never part of normal login UI. */
 .auth-bootstrap{
     margin-top:16px!important;
     padding-top:14px!important;
 }
 
-
-/* =========================================================
-   V31 UI FIX 4 — PASSWORD EYE BUTTON
-   ========================================================= */
 .auth-eye{
     color:#64748b!important;
     background:transparent!important;
@@ -12587,11 +11560,6 @@ body.history-range-modal-open{
     outline:2px solid #22d3ee!important;
     outline-offset:1px!important;
 }
-
-
-/* =========================================================
-   V32 — ACCOUNT / PERMISSION
-   ========================================================= */
 
 .account-dropdown-profile small{
     display:block;
@@ -12869,9 +11837,6 @@ body.history-range-modal-open{
     }
 }
 
-/* =========================================================
-   V33 — PROFILE / PASSWORD RECOVERY
-   ========================================================= */
 .header-account-avatar,.account-menu-avatar{display:inline-grid;place-items:center;overflow:hidden;border-radius:999px;background:rgba(34,211,238,.10);border:1px solid rgba(125,211,252,.22);flex:0 0 auto}
 .header-account-avatar{width:30px;height:30px}.account-menu-avatar{width:46px;height:46px}
 .header-account-avatar img,.account-menu-avatar img{width:100%;height:100%;object-fit:cover;display:block}
@@ -12881,20 +11846,11 @@ body.history-range-modal-open{
 .auth-form-note{font-size:13px;line-height:1.6;color:#94a3b8;background:rgba(15,23,42,.45);border:1px solid rgba(148,163,184,.12);padding:10px 12px;border-radius:11px}
 #forgotPasswordForm.hidden,#resetPasswordForm.hidden{display:none!important}
 
-/* =========================================================
-   V34 — ACCOUNT AVATAR / PROFILE EDITOR / MEMBER PERMISSIONS
-   ========================================================= */
-
-/* ป้องกัน selector ของรูป Avatar ด้านบนไป override utility .hidden
-   กรณียังไม่เข้าสู่ระบบ <img> จะไม่มี src จึงต้องซ่อนจริง ๆ */
 .header-account-avatar img.hidden,
 .account-menu-avatar img.hidden{
     display:none!important;
 }
 
-/* -------------------------
-   PROFILE IMAGE EDITOR
-   ------------------------- */
 .profile-editor{
     position:fixed;
     inset:0;
@@ -12976,11 +11932,6 @@ body.history-range-modal-open{
 .profile-editor-primary{border:1px solid rgba(34,211,238,.28);background:#0e7490;color:white}
 .profile-editor-primary:disabled{opacity:.55;cursor:wait}
 
-/* -------------------------
-   GUEST / MEMBER PERMISSIONS
-   Guest ยังคงดู Dashboard สาธารณะได้ แต่ฟังก์ชันสมาชิก
-   จะแสดงสัญลักษณ์ล็อกและพาไปหน้าเข้าสู่ระบบเมื่อกด
-   ------------------------- */
 .member-locked{
     opacity:.58!important;
     position:relative;
@@ -12997,13 +11948,6 @@ button.member-locked::after{
     .profile-editor-footer{padding-left:16px;padding-right:16px}
     .profile-crop-stage{width:min(82vw,300px)}
 }
-
-
-/* =========================================================
-   V35 — GRANULAR PERMISSIONS / DISCORD-LIKE ACCESS EDITOR
-   Owner สามารถเปิด/ปิด Permission รายบัญชีได้ละเอียด
-   โดย Role ยังคงเป็นค่าเริ่มต้นของสิทธิ์
-   ========================================================= */
 
 .admin-user-editor-v35{
     display:block;
@@ -13274,11 +12218,6 @@ button.member-locked::after{
     }
 }
 
-
-/* =========================================================
-   V34 — ACCOUNT MENU / USER MANAGEMENT FINAL
-   เมนูบัญชีแบ่งเป็นส่วนแบบอ่านง่าย คล้ายแนวคิด YouTube
-   ========================================================= */
 .header-account-avatar img.hidden,.account-menu-avatar img.hidden{display:none!important}
 .account-dropdown-v34{width:min(390px,calc(100vw - 24px));padding:0;overflow:hidden;border-radius:20px;background:#081725;border:1px solid rgba(148,163,184,.18);box-shadow:0 26px 80px rgba(0,0,0,.52)}
 .account-profile-v34{display:flex!important;gap:13px;align-items:center;padding:17px 18px!important;margin:0!important;border-bottom:1px solid rgba(148,163,184,.13)!important;background:rgba(15,34,53,.72)}
@@ -13289,11 +12228,6 @@ button.member-locked::after{
 .admin-user-toolbar{grid-template-columns:minmax(240px,1fr) minmax(150px,220px)!important}.admin-user-editor-top{grid-template-columns:minmax(180px,260px) auto!important}.admin-user-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:16px 0 0;padding:14px 16px;border:1px solid rgba(248,113,113,.20);border-radius:14px;background:rgba(127,29,29,.08)}.admin-user-danger-zone>div{display:grid;gap:3px}.admin-user-danger-zone b{color:#fecaca;font-size:13px}.admin-user-danger-zone span{color:#94a3b8;font-size:11px;line-height:1.45}.admin-user-delete{min-height:38px;padding:0 14px;border-radius:10px;border:1px solid rgba(248,113,113,.3);background:rgba(190,24,93,.13);color:#fecdd3;font-weight:900;cursor:pointer;white-space:nowrap}.admin-user-delete:hover{background:rgba(190,24,93,.23)}
 @media(max-width:640px){.account-dropdown-v34{width:min(360px,calc(100vw - 20px))}.admin-user-toolbar,.admin-user-editor-top{grid-template-columns:1fr!important}.admin-user-danger-zone{align-items:stretch;flex-direction:column}.admin-user-delete{width:100%}}
 
-
-/* =========================================================
-   V34.1 — MY ACCOUNT / CLEAN ACCOUNT HUB
-   หน้าต่างบัญชีแยกข้อมูลเป็นส่วนเพื่อให้ผู้ใช้ทุกระดับหาเมนูง่าย
-   ========================================================= */
 .my-account-center,.account-security-modal{position:fixed;inset:0;z-index:180;display:grid;place-items:center;padding:20px}.my-account-center.hidden,.account-security-modal.hidden{display:none!important}.my-account-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.76);backdrop-filter:blur(9px)}
 .my-account-shell{position:relative;width:min(920px,96vw);max-height:min(820px,92vh);overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(180deg,#0b1b2c 0%,#071522 100%);box-shadow:0 32px 100px rgba(0,0,0,.58)}
 .my-account-header,.account-security-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:22px 24px;border-bottom:1px solid rgba(148,163,184,.12);background:rgba(8,23,37,.94);backdrop-filter:blur(14px)}
@@ -13304,15 +12238,9 @@ button.member-locked::after{
 .account-security-shell{position:relative;width:min(520px,95vw);overflow:hidden;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:#081725;box-shadow:0 28px 90px rgba(0,0,0,.56)}.account-security-header{position:relative}.account-security-form{display:grid;gap:14px;padding:22px}.account-security-form label{display:grid;gap:6px;color:#cbd5e1;font-size:11px;font-weight:800}.account-security-form input{width:100%;min-height:44px;padding:0 12px;border:1px solid rgba(148,163,184,.18);border-radius:11px;background:#07131f;color:#f8fafc;outline:none}.account-security-form input:focus{border-color:rgba(34,211,238,.5);box-shadow:0 0 0 3px rgba(34,211,238,.08)}.account-security-form small{color:#64748b;font-size:10px}.account-security-message{min-height:18px;color:#fbbf24;font-size:11px}.account-security-form footer{display:flex;justify-content:flex-end;gap:9px;margin-top:2px}
 @media(max-width:700px){.my-account-center{padding:10px}.my-account-shell{max-height:94vh;border-radius:20px}.my-account-header{padding:18px}.my-account-body{padding:14px}.my-account-hero{grid-template-columns:auto 1fr;padding:16px}.my-account-hero>.my-account-primary{grid-column:1/-1;width:100%}.my-account-avatar{width:66px;height:66px}.my-account-grid{grid-template-columns:1fr}.my-account-card-wide{grid-column:auto}.my-account-details>div{align-items:flex-start;flex-direction:column;gap:4px}.my-account-details dd{text-align:left}.account-security-form footer{flex-direction:column-reverse}.account-security-form footer button{width:100%}}
 
-/* =====================================================
-   V34.2 — NOTIFICATION CENTER
-   ===================================================== */
 .notification-center-modal,.notification-detail-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:22px}.notification-center-modal.hidden,.notification-detail-modal.hidden{display:none!important}.notification-modal-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.76);backdrop-filter:blur(12px)}.notification-settings-shell{position:relative;width:min(760px,96vw);max-height:90vh;overflow:auto;border:1px solid rgba(125,211,252,.18);border-radius:28px;background:linear-gradient(145deg,rgba(11,25,45,.99),rgba(5,15,30,.99));box-shadow:0 32px 90px rgba(0,0,0,.48)}.notification-settings-header{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:24px 26px 20px;border-bottom:1px solid rgba(148,163,184,.12);background:rgba(8,20,38,.94);backdrop-filter:blur(16px)}.notification-title-wrap{display:flex;gap:15px;align-items:flex-start}.notification-title-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:rgba(14,165,233,.12);font-size:24px}.notification-eyebrow{font-size:10px;font-weight:800;letter-spacing:.18em;color:#38bdf8}.notification-settings-header h2{margin:2px 0 3px;font-size:23px;color:#f8fafc}.notification-settings-header p{margin:0;color:#94a3b8;font-size:13px}.notification-close{border:0;width:38px;height:38px;border-radius:12px;background:rgba(148,163,184,.09);color:#cbd5e1;font-size:25px;cursor:pointer}.notification-close:hover{background:rgba(148,163,184,.16);color:#fff}.notification-settings-body{padding:22px 26px 26px}.notification-master-card,.notification-permission-card{display:flex;align-items:center;gap:16px;padding:18px;border:1px solid rgba(148,163,184,.12);border-radius:20px;background:rgba(15,30,51,.72)}.notification-master-card{justify-content:space-between}.notification-master-card strong,.notification-permission-card strong{color:#f1f5f9;font-size:14px}.notification-master-card p,.notification-permission-card p{margin:4px 0 0;color:#94a3b8;font-size:12px;line-height:1.55}.notification-permission-card{margin-top:12px}.notification-permission-card.is-granted{border-color:rgba(34,197,94,.22);background:rgba(22,101,52,.09)}.notification-permission-card.is-denied{border-color:rgba(248,113,113,.22);background:rgba(127,29,29,.1)}.notification-permission-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:rgba(148,163,184,.09);font-size:20px}.notification-permission-card>div:nth-child(2){flex:1}.notification-permission-button,.notification-save-button,.notification-detail-action{border:0;border-radius:13px;padding:11px 16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#03111f}.notification-permission-button:disabled{opacity:.5;cursor:not-allowed}.notification-section-label{margin:24px 2px 11px}.notification-section-label span{display:block;color:#e2e8f0;font-size:13px;font-weight:800}.notification-section-label small{display:block;margin-top:3px;color:#64748b;font-size:11px}.notification-topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.notification-topic-card{display:flex;align-items:center;gap:13px;min-height:86px;padding:15px;border:1px solid rgba(148,163,184,.11);border-radius:18px;background:rgba(15,30,51,.5);cursor:pointer;transition:.18s ease}.notification-topic-card:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.25);background:rgba(15,35,60,.72)}.notification-topic-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:rgba(14,165,233,.08);font-size:20px}.notification-topic-copy{min-width:0;flex:1}.notification-topic-copy b{display:block;color:#eaf2ff;font-size:13px}.notification-topic-copy small{display:block;margin-top:4px;color:#8292a8;font-size:11px;line-height:1.45}.notification-system-label{margin-top:18px}.notification-topic-wide{width:100%}.notification-switch{position:relative;display:inline-flex;flex:0 0 auto}.notification-switch input{position:absolute;opacity:0;pointer-events:none}.notification-switch>span{display:block;width:44px;height:25px;border-radius:999px;background:#334155;position:relative;transition:.2s}.notification-switch>span:after{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 7px rgba(0,0,0,.3)}.notification-switch input:checked+span{background:#0ea5e9}.notification-switch input:checked+span:after{transform:translateX(19px)}.notification-footer-note{display:flex;gap:9px;margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(14,165,233,.06);color:#7f93aa;font-size:11px;line-height:1.55}.notification-footer-note p{margin:0}.notification-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:18px}.notification-actions>span{color:#86efac;font-size:12px}.notification-detail-shell{position:relative;width:min(460px,94vw);padding:30px;border:1px solid rgba(125,211,252,.18);border-radius:26px;background:linear-gradient(145deg,#0b1c31,#071426);box-shadow:0 30px 80px rgba(0,0,0,.5);text-align:center}.notification-detail-shell .notification-close{position:absolute;right:16px;top:16px}.notification-detail-icon{display:grid;place-items:center;width:62px;height:62px;margin:2px auto 14px;border-radius:20px;background:rgba(14,165,233,.1);font-size:29px}.notification-detail-kicker{font-size:10px;font-weight:900;letter-spacing:.15em;color:#38bdf8}.notification-detail-shell h2{margin:6px 0 8px;color:#f8fafc;font-size:21px}.notification-detail-shell p{margin:0 auto;color:#a8b7ca;font-size:13px;line-height:1.65;max-width:360px}.notification-detail-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:17px 0}.notification-detail-meta span{padding:6px 10px;border-radius:999px;background:rgba(148,163,184,.08);color:#94a3b8;font-size:11px}.notification-detail-action{margin-top:3px}.account-menu-icon{font-style:normal}
 @media(max-width:680px){.notification-center-modal{padding:10px}.notification-settings-shell{width:100%;max-height:94vh;border-radius:23px}.notification-settings-header{padding:20px 18px 16px}.notification-settings-body{padding:16px 18px 20px}.notification-topic-grid{grid-template-columns:1fr}.notification-permission-card{align-items:flex-start;flex-wrap:wrap}.notification-permission-button{width:100%}.notification-title-icon{width:43px;height:43px}.notification-master-card{gap:12px}}
 
-/* =====================================================
-   V34.3 — ACCOUNT / MANAGEMENT NAVIGATION
-   ===================================================== */
 .my-account-header,.admin-center-header{align-items:center}
 .my-account-back,.admin-back{flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(30,41,59,.42);color:#e2e8f0;font-size:30px;line-height:1;cursor:pointer;transition:.18s ease}
 .my-account-back:hover,.admin-back:hover{background:rgba(8,145,178,.16);border-color:rgba(34,211,238,.34);color:#67e8f9;transform:translateX(-2px)}
@@ -13322,9 +12250,7 @@ button.member-locked::after{
 .admin-center.admin-users-page .admin-main{padding:26px 30px}
 .admin-center.admin-content-page [data-admin-tab="users"]{display:none!important}
 @media(max-width:700px){.my-account-back,.admin-back{width:36px;height:36px;font-size:26px}.admin-center.admin-users-page .admin-main{padding:14px}}
-\n\n/* =====================================================
-   V34.4 — TELEGRAM SITUATION LINK
-   ===================================================== */
+\n\n
 
 .about-telegram-link{
     position:relative;
@@ -13412,10 +12338,6 @@ button.member-locked::after{
     .about-telegram-arrow{width:34px;height:34px;border-radius:11px}
 }
 
-
-/* =====================================================
-   V34.5 — TELEGRAM STRIP POSITION / FULL WIDTH
-   ===================================================== */
 .about-telegram-section{
     width:100%;
     margin:24px 0 18px;
@@ -13449,11 +12371,6 @@ button.member-locked::after{
     .about-telegram-section{margin:18px 0 14px}
     .about-telegram-section .about-telegram-link{min-height:68px;padding:12px 14px;border-radius:16px}
 }
-
-
-/* =====================================================
-   V34.6 — TELEGRAM STRIP / MOBILE UX FIX
-   ===================================================== */
 
 #page-about .about-telegram-section{
     display:block !important;
@@ -13543,10 +12460,6 @@ button.member-locked::after{
 #page-about .about-telegram-section + .about-credit-section{
     margin-top:0 !important;
 }
-
-/* =====================================================
-   V34.6 — NOTIFICATION STATES
-   ===================================================== */
 
 .notification-permission-card.is-granted .notification-permission-icon{
     color:#86efac;
@@ -13644,10 +12557,6 @@ button.member-locked::after{
     }
 }
 
-/* =====================================================
-   V34.6 — ACCOUNT MOBILE SPACING
-   ===================================================== */
-
 @media(max-width:680px){
     .account-dropdown-v34{
         max-width:calc(100vw - 18px);
@@ -13662,11 +12571,6 @@ button.member-locked::after{
         padding:14px !important;
     }
 }
-
-
-/* =====================================================
-   V34.7 — HEADER LAYOUT
-   ===================================================== */
 
 .site-header{
     display:flex!important;
@@ -13831,10 +12735,6 @@ button.member-locked::after{
     }
 }
 
-/* =====================================================
-   V34.7 — GOOGLE SIGN-IN / PASSWORD ICON
-   ===================================================== */
-
 .auth-google-button{
     width:100%;
     min-width:0;
@@ -13873,10 +12773,6 @@ button.member-locked::after{
     color:#67e8f9!important;
     background:rgba(34,211,238,.08)!important;
 }
-
-/* =====================================================
-   V34.7 — BACK NAVIGATION
-   ===================================================== */
 
 .has-back-button{
     display:grid!important;
@@ -13949,10 +12845,6 @@ button.member-locked::after{
         gap:9px!important;
     }
 }
-
-/* =====================================================
-   V34.7 — TEXT / COMPONENT OVERFLOW GUARDS
-   ===================================================== */
 
 .site-header *,
 .account-dropdown *,
@@ -14031,11 +12923,6 @@ button.member-locked::after{
         overflow:hidden;
     }
 }
-
-
-/* =====================================================
-   V34.8 SAFE — HEADER
-   ===================================================== */
 
 .header-account-zone{
     display:flex!important;
@@ -14172,10 +13059,6 @@ button.member-locked::after{
     display:none!important;
 }
 
-/* =====================================================
-   V34.8 SAFE — GOOGLE
-   ===================================================== */
-
 .auth-google-button{
     width:100%!important;
     max-width:100%!important;
@@ -14195,10 +13078,6 @@ button.member-locked::after{
     margin:0 auto!important;
 }
 
-/* =====================================================
-   V34.8 SAFE — HELP BUTTONS
-   ===================================================== */
-
 .section-title-with-help{
     display:inline-flex!important;
     width:auto!important;
@@ -14216,10 +13095,6 @@ button.member-locked::after{
 .ai-title:empty{
     display:none!important;
 }
-
-/* =====================================================
-   V34.8 SAFE — MOBILE
-   ===================================================== */
 
 @media(max-width:760px){
     .header-account-zone{
@@ -14252,11 +13127,6 @@ button.member-locked::after{
         flex-basis:38px;
     }
 }
-
-
-/* =====================================================
-   V34.9 — HEADER REBALANCE
-   ===================================================== */
 
 .site-header{
     min-height:136px!important;
@@ -14335,10 +13205,6 @@ button.member-locked::after{
     height:22px!important;
 }
 
-/* =====================================================
-   V34.9 — MODAL HEADERS WITHOUT BACK BUTTONS
-   ===================================================== */
-
 .my-account-header,
 .admin-center-header,
 .notification-settings-header,
@@ -14364,10 +13230,6 @@ button.member-locked::after{
 .notification-detail-back{
     display:none!important;
 }
-
-/* =====================================================
-   V34.9 — MY ACCOUNT ALIGNMENT
-   ===================================================== */
 
 .my-account-shell{
     width:min(980px,96vw)!important;
@@ -14400,10 +13262,6 @@ button.member-locked::after{
     white-space:nowrap;
 }
 
-/* =====================================================
-   V34.9 — NOTIFICATION ALIGNMENT
-   ===================================================== */
-
 .notification-settings-header{
     padding:24px 28px 20px!important;
 }
@@ -14424,10 +13282,6 @@ button.member-locked::after{
 .notification-topic-copy small{
     line-height:1.45!important;
 }
-
-/* =====================================================
-   V34.9 — CONTENT / USER MANAGEMENT
-   ===================================================== */
 
 .admin-center-header{
     padding:26px 30px!important;
@@ -14477,10 +13331,6 @@ button.member-locked::after{
     top:0;
 }
 
-/* =====================================================
-   V34.9 — HISTORY RANGE FOOTER
-   ===================================================== */
-
 .history-range-footer{
     display:flex!important;
     align-items:center!important;
@@ -14527,10 +13377,6 @@ button.member-locked::after{
 .history-range-footer-actions{
     flex:0 0 auto;
 }
-
-/* =====================================================
-   V34.9 — AI PAGE
-   ===================================================== */
 
 .dashboard-page-heading .section-title-with-help{
     display:inline-flex!important;
@@ -14586,10 +13432,6 @@ button.member-locked::after{
     margin:0!important;
     flex:0 0 auto!important;
 }
-
-/* =====================================================
-   V34.9 — MOBILE
-   ===================================================== */
 
 @media(max-width:760px){
     .site-header{
@@ -14650,10 +13492,6 @@ button.member-locked::after{
     }
 }
 
-
-/* =====================================================
-   V35 — COMPACT DATE RANGE
-   ===================================================== */
 .history-range-modal-dialog-v35{
   width:min(900px,calc(100vw - 32px))!important;
   max-height:min(720px,calc(100vh - 32px))!important;
@@ -14707,9 +13545,6 @@ button.member-locked::after{
   .history-range-calendar-v35 #rangeCalendarGrid{gap:2px!important}
 }
 
-/* =====================================================
-   V35 — DEVICE PREVIEW
-   ===================================================== */
 .admin-device-layout-v35{align-items:start!important}
 .admin-device-preview-card{position:sticky!important;top:0!important}
 .admin-preview-select-label{margin:10px 0 16px}
@@ -14730,9 +13565,6 @@ button.member-locked::after{
 .admin-device-preview-metrics small{color:#64748b;font-size:9px}.admin-device-preview-metrics b{color:#f8fafc;font-size:17px}.admin-device-preview-metrics i{color:#67e8f9;font-size:8px;font-style:normal}
 .admin-preview-note{color:#64748b;font-size:10px;line-height:1.5}
 
-/* =====================================================
-   V35 — NOTIFICATION INBOX
-   ===================================================== */
 .header-account-zone{position:relative!important}
 .notification-inbox{
   position:absolute;z-index:1200;top:64px;right:0;width:min(410px,calc(100vw - 24px));
@@ -14772,10 +13604,6 @@ button.member-locked::after{
   .notification-inbox-arrow{display:none}
 }
 
-
-/* =====================================================
-   V35.1 — HISTORICAL HEADER
-   ===================================================== */
 @media (min-width: 1024px){
   .historical-section > .flex:first-child{
     display:grid!important;
@@ -14835,10 +13663,6 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V35.2 — HISTORY STRUCTURE HARDENING
-   ===================================================== */
 .historical-section{
   display:block!important;
 }
@@ -14888,10 +13712,6 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V35.3 — COMPACT HISTORY CONTROLS
-   ===================================================== */
 @media (min-width: 1281px){
   .historical-section > .flex:first-child{
     display:grid!important;
@@ -14947,9 +13767,6 @@ button.member-locked::after{
   }
 }
 
-/* =====================================================
-   V35.3 — COMPACT DATE / TIME MODAL
-   ===================================================== */
 @media (min-width: 761px){
   #historyRangeModal .history-range-modal-dialog.history-range-modal-dialog-v35{
     width:min(880px,calc(100vw - 40px))!important;
@@ -15069,10 +13886,6 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V35.4 — RESPONSIVE DATE / TIME PICKER
-   ===================================================== */
 .history-range-mobile-selection{display:none}
 
 #historyRangeModal .history-range-modal-dialog-v35{
@@ -15097,7 +13910,6 @@ button.member-locked::after{
 #historyRangeModal .history-range-datetime-v35{grid-template-columns:1fr 1fr!important;gap:8px!important}
 #historyRangeModal .history-range-footer-v35{padding:10px 14px!important}
 
-/* Tablet / iPad portrait */
 @media (min-width:601px) and (max-width:899px){
   #historyRangeModal .history-range-modal-dialog-v35{
     width:min(720px,calc(100vw - 20px))!important;
@@ -15116,7 +13928,6 @@ button.member-locked::after{
   #historyRangeModal .history-datetime-input{padding:6px 8px!important}
 }
 
-/* Mobile: split view + fixed bottom actions, no vertical hunt for Apply */
 @media (max-width:600px){
   #historyRangeModal{padding:0!important;align-items:flex-end!important}
   #historyRangeModal .history-range-modal-dialog-v35{
@@ -15193,7 +14004,6 @@ button.member-locked::after{
   }
 }
 
-/* Very small phones */
 @media (max-width:390px){
   #historyRangeModal .history-range-main-v35{grid-template-columns:minmax(0,1.08fr) minmax(132px,.92fr)!important}
   #historyRangeModal #rangeCalendarGrid .range-calendar-day{height:26px!important;min-height:26px!important;font-size:8px!important}
@@ -15201,7 +14011,6 @@ button.member-locked::after{
   #historyRangeModal .history-datetime-input input{font-size:7px!important}
 }
 
-/* Landscape / short screens */
 @media (max-height:650px) and (max-width:899px){
   #historyRangeModal .history-range-modal-header{min-height:48px!important;padding-block:6px!important}
   #historyRangeModal .history-range-main-v35{grid-template-columns:minmax(0,1.18fr) minmax(245px,.82fr)!important}
@@ -15209,10 +14018,6 @@ button.member-locked::after{
   #historyRangeModal .history-range-footer-v35{min-height:46px!important;padding-block:4px!important}
 }
 
-
-/* =====================================================
-   V35.5 — SIMPLE RANGE PICKER RIGHT PANEL
-   ===================================================== */
 .history-range-side-v355{
   display:flex!important;
   flex-direction:column!important;
@@ -15426,14 +14231,12 @@ button.member-locked::after{
   color:#64748b;
 }
 
-/* Desktop */
 @media(min-width:900px){
   #historyRangeModal .history-range-side-v355{
     padding:14px 16px!important;
   }
 }
 
-/* Tablet */
 @media(min-width:601px) and (max-width:899px){
   .history-range-mode{height:38px;font-size:10px}
   #historyRangeModal #quickRangeList .quick-range-option{
@@ -15451,7 +14254,6 @@ button.member-locked::after{
   .history-range-panel-tip{padding:7px 8px}
 }
 
-/* Mobile */
 @media(max-width:600px){
   #historyRangeModal .history-range-side-v355{
     padding:6px!important;
@@ -15540,10 +14342,6 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V35.6 — CUSTOM RANGE + GRAPH FIX
-   ===================================================== */
 .history-range-custom-card-v356{display:grid;gap:8px}
 .history-range-custom-input-field{
   display:grid;gap:8px;padding:11px;border:1px solid rgba(51,65,85,.72);
@@ -15582,10 +14380,6 @@ button.member-locked::after{
   .history-range-custom-input-field>small{display:none}
 }
 
-
-/* =====================================================
-   V35.7 — COMPACT CUSTOM RANGE LABEL
-   ===================================================== */
 .historical-section #historyRangePicker{
   flex:0 0 220px!important;
   width:220px!important;
@@ -15637,10 +14431,6 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V35.9 — REAL DATA TIME ZOOM
-   ===================================================== */
 #chartZoomResolution{
   color:#67e8f9;
   font-weight:800;
@@ -15657,18 +14447,9 @@ button.member-locked::after{
   }
 }
 
-
-/* =====================================================
-   V36.1 — REAL POINT TIME / PRETTY ADAPTIVE AXIS
-   ===================================================== */
 #chartZoomResolution{
   white-space:nowrap;
 }
-
-
-/* =========================================================
-   V36.5 — CROSS-DEVICE SAFETY
-   ========================================================= */
 
 *,*::before,*::after{box-sizing:border-box}
 html,body{width:100%;max-width:100%;overflow-x:hidden}
@@ -15692,7 +14473,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   max-width:100%!important;
 }
 
-/* Text and controls must wrap instead of escaping their cards. */
 .dashboard-page-heading,
 .section-title-with-help,
 .chart-zone-heading,
@@ -15723,7 +14503,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   overflow-wrap:anywhere;
 }
 
-/* Graph headers: legend can never collide with graph/open hint. */
 .metric-chart-head{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) auto!important;
@@ -15747,7 +14526,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   max-width:100%!important;
 }
 
-/* Medium devices / tablets */
 @media (min-width:761px) and (max-width:1100px){
   body>.max-w-\[1800px\]{padding-left:14px!important;padding-right:14px!important}
   .history-toolbar{
@@ -15764,7 +14542,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   .metric-chart-legend{justify-content:flex-start!important}
 }
 
-/* Phones */
 @media (max-width:760px){
   body>.max-w-\[1800px\]{
     width:100%!important;
@@ -15784,7 +14561,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     max-width:100%!important;
   }
 
-  /* Header brand stays readable from 320px upward. */
   header .flex.items-center.gap-4{
     width:100%!important;
     min-width:0!important;
@@ -15797,7 +14573,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     overflow-wrap:anywhere!important;
   }
 
-  /* One-column operational controls prevent squeezing. */
   .history-toolbar{
     display:grid!important;
     grid-template-columns:1fr!important;
@@ -15813,7 +14588,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     max-width:100%!important;
   }
 
-  /* Compare selector + action stack on narrow screens. */
   .compare-toolbar,
   .node-compare-controls,
   .comparison-controls{
@@ -15822,7 +14596,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     gap:9px!important;
   }
 
-  /* Graph title and legend get their own rows. */
   .metric-chart-head{
     grid-template-columns:1fr!important;
     gap:7px!important;
@@ -15837,7 +14610,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     white-space:normal!important;
   }
 
-  /* The floating hint was covering legends on phones. */
   .metric-chart-canvas-wrap::after,
   .bottom-chart-wrap::after{
     display:none!important;
@@ -15854,7 +14626,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     overflow:hidden!important;
   }
 
-  /* Headings/buttons can wrap instead of pushing outside. */
   .section-title-with-help,
   .chart-zone-heading,
   .ai-analysis-header,
@@ -15866,7 +14637,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     flex:0 0 auto!important;
   }
 
-  /* Cards and grids */
   .monitoring-status-cluster,
   .overview-metrics-grid,
   .overview-node-grid,
@@ -15877,7 +14647,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     grid-template-columns:1fr!important;
   }
 
-  /* Modal/dialog safety for different browser bars and device heights. */
   .auth-modal-dialog,
   .admin-dialog,
   .my-account-dialog,
@@ -15890,7 +14659,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   }
 }
 
-/* Small phones */
 @media (max-width:480px){
   body>.max-w-\[1800px\]{padding-left:8px!important;padding-right:8px!important}
 
@@ -15915,7 +14683,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   }
 }
 
-/* Very small phones */
 @media (max-width:360px){
   header img.w-20{width:40px!important;height:40px!important}
   header .text-xl{font-size:15px!important}
@@ -15923,11 +14690,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   .overview-title{font-size:20px!important}
   .metric-chart-canvas-wrap{height:220px!important;min-height:220px!important}
 }
-
-
-/* =====================================================
-   V36.6 — CARD PAGE HEADINGS
-   ===================================================== */
 
 .dashboard-card-page-head{
   min-width:0;
@@ -15993,12 +14755,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
     width:100%!important;
   }
 }
-
-/* =====================================================
-   V36.6 — RESPONSIVE DATE / TIME MODAL
-   Mobile is stacked, not compressed into desktop columns.
-   Footer remains visible while content can scroll.
-   ===================================================== */
 
 @media(max-width:760px){
   #historyRangeModal{
@@ -16245,7 +15001,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   }
 }
 
-/* Small phones: keep readable without side-by-side squeezing */
 @media(max-width:430px){
   #historyRangeModal{
     padding:5px!important;
@@ -16333,7 +15088,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   }
 }
 
-/* Short landscape phones/tablets */
 @media(max-height:600px) and (max-width:900px){
   #historyRangeModal .history-range-modal-dialog-v35{
     max-height:calc(100dvh - 8px)!important;
@@ -16358,11 +15112,6 @@ button,input,select,textarea{max-width:100%;min-width:0}
   }
 }
 
-
-/* =====================================================
-   V36.7 — RESPONSIVE HEADER
-   ===================================================== */
-
 header.glass.card{
   min-width:0;
 }
@@ -16374,7 +15123,6 @@ header.glass.card .header-user-copy{
   min-width:0;
 }
 
-/* Tablet */
 @media (min-width:761px) and (max-width:1100px){
   header.glass.card{
     display:grid!important;
@@ -16407,7 +15155,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Phones — guest and signed-in */
 @media (max-width:760px){
   header.glass.card{
     display:grid!important;
@@ -16417,7 +15164,6 @@ header.glass.card .header-user-copy{
     border-radius:18px!important;
   }
 
-  /* Brand */
   header.glass.card>.flex.items-center.gap-4:first-child{
     display:grid!important;
     grid-template-columns:auto minmax(0,1fr)!important;
@@ -16454,7 +15200,6 @@ header.glass.card .header-user-copy{
     line-height:1.45!important;
   }
 
-  /* Right/account zone */
   header.glass.card>.flex.items-center.gap-3,
   header.glass.card>.flex.items-center.gap-4:last-child,
   header.glass.card .header-user,
@@ -16489,7 +15234,6 @@ header.glass.card .header-user-copy{
     text-overflow:ellipsis!important;
   }
 
-  /* Bell and avatar stay fixed; text gets remaining space. */
   header.glass.card button[id*="notification"],
   header.glass.card button[class*="notification"],
   header.glass.card .notification-bell,
@@ -16508,7 +15252,6 @@ header.glass.card .header-user-copy{
     flex:0 0 42px!important;
   }
 
-  /* Guest login/register area must not overflow. */
   header.glass.card .guest-actions,
   header.glass.card .auth-actions{
     display:grid!important;
@@ -16524,7 +15267,6 @@ header.glass.card .header-user-copy{
     white-space:normal!important;
   }
 
-  /* Date/time becomes secondary information. */
   header.glass.card [id*="clock"],
   header.glass.card [id*="time"],
   header.glass.card .header-time{
@@ -16534,7 +15276,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Small phones */
 @media (max-width:430px){
   header.glass.card{
     padding:12px!important;
@@ -16570,7 +15311,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Very narrow phones */
 @media (max-width:360px){
   header.glass.card{
     padding:10px!important;
@@ -16598,7 +15338,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Landscape phones */
 @media (max-height:520px) and (max-width:900px) and (orientation:landscape){
   header.glass.card{
     grid-template-columns:minmax(0,1fr) minmax(220px,.75fr)!important;
@@ -16614,12 +15353,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.8 — HEADER RESPONSIVE FIX
-   ===================================================== */
-
-/* Tablet / iPad */
 @media (min-width:761px) and (max-width:1100px){
   .site-header{
     min-height:0!important;
@@ -16707,7 +15440,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Phones */
 @media (max-width:760px){
   .site-header{
     min-height:0!important;
@@ -16842,7 +15574,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Small phones */
 @media (max-width:430px){
   .site-header{
     padding:10px!important;
@@ -16900,7 +15631,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Very narrow phones */
 @media (max-width:360px){
   .site-header{
     padding:9px!important;
@@ -16941,7 +15671,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Landscape phones */
 @media (max-height:520px) and (max-width:900px) and (orientation:landscape){
   .site-header{
     min-height:0!important;
@@ -16972,11 +15701,6 @@ header.glass.card .header-user-copy{
     border-top:0!important;
   }
 }
-
-
-/* =====================================================
-   V36.9 — MOBILE HEADER BALANCE
-   ===================================================== */
 
 @media (max-width:760px){
 
@@ -17018,7 +15742,6 @@ header.glass.card .header-user-copy{
     gap:8px!important;
   }
 
-  /* Guest */
   .header-account-zone:has(.header-notification-button.hidden){
     display:grid!important;
     grid-template-columns:minmax(0,1fr) auto!important;
@@ -17066,7 +15789,6 @@ header.glass.card .header-user-copy{
     color:#94a3b8!important;
   }
 
-  /* Signed in */
   .header-account-zone:not(:has(.header-notification-button.hidden)){
     display:grid!important;
     grid-template-columns:auto minmax(0,1fr)!important;
@@ -17183,12 +15905,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.10 — MOBILE HEADER + GOOGLE ACCOUNT POLISH
-   ===================================================== */
-
-/* Header: slightly larger and more balanced on phones */
 @media (max-width:760px){
   .site-header{
     padding:13px 14px!important;
@@ -17293,7 +16009,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Tablet/iPad */
 @media (min-width:761px) and (max-width:1100px){
   .site-brand-logo,
   .site-brand-logos img{
@@ -17310,7 +16025,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Google account chooser: no visual clipping */
 .google-account-option,
 .google-account-row,
 .google-account-card,
@@ -17408,7 +16122,6 @@ header.glass.card .header-user-copy{
   overflow:visible!important;
 }
 
-/* Auth modal mobile spacing */
 @media (max-width:760px){
   .auth-modal-dialog{
     width:calc(100vw - 24px)!important;
@@ -17440,13 +16153,8 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.11 — GUEST LOGIN BUTTON
-   ===================================================== */
-
 @media (max-width:760px){
-  /* Guest: show one clear clickable Login button only. */
+  
   .header-account-zone:has(.header-notification-button.hidden) .header-account-button{
     display:inline-flex!important;
     align-items:center!important;
@@ -17494,10 +16202,6 @@ header.glass.card .header-user-copy{
     font-size:11.5px!important;
   }
 }
-
-/* =====================================================
-   V36.11 — GOOGLE BUTTON FIT
-   ===================================================== */
 
 #authSocialArea,
 #googleSignInButton{
@@ -17547,12 +16251,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.12 — LOGIN / AUTH FINAL LAYOUT
-   ===================================================== */
-
-/* Guest button: desktop + tablet + mobile */
 .header-account-zone:has(.header-notification-button.hidden) .header-account-button{
   display:inline-flex!important;
   align-items:center!important;
@@ -17580,7 +16278,6 @@ header.glass.card .header-user-copy{
   font-weight:900!important;
 }
 
-/* Modal: equal left/right breathing room on every screen */
 .auth-modal{
   box-sizing:border-box!important;
   padding:clamp(12px,3vw,24px)!important;
@@ -17605,7 +16302,6 @@ header.glass.card .header-user-copy{
   max-width:100%!important;
 }
 
-/* Google button: never clip its right-side G icon */
 .auth-social,
 .auth-google-button,
 #googleSignInButton{
@@ -17632,7 +16328,6 @@ header.glass.card .header-user-copy{
   margin:0 auto!important;
 }
 
-/* Phone modal */
 @media(max-width:760px){
   .auth-modal{
     padding:12px!important;
@@ -17656,7 +16351,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Small phones */
 @media(max-width:430px){
   .auth-modal{
     padding:10px!important;
@@ -17669,7 +16363,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Very small phones */
 @media(max-width:360px){
   .auth-modal{
     padding:8px!important;
@@ -17687,12 +16380,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.13 — GOOGLE GUTTER + MOBILE TIMEZONE FOOTER
-   ===================================================== */
-
-/* Keep Google's trailing G comfortably inside the login card. */
 #googleSignInButton{
   padding-inline:6px!important;
 }
@@ -17702,8 +16389,6 @@ header.glass.card .header-user-copy{
   margin-inline:auto!important;
 }
 
-/* Mobile date-range footer: timezone gets its own row.
-   Prevents "เวลาไทย" from collapsing one character per line. */
 @media(max-width:760px){
   #historyRangeModal .history-range-footer-v35{
     display:grid!important;
@@ -17794,14 +16479,8 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.14 — LOGGED-IN MOBILE HEADER SPACING
-   ===================================================== */
-
 @media(max-width:760px){
 
-  /* Signed-in account block */
   .header-account-zone:not(:has(.header-notification-button.hidden)){
     display:grid!important;
     grid-template-columns:44px minmax(0,1fr)!important;
@@ -17972,12 +16651,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.15 — STABLE HEADER AUTH STATE
-   ===================================================== */
-
-/* Guest: desktop and mobile */
 .site-header.is-guest .header-notification-button,
 .site-header.is-guest .header-account-avatar,
 .site-header.is-guest .header-account-chevron,
@@ -18006,7 +16679,6 @@ header.glass.card .header-user-copy{
   font-weight:900!important;
 }
 
-/* Signed in: clean two-column account area */
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
     display:grid!important;
@@ -18128,10 +16800,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* =====================================================
-   V36.15 — GOOGLE BUTTON FINAL FIT
-   ===================================================== */
-
 #authSocialArea{
   width:100%!important;
   min-width:0!important;
@@ -18152,11 +16820,6 @@ header.glass.card .header-user-copy{
   margin-inline:auto!important;
   max-width:100%!important;
 }
-
-
-/* =====================================================
-   V36.16 — COMPACT SIGNED-IN HEADER
-   ===================================================== */
 
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
@@ -18299,10 +16962,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* =====================================================
-   V36.16 — GOOGLE BUTTON SAFE AREA
-   ===================================================== */
-
 .auth-social{
   width:100%!important;
   min-width:0!important;
@@ -18342,11 +17001,6 @@ header.glass.card .header-user-copy{
     padding-inline:10px!important;
   }
 }
-
-
-/* =====================================================
-   V36.17 — COMPACT SIGNED-IN IDENTITY
-   ===================================================== */
 
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
@@ -18485,7 +17139,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Desktop/tablet signed-in identity should also remain compact. */
 @media(min-width:761px){
   .site-header.is-authenticated .header-profile-stack{
     width:auto!important;
@@ -18507,20 +17160,11 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* =====================================================
-   V36.17 — GOOGLE DESKTOP WIDTH
-   ===================================================== */
-
 @media(min-width:761px){
   #googleSignInButton{
     padding-inline:8px!important;
   }
 }
-
-
-/* =====================================================
-   V36.18 — MOBILE TIMEZONE ICON
-   ===================================================== */
 
 @media(max-width:760px){
   #historyRangeModal .history-timezone-note{
@@ -18578,11 +17222,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.19 — TIMEZONE ICON GLYPH
-   ===================================================== */
-
 @media(max-width:760px){
   #historyRangeModal .history-timezone-icon{
     width:34px!important;
@@ -18629,7 +17268,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Desktop Google button can use the available login-card width. */
 @media(min-width:761px){
   #googleSignInButton{
     width:100%!important;
@@ -18638,12 +17276,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.20 — FINAL UI CLEANUP
-   ===================================================== */
-
-/* 1) Timezone globe: larger and centered */
 @media(max-width:760px){
   #historyRangeModal .history-timezone-icon{
     width:40px!important;
@@ -18683,14 +17315,12 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* 2) Permission-hidden account items must really be hidden */
 .account-dropdown-v34 .account-menu-item.hidden,
 .account-dropdown-v34 .account-menu-section.hidden,
 .account-management-section.hidden{
   display:none!important;
 }
 
-/* 3) Notification bell icon: mathematically centered */
 .header-notification-button{
   position:relative!important;
   display:block!important;
@@ -18704,7 +17334,6 @@ header.glass.card .header-user-copy{
   margin:0!important;
 }
 
-/* 4) Signed-in profile: compact chip, never a long empty bar */
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
     display:grid!important;
@@ -18798,7 +17427,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Desktop/tablet profile should also stay compact */
 @media(min-width:761px){
   .site-header.is-authenticated .header-profile-stack{
     width:max-content!important;
@@ -18814,12 +17442,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.21 — PROFILE + TIMEZONE FINAL REDESIGN
-   ===================================================== */
-
-/* Stable vector globe on every platform */
 #historyRangeModal .history-timezone-icon{
   width:40px!important;
   height:40px!important;
@@ -18849,7 +17471,6 @@ header.glass.card .header-user-copy{
   stroke-linejoin:round!important;
 }
 
-/* Signed-in account: compact, no long empty bar */
 .site-header.is-authenticated .header-profile-stack{
   width:max-content!important;
   max-width:100%!important;
@@ -18948,7 +17569,6 @@ header.glass.card .header-user-copy{
   white-space:nowrap!important;
 }
 
-/* Header account zone works across desktop/tablet/mobile */
 .site-header.is-authenticated .header-account-zone{
   display:grid!important;
   grid-template-columns:auto max-content!important;
@@ -18962,7 +17582,6 @@ header.glass.card .header-user-copy{
   align-self:center!important;
 }
 
-/* Tablet */
 @media(min-width:761px) and (max-width:1100px){
   .site-header.is-authenticated .header-account-button{
     max-width:245px!important;
@@ -18973,7 +17592,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Phones */
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
     grid-template-columns:44px minmax(0,1fr)!important;
@@ -19080,12 +17698,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.22 — ROLE ALIGN RIGHT
-   ===================================================== */
-
-/* USER / ADMIN / OWNER อยู่บรรทัดบนสุดและชิดขวาของกล่องโปรไฟล์ */
 .site-header.is-authenticated .header-account-button{
   grid-template-columns:auto minmax(0,1fr) 40px!important;
   grid-template-rows:auto auto!important;
@@ -19104,7 +17716,6 @@ header.glass.card .header-user-copy{
   white-space:nowrap!important;
 }
 
-/* ชื่ออยู่บรรทัดถัดลงมา */
 .site-header.is-authenticated .header-account-chevron{
   grid-column:1!important;
   grid-row:2!important;
@@ -19137,12 +17748,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.23 — PROFILE LAYOUT FINAL
-   ===================================================== */
-
-/* Timezone: text only, no icon */
 #historyRangeModal .history-timezone-note{
   gap:0!important;
 }
@@ -19151,8 +17756,6 @@ header.glass.card .header-user-copy{
   display:none!important;
 }
 
-/* Signed-in profile chip:
-   ROLE aligns with the last letter of the name, avatar stays separate. */
 .site-header.is-authenticated .header-account-zone{
   display:grid!important;
   grid-template-columns:auto max-content!important;
@@ -19197,7 +17800,6 @@ header.glass.card .header-user-copy{
   border-radius:14px!important;
 }
 
-/* Arrow remains on the left of the name row */
 .site-header.is-authenticated .header-account-chevron{
   display:inline-block!important;
   grid-column:1!important;
@@ -19206,7 +17808,6 @@ header.glass.card .header-user-copy{
   justify-self:start!important;
 }
 
-/* ROLE: above name, right-aligned to the name column only */
 .site-header.is-authenticated .header-account-role{
   display:block!important;
   grid-column:2!important;
@@ -19226,7 +17827,6 @@ header.glass.card .header-user-copy{
   letter-spacing:.12em!important;
 }
 
-/* Name: same right edge as ROLE */
 .site-header.is-authenticated #accountButtonText{
   grid-column:2!important;
   grid-row:2!important;
@@ -19246,7 +17846,6 @@ header.glass.card .header-user-copy{
   line-height:1.15!important;
 }
 
-/* Avatar is outside the ROLE/name alignment */
 .site-header.is-authenticated .header-account-avatar{
   grid-column:3!important;
   grid-row:1/3!important;
@@ -19260,7 +17859,6 @@ header.glass.card .header-user-copy{
   flex:0 0 40px!important;
 }
 
-/* Clock is independent from profile chip size */
 .site-header.is-authenticated .header-clock{
   width:max-content!important;
   max-width:none!important;
@@ -19277,7 +17875,6 @@ header.glass.card .header-user-copy{
   white-space:nowrap!important;
 }
 
-/* Bell stays centered */
 .header-notification-button{
   position:relative!important;
 }
@@ -19290,7 +17887,6 @@ header.glass.card .header-user-copy{
   margin:0!important;
 }
 
-/* Tablet */
 @media(min-width:761px) and (max-width:1100px){
   .site-header.is-authenticated .header-account-button{
     max-width:260px!important;
@@ -19310,7 +17906,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-/* Phones */
 @media(max-width:760px){
   .site-header.is-authenticated .header-account-zone{
     grid-template-columns:44px minmax(0,1fr)!important;
@@ -19405,12 +18000,6 @@ header.glass.card .header-user-copy{
   }
 }
 
-
-/* =====================================================
-   V36.24 — MOBILE PROFILE CHIP FINAL
-   ===================================================== */
-
-/* ROLE + name are one column so their right edges always match. */
 html body .site-header.is-authenticated #accountButton{
   width:max-content!important;
   inline-size:max-content!important;
@@ -19504,7 +18093,6 @@ html body .site-header.is-authenticated #accountButton .header-account-chevron{
   align-self:center!important;
 }
 
-/* Profile wrapper follows content instead of stretching across the header. */
 html body .site-header.is-authenticated .header-profile-stack{
   width:max-content!important;
   min-width:0!important;
@@ -19520,7 +18108,6 @@ html body .site-header.is-authenticated .header-profile-stack{
   justify-self:end!important;
 }
 
-/* Clock has its own readable size; it does not inherit profile scaling. */
 html body .site-header.is-authenticated #clock{
   width:max-content!important;
   max-width:none!important;
@@ -19536,7 +18123,6 @@ html body .site-header.is-authenticated #clock{
   white-space:nowrap!important;
 }
 
-/* Mobile */
 @media(max-width:760px){
   html body .site-header.is-authenticated .header-account-zone{
     display:grid!important;
@@ -19644,12 +18230,6 @@ html body .site-header.is-authenticated #clock{
   }
 }
 
-
-/* =====================================================
-   V36.25 — HEADER CLOCK SIZE
-   ===================================================== */
-
-/* Desktop */
 html body .site-header.is-authenticated #clock{
   font-size:13px!important;
   line-height:1.25!important;
@@ -19657,40 +18237,30 @@ html body .site-header.is-authenticated #clock{
   letter-spacing:.01em!important;
 }
 
-/* Tablet / iPad */
 @media(min-width:761px) and (max-width:1100px){
   html body .site-header.is-authenticated #clock{
     font-size:12.5px!important;
   }
 }
 
-/* Mobile */
 @media(max-width:760px){
   html body .site-header.is-authenticated #clock{
     font-size:11.5px!important;
   }
 }
 
-/* Small mobile */
 @media(max-width:430px){
   html body .site-header.is-authenticated #clock{
     font-size:11px!important;
   }
 }
 
-/* Very small mobile */
 @media(max-width:360px){
   html body .site-header.is-authenticated #clock{
     font-size:10.5px!important;
   }
 }
 
-
-/* =====================================================
-   V36.26 — MOBILE HEADER / PROFILE BALANCE
-   ===================================================== */
-
-/* Keep the brand readable again */
 @media(max-width:760px){
   .site-header{
     padding:14px 14px 13px!important;
@@ -19722,7 +18292,6 @@ html body .site-header.is-authenticated #clock{
     color:#aeb9c9!important;
   }
 
-  /* Account row: do not let the profile chip stick to the far-right edge */
   html body .site-header.is-authenticated .header-account-zone{
     grid-template-columns:48px minmax(0,1fr)!important;
     gap:14px!important;
@@ -19737,7 +18306,6 @@ html body .site-header.is-authenticated #clock{
     gap:7px!important;
   }
 
-  /* Compact profile chip: content-sized, no empty stretched area */
   html body .site-header.is-authenticated #accountButton{
     width:max-content!important;
     inline-size:max-content!important;
@@ -19786,7 +18354,6 @@ html body .site-header.is-authenticated #clock{
     color:#cbd5e1!important;
   }
 
-  /* Clock stays separate and readable */
   html body .site-header.is-authenticated #clock{
     margin-right:8px!important;
     font-size:12px!important;
@@ -19796,7 +18363,6 @@ html body .site-header.is-authenticated #clock{
     letter-spacing:.01em!important;
   }
 
-  /* Bell remains centered and slightly larger */
   .header-notification-button{
     width:46px!important;
     height:46px!important;
@@ -19906,7 +18472,6 @@ html body .site-header.is-authenticated #clock{
   }
 }
 
-/* Desktop/tablet clock & account text should remain easy to read too */
 @media(min-width:761px){
   html body .site-header.is-authenticated #accountRoleBadge{
     color:#f8fafc!important;
@@ -19927,17 +18492,10 @@ html body .site-header.is-authenticated #clock{
   }
 }
 
-
-/* =====================================================
-   V36.27 — ROLE COLOR + DESKTOP CLOCK POSITION
-   ===================================================== */
-
-/* USER / ADMIN / OWNER กลับเป็นสีฟ้าเดิมทุกแพลตฟอร์ม */
 html body .site-header.is-authenticated #accountRoleBadge{
   color:#67e8f9!important;
 }
 
-/* เฉพาะคอม: ขยับเวลาเข้าซ้ายเล็กน้อยและลงอีกนิด */
 @media(min-width:1101px){
   html body .site-header.is-authenticated #clock{
     position:relative!important;
@@ -19945,11 +18503,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
     top:5px!important;
   }
 }
-
-
-/* =====================================================
-   V36.28 — ROLE COLOR MOBILE FINAL
-   ===================================================== */
 
 html body .site-header.is-authenticated #accountRoleBadge{
   color:#67e8f9!important;
