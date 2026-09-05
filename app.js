@@ -3558,12 +3558,27 @@ return n!==null?((n-min)/(max-min))*100:null;
 
 function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
-const raw=Array.isArray(ds.rawValues)?ds.rawValues[ctx.dataIndex]:null;
 const field=ds.metricField;
-if(field&&hasFiniteSensorValue(raw)){
-return `${ds.label}: ${fmt(raw)} ${metricUnitFor(field)}`.trim();
+
+const plotted=
+finiteNumberOrNull(
+ctx?.parsed?.y
+);
+
+if(
+field&&
+plotted!==null
+){
+return `${ds.label}: ${fmt(plotted)} ${metricUnitFor(field)}`.trim();
 }
-return `${ds.label}: ${Number(ctx.parsed?.y??0).toFixed(1)}`;
+
+if(
+plotted!==null
+){
+return `${ds.label}: ${fmt(plotted)}`;
+}
+
+return `${ds.label}: --`;
 }
 
 function isMobileChart(){
@@ -3673,8 +3688,18 @@ return adaptiveChartTickText(this,value,index,ticks);
 }
 },
 y:{
+beginAtZero:false,
 title:{display:true,text:yTitle,font:{size:chartFontSize(),weight:"600"}},
-ticks:{font:{size:chartFontSize()}},
+ticks:{
+font:{size:chartFontSize()},
+callback:function(value){
+const n=finiteNumberOrNull(value);
+if(n===null)return value;
+return Math.abs(n)>=1000
+?new Intl.NumberFormat("th-TH",{maximumFractionDigits:0}).format(n)
+:new Intl.NumberFormat("th-TH",{maximumFractionDigits:1}).format(n);
+}
+},
 grid:{color:"rgba(148,163,184,.08)"}
 }
 }
@@ -8151,7 +8176,11 @@ function cloneChartDatasetForViewer(ds){
 const copy={
 label:ds.label||"ข้อมูล",
 metricField:ds.metricField,
-rawValues:Array.isArray(ds.rawValues)?[...ds.rawValues]:null,
+rawValues:Array.isArray(ds.rawValues)
+?[...ds.rawValues]
+:Array.isArray(ds.data)
+?ds.data.map(v=>v&&typeof v==="object"?finiteNumberOrNull(v.y):finiteNumberOrNull(v))
+:null,
 
 data:Array.isArray(ds.data)
 ?ds.data.map(
@@ -8812,10 +8841,17 @@ raw&&typeof raw==="object"
 ?finiteNumberOrNull(raw.y)
 :finiteNumberOrNull(raw);
 
-return Number.isFinite(x)&&y!==null
-?{x,y}
-:null;
-}).filter(Boolean);
+if(
+!Number.isFinite(x)
+){
+return null;
+}
+
+return{
+x,
+y
+};
+});
 return copy;
 });
 
@@ -8961,6 +8997,13 @@ ticks:{
 color:"#94a3b8",
 font:{
 size:isTouch?12:12
+},
+callback:function(value){
+const n=finiteNumberOrNull(value);
+if(n===null)return value;
+return Math.abs(n)>=1000
+?new Intl.NumberFormat("th-TH",{maximumFractionDigits:0}).format(n)
+:new Intl.NumberFormat("th-TH",{maximumFractionDigits:1}).format(n);
 }
 },
 
