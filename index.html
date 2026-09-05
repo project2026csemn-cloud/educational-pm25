@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260904-v349" rel="stylesheet"/>
+<link href="style.css?v=20260905-v35r1" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -136,6 +136,28 @@ HEADER
   </div>
 </div>
 </header>
+<!-- =====================================================
+     V35 — NOTIFICATION INBOX
+     ===================================================== -->
+<div class="notification-inbox hidden" id="notificationInbox" aria-hidden="true">
+  <div class="notification-inbox-arrow"></div>
+  <div class="notification-inbox-head">
+    <div>
+      <span>NOTIFICATIONS</span>
+      <h3>การแจ้งเตือน</h3>
+      <p>เหตุการณ์และสถานการณ์ล่าสุด</p>
+    </div>
+    <button type="button" id="notificationMarkAllRead" class="notification-mark-read">อ่านทั้งหมด</button>
+  </div>
+  <div class="notification-inbox-list" id="notificationInboxList">
+    <div class="notification-inbox-empty">กำลังโหลดการแจ้งเตือน...</div>
+  </div>
+  <div class="notification-inbox-footer">
+    <span>เก็บประวัติ 30 วัน • แสดงล่าสุด 20 รายการ</span>
+    <button type="button" id="notificationInboxSettings">ตั้งค่า</button>
+  </div>
+</div>
+
 <!-- =========================================================
 DASHBOARD NAVIGATION
 ========================================================= -->
@@ -487,118 +509,75 @@ DASHBOARD NAVIGATION
 </button>
 <div aria-hidden="true" class="history-range-modal" id="historyRangeModal">
 <div class="history-range-modal-backdrop" data-history-range-close="true"></div>
-<div aria-labelledby="historyRangeModalTitle" aria-modal="true" class="history-range-modal-dialog" role="dialog">
-<div class="history-range-modal-header">
-<div class="history-range-modal-title-wrap">
-<div class="history-range-modal-icon">🗓️</div>
-<div>
-<h2 class="history-range-modal-title" id="historyRangeModalTitle">เลือกช่วงวันที่และเวลา</h2>
-<p class="history-range-modal-subtitle">เลือกช่วงด่วน หรือกำหนดวันและเวลาเอง</p>
-</div>
-</div>
-<button aria-label="ปิด" class="history-range-modal-close" id="historyRangeModalClose" type="button">×</button>
-</div>
-<div class="history-range-modal-body">
-<div class="history-range-layout">
-<!-- CALENDAR -->
-<div class="history-range-calendar">
-<div class="flex items-center justify-between mb-4">
-<b class="text-sm text-slate-200" id="rangeCalendarTitle">
-                                    --
-                                </b>
-<div class="flex gap-2">
-<button aria-label="เดือนก่อนหน้า" class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition" id="calendarPrev" type="button">
-                                        ‹
-                                    </button>
-<button aria-label="เดือนถัดไป" class="w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition" id="calendarNext" type="button">
-                                        ›
-                                    </button>
-</div>
-</div>
-<div class="range-calendar-weekdays">
-<div>อา</div>
-<div>จ</div>
-<div>อ</div>
-<div>พ</div>
-<div>พฤ</div>
-<div>ศ</div>
-<div>ส</div>
-</div>
-<div class="grid grid-cols-7 gap-1" id="rangeCalendarGrid"></div>
-<div class="text-[11px] text-slate-500 mt-3">
-                                เลือกวันเริ่มต้น แล้วเลือกวันสิ้นสุด
-                            </div>
-</div>
-<!-- QUICK RANGE -->
-<div class="history-range-quick">
-<div class="text-[11px] uppercase tracking-wider text-slate-500 px-2 py-1">
-                                ช่วงเวลาด่วน
-                            </div>
-<div class="quick-range-list" id="quickRangeList">
-<button class="quick-range-option active w-full text-left rounded-lg px-3 py-2 text-sm" data-range="today" type="button">
-                                    วันนี้
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30m" type="button">
-                                    30 นาที
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="1h" type="button">
-                                    1 ชั่วโมง
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="6h" type="button">
-                                    6 ชั่วโมง
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="12h" type="button">
-                                    12 ชั่วโมง
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="24h" type="button">
-                                    24 ชั่วโมง
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="7d" type="button">
-                                    7 วัน
-                                </button>
-<button class="quick-range-option w-full text-left rounded-lg px-3 py-2 text-sm" data-range="30d" type="button">
-                                    30 วัน
-                                </button>
-</div>
-</div>
-</div>
-<!-- START / END -->
-<div class="border-t border-slate-800 p-4 grid sm:grid-cols-2 gap-3">
-<label class="block">
-<span class="text-xs text-slate-400">
-                                เริ่มต้น
-                            </span>
-<div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeStart" type="datetime-local"/>
-</div>
-</label>
-<label class="block">
-<span class="text-xs text-slate-400">
-                                สิ้นสุด
-                            </span>
-<div class="mt-1 rounded-xl border border-slate-700 px-3 py-2 bg-slate-950/30">
-<input class="block w-full min-w-0 border-0 bg-transparent p-0 text-sm text-slate-200 outline-none" id="customRangeEnd" type="datetime-local"/>
-</div>
-</label>
-</div>
-<!-- FOOTER -->
-<div class="history-range-footer border-t border-slate-800">
-<div class="history-timezone-note">
-  <span class="history-timezone-icon">🌏</span>
-  <div><b>เวลาไทย</b><span>GMT+7 • Asia/Bangkok</span></div>
-  <div class="text-red-400 hidden" id="customRangeError"></div>
-</div>
-<div class="history-range-footer-actions flex justify-end gap-2">
-<button class="rounded-xl px-4 py-2 text-sm font-bold border border-slate-700 text-slate-300" id="historyRangeCancel" type="button">
-                                ยกเลิก
-                            </button>
-<button class="rounded-xl px-5 py-2 text-sm font-bold text-cyan-200" id="historyRangeApply" style="background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.28);" type="button">
-                                ใช้งาน
-                            </button>
-</div>
-</div>
-</div>
-</div>
+<div aria-labelledby="historyRangeModalTitle" aria-modal="true" class="history-range-modal-dialog history-range-modal-dialog-v35" role="dialog">
+  <div class="history-range-modal-header">
+    <div class="history-range-modal-title-wrap">
+      <div class="history-range-modal-icon">🗓️</div>
+      <div>
+        <h2 class="history-range-modal-title" id="historyRangeModalTitle">เลือกช่วงวันที่และเวลา</h2>
+        <p class="history-range-modal-subtitle">เลือกช่วงด่วน หรือกำหนดวันและเวลาเอง</p>
+      </div>
+    </div>
+    <button aria-label="ปิด" class="history-range-modal-close" id="historyRangeModalClose" type="button">×</button>
+  </div>
+
+  <div class="history-range-modal-body history-range-modal-body-v35">
+    <div class="history-range-main-v35">
+      <section class="history-range-calendar history-range-calendar-v35">
+        <div class="history-calendar-toolbar">
+          <b class="text-sm text-slate-200" id="rangeCalendarTitle">--</b>
+          <div class="flex gap-2">
+            <button aria-label="เดือนก่อนหน้า" class="history-calendar-nav" id="calendarPrev" type="button">‹</button>
+            <button aria-label="เดือนถัดไป" class="history-calendar-nav" id="calendarNext" type="button">›</button>
+          </div>
+        </div>
+        <div class="range-calendar-weekdays">
+          <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+        </div>
+        <div class="grid grid-cols-7 gap-1" id="rangeCalendarGrid"></div>
+        <div class="history-calendar-hint">เลือกวันเริ่มต้น แล้วเลือกวันสิ้นสุด</div>
+      </section>
+
+      <aside class="history-range-side-v35">
+        <div class="history-range-quick history-range-quick-v35">
+          <div class="history-range-side-label">ช่วงเวลาด่วน</div>
+          <div class="quick-range-list quick-range-grid-v35" id="quickRangeList">
+            <button class="quick-range-option active" data-range="today" type="button">วันนี้</button>
+            <button class="quick-range-option" data-range="30m" type="button">30 นาที</button>
+            <button class="quick-range-option" data-range="1h" type="button">1 ชั่วโมง</button>
+            <button class="quick-range-option" data-range="6h" type="button">6 ชั่วโมง</button>
+            <button class="quick-range-option" data-range="12h" type="button">12 ชั่วโมง</button>
+            <button class="quick-range-option" data-range="24h" type="button">24 ชั่วโมง</button>
+            <button class="quick-range-option" data-range="7d" type="button">7 วัน</button>
+            <button class="quick-range-option" data-range="30d" type="button">30 วัน</button>
+          </div>
+        </div>
+
+        <div class="history-range-datetime-v35">
+          <label>
+            <span>เริ่มต้น</span>
+            <div class="history-datetime-input"><input id="customRangeStart" type="datetime-local"/></div>
+          </label>
+          <label>
+            <span>สิ้นสุด</span>
+            <div class="history-datetime-input"><input id="customRangeEnd" type="datetime-local"/></div>
+          </label>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="history-range-footer history-range-footer-v35">
+    <div class="history-timezone-note">
+      <span class="history-timezone-icon">🌏</span>
+      <div><b>เวลาไทย</b><span>GMT+7 • Asia/Bangkok</span></div>
+      <div class="text-red-400 hidden" id="customRangeError"></div>
+    </div>
+    <div class="history-range-footer-actions">
+      <button class="history-range-secondary" id="historyRangeCancel" type="button">ยกเลิก</button>
+      <button class="history-range-primary" id="historyRangeApply" type="button">ใช้งาน</button>
+    </div>
+  </div>
 </div>
 </div>
 <button class="history-toolbar-button history-export-button" id="exportButton" data-member-only="true" type="button">
@@ -1443,10 +1422,44 @@ ADMIN / OWNER CENTER
           </div>
         </section>
         <section class="admin-panel" data-admin-panel="devices">
-          <div class="admin-panel-head"><div><h3>ชื่อจุดตรวจวัด</h3><p>เปลี่ยนเฉพาะชื่อที่แสดงต่อผู้ใช้ รหัสภายในของข้อมูลจะไม่เปลี่ยน</p></div></div>
-          <div class="admin-device-list" id="adminDeviceList"></div>
-          <div class="admin-actions"><button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกชื่อจุดตรวจวัด</button></div>
-          <div class="admin-inline-message" id="deviceSaveMessage"></div>
+          <div class="admin-panel-head"><div><h3>ข้อมูลจุดตรวจวัด</h3><p>แก้ชื่อ ตำแหน่ง และคำอธิบาย พร้อมดูตัวอย่างก่อนบันทึก รหัสภายในของข้อมูลจะไม่เปลี่ยน</p></div></div>
+          <div class="admin-help-layout admin-device-layout-v35">
+            <div class="admin-editor-card">
+              <div class="admin-device-list" id="adminDeviceList"></div>
+              <div class="admin-actions"><button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกข้อมูลจุดตรวจวัด</button></div>
+              <div class="admin-inline-message" id="deviceSaveMessage"></div>
+            </div>
+            <div class="admin-preview-card admin-device-preview-card">
+              <div class="admin-preview-label">PREVIEW ก่อนบันทึก</div>
+              <label class="admin-field admin-preview-select-label">ดูตัวอย่าง
+                <select id="adminDevicePreviewSelect">
+                  <option value="Number 1">จุดตรวจวัด 1</option>
+                  <option value="Number 2">จุดตรวจวัด 2</option>
+                  <option value="Number 3">จุดตรวจวัด 3</option>
+                </select>
+              </label>
+              <div class="admin-device-live-preview">
+                <div class="admin-device-preview-card-ui">
+                  <div class="admin-device-preview-top">
+                    <span class="admin-device-preview-dot"></span>
+                    <div>
+                      <b id="adminDevicePreviewName">จุดตรวจวัด 1</b>
+                      <small id="adminDevicePreviewStatus">ONLINE</small>
+                    </div>
+                    <span>›</span>
+                  </div>
+                  <div class="admin-device-preview-location hidden" id="adminDevicePreviewLocation"></div>
+                  <div class="admin-device-preview-description hidden" id="adminDevicePreviewDescription"></div>
+                  <div class="admin-device-preview-metrics">
+                    <span><small>PM2.5</small><b>12</b><i>µg/m³</i></span>
+                    <span><small>อุณหภูมิ</small><b>29.4</b><i>°C</i></span>
+                    <span><small>ความชื้น</small><b>61</b><i>%</i></span>
+                  </div>
+                </div>
+                <p class="admin-preview-note">ตัวเลขเป็นข้อมูลตัวอย่างเพื่อดูรูปแบบการแสดงผลเท่านั้น</p>
+              </div>
+            </div>
+          </div>
         </section>
         <section class="admin-panel" data-admin-panel="announcement">
           <div class="admin-panel-head"><div><h3>ประกาศบน Dashboard</h3><p>ข้อความนี้จะแสดงให้ผู้ใช้ทั่วไปเห็นด้านบนของหน้า Dashboard</p></div></div>
@@ -1531,7 +1544,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260904-v349"></script>
+<script defer src="app.js?v=20260905-v35r1"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
