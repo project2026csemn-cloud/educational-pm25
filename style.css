@@ -15923,3 +15923,437 @@ button,input,select,textarea{max-width:100%;min-width:0}
   .overview-title{font-size:20px!important}
   .metric-chart-canvas-wrap{height:220px!important;min-height:220px!important}
 }
+
+
+/* =====================================================
+   V36.6 — CARD PAGE HEADINGS
+   ===================================================== */
+
+.dashboard-card-page-head{
+  min-width:0;
+  width:100%;
+}
+
+.dashboard-card-page-head-split{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.dashboard-card-page-copy{
+  min-width:0;
+}
+
+.dashboard-card-page-copy .overview-eyebrow{
+  margin-bottom:5px;
+}
+
+.dashboard-card-page-copy .section-title-with-help{
+  margin:0;
+}
+
+.dashboard-card-page-copy h1{
+  margin:0;
+  font-size:clamp(1.28rem,2vw,1.65rem);
+  line-height:1.2;
+  font-weight:900;
+}
+
+.dashboard-card-page-copy p{
+  margin:7px 0 0;
+  color:#94a3b8;
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.dashboard-card-page-copy-analysis{
+  margin-bottom:18px;
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(51,65,85,.58);
+}
+
+@media(max-width:760px){
+  .dashboard-card-page-head-split{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:14px!important;
+  }
+
+  .dashboard-card-page-copy h1{
+    font-size:1.35rem!important;
+  }
+
+  .dashboard-card-page-copy p{
+    font-size:.82rem!important;
+    line-height:1.55!important;
+  }
+
+  .monitoring-status-cluster{
+    width:100%!important;
+  }
+}
+
+/* =====================================================
+   V36.6 — RESPONSIVE DATE / TIME MODAL
+   Mobile is stacked, not compressed into desktop columns.
+   Footer remains visible while content can scroll.
+   ===================================================== */
+
+@media(max-width:760px){
+  #historyRangeModal{
+    padding:8px!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+
+  #historyRangeModal .history-range-modal-dialog-v35{
+    width:min(100%,680px)!important;
+    max-width:680px!important;
+    height:auto!important;
+    max-height:calc(100dvh - 16px)!important;
+    margin:0!important;
+    border-radius:18px!important;
+    display:grid!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+    overflow:hidden!important;
+  }
+
+  #historyRangeModal .history-range-modal-header{
+    min-height:64px!important;
+    padding:10px 12px!important;
+  }
+
+  #historyRangeModal .history-range-modal-title-wrap{
+    min-width:0!important;
+    gap:9px!important;
+    padding-right:44px!important;
+  }
+
+  #historyRangeModal .history-range-modal-icon{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    font-size:17px!important;
+  }
+
+  #historyRangeModal .history-range-modal-title{
+    font-size:17px!important;
+    line-height:1.2!important;
+  }
+
+  #historyRangeModal .history-range-mobile-selection{
+    display:block!important;
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-modal-close{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    right:10px!important;
+    top:10px!important;
+  }
+
+  #historyRangeModal .history-range-modal-body-v35{
+    min-height:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+
+  #historyRangeModal .history-range-main-v35{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    height:auto!important;
+    min-height:0!important;
+  }
+
+  #historyRangeModal .history-range-calendar-v35{
+    width:100%!important;
+    min-width:0!important;
+    padding:12px 12px 10px!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(51,65,85,.65)!important;
+    overflow:visible!important;
+  }
+
+  #historyRangeModal .history-calendar-toolbar{
+    margin-bottom:8px!important;
+  }
+
+  #historyRangeModal .history-calendar-toolbar b{
+    font-size:12px!important;
+  }
+
+  #historyRangeModal .history-calendar-nav{
+    width:34px!important;
+    height:34px!important;
+    border-radius:10px!important;
+  }
+
+  #historyRangeModal .range-calendar-weekdays{
+    font-size:10px!important;
+    margin-bottom:4px!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid{
+    gap:3px!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{
+    width:100%!important;
+    min-width:0!important;
+    height:36px!important;
+    min-height:36px!important;
+    padding:0!important;
+    border-radius:9px!important;
+    font-size:11px!important;
+  }
+
+  #historyRangeModal .history-calendar-hint{
+    display:none!important;
+  }
+
+  #historyRangeModal .history-range-side-v35,
+  #historyRangeModal .history-range-side-v355{
+    width:100%!important;
+    min-width:0!important;
+    padding:12px!important;
+    gap:10px!important;
+    overflow:visible!important;
+  }
+
+  #historyRangeModal .history-range-mode-switch{
+    width:100%!important;
+    min-width:0!important;
+    padding:4px!important;
+    gap:4px!important;
+    border-radius:12px!important;
+  }
+
+  #historyRangeModal .history-range-mode{
+    min-width:0!important;
+    height:40px!important;
+    padding:0 8px!important;
+    gap:6px!important;
+    border-radius:9px!important;
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-mode span{
+    font-size:12px!important;
+  }
+
+  #historyRangeModal .history-range-mode-panel.active{
+    gap:8px!important;
+  }
+
+  #historyRangeModal #quickRangeList.quick-range-list.quick-range-grid-v35,
+  #historyRangeModal #quickRangeList.quick-range-grid-v35,
+  #historyRangeModal #quickRangeList{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+
+  #historyRangeModal #quickRangeList .quick-range-option{
+    width:100%!important;
+    min-width:0!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:6px 8px!important;
+    border-radius:10px!important;
+    font-size:11px!important;
+    white-space:normal!important;
+  }
+
+  #historyRangeModal .history-range-custom-input-field{
+    padding:9px!important;
+    gap:7px!important;
+    border-radius:11px!important;
+  }
+
+  #historyRangeModal .history-range-custom-input-head{
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-custom-input-head .history-range-custom-icon{
+    width:28px!important;
+    height:28px!important;
+    font-size:11px!important;
+  }
+
+  #historyRangeModal .history-range-custom-input-field input[type="datetime-local"]{
+    height:42px!important;
+    min-height:42px!important;
+    padding:7px 8px!important;
+    font-size:11px!important;
+    border-radius:9px!important;
+  }
+
+  #historyRangeModal .history-range-custom-input-field>small{
+    font-size:8.5px!important;
+  }
+
+  #historyRangeModal .history-range-footer-v35{
+    position:relative!important;
+    z-index:5!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    gap:8px!important;
+    min-height:66px!important;
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom))!important;
+    background:rgba(4,18,31,.995)!important;
+  }
+
+  #historyRangeModal .history-timezone-note{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+
+  #historyRangeModal .history-timezone-icon{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+  }
+
+  #historyRangeModal .history-timezone-note b{
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-timezone-note span{
+    display:none!important;
+  }
+
+  #historyRangeModal .history-range-footer-actions{
+    flex:0 0 auto!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:6px!important;
+  }
+
+  #historyRangeModal .history-range-secondary,
+  #historyRangeModal .history-range-primary{
+    min-width:72px!important;
+    min-height:42px!important;
+    padding:7px 12px!important;
+    border-radius:10px!important;
+    font-size:10px!important;
+  }
+}
+
+/* Small phones: keep readable without side-by-side squeezing */
+@media(max-width:430px){
+  #historyRangeModal{
+    padding:5px!important;
+  }
+
+  #historyRangeModal .history-range-modal-dialog-v35{
+    max-height:calc(100dvh - 10px)!important;
+    border-radius:15px!important;
+  }
+
+  #historyRangeModal .history-range-modal-header{
+    min-height:58px!important;
+    padding:8px 9px!important;
+  }
+
+  #historyRangeModal .history-range-modal-icon{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+  }
+
+  #historyRangeModal .history-range-modal-title{
+    font-size:15px!important;
+  }
+
+  #historyRangeModal .history-range-modal-close{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    right:8px!important;
+    top:8px!important;
+  }
+
+  #historyRangeModal .history-range-calendar-v35{
+    padding:9px!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{
+    height:32px!important;
+    min-height:32px!important;
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-side-v35,
+  #historyRangeModal .history-range-side-v355{
+    padding:9px!important;
+  }
+
+  #historyRangeModal .history-range-mode{
+    height:36px!important;
+    font-size:9px!important;
+  }
+
+  #historyRangeModal .history-range-mode span{
+    font-size:10px!important;
+  }
+
+  #historyRangeModal #quickRangeList .quick-range-option{
+    height:38px!important;
+    min-height:38px!important;
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-footer-v35{
+    min-height:60px!important;
+    padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important;
+  }
+
+  #historyRangeModal .history-timezone-icon{
+    width:28px!important;
+    height:28px!important;
+    min-width:28px!important;
+  }
+
+  #historyRangeModal .history-timezone-note b{
+    font-size:9px!important;
+  }
+
+  #historyRangeModal .history-range-secondary,
+  #historyRangeModal .history-range-primary{
+    min-width:66px!important;
+    min-height:38px!important;
+    padding:6px 9px!important;
+    font-size:9px!important;
+  }
+}
+
+/* Short landscape phones/tablets */
+@media(max-height:600px) and (max-width:900px){
+  #historyRangeModal .history-range-modal-dialog-v35{
+    max-height:calc(100dvh - 8px)!important;
+  }
+
+  #historyRangeModal .history-range-modal-body-v35{
+    overflow-y:auto!important;
+  }
+
+  #historyRangeModal .history-range-main-v35{
+    grid-template-columns:minmax(280px,1fr) minmax(240px,.8fr)!important;
+  }
+
+  #historyRangeModal .history-range-calendar-v35{
+    border-right:1px solid rgba(51,65,85,.65)!important;
+    border-bottom:0!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{
+    height:27px!important;
+    min-height:27px!important;
+  }
+}
