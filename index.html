@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260905-v354" rel="stylesheet"/>
+<link href="style.css?v=20260905-v355" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -538,29 +538,62 @@ DASHBOARD NAVIGATION
         <div class="history-calendar-hint">เลือกวันเริ่มต้น แล้วเลือกวันสิ้นสุด</div>
       </section>
 
-      <aside class="history-range-side-v35">
-        <div class="history-range-quick history-range-quick-v35">
-          <div class="history-range-side-label">ช่วงเวลาด่วน</div>
+      <aside class="history-range-side-v35 history-range-side-v355">
+        <div class="history-range-mode-switch" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
+          <button class="history-range-mode active" id="historyRangeModeQuick" data-history-range-mode="quick" type="button" role="tab" aria-selected="true">
+            <span>⚡</span><b>ช่วงด่วน</b>
+          </button>
+          <button class="history-range-mode" id="historyRangeModeCustom" data-history-range-mode="custom" type="button" role="tab" aria-selected="false">
+            <span>📅</span><b>กำหนดเอง</b>
+          </button>
+        </div>
+
+        <div class="history-range-mode-panel active" id="historyRangeQuickPanel" data-history-range-panel="quick">
+          <div class="history-range-panel-head">
+            <b>เลือกช่วงเวลา</b>
+            <span>กดแล้วใช้งานทันที</span>
+          </div>
           <div class="quick-range-list quick-range-grid-v35" id="quickRangeList">
             <button class="quick-range-option active" data-range="today" type="button">วันนี้</button>
-                        <button class="quick-range-option" data-range="1h" type="button">1 ชั่วโมง</button>
+            <button class="quick-range-option" data-range="1h" type="button">1 ชั่วโมง</button>
             <button class="quick-range-option" data-range="6h" type="button">6 ชั่วโมง</button>
             <button class="quick-range-option" data-range="12h" type="button">12 ชั่วโมง</button>
             <button class="quick-range-option" data-range="24h" type="button">24 ชั่วโมง</button>
             <button class="quick-range-option" data-range="7d" type="button">7 วัน</button>
             <button class="quick-range-option" data-range="30d" type="button">30 วัน</button>
           </div>
+          <div class="history-range-panel-tip">
+            <span>✓</span>
+            <p>เหมาะสำหรับดูข้อมูลย้อนหลังแบบรวดเร็ว</p>
+          </div>
         </div>
 
-        <div class="history-range-datetime-v35">
-          <label>
-            <span>เริ่มต้น</span>
-            <div class="history-datetime-input"><input id="customRangeStart" type="datetime-local"/></div>
-          </label>
-          <label>
-            <span>สิ้นสุด</span>
-            <div class="history-datetime-input"><input id="customRangeEnd" type="datetime-local"/></div>
-          </label>
+        <div class="history-range-mode-panel" id="historyRangeCustomPanel" data-history-range-panel="custom">
+          <div class="history-range-panel-head">
+            <b>กำหนดช่วงเอง</b>
+            <span>เลือกจากปฏิทินหรือกรอกวันและเวลา</span>
+          </div>
+
+          <div class="history-range-custom-card">
+            <label class="history-range-custom-field">
+              <span class="history-range-custom-icon">↗</span>
+              <span class="history-range-custom-copy"><small>เริ่มต้น</small><b id="historyRangeStartPreview">--</b></span>
+              <input id="customRangeStart" type="datetime-local"/>
+            </label>
+
+            <div class="history-range-custom-line"><span></span><b>ถึง</b><span></span></div>
+
+            <label class="history-range-custom-field">
+              <span class="history-range-custom-icon">↘</span>
+              <span class="history-range-custom-copy"><small>สิ้นสุด</small><b id="historyRangeEndPreview">--</b></span>
+              <input id="customRangeEnd" type="datetime-local"/>
+            </label>
+          </div>
+
+          <div class="history-range-panel-tip">
+            <span>💡</span>
+            <p>แตะวันที่ในปฏิทินด้านซ้ายเพื่อเลือกเริ่มต้นและสิ้นสุดได้เลย</p>
+          </div>
         </div>
       </aside>
     </div>
@@ -1544,7 +1577,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260905-v354"></script>
+<script defer src="app.js?v=20260905-v355"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
