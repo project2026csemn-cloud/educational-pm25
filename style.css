@@ -14834,3 +14834,56 @@ button.member-locked::after{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* =====================================================
+   V35.2 — HISTORY STRUCTURE HARDENING
+   ===================================================== */
+.historical-section{
+  display:block!important;
+}
+
+.historical-section > .soft{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  clear:both!important;
+}
+
+.historical-section > .soft .grid.grid-cols-5{
+  width:100%!important;
+  min-width:0!important;
+}
+
+@media (min-width:1281px){
+  .historical-section > .flex:first-child{
+    grid-template-columns:minmax(250px,300px) minmax(0,1fr)!important;
+  }
+
+  .historical-section .history-toolbar{
+    grid-template-columns:
+      minmax(260px,1.25fr)
+      minmax(180px,.9fr)
+      minmax(185px,.9fr)
+      minmax(150px,.7fr)!important;
+  }
+
+  .historical-section > .soft .grid.grid-cols-5{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:18px!important;
+  }
+
+  .historical-section > .soft .grid.grid-cols-5 > div{
+    min-width:0!important;
+  }
+
+  .historical-section > .soft .grid.grid-cols-5 > div:last-child{
+    grid-column:auto!important;
+  }
+
+  .historical-section > .soft .grid.grid-cols-5 b{
+    overflow-wrap:normal!important;
+    word-break:keep-all!important;
+  }
+}
