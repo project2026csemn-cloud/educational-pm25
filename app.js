@@ -6533,11 +6533,9 @@ async function loadAI(
 force=false
 ){
 
-if(!authUser||!authToken){
-  if(force){openAuthModal("login");setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์สถานการณ์","error");}
-  const root=$("aiSummary");
-  if(root)root.innerHTML=`<div class="member-feature-lock"><b>🔒 AI Analysis</b><span>เข้าสู่ระบบเพื่อใช้ AI วิเคราะห์สถานการณ์</span><button type="button" data-open-login-from-ai>เข้าสู่ระบบ</button></div>`;
-  root?.querySelector("[data-open-login-from-ai]")?.addEventListener("click",()=>openAuthModal("login"));
+if(force&&(!authUser||!authToken)){
+  openAuthModal("login");
+  setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อวิเคราะห์ใหม่","error");
   return;
 }
 
@@ -7109,11 +7107,9 @@ async function loadAIForecast(
 force=false
 ){
 
-if(!authUser||!authToken){
-  if(force){openAuthModal("login");setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้ AI คาดการณ์แนวโน้ม","error");}
-  const message=$("forecastMessage");
-  if(message)message.innerHTML=`<div class="member-feature-lock"><b>🔒 AI Forecast</b><span>เข้าสู่ระบบเพื่อใช้ AI คาดการณ์แนวโน้ม</span><button type="button" data-open-login-from-forecast>เข้าสู่ระบบ</button></div>`;
-  message?.querySelector("[data-open-login-from-forecast]")?.addEventListener("click",()=>openAuthModal("login"));
+if(force&&(!authUser||!authToken)){
+  openAuthModal("login");
+  setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อวิเคราะห์ใหม่","error");
   return;
 }
 
@@ -9658,16 +9654,6 @@ function getDashboardPageFromHash(){
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
 
-  if(page==="analysis" && !(authUser&&authToken)){
-    if(!authUser){
-      openAuthModal("login");
-      setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อใช้เมนูวิเคราะห์และคาดการณ์ด้วย AI","error");
-    }else{
-      alert("บัญชีนี้ไม่ได้รับสิทธิ์ใช้เมนู AI");
-    }
-    return;
-  }
-
   currentDashboardPage=page;
   document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
     panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
@@ -9691,7 +9677,7 @@ function openDashboardPage(page,{updateHash=true}={}){
     // V15:
     // กราฟคาดการณ์อยู่ในหน้าสถิติและกราฟ จึงเริ่มขอ Forecast ทันที
     // ไม่ต้องรอให้ผู้ใช้เปิดหน้า "วิเคราะห์และคาดการณ์" ก่อน
-    if(typeof loadAIForecast==="function" && authUser&&authToken){
+    if(typeof loadAIForecast==="function"){
       loadAIForecast(false);
     }
   }
