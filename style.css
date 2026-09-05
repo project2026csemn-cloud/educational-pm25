@@ -14771,3 +14771,66 @@ button.member-locked::after{
   .notification-inbox{position:fixed;top:74px;right:10px;left:10px;width:auto}
   .notification-inbox-arrow{display:none}
 }
+
+
+/* =====================================================
+   V35.1 — HISTORICAL HEADER
+   ===================================================== */
+@media (min-width: 1024px){
+  .historical-section > .flex:first-child{
+    display:grid!important;
+    grid-template-columns:minmax(210px,260px) minmax(0,1fr)!important;
+    align-items:start!important;
+    gap:18px!important;
+  }
+
+  .historical-section > .flex:first-child > div:first-child{
+    min-width:0!important;
+    width:auto!important;
+    flex:none!important;
+  }
+
+  .historical-section > .flex:first-child > div:first-child .section-title-with-help{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+    width:max-content!important;
+    max-width:100%!important;
+    gap:8px!important;
+  }
+
+  .historical-section > .flex:first-child h2{
+    white-space:nowrap!important;
+    overflow-wrap:normal!important;
+    word-break:keep-all!important;
+    margin:0!important;
+  }
+
+  .historical-section .history-toolbar{
+    display:grid!important;
+    grid-template-columns:minmax(190px,1.25fr) minmax(145px,.85fr) minmax(150px,.85fr) minmax(120px,.7fr)!important;
+    width:100%!important;
+    min-width:0!important;
+    justify-content:stretch!important;
+    align-items:center!important;
+    gap:10px!important;
+  }
+
+  .historical-section .history-toolbar > *,
+  .historical-section .history-toolbar select,
+  .historical-section .history-toolbar button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1280px){
+  .historical-section > .flex:first-child{
+    grid-template-columns:1fr!important;
+  }
+
+  .historical-section .history-toolbar{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
