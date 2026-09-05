@@ -10665,7 +10665,15 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.
 // V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
 // =========================================================
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
-let authToken=sessionStorage.getItem(AUTH_TOKEN_KEY)||"";
+let authToken=
+  localStorage.getItem(AUTH_TOKEN_KEY)||
+  sessionStorage.getItem(AUTH_TOKEN_KEY)||
+  "";
+
+if(authToken){
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);
+}
 let authUser=null;
 let managedHelpCache={};
 let currentHelpEditorKey="";
@@ -11149,8 +11157,8 @@ function renderGoogleIdentityButton(){
   if(available<220)return false;
 
   const isPhone=window.matchMedia("(max-width: 760px)").matches;
-  const maxWidth=isPhone?300:336;
-  const sideGutter=isPhone?36:16;
+  const maxWidth=isPhone?300:400;
+  const sideGutter=isPhone?36:8;
 
   const width=Math.max(
     220,
@@ -11229,7 +11237,7 @@ async function handleGoogleCredential(response){
     const j=await apiJson(API.authGoogle,{method:"POST",body:JSON.stringify({credential})});
     authToken=String(j.token||"");
     authUser=j.user||null;
-    sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);
+    localStorage.setItem(AUTH_TOKEN_KEY,authToken);
     await refreshAuthUserAfterLogin();
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
@@ -11240,7 +11248,7 @@ async function handleGoogleCredential(response){
 
 async function restoreAuthSession(){
   if(!authToken){authUser=null;updateAccountUI();return;}
-  try{const j=await apiJson(API.authMe);authUser=j.user||null;}catch(_){authToken="";authUser=null;sessionStorage.removeItem(AUTH_TOKEN_KEY);}
+  try{const j=await apiJson(API.authMe);authUser=j.user||null;}catch(_){authToken="";authUser=null;localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);}
   updateAccountUI();
 }
 
@@ -11248,7 +11256,7 @@ async function doLogin(email,password){
   const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
   authToken=String(j.token||"");
   authUser=j.user||null;
-  sessionStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
   await refreshAuthUserAfterLogin();
   return j;
 }
@@ -12082,7 +12090,7 @@ function openNotificationDetailFromUrl(){
     $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
     $("notificationDetailGo")?.addEventListener("click",()=>{closeNotificationDetail();document.querySelector('[data-go-page="monitoring"]')?.click();});
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];updateNotificationBadge(0);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
