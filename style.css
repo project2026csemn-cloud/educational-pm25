@@ -14887,3 +14887,184 @@ button.member-locked::after{
     word-break:keep-all!important;
   }
 }
+
+
+/* =====================================================
+   V35.3 — COMPACT HISTORY CONTROLS
+   ===================================================== */
+@media (min-width: 1281px){
+  .historical-section > .flex:first-child{
+    display:grid!important;
+    grid-template-columns:300px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:20px!important;
+  }
+
+  .historical-section .history-toolbar{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    gap:10px!important;
+    width:100%!important;
+  }
+
+  .historical-section #historyNode{
+    flex:0 0 250px!important;
+    width:250px!important;
+    min-width:250px!important;
+  }
+
+  .historical-section #metric{
+    flex:0 0 170px!important;
+    width:170px!important;
+    min-width:170px!important;
+  }
+
+  .historical-section #historyRangePicker{
+    flex:0 0 170px!important;
+    width:170px!important;
+    min-width:170px!important;
+  }
+
+  .historical-section #historyRangeButton{
+    width:170px!important;
+    min-width:170px!important;
+  }
+
+  .historical-section #exportButton{
+    flex:0 0 128px!important;
+    width:128px!important;
+    min-width:128px!important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1280px){
+  .historical-section .history-toolbar{
+    display:grid!important;
+    grid-template-columns:minmax(220px,1.15fr) minmax(150px,.75fr) minmax(160px,.8fr) 120px!important;
+    gap:9px!important;
+  }
+}
+
+/* =====================================================
+   V35.3 — COMPACT DATE / TIME MODAL
+   ===================================================== */
+@media (min-width: 761px){
+  #historyRangeModal .history-range-modal-dialog.history-range-modal-dialog-v35{
+    width:min(880px,calc(100vw - 40px))!important;
+    max-width:880px!important;
+    max-height:calc(100dvh - 40px)!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+  }
+
+  #historyRangeModal .history-range-modal-header{
+    position:static!important;
+    flex:0 0 auto!important;
+    padding:14px 18px!important;
+  }
+
+  #historyRangeModal .history-range-modal-body.history-range-modal-body-v35{
+    flex:1 1 auto!important;
+    overflow:hidden!important;
+    min-height:0!important;
+  }
+
+  #historyRangeModal .history-range-main-v35{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.12fr) minmax(330px,.88fr)!important;
+    align-items:start!important;
+    min-height:0!important;
+    height:auto!important;
+  }
+
+  #historyRangeModal .history-range-calendar.history-range-calendar-v35{
+    min-height:0!important;
+    height:auto!important;
+    padding:14px 18px 12px!important;
+    border-right:1px solid rgba(51,65,85,.72)!important;
+  }
+
+  #historyRangeModal .history-calendar-toolbar{
+    margin-bottom:8px!important;
+  }
+
+  #historyRangeModal .range-calendar-weekdays{
+    margin-bottom:4px!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid{
+    gap:3px!important;
+  }
+
+  #historyRangeModal #rangeCalendarGrid .range-calendar-day{
+    min-height:34px!important;
+    height:34px!important;
+    font-size:12px!important;
+    border-radius:9px!important;
+  }
+
+  #historyRangeModal .history-calendar-hint{
+    margin-top:7px!important;
+    font-size:9px!important;
+  }
+
+  #historyRangeModal .history-range-side-v35{
+    padding:14px!important;
+    gap:12px!important;
+  }
+
+  #historyRangeModal #quickRangeList.quick-range-list.quick-range-grid-v35{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+    width:100%!important;
+    margin:0!important;
+  }
+
+  #historyRangeModal #quickRangeList .quick-range-option{
+    width:100%!important;
+    min-width:0!important;
+    min-height:38px!important;
+    height:38px!important;
+    padding:6px 7px!important;
+    font-size:11px!important;
+    white-space:nowrap!important;
+  }
+
+  #historyRangeModal .history-range-datetime-v35{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+
+  #historyRangeModal .history-datetime-input{
+    padding:8px 9px!important;
+    border-radius:10px!important;
+  }
+
+  #historyRangeModal .history-datetime-input input{
+    font-size:10px!important;
+  }
+
+  #historyRangeModal .history-range-footer.history-range-footer-v35{
+    position:static!important;
+    flex:0 0 auto!important;
+    padding:10px 14px!important;
+  }
+}
+
+@media (max-width:760px){
+  #historyRangeModal #quickRangeList.quick-range-list.quick-range-grid-v35{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+
+  #historyRangeModal #quickRangeList .quick-range-option{
+    min-height:38px!important;
+    font-size:11px!important;
+  }
+}
