@@ -10083,11 +10083,25 @@ function getDashboardPageFromHash(){
   return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
 }
 
+function clearTransientUiMessages(ids=null){
+  const list=ids||[
+    "loginMessage",
+    "registerMessage",
+    "forgotPasswordMessage",
+    "resetPasswordMessage",
+    "ownerSetupMessage",
+    "profileEditorMessage",
+    "accountSecurityMessage",
+    "helpSaveMessage",
+    "deviceSaveMessage",
+    "announcementSaveMessage",
+    "userSaveMessage"
+  ];
+  list.forEach(id=>setAuthMessage(id,""));
+}
+
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
-
-  // ข้อความผลลัพธ์จากการทำรายการเป็นสถานะชั่วคราว
-  // เมื่อเปลี่ยนหน้าแล้วกลับมา ต้องไม่ค้างจากครั้งก่อน
   clearTransientUiMessages();
 
   currentDashboardPage=page;
@@ -10684,24 +10698,6 @@ function setAuthMessage(id,text,type=""){
   el.textContent=text||"";
   el.classList.toggle("is-error",type==="error");
   el.classList.toggle("is-success",type==="success");
-}
-
-const TRANSIENT_UI_MESSAGE_IDS=[
-  "loginMessage",
-  "registerMessage",
-  "forgotPasswordMessage",
-  "resetPasswordMessage",
-  "ownerSetupMessage",
-  "profileEditorMessage",
-  "accountSecurityMessage",
-  "helpSaveMessage",
-  "deviceSaveMessage",
-  "announcementSaveMessage",
-  "userSaveMessage"
-];
-
-function clearTransientUiMessages(ids=TRANSIENT_UI_MESSAGE_IDS){
-  ids.forEach(id=>setAuthMessage(id,""));
 }
 
 
@@ -11623,7 +11619,13 @@ function switchAdminTab(tab){
     "deviceSaveMessage",
     "announcementSaveMessage",
     "userSaveMessage"
-  ]);document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));if(tab==="users")loadAdminUsers();if(tab==="announcement")loadAnnouncementEditor();if(tab==="devices")renderAdminDevices();}
+  ]);
+  document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));
+  document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));
+  if(tab==="users")loadAdminUsers();
+  if(tab==="announcement")loadAnnouncementEditor();
+  if(tab==="devices")renderAdminDevices();
+}
 
 // =====================================================
 // V34.1 — MY ACCOUNT CENTER
