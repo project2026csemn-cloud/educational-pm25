@@ -1249,12 +1249,40 @@ averageRange
 
 async function loadHistory(){
 
-const j=
+const range=
+apiRange();
+
+const url=
+`${API.history}?range=${encodeURIComponent(range)}`;
+
+let j;
+
+try{
+
+j=
 await fetchJson(
-`${API.history}?range=${encodeURIComponent(apiRange())}`,
+url,
 25000
 );
 
+}catch(firstError){
+
+console.warn(
+"History first attempt failed:",
+firstError
+);
+
+await new Promise(
+resolve=>setTimeout(resolve,650)
+);
+
+j=
+await fetchJson(
+url,
+25000
+);
+
+}
 
 return(
 Array.isArray(
@@ -5232,14 +5260,6 @@ label.textContent=active?active.textContent.trim():(averageRange==="custom"?"ก
 function updateQuickRangeUI(key){
 
 document
-.querySelectorAll("[data-history-range-mode]")
-.forEach(button=>{
-button.addEventListener("click",()=>{
-setHistoryRangeMode(button.dataset.historyRangeMode);
-});
-});
-
-document
 .querySelectorAll(
 ".quick-range-option"
 )
@@ -7615,6 +7635,16 @@ closeCreditImage();
 
 function bindEvents(){
 
+document
+.querySelectorAll("[data-history-range-mode]")
+.forEach(button=>{
+button.addEventListener("click",()=>{
+setHistoryRangeMode(button.dataset.historyRangeMode);
+updateRangePickerPreviews();
+});
+});
+
+
 const currentSelect=
 $("currentMetric");
 
@@ -7799,14 +7829,44 @@ $("customRangeEnd")
 "change",
 ()=>{
 
+averageRange="custom";
 updateQuickRangeUI(
 null
 );
+updateHistoryRangeMobileSelection();
+setHistoryRangeMode("custom");
+updateRangePickerPreviews();
+
+const d=
+dateFromRangeInput(
+"customRangeEnd"
+);
+
+if(d){
+
+calendarDisplayDate=
+new Date(
+d.getFullYear(),
+d.getMonth(),
+1
+);
+
+}
 
 renderRangeCalendar();
 
 }
 );
+
+["customRangeStart","customRangeEnd"].forEach(id=>{
+$(id)?.addEventListener("input",()=>{
+averageRange="custom";
+updateQuickRangeUI(null);
+setHistoryRangeMode("custom");
+updateHistoryRangeMobileSelection();
+updateRangePickerPreviews();
+});
+});
 
 $("historyRangeApply")
 ?.addEventListener(
