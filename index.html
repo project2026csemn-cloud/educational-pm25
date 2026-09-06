@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260905-v3631" rel="stylesheet"/>
+<link href="style.css?v=20260906-v3632" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -1308,8 +1308,11 @@
         <label class="notification-topic-card"><span class="notification-topic-icon">☀️</span><span class="notification-topic-copy"><b>ดัชนีความร้อน (Heat Index)</b><small>ประเมินความร้อนที่ร่างกายรู้สึกจากอุณหภูมิและความชื้น</small></span><span class="notification-switch"><input type="checkbox" id="notifyHeatIndex"><span></span></span></label>
       </div>
       <div class="notification-section-label notification-system-label"><span>สถานะระบบ</span></div>
-      <label class="notification-topic-card notification-topic-wide"><span class="notification-topic-icon">📡</span><span class="notification-topic-copy"><b>สถานะอุปกรณ์</b><small>แจ้งเมื่อจุดตรวจวัด Offline และเมื่อกลับมา Online</small></span><span class="notification-switch"><input type="checkbox" id="notifyDevice"><span></span></span></label>
-      <div class="notification-footer-note"><span>ⓘ</span><p>ระบบจะไม่แจ้งทุกครั้งที่มีข้อมูลเข้า แต่จะแจ้งเมื่อสถานการณ์เปลี่ยน เพื่อป้องกันข้อความซ้ำ</p></div>
+      <div class="notification-system-grid">
+        <label class="notification-topic-card notification-topic-wide"><span class="notification-topic-icon">📡</span><span class="notification-topic-copy"><b>สถานะจุดตรวจวัด</b><small>แจ้งเมื่อ Number 1–3 Offline และเมื่อกลับมา Online</small></span><span class="notification-switch"><input type="checkbox" id="notifyDevice"><span></span></span></label>
+        <label class="notification-topic-card notification-topic-wide"><span class="notification-topic-icon">🛜</span><span class="notification-topic-copy"><b>สถานะตัวแม่ (Gateway)</b><small>แจ้งเมื่อสถานีรับข้อมูลหลัก Offline และเมื่อกลับมา Online</small></span><span class="notification-switch"><input type="checkbox" id="notifyMother"><span></span></span></label>
+      </div>
+      <div class="notification-footer-note"><span>ⓘ</span><p>ระบบจะไม่แจ้งทุกครั้งที่มีข้อมูลเข้า แต่จะแจ้งเฉพาะเมื่อสถานการณ์เปลี่ยนและเมื่อกลับสู่สถานะปกติ เพื่อป้องกันข้อความซ้ำ</p></div>
       <div class="notification-actions"><span id="notificationSaveStatus"></span><button type="button" id="saveNotificationSettings" class="notification-save-button">บันทึกการตั้งค่า</button></div>
     </div>
   </section>
@@ -1524,7 +1527,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260905-v3631"></script>
+<script defer src="app.js?v=20260906-v3632"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
