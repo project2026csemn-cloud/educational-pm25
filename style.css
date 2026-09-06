@@ -18903,3 +18903,97 @@ html body .site-header.is-authenticated #accountRoleBadge{
   position:relative!important;
   z-index:1!important;
 }
+
+
+/* =====================================================
+   V2.4 — MOBILE POLISH
+   Notification detail safe margins + Remember checkbox
+   ===================================================== */
+
+@media (max-width: 760px){
+
+  /* 1) Notification detail:
+     keep equal left/right breathing room on small and large phones */
+  .notification-detail-modal{
+    padding:
+      max(16px, env(safe-area-inset-top))
+      max(16px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left))!important;
+    box-sizing:border-box!important;
+  }
+
+  .notification-detail-shell{
+    width:100%!important;
+    max-width:560px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+    left:auto!important;
+    right:auto!important;
+    transform:none!important;
+  }
+
+  /* Prevent long notification text from forcing the card wider. */
+  .notification-detail-shell,
+  .notification-detail-shell *{
+    min-width:0;
+  }
+
+  .notification-detail-shell p,
+  .notification-detail-shell h1,
+  .notification-detail-shell h2,
+  .notification-detail-shell h3{
+    overflow-wrap:anywhere;
+  }
+
+  /* 2) Remember:
+     reset checkbox styles inherited from normal form inputs */
+  .wifi-remember-network{
+    display:flex!important;
+    align-items:flex-start!important;
+    gap:12px!important;
+    width:100%!important;
+  }
+
+  .wifi-remember-network > input[type="checkbox"]{
+    -webkit-appearance:checkbox!important;
+    appearance:auto!important;
+    flex:0 0 20px!important;
+    width:20px!important;
+    height:20px!important;
+    min-width:20px!important;
+    min-height:20px!important;
+    max-width:20px!important;
+    max-height:20px!important;
+    padding:0!important;
+    margin:2px 0 0 0!important;
+    border:0!important;
+    border-radius:4px!important;
+    box-shadow:none!important;
+    background:none!important;
+    accent-color:#0ea5e9;
+  }
+
+  .wifi-remember-network > span{
+    flex:1 1 auto!important;
+    min-width:0!important;
+  }
+
+  .wifi-remember-network > span small{
+    display:block!important;
+    overflow-wrap:anywhere;
+  }
+}
+
+/* Extra-narrow phones */
+@media (max-width: 380px){
+  .notification-detail-modal{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+
+  .wifi-remember-network{
+    gap:10px!important;
+  }
+}
