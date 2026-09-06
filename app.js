@@ -11959,6 +11959,15 @@ async function openNotificationDetailFromUrl(){
 // =====================================================
 let wifiManagementPollTimer=null;
 
+function wifiEscapeHtml(value){
+  return String(value??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
 function canManageMotherWiFi(){
   return Boolean(authUser&&authToken&&["admin","owner"].includes(String(authUser.role||"").toLowerCase()));
 }
@@ -12009,8 +12018,8 @@ function renderSavedWiFiNetworks(items,currentSSID=""){
     return `<article class="wifi-saved-item${current?" is-current":""}">
       <div class="wifi-saved-icon">${Number(n.open_network)===1?"◉":"🔒"}</div>
       <div class="wifi-saved-main">
-        <div class="wifi-saved-name">${escapeHtml(String(n.ssid||"--"))}${current?'<span>กำลังใช้งาน</span>':""}</div>
-        <small>${security} • เชื่อมต่อล่าสุด ${escapeHtml(formatWiFiDate(n.last_connected_at||n.updated_at))}</small>
+        <div class="wifi-saved-name">${wifiEscapeHtml(String(n.ssid||"--"))}${current?'<span>กำลังใช้งาน</span>':""}</div>
+        <small>${security} • เชื่อมต่อล่าสุด ${wifiEscapeHtml(formatWiFiDate(n.last_connected_at||n.updated_at))}</small>
       </div>
       <div class="wifi-saved-actions">
         ${current?'<button type="button" disabled>เชื่อมต่อแล้ว</button>':`<button type="button" data-wifi-saved-connect="${Number(n.id)}">เชื่อมต่อ</button>`}
@@ -12026,8 +12035,8 @@ function renderWiFiHistory(items){
     return;
   }
   box.innerHTML=items.map(h=>`<article class="wifi-history-item">
-    <div><strong>${escapeHtml(String(h.ssid||"--"))}</strong><small>${escapeHtml(formatWiFiDate(h.completed_at||h.created_at))}</small></div>
-    <div class="wifi-history-result ${wifiCommandClass(h.status)}"><b>${escapeHtml(wifiCommandLabel(h.status))}</b><small>${escapeHtml(String(h.message||""))}</small></div>
+    <div><strong>${wifiEscapeHtml(String(h.ssid||"--"))}</strong><small>${wifiEscapeHtml(formatWiFiDate(h.completed_at||h.created_at))}</small></div>
+    <div class="wifi-history-result ${wifiCommandClass(h.status)}"><b>${wifiEscapeHtml(wifiCommandLabel(h.status))}</b><small>${wifiEscapeHtml(String(h.message||""))}</small></div>
   </article>`).join("");
 }
 function updateWiFiSecurityUI(){
@@ -12045,8 +12054,9 @@ function updateWiFiPasswordEye(){
   const visible=input.type==="text";
   btn.setAttribute("aria-pressed",visible?"true":"false");
   btn.setAttribute("aria-label",visible?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
-  btn.querySelector(".wifi-eye-open")?.classList.toggle("hidden",visible);
-  btn.querySelector(".wifi-eye-off")?.classList.toggle("hidden",!visible);
+  // Password hidden = eye with slash, Password visible = normal eye
+  btn.querySelector(".wifi-eye-open")?.classList.toggle("hidden",!visible);
+  btn.querySelector(".wifi-eye-off")?.classList.toggle("hidden",visible);
 }
 async function loadWiFiManagementStatus(){
   if(!canManageMotherWiFi())return;
