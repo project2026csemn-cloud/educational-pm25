@@ -18734,3 +18734,39 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .notification-inbox-footer button{
   color:#67e8f9!important;
 }
+
+/* =====================================================
+   REMOTE WI-FI MANAGEMENT V1
+   ===================================================== */
+.wifi-management-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px}
+.wifi-management-modal.hidden{display:none}
+.wifi-management-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.78);backdrop-filter:blur(10px)}
+.wifi-management-shell{position:relative;width:min(720px,100%);max-height:min(88vh,820px);overflow:auto;border:1px solid rgba(34,211,238,.28);border-radius:24px;background:#0b1929;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.wifi-management-header{display:flex;justify-content:space-between;gap:20px;padding:24px 26px 18px;border-bottom:1px solid rgba(148,163,184,.14)}
+.wifi-management-header h2{margin:4px 0 4px;font-size:1.45rem}
+.wifi-management-header p{margin:0;color:#94a3b8;font-size:.9rem}
+.wifi-management-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.16em;color:#22d3ee}
+.wifi-management-close{width:38px;height:38px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:#102338;color:#e2e8f0;font-size:24px;cursor:pointer}
+.wifi-management-body{padding:22px 26px 26px;display:grid;gap:18px}
+.wifi-status-card{padding:18px;border:1px solid rgba(34,211,238,.16);border-radius:18px;background:#091827}
+.wifi-status-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}
+.wifi-status-row strong{color:#67e8f9}
+.wifi-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wifi-status-grid>div{padding:12px;border-radius:13px;background:#0e2236;border:1px solid rgba(148,163,184,.12);min-width:0}
+.wifi-status-grid small{display:block;color:#94a3b8;margin-bottom:4px}
+.wifi-status-grid b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wifi-status-note{margin:12px 0 0;color:#cbd5e1;font-size:.86rem}
+.wifi-management-form{display:grid;gap:14px}
+.wifi-management-form>label:not(.wifi-open-network){display:grid;gap:7px;font-weight:700}
+.wifi-management-form input[type=text],.wifi-management-form input[type=password]{width:100%;height:46px;border-radius:13px;border:1px solid rgba(148,163,184,.22);background:#091827;color:#eaf2f8;padding:0 13px;outline:none}
+.wifi-management-form input:focus{border-color:rgba(34,211,238,.62);box-shadow:0 0 0 3px rgba(34,211,238,.08)}
+.wifi-password-wrap{display:grid;grid-template-columns:1fr 46px;gap:8px}
+.wifi-password-wrap button{border-radius:13px;border:1px solid rgba(148,163,184,.22);background:#102338;color:#e2e8f0;cursor:pointer}
+.wifi-open-network{display:flex;align-items:center;gap:9px;color:#cbd5e1}
+.wifi-open-network input{width:18px;height:18px}
+.wifi-security-note{padding:11px 13px;border-radius:12px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.14);color:#a5f3fc;font-size:.82rem;line-height:1.55}
+.wifi-management-message{min-height:20px;font-size:.88rem;color:#cbd5e1}
+.wifi-management-message.is-error{color:#fca5a5}.wifi-management-message.is-success{color:#86efac}
+.wifi-management-submit{height:48px;border:0;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0284c7);color:white;font-weight:800;cursor:pointer}
+.wifi-management-submit:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:640px){.wifi-management-modal{padding:10px}.wifi-management-header,.wifi-management-body{padding-left:16px;padding-right:16px}.wifi-status-grid{grid-template-columns:1fr}}
