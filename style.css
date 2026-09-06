@@ -18830,3 +18830,33 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .wifi-history-item{grid-template-columns:1fr}
   .wifi-history-result{text-align:left}
 }
+
+
+/* =====================================================
+   V2.2 — FINAL WINDOW POSITION / PERMISSION UI
+   ===================================================== */
+
+/* Notification panel was visually too close to the right edge.
+   Pull it inward while keeping the bell arrow aligned. */
+@media (min-width:761px){
+  .notification-inbox{
+    right:28px!important;
+  }
+  .notification-inbox-arrow{
+    right:140px!important;
+  }
+}
+
+/* Keep full-screen management windows optically centered. */
+.admin-center,
+.notification-center-modal,
+.notification-detail-modal,
+.wifi-management-modal{
+  place-items:center!important;
+}
+
+/* Do not let large management shells visually stick to one side. */
+.admin-center-shell{
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
