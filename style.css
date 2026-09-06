@@ -18860,3 +18860,46 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin-left:auto!important;
   margin-right:auto!important;
 }
+
+
+/* =====================================================
+   V2.3 — MODAL LAYER FIX
+   Header must never cover management/account windows.
+   ===================================================== */
+
+/* Main site header stays above normal page content. */
+.site-header{
+  z-index:1300!important;
+}
+
+/* Full-screen dialogs must sit above the site header. */
+.admin-center,
+.my-account-center,
+.account-security-modal,
+.wifi-management-modal,
+.notification-center-modal,
+.notification-detail-modal,
+.auth-modal{
+  z-index:2200!important;
+}
+
+/* Their backdrops/dialog shells remain in the same stacking context. */
+.admin-center-backdrop,
+.my-account-backdrop,
+.wifi-management-backdrop,
+.notification-center-backdrop,
+.notification-detail-backdrop,
+.auth-modal-backdrop{
+  z-index:0!important;
+}
+
+.admin-center-shell,
+.my-account-shell,
+.account-security-shell,
+.wifi-management-shell,
+.notification-center-shell,
+.notification-detail-shell,
+.auth-dialog{
+  position:relative!important;
+  z-index:1!important;
+}
