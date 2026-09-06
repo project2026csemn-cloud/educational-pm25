@@ -10292,6 +10292,19 @@ function configDevice(deviceId){
 return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
 }
 
+function deviceDisplayName(deviceId){
+  const id=String(deviceId??"").trim();
+  if(!id)return "ระบบ";
+  if(id.toLowerCase()==="mother")return "สถานีรับข้อมูลหลัก";
+  const configured=(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"").trim()===id);
+  if(configured){
+    const name=String(configured.display_name||"").trim();
+    if(name)return name;
+  }
+  const m=id.match(/(?:Number\s*)?(\d+)/i);
+  return m?`จุดตรวจวัด ${m[1]}`:id;
+}
+
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
 const d=configDevice(`Number ${i}`)||{};
@@ -11598,7 +11611,7 @@ function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
 // =====================================================
 // V34.2 — NOTIFICATIONS
 // =====================================================
-const DEFAULT_NOTIFICATION_PREFS={enabled:true,dust:true,temperature:true,humidity:true,heat_index:true,device:true};
+const DEFAULT_NOTIFICATION_PREFS={enabled:true,dust:true,temperature:true,humidity:true,heat_index:true,device:true,mother:true};
 let notificationPrefs={...DEFAULT_NOTIFICATION_PREFS};
 let notificationPrefsLoadedFor=null;
 let notificationCheckBusy=false;
@@ -11606,6 +11619,9 @@ let notificationSeeded=false;
 let lastNotificationDetail=null;
 let notificationInboxItems=[];
 let notificationInboxTimer=null;
+let browserNotificationSeeded=false;
+let browserNotificationSeenIds=new Set();
+let activeNotificationDetail=null;
 
 function formatNotificationTime(value){
   const d=value?new Date(String(value).replace(" ","T")+"Z"):null;
@@ -11623,6 +11639,35 @@ function updateNotificationBadge(unread=0){
   const n=Math.max(0,Number(unread)||0);
   badge.textContent=n>9?"9+":String(n);
   badge.classList.toggle("hidden",n===0||!authUser);
+}
+
+function notificationTargetFor(item){
+  if(String(item?.event_type||"").toLowerCase()==="mother"||String(item?.device_id||"").toLowerCase()==="mother")return "system";
+  if(item?.device_id)return "monitoring";
+  return "none";
+}
+
+function showNotificationDetail(item){
+  if(!item)return;
+  activeNotificationDetail=item;
+  $("notificationDetailIcon").textContent=item.icon||"🔔";
+  $("notificationDetailTitle").textContent=item.title||"การแจ้งเตือน";
+  $("notificationDetailMessage").textContent=item.message||"";
+  $("notificationDetailDevice").textContent=item.device_id?deviceDisplayName(item.device_id):"ระบบ";
+  $("notificationDetailTime").textContent=item.created_at
+    ?new Date(String(item.created_at).replace(" ","T")+"Z").toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})
+    :(item.time?new Date(item.time).toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"--");
+
+  const action=$("notificationDetailGo");
+  const target=notificationTargetFor(item);
+  if(action){
+    action.dataset.target=target;
+    action.classList.toggle("hidden",target==="none");
+    action.textContent=target==="system"?"ดูสถานะระบบ":"ดูข้อมูลจุดตรวจวัด";
+  }
+
+  const m=$("notificationDetailModal");
+  if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
 }
 
 function renderNotificationInbox(){
@@ -11644,6 +11689,36 @@ function renderNotificationInbox(){
   root.querySelectorAll("[data-notification-id]").forEach(btn=>btn.addEventListener("click",()=>openInboxNotificationDetail(Number(btn.dataset.notificationId))));
 }
 
+function showBrowserNotificationItem(item){
+  if(!item||!("Notification" in window)||Notification.permission!=="granted")return;
+  try{
+    const n=new Notification(`${item.icon||"🔔"} ${item.title||"การแจ้งเตือน"}`,{
+      body:item.message||"",
+      tag:`pm25-notification-${Number(item.id)||"event"}`,
+      renotify:false
+    });
+    n.onclick=()=>{
+      try{window.focus();}catch(_){}
+      openNotificationById(Number(item.id),{markRead:true,fromBrowser:true});
+      n.close();
+    };
+  }catch(_){}
+}
+
+function processBrowserNotificationInbox(items){
+  const rows=Array.isArray(items)?items:[];
+  if(!browserNotificationSeeded){
+    rows.forEach(n=>browserNotificationSeenIds.add(Number(n.id)));
+    browserNotificationSeeded=true;
+    return;
+  }
+  const fresh=rows
+    .filter(n=>!n.is_read&&!browserNotificationSeenIds.has(Number(n.id)))
+    .sort((a,b)=>Number(a.id)-Number(b.id));
+  rows.forEach(n=>browserNotificationSeenIds.add(Number(n.id)));
+  fresh.slice(-3).forEach(showBrowserNotificationItem);
+}
+
 async function loadNotificationInbox({silent=false}={}){
   if(!authUser)return;
   const root=$("notificationInboxList");
@@ -11652,17 +11727,19 @@ async function loadNotificationInbox({silent=false}={}){
     const j=await apiJson(`${API.notifications}?limit=20`);
     notificationInboxItems=Array.isArray(j.notifications)?j.notifications:[];
     updateNotificationBadge(j.unread_count||0);
+    processBrowserNotificationInbox(notificationInboxItems);
     renderNotificationInbox();
   }catch(err){
     if(!silent&&root)root.innerHTML=`<div class="notification-inbox-empty"><b>โหลดการแจ้งเตือนไม่สำเร็จ</b><small>${esc(err.message||"")}</small></div>`;
   }
 }
 
-async function markNotificationRead(id=null,all=false){
+async function markNotificationRead(id=null,all=false,{reload=true}={}){
   if(!authUser)return;
   try{
-    await apiJson(API.notificationRead,{method:"POST",body:JSON.stringify(all?{all:true}:{id})});
-    await loadNotificationInbox({silent:true});
+    const j=await apiJson(API.notificationRead,{method:"POST",body:JSON.stringify(all?{all:true}:{id})});
+    updateNotificationBadge(j.unread_count||0);
+    if(reload)await loadNotificationInbox({silent:true});
   }catch(_){}
 }
 
@@ -11683,16 +11760,29 @@ async function openNotificationInbox(){
   await loadNotificationInbox();
 }
 
+async function openNotificationById(id,{markRead=true,fromBrowser=false}={}){
+  if(!authUser||!Number(id))return false;
+  let item=notificationInboxItems.find(x=>Number(x.id)===Number(id))||null;
+  try{
+    if(!item){
+      const j=await apiJson(`${API.notifications}?id=${encodeURIComponent(Number(id))}`);
+      item=Array.isArray(j.notifications)?j.notifications[0]||null:null;
+    }
+    if(!item)return false;
+    if(markRead&&!item.is_read)await markNotificationRead(item.id,false,{reload:false});
+    item.is_read=true;
+    const local=notificationInboxItems.find(x=>Number(x.id)===Number(item.id));
+    if(local)local.is_read=true;
+    closeNotificationInbox();
+    renderNotificationInbox();
+    showNotificationDetail(item);
+    if(fromBrowser)history.replaceState({},"",location.pathname+location.hash);
+    return true;
+  }catch(_){return false;}
+}
+
 async function openInboxNotificationDetail(id){
-  const item=notificationInboxItems.find(x=>Number(x.id)===Number(id));if(!item)return;
-  await markNotificationRead(item.id,false);
-  closeNotificationInbox();
-  $("notificationDetailIcon").textContent=item.icon||"🔔";
-  $("notificationDetailTitle").textContent=item.title||"การแจ้งเตือน";
-  $("notificationDetailMessage").textContent=item.message||"";
-  $("notificationDetailDevice").textContent=item.device_id?deviceDisplayName(item.device_id):"ระบบ";
-  $("notificationDetailTime").textContent=item.created_at?new Date(String(item.created_at).replace(" ","T")+"Z").toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"--";
-  const m=$("notificationDetailModal");if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
+  await openNotificationById(id,{markRead:true});
 }
 
 function startNotificationInboxPolling(){
@@ -11719,7 +11809,7 @@ async function ensureNotificationPreferences(){
 }
 
 function syncNotificationSettingsUI(){
-  const map={notificationMaster:"enabled",notifyDust:"dust",notifyTemperature:"temperature",notifyHumidity:"humidity",notifyHeatIndex:"heat_index",notifyDevice:"device"};
+  const map={notificationMaster:"enabled",notifyDust:"dust",notifyTemperature:"temperature",notifyHumidity:"humidity",notifyHeatIndex:"heat_index",notifyDevice:"device",notifyMother:"mother"};
   Object.entries(map).forEach(([id,key])=>{if($(id))$(id).checked=notificationPrefs[key]!==false;});
   updateNotificationMasterUI();
   updateNotificationPermissionUI();
@@ -11729,7 +11819,7 @@ function updateNotificationMasterUI(){
   const enabled=!!$("notificationMaster")?.checked;
   const body=$("notificationSettingsModal");
   body?.classList.toggle("notifications-paused",!enabled);
-  ["notifyDust","notifyTemperature","notifyHumidity","notifyHeatIndex","notifyDevice"].forEach(id=>{
+  ["notifyDust","notifyTemperature","notifyHumidity","notifyHeatIndex","notifyDevice","notifyMother"].forEach(id=>{
     const input=$(id);
     if(input)input.disabled=!enabled;
   });
@@ -11793,7 +11883,7 @@ async function requestBrowserNotificationPermission(){
 
 async function saveNotificationPreferences(){
   const status=$("notificationSaveStatus");
-  const next={enabled:!!$("notificationMaster")?.checked,dust:!!$("notifyDust")?.checked,temperature:!!$("notifyTemperature")?.checked,humidity:!!$("notifyHumidity")?.checked,heat_index:!!$("notifyHeatIndex")?.checked,device:!!$("notifyDevice")?.checked};
+  const next={enabled:!!$("notificationMaster")?.checked,dust:!!$("notifyDust")?.checked,temperature:!!$("notifyTemperature")?.checked,humidity:!!$("notifyHumidity")?.checked,heat_index:!!$("notifyHeatIndex")?.checked,device:!!$("notifyDevice")?.checked,mother:!!$("notifyMother")?.checked};
   if(status)status.textContent="กำลังบันทึก...";
   try{const j=await apiJson(API.notificationPreferences,{method:"POST",body:JSON.stringify({preferences:next})});notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...j.preferences};notificationPrefsLoadedFor=authUser?.id||null;if(status)status.textContent="บันทึกแล้ว ✓";setTimeout(()=>{if(status)status.textContent="";},1800);}
   catch(err){if(status)status.textContent=err.message;}
@@ -11821,12 +11911,9 @@ function notificationSituationFor(node){
 }
 
 async function showSituationNotification(evt){
-  if(Notification.permission!=="granted")return;
+  // V36.32: Browser notifications are emitted from the authenticated D1 inbox
+  // so every popup is tied to a real notification ID and opens the correct event.
   lastNotificationDetail={...evt,time:new Date().toISOString()};
-  try{localStorage.setItem("pm25-last-notification",JSON.stringify(lastNotificationDetail));}catch(_){}
-  const reg=await registerNotificationServiceWorker();
-  const url=`${location.origin}${location.pathname}?notification=1&device=${encodeURIComponent(evt.device)}&type=${encodeURIComponent(evt.type)}`;
-  if(reg){await reg.showNotification(`${evt.icon} ${evt.title}`,{body:evt.message,tag:`pm25-${evt.device}-${evt.type}`,renotify:true,data:{url,device:evt.device,type:evt.type}});}
 }
 
 async function checkSituationNotifications(){
@@ -11848,12 +11935,17 @@ async function checkSituationNotifications(){
   }finally{notificationCheckBusy=false;}
 }
 
-function openNotificationDetailFromUrl(){
-  const q=new URLSearchParams(location.search);if(q.get("notification")!=="1")return;
+async function openNotificationDetailFromUrl(){
+  const q=new URLSearchParams(location.search);
+  const id=Number(q.get("notification_id")||0);
+  if(id&&authUser){
+    await openNotificationById(id,{markRead:true,fromBrowser:true});
+    return;
+  }
+  if(q.get("notification")!=="1")return;
   let d=null;try{d=JSON.parse(localStorage.getItem("pm25-last-notification")||"null");}catch(_){}
   if(!d)return;
-  $("notificationDetailIcon").textContent=d.icon||"🔔";$("notificationDetailTitle").textContent=d.title||"การแจ้งเตือน";$("notificationDetailMessage").textContent=d.message||"";$("notificationDetailDevice").textContent=d.device||"--";$("notificationDetailTime").textContent=d.time?new Date(d.time).toLocaleString("th-TH"):"ล่าสุด";
-  const m=$("notificationDetailModal");if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
+  showNotificationDetail({icon:d.icon,title:d.title,message:d.message,device_id:d.device,created_at:null,time:d.time,event_type:d.type});
   history.replaceState({},"",location.pathname+location.hash);
 }
 
@@ -11921,8 +12013,13 @@ function openNotificationDetailFromUrl(){
     $("requestNotificationPermission")?.addEventListener("click",requestBrowserNotificationPermission);
     $("notificationMaster")?.addEventListener("change",updateNotificationMasterUI);
     $("saveNotificationSettings")?.addEventListener("click",saveNotificationPreferences);
-    $("notificationDetailGo")?.addEventListener("click",()=>{closeNotificationDetail();document.querySelector('[data-go-page="monitoring"]')?.click();});
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("notificationDetailGo")?.addEventListener("click",()=>{
+      const target=$("notificationDetailGo")?.dataset.target||"monitoring";
+      closeNotificationDetail();
+      if(target==="system")document.querySelector('[data-go-page="overview"]')?.click();
+      else if(target==="monitoring")document.querySelector('[data-go-page="monitoring"]')?.click();
+    });
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
