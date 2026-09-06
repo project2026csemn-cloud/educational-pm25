@@ -10780,12 +10780,13 @@ const PERMISSION_DEFINITIONS=[
   {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
   {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
   {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
+  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
   {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
 ];
 
 const ROLE_PERMISSION_DEFAULTS={
-  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_users_view:false},
-  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_users_view:true},
+  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
+  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
   owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
 };
 
@@ -10879,7 +10880,7 @@ function updateAccountUI(){
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     const canManageContent=["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key));
     const canManageUsers=hasPermission("manage_users_view");
-    const canManageWiFi=["admin","owner"].includes(String(authUser?.role||"").toLowerCase());
+    const canManageWiFi=hasPermission("manage_mother_wifi");
 
     contentBtn?.classList.toggle("hidden",!canManageContent);
     usersBtn?.classList.toggle("hidden",!canManageUsers);
@@ -11665,8 +11666,9 @@ function showNotificationDetail(item){
   const target=notificationTargetFor(item);
   if(action){
     action.dataset.target=target;
-    action.classList.toggle("hidden",target==="none");
-    action.textContent=target==="system"?"ดูสถานะระบบ":"ดูข้อมูลจุดตรวจวัด";
+    // Mother/Gateway notification is informational only — no extra system-status button.
+    action.classList.toggle("hidden",target==="none"||target==="system");
+    action.textContent="ดูข้อมูลจุดตรวจวัด";
   }
 
   const m=$("notificationDetailModal");
@@ -11969,7 +11971,7 @@ function wifiEscapeHtml(value){
 }
 
 function canManageMotherWiFi(){
-  return Boolean(authUser&&authToken&&["admin","owner"].includes(String(authUser.role||"").toLowerCase()));
+  return Boolean(authUser&&authToken&&hasPermission("manage_mother_wifi"));
 }
 function wifiCommandLabel(status){
   const map={
@@ -12081,7 +12083,7 @@ function closeWiFiManagement(){
   if(wifiManagementPollTimer){clearInterval(wifiManagementPollTimer);wifiManagementPollTimer=null;}
 }
 async function openWiFiManagement(){
-  if(!canManageMotherWiFi()){alert("เฉพาะ Admin และ Owner เท่านั้นที่สามารถจัดการ Wi-Fi ตัวแม่ได้");return;}
+  if(!canManageMotherWiFi()){alert("บัญชีนี้ไม่มีสิทธิ์จัดการ Wi-Fi ตัวแม่");return;}
   $("accountDropdown")?.classList.add("hidden");
   const m=$("wifiManagementModal");if(!m)return;
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
