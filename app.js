@@ -29,7 +29,8 @@ manageUsers:`${BASE}/api/manage/users`,
 manageUsersUpdate:`${BASE}/api/manage/users/update`,
 notificationPreferences:`${BASE}/api/auth/notification_preferences`,
 notifications:`${BASE}/api/auth/notifications`,
-notificationRead:`${BASE}/api/auth/notifications/read`
+notificationRead:`${BASE}/api/auth/notifications/read`,
+wifiManage:`${BASE}/api/manage/wifi`
 };
 
 const TOTAL_NODES=3;
@@ -10854,7 +10855,7 @@ function updateMemberPermissionUI(){
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
   const menu=$("accountDropdown");
-  const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton");
+  const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton"),wifiBtn=$("openWiFiManagementButton");
   const header=document.querySelector(".site-header");
   if(!button||!text)return;
 
@@ -10878,12 +10879,14 @@ function updateAccountUI(){
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     const canManageContent=["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key));
     const canManageUsers=hasPermission("manage_users_view");
+    const canManageWiFi=["admin","owner"].includes(String(authUser?.role||"").toLowerCase());
 
     contentBtn?.classList.toggle("hidden",!canManageContent);
     usersBtn?.classList.toggle("hidden",!canManageUsers);
+    wifiBtn?.classList.toggle("hidden",!canManageWiFi);
 
     const managementSection=document.querySelector(".account-management-section");
-    managementSection?.classList.toggle("hidden",!(canManageContent||canManageUsers));
+    managementSection?.classList.toggle("hidden",!(canManageContent||canManageUsers||canManageWiFi));
 
     syncMyAccountUI();
   }else{
@@ -11949,8 +11952,82 @@ async function openNotificationDetailFromUrl(){
   history.replaceState({},"",location.pathname+location.hash);
 }
 
+
+
+// =====================================================
+// REMOTE WI-FI MANAGEMENT V1
+// =====================================================
+let wifiManagementPollTimer=null;
+
+function canManageMotherWiFi(){
+  return Boolean(authUser&&authToken&&["admin","owner"].includes(String(authUser.role||"").toLowerCase()));
+}
+function wifiCommandLabel(status){
+  const map={pending:"รอตัวแม่รับคำสั่ง",received:"ตัวแม่รับคำสั่งแล้ว",applying:"กำลังเปลี่ยน Wi-Fi",connected:"เชื่อมต่อสำเร็จ",failed:"เปลี่ยนไม่สำเร็จ",rolled_back:"Rollback สำเร็จ",cancelled:"ยกเลิกแล้ว"};
+  return map[String(status||"").toLowerCase()]||"--";
+}
+function setWiFiManagementMessage(text="",type=""){
+  const el=$("wifiManagementMessage");if(!el)return;
+  el.textContent=text;el.classList.toggle("is-error",type==="error");el.classList.toggle("is-success",type==="success");
+}
+async function loadWiFiManagementStatus(){
+  if(!canManageMotherWiFi())return;
+  try{
+    const j=await apiJson(API.wifiManage);
+    const s=j.status||{},cmd=j.command||null;
+    $("wifiMotherStatus").textContent=String(s.status||"offline").toLowerCase()==="online"?"🟢 Online":"🔴 Offline";
+    $("wifiCurrentSSID").textContent=s.ssid||"--";
+    $("wifiCurrentIP").textContent=s.ip||"--";
+    $("wifiCurrentChannel").textContent=s.channel??"--";
+    $("wifiCommandStatus").textContent=cmd?wifiCommandLabel(cmd.status):"--";
+    $("wifiCommandMessage").textContent=cmd?(cmd.message||`คำสั่ง #${cmd.id} • ${wifiCommandLabel(cmd.status)}`):"ยังไม่มีคำสั่งเปลี่ยน Wi-Fi";
+  }catch(err){setWiFiManagementMessage(err.message||"โหลดสถานะ Wi-Fi ไม่สำเร็จ","error");}
+}
+function closeWiFiManagement(){
+  $("wifiManagementModal")?.classList.add("hidden");
+  $("wifiManagementModal")?.setAttribute("aria-hidden","true");
+  if(wifiManagementPollTimer){clearInterval(wifiManagementPollTimer);wifiManagementPollTimer=null;}
+}
+async function openWiFiManagement(){
+  if(!canManageMotherWiFi()){alert("เฉพาะ Admin และ Owner เท่านั้นที่สามารถเปลี่ยน Wi-Fi ตัวแม่ได้");return;}
+  $("accountDropdown")?.classList.add("hidden");
+  const m=$("wifiManagementModal");if(!m)return;
+  m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
+  setWiFiManagementMessage("");
+  await loadWiFiManagementStatus();
+  if(wifiManagementPollTimer)clearInterval(wifiManagementPollTimer);
+  wifiManagementPollTimer=setInterval(loadWiFiManagementStatus,5000);
+}
+async function submitRemoteWiFiChange(e){
+  e.preventDefault();
+  if(!canManageMotherWiFi())return;
+  const ssid=String($("wifiNewSSID")?.value||"").trim();
+  const openNetwork=Boolean($("wifiOpenNetwork")?.checked);
+  const password=openNetwork?"":String($("wifiNewPassword")?.value||"");
+  if(!ssid){setWiFiManagementMessage("กรุณากรอก SSID","error");return;}
+  if(!openNetwork&&password.length<8){setWiFiManagementMessage("Wi-Fi ที่มีรหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร","error");return;}
+  if(!confirm(`ยืนยันเปลี่ยน Wi-Fi ของตัวแม่เป็น "${ssid}" ?\n\nหากเชื่อมต่อไม่สำเร็จ ระบบจะพยายาม Rollback ไป Known-Good เดิม`))return;
+  const btn=$("wifiManagementSubmit");if(btn)btn.disabled=true;
+  setWiFiManagementMessage("กำลังส่งคำสั่งไปยังตัวแม่...");
+  try{
+    const j=await apiJson(API.wifiManage,{method:"POST",body:JSON.stringify({ssid,password,open_network:openNetwork})});
+    setWiFiManagementMessage(j.message||"สร้างคำสั่งเปลี่ยน Wi-Fi แล้ว","success");
+    if($("wifiNewPassword"))$("wifiNewPassword").value="";
+    await loadWiFiManagementStatus();
+  }catch(err){setWiFiManagementMessage(err.message||"ส่งคำสั่งไม่สำเร็จ","error");}
+  finally{if(btn)btn.disabled=false;}
+}
+function setupRemoteWiFiManagement(){
+  $("openWiFiManagementButton")?.addEventListener("click",openWiFiManagement);
+  document.querySelectorAll("[data-wifi-management-close]").forEach(x=>x.addEventListener("click",closeWiFiManagement));
+  $("wifiManagementForm")?.addEventListener("submit",submitRemoteWiFiChange);
+  $("wifiOpenNetwork")?.addEventListener("change",e=>{const p=$("wifiNewPassword");if(p){p.disabled=e.target.checked;if(e.target.checked)p.value="";}});
+  $("wifiPasswordToggle")?.addEventListener("click",()=>{const p=$("wifiNewPassword");if(!p)return;p.type=p.type==="password"?"text":"password";});
+}
+
 (function setupAuthCmsV31(){
   const run=async()=>{
+    setupRemoteWiFiManagement();
     await restoreAuthSession();
     if(authUser){ensureNotificationPreferences();startNotificationInboxPolling();}
     setTimeout(openNotificationDetailFromUrl,150);
