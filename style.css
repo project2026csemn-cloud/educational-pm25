@@ -18630,3 +18630,107 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .notification-detail-action.hidden{
   display:none!important;
 }
+
+/* =====================================================
+   V36.33 — HEADER POPOVER LAYER / NOTIFICATION CONTRAST FIX
+   ===================================================== */
+
+/*
+ * V36.31 used paint containment on the header to reduce repaint/CLS work.
+ * Paint containment clips absolutely positioned children, including the
+ * account dropdown. Keep layout containment, but allow popovers to escape.
+ */
+.site-header{
+  contain:layout style!important;
+  overflow:visible!important;
+}
+
+.header-account-zone,
+.header-profile-stack{
+  overflow:visible!important;
+}
+
+/* Account menu must float above the header/nav without changing layout. */
+.account-dropdown{
+  z-index:1700!important;
+}
+
+/*
+ * The notification inbox sits outside <header>, so it must be above the
+ * header stacking layer. Previously the header (z-index 1300) covered the
+ * inbox header, which made NOTIFICATIONS / การแจ้งเตือน look faded.
+ */
+.notification-inbox{
+  z-index:1800!important;
+  background:#071624!important;
+  border-color:rgba(71,85,105,.95)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.62)!important;
+  backdrop-filter:blur(20px)!important;
+  -webkit-backdrop-filter:blur(20px)!important;
+}
+
+.notification-inbox-head{
+  background:linear-gradient(180deg,rgba(10,31,50,.99),rgba(7,22,36,.99))!important;
+  border-bottom-color:rgba(71,85,105,.72)!important;
+}
+
+.notification-inbox-head span{
+  color:#22d3ee!important;
+  opacity:1!important;
+}
+
+.notification-inbox-head h3{
+  color:#f8fafc!important;
+  opacity:1!important;
+}
+
+.notification-inbox-head p{
+  color:#94a3b8!important;
+  opacity:1!important;
+}
+
+.notification-mark-read{
+  color:#67e8f9!important;
+  opacity:1!important;
+}
+
+.notification-inbox-list{
+  background:#061522!important;
+}
+
+.notification-inbox-item{
+  border-bottom-color:rgba(51,65,85,.82)!important;
+}
+
+.notification-inbox-item:hover{
+  background:rgba(14,116,144,.14)!important;
+}
+
+.notification-inbox-item.is-unread{
+  background:rgba(8,145,178,.11)!important;
+}
+
+.notification-inbox-item-copy b{
+  color:#f8fafc!important;
+}
+
+.notification-inbox-item-copy>span{
+  color:#a9b8ca!important;
+}
+
+.notification-inbox-item-copy small{
+  color:#7f91a6!important;
+}
+
+.notification-inbox-footer{
+  background:#04111d!important;
+  border-top:1px solid rgba(51,65,85,.55)!important;
+}
+
+.notification-inbox-footer span{
+  color:#71839a!important;
+}
+
+.notification-inbox-footer button{
+  color:#67e8f9!important;
+}
