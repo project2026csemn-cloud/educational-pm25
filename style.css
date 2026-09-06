@@ -18770,3 +18770,63 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .wifi-management-submit{height:48px;border:0;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0284c7);color:white;font-weight:800;cursor:pointer}
 .wifi-management-submit:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:640px){.wifi-management-modal{padding:10px}.wifi-management-header,.wifi-management-body{padding-left:16px;padding-right:16px}.wifi-status-grid{grid-template-columns:1fr}}
+
+
+/* =====================================================
+   REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
+   ===================================================== */
+.wifi-management-shell{max-width:680px}
+.wifi-form-title{display:flex;flex-direction:column;gap:3px;padding-bottom:2px}
+.wifi-form-title strong{font-size:15px;color:#eef8ff}
+.wifi-form-title span,.wifi-section-heading small{font-size:12px;color:#7f9db4}
+.wifi-password-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;font-weight:700;color:#eef8ff}
+.wifi-security-choice{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(88,160,196,.25);border-radius:12px;background:rgba(5,21,34,.56)}
+.wifi-security-choice label{position:relative;margin:0;cursor:pointer}
+.wifi-security-choice input{position:absolute;opacity:0;pointer-events:none}
+.wifi-security-choice span{display:block;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#87a8bd;transition:.18s ease}
+.wifi-security-choice input:checked+span{background:rgba(14,165,233,.18);box-shadow:inset 0 0 0 1px rgba(56,189,248,.35);color:#75dcff}
+.wifi-password-toggle{display:grid!important;place-items:center}
+.wifi-eye-icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wifi-password-wrap.hidden{display:none!important}
+.wifi-remember-network{display:flex!important;align-items:flex-start!important;gap:10px!important;padding:10px 0!important;cursor:pointer}
+.wifi-remember-network>input{width:18px!important;height:18px!important;margin-top:2px;accent-color:#0ea5e9}
+.wifi-remember-network>span{display:flex;flex-direction:column;gap:2px}
+.wifi-remember-network b{font-size:13px;color:#eef8ff}
+.wifi-remember-network small{font-size:11px;line-height:1.45;color:#7f9db4}
+.wifi-saved-section,.wifi-history-section{display:flex;flex-direction:column;gap:10px}
+.wifi-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wifi-section-heading>div{display:flex;flex-direction:column;gap:2px}
+.wifi-section-heading span{font-size:14px;font-weight:800;color:#e9f7ff}
+.wifi-saved-count{display:grid!important;place-items:center;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:rgba(14,165,233,.12);border:1px solid rgba(56,189,248,.22);color:#65d7ff!important}
+.wifi-saved-list,.wifi-history-list{display:flex;flex-direction:column;gap:8px}
+.wifi-saved-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 12px;border:1px solid rgba(86,145,177,.2);border-radius:13px;background:rgba(9,31,48,.7)}
+.wifi-saved-item.is-current{border-color:rgba(52,211,153,.38);background:rgba(16,185,129,.06)}
+.wifi-saved-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(14,165,233,.09);font-size:15px}
+.wifi-saved-main{min-width:0}
+.wifi-saved-name{display:flex;align-items:center;gap:7px;min-width:0;font-weight:800;color:#f2f8fb;overflow:hidden;text-overflow:ellipsis}
+.wifi-saved-name>span{flex:none;padding:2px 6px;border-radius:999px;background:rgba(16,185,129,.12);color:#6ee7b7;font-size:9px;font-weight:800}
+.wifi-saved-main small{display:block;margin-top:3px;color:#7797ac;font-size:10px}
+.wifi-saved-actions{display:flex;gap:6px}
+.wifi-saved-actions button{border:1px solid rgba(71,172,218,.25);border-radius:9px;background:rgba(14,165,233,.09);color:#79dcff;font-size:11px;font-weight:800;padding:7px 9px;cursor:pointer}
+.wifi-saved-actions button:disabled{opacity:.55;cursor:default}
+.wifi-saved-actions .is-forget{background:transparent;color:#9cb2c1;border-color:rgba(148,163,184,.16)}
+.wifi-empty-state{padding:14px;border:1px dashed rgba(104,153,179,.22);border-radius:12px;text-align:center;color:#6e8ca0;font-size:12px}
+.wifi-history-item{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.8fr);gap:10px;padding:10px 12px;border-bottom:1px solid rgba(88,130,154,.13)}
+.wifi-history-item>div{display:flex;flex-direction:column;gap:3px}
+.wifi-history-item strong{font-size:12px;color:#e8f4fa}
+.wifi-history-item small{font-size:10px;color:#718ea0;line-height:1.35}
+.wifi-history-result{text-align:right}
+.wifi-history-result b{font-size:11px}
+.wifi-history-result.is-success b{color:#63e6b0}
+.wifi-history-result.is-warning b{color:#facc6b}
+.wifi-history-result.is-error b{color:#fb7185}
+.wifi-history-result.is-pending b{color:#6dd8ff}
+@media(max-width:640px){
+  .wifi-password-heading{align-items:flex-start;flex-direction:column}
+  .wifi-security-choice{width:100%}
+  .wifi-security-choice label{flex:1;text-align:center}
+  .wifi-saved-item{grid-template-columns:34px minmax(0,1fr)}
+  .wifi-saved-actions{grid-column:1/-1;justify-content:flex-end}
+  .wifi-history-item{grid-template-columns:1fr}
+  .wifi-history-result{text-align:left}
+}
