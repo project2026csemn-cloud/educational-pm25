@@ -18604,3 +18604,29 @@ html body .site-header.is-authenticated #accountRoleBadge{
     contain-intrinsic-size:auto 220px;
   }
 }
+
+/* =====================================================
+   V36.32 — PROFILE DROPDOWN + NOTIFICATION POLISH
+   ===================================================== */
+.site-header,
+.header-account-zone,
+.header-profile-stack{
+  overflow:visible!important;
+}
+.site-header{
+  position:relative!important;
+  z-index:1300!important;
+}
+.header-account-zone{
+  z-index:1310!important;
+}
+.account-dropdown{
+  z-index:1400!important;
+}
+.notification-system-grid{
+  display:grid;
+  gap:10px;
+}
+.notification-detail-action.hidden{
+  display:none!important;
+}
