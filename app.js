@@ -9589,16 +9589,25 @@ historyLoading=false;
 
 function activateAISection(){
 
+// =====================================================
+// V2.6 — AI AUTO LOAD + FORECAST CHART VIEWER
+// =====================================================
+// Forecast ต้องเปิด Chart Viewer ได้ แม้ผู้ใช้ยังไม่เคยเข้าหน้า History
+if(!chartInteractiveViewerReady){
+  setupChartZoomViewer();
+}
+
 if(aiSectionActivated){
-  if(authUser&&authToken&&!aiPayload&&!aiLoading)loadAI(false);
-  if(authUser&&authToken&&!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
+  if(!aiPayload&&!aiLoading)loadAI(false);
+  if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
   return;
 }
 
 aiSectionActivated=true;
 
-loadAI(false);          // ถ้าไม่มีสิทธิ์ ฟังก์ชันจะแสดงกล่องล็อกแทน
-loadAIForecast(false);  // และจะไม่เรียก API
+// โหลดผลล่าสุด/Cache อัตโนมัติ ไม่ต้องกด “วิเคราะห์ใหม่”
+loadAI(false);
+loadAIForecast(false);
 
 }
 
@@ -9901,6 +9910,12 @@ const scheduleStartup=(fn,delay)=>{
 scheduleStartup(bindEvents,40);
 scheduleStartup(bindHelp,120);
 scheduleStartup(setupDeferredSections,220);
+
+// V2.6: preload AI/Forecast หลังงานหลักของหน้าเสร็จแล้ว
+// ไม่แย่งช่วง initial render/Lighthouse แต่ผู้ใช้ไม่ต้องเข้า Analysis ก่อน
+scheduleStartup(()=>{
+  if(!aiSectionActivated)activateAISection();
+},2200);
 
 // =====================================================
 // CLOCK
