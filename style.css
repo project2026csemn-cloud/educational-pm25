@@ -18997,3 +18997,265 @@ html body .site-header.is-authenticated #accountRoleBadge{
     gap:10px!important;
   }
 }
+
+
+/* =====================================================
+   V2.5 — RESPONSIVE DEEP AUDIT HARDENING
+   CSS-only. No application logic / API / permissions changed.
+   ===================================================== */
+
+/* Core anti-stretch rules for flexible children. */
+.site-header *,
+.account-dropdown *,
+.notification-inbox *,
+.notification-settings-shell *,
+.notification-detail-shell *,
+.my-account-shell *,
+.account-security-shell *,
+.admin-center-shell *,
+.wifi-management-shell *,
+.auth-dialog *,
+.export-modal-dialog *,
+.history-range-modal-dialog *{
+  min-width:0;
+  box-sizing:border-box;
+}
+
+/* Long values (SSID, email, status messages, Thai/English labels)
+   must wrap instead of widening a card. */
+.wifi-status-card b,
+.wifi-status-note,
+.wifi-saved-name,
+.wifi-saved-main small,
+.wifi-history-item,
+.notification-inbox-item,
+.notification-detail-shell,
+.account-profile-copy,
+.my-account-details,
+.admin-user-name,
+.admin-user-email,
+.admin-field,
+.export-modal-dialog,
+.history-range-modal-dialog{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* Keep wide tables inside their own scroll area, not the whole page. */
+.export-table-wrap,
+.export-preview-table-wrap{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* =====================================================
+   TABLET + MOBILE
+   ===================================================== */
+@media (max-width:900px){
+
+  /* Every full-screen modal gets a predictable safe gutter. */
+  .admin-center,
+  .my-account-center,
+  .notification-center-modal,
+  .notification-detail-modal,
+  .wifi-management-modal,
+  .account-security-modal,
+  .auth-modal,
+  .export-modal,
+  .history-range-modal{
+    box-sizing:border-box!important;
+    padding-left:max(12px,env(safe-area-inset-left))!important;
+    padding-right:max(12px,env(safe-area-inset-right))!important;
+  }
+
+  /* Shells can never become wider than the viewport. */
+  .admin-center-shell,
+  .my-account-shell,
+  .notification-settings-shell,
+  .notification-detail-shell,
+  .wifi-management-shell,
+  .account-security-shell,
+  .auth-dialog,
+  .export-modal-dialog,
+  .history-range-modal-dialog{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Form controls must shrink with their parent. */
+  .admin-center-shell input,
+  .admin-center-shell select,
+  .admin-center-shell textarea,
+  .my-account-shell input,
+  .my-account-shell select,
+  .account-security-shell input,
+  .wifi-management-shell input,
+  .wifi-management-shell select,
+  .wifi-management-shell textarea,
+  .auth-dialog input,
+  .auth-dialog select,
+  .export-modal-dialog input,
+  .export-modal-dialog select,
+  .history-range-modal-dialog input,
+  .history-range-modal-dialog select{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Buttons/actions can wrap instead of pushing the parent wider. */
+  .wifi-saved-actions,
+  .notification-actions,
+  .account-security-form footer,
+  .history-range-footer-actions,
+  .export-modal-footer,
+  .admin-user-actions{
+    flex-wrap:wrap!important;
+    min-width:0!important;
+  }
+
+  /* Notification dropdown: keep a real gutter on tablets/small laptops. */
+  .notification-inbox{
+    max-width:calc(100vw - 24px)!important;
+  }
+}
+
+/* =====================================================
+   PHONES
+   ===================================================== */
+@media (max-width:760px){
+
+  /* Account menu / notification inbox stay inside both screen edges. */
+  .account-dropdown{
+    max-width:calc(100vw - 24px)!important;
+  }
+
+  .notification-inbox{
+    position:fixed!important;
+    left:max(12px,env(safe-area-inset-left))!important;
+    right:max(12px,env(safe-area-inset-right))!important;
+    top:max(76px,calc(env(safe-area-inset-top) + 64px))!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+
+  /* An arrow tied to the desktop bell position is misleading on phone. */
+  .notification-inbox-arrow{
+    display:none!important;
+  }
+
+  /* Wi-Fi saved network rows and history never force horizontal scroll. */
+  .wifi-saved-item,
+  .wifi-history-item{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  .wifi-saved-actions{
+    width:100%!important;
+    justify-content:flex-end!important;
+  }
+
+  .wifi-saved-actions button{
+    max-width:100%!important;
+    white-space:normal!important;
+  }
+
+  /* Security selector stays as two equal choices even on narrow phones. */
+  .wifi-security-choice{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    width:100%!important;
+  }
+
+  .wifi-security-choice label,
+  .wifi-security-choice span{
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  /* Header/modal titles can wrap, close button retains its own space. */
+  .wifi-management-header,
+  .notification-settings-header,
+  .my-account-header,
+  .admin-center-header,
+  .account-security-header{
+    min-width:0!important;
+  }
+
+  .wifi-management-header>div,
+  .notification-title-wrap,
+  .my-account-header-copy,
+  .admin-center-header-copy{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+
+  /* Avoid iOS/Android zoom and clipped native date/select controls. */
+  .wifi-management-shell input,
+  .wifi-management-shell select,
+  .auth-dialog input,
+  .auth-dialog select,
+  .admin-center-shell input,
+  .admin-center-shell select,
+  .history-range-modal-dialog input,
+  .history-range-modal-dialog select,
+  .export-modal-dialog input,
+  .export-modal-dialog select{
+    font-size:max(16px,1em);
+  }
+
+  /* Tables remain horizontally scrollable inside the modal only. */
+  .export-table-wrap,
+  .export-preview-table-wrap{
+    overflow-x:auto!important;
+    overscroll-behavior-x:contain;
+  }
+}
+
+/* =====================================================
+   EXTRA-NARROW PHONES / FOLDS
+   ===================================================== */
+@media (max-width:380px){
+
+  .admin-center,
+  .my-account-center,
+  .notification-center-modal,
+  .notification-detail-modal,
+  .wifi-management-modal,
+  .account-security-modal,
+  .auth-modal,
+  .export-modal,
+  .history-range-modal{
+    padding-left:max(8px,env(safe-area-inset-left))!important;
+    padding-right:max(8px,env(safe-area-inset-right))!important;
+  }
+
+  .notification-inbox{
+    left:max(8px,env(safe-area-inset-left))!important;
+    right:max(8px,env(safe-area-inset-right))!important;
+  }
+
+  .wifi-management-header,
+  .wifi-management-body,
+  .notification-settings-body,
+  .my-account-body,
+  .admin-main{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+
+  .wifi-saved-actions{
+    justify-content:stretch!important;
+  }
+
+  .wifi-saved-actions button{
+    flex:1 1 0!important;
+  }
+}
