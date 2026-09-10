@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260909-v2-6" rel="stylesheet"/>
+<link href="style.css?v=20260910-v2-9" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -175,38 +175,49 @@
   </div>
 </nav>
 
-<div class="site-announcement-wrap hidden" id="siteAnnouncementWrap"><div class="site-announcement is-info" id="siteAnnouncement"><span class="site-announcement-icon" id="siteAnnouncementIcon">ℹ</span><div><strong id="siteAnnouncementTitle">ประกาศจากระบบ</strong><p id="siteAnnouncementMessage"></p></div></div></div>
+<div class="site-announcement-wrap hidden" id="siteAnnouncementWrap">
+  <div class="site-announcement is-info" id="siteAnnouncement">
+    <span class="site-announcement-icon" id="siteAnnouncementIcon">ℹ</span>
+    <div class="site-announcement-content">
+      <div class="site-announcement-meta"><span class="site-announcement-label">ประกาศ</span><span class="site-announcement-source">จากสถานีตรวจวัดคุณภาพอากาศ</span></div>
+      <strong id="siteAnnouncementTitle">ประกาศจากระบบ</strong>
+      <p id="siteAnnouncementMessage"></p>
+    </div>
+  </div>
+</div>
 
 <main class="dashboard-pages" id="dashboardPages">
 
 <section class="dashboard-page active" id="page-overview" data-dashboard-page-panel="overview">
-  <div class="overview-hero glass card">
+  <div class="overview-hero glass card overview-people-hero">
+    <div class="overview-face-wrap"><div class="overview-face" id="overviewFace">🙂</div></div>
     <div class="overview-hero-copy">
-      <div class="overview-eyebrow">AIR QUALITY OVERVIEW</div>
-      <div class="overview-title-row">
-        <div>
-          <div class="section-title-with-help overview-title-help">
-            <h1 class="overview-title">ภาพรวมคุณภาพอากาศ</h1>
-            <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
-          </div>
-          <p class="overview-subtitle">สรุปสถานการณ์ล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</p>
-        </div>
-        <div class="overview-quality-badge is-waiting" id="overviewQualityBadge">รอข้อมูล</div>
+      <div class="overview-eyebrow">AREA AIR QUALITY</div>
+      <div class="section-title-with-help overview-title-help">
+        <h1 class="overview-title">คุณภาพอากาศโดยรวมในพื้นที่</h1>
+        <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
       </div>
+      <p class="overview-subtitle">ค่าเฉลี่ยจากจุดตรวจวัดที่มีข้อมูลล่าสุดในพื้นที่</p>
+      <div class="overview-quality-badge is-waiting" id="overviewQualityBadge">รอข้อมูล</div>
       <div class="overview-guidance" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</div>
+      <div class="overview-source-line" id="overviewSourceLine">กำลังตรวจสอบจุดตรวจวัด...</div>
       <div class="overview-freshness"><span class="overview-freshness-dot"></span><span id="overviewLastUpdated">อัปเดตล่าสุด: --</span></div>
     </div>
     <div class="overview-main-value">
-      <span class="overview-main-label" id="overviewParticleLabel">PM2.5 เฉลี่ยปัจจุบัน</span>
+      <span class="overview-main-label" id="overviewParticleLabel">PM2.5 เฉลี่ยในพื้นที่</span>
       <strong id="overviewPM25" class="overview-particle-value">--</strong>
       <span class="overview-main-unit">µg/m³</span>
     </div>
   </div>
 
-  <div class="overview-metrics-grid">
-    <div class="overview-metric-card glass card"><span>อุณหภูมิเฉลี่ย</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em></div>
-    <div class="overview-metric-card glass card"><span>ความชื้นเฉลี่ย</span><b id="overviewHumidity">--</b><small>%</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em></div>
-    <div class="overview-metric-card glass card"><span>จุดตรวจวัด ONLINE</span><b id="overviewActiveNodes">0 / 3</b><small>จุดตรวจวัด</small></div>
+  <div class="overview-section-head overview-environment-head">
+    <div><div class="overview-eyebrow">CURRENT CONDITIONS</div><h2>สภาพแวดล้อมขณะนี้</h2></div>
+  </div>
+  <div class="overview-metrics-grid overview-metrics-grid-four">
+    <div class="overview-metric-card overview-friendly-card metric-pm25 glass card"><div class="overview-metric-emoji" id="overviewPM25Emoji">🙂</div><span>PM2.5</span><b id="overviewPM25Card">--</b><small>µg/m³</small><em class="overview-metric-status no_data" id="overviewPM25Status">รอข้อมูล</em><p id="overviewPM25Hint">คุณภาพอากาศในพื้นที่</p></div>
+    <div class="overview-metric-card overview-friendly-card metric-temp glass card"><div class="overview-metric-emoji" id="overviewTempEmoji">🙂</div><span>อุณหภูมิ</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em><p id="overviewTempHint">สภาพอากาศขณะนี้</p></div>
+    <div class="overview-metric-card overview-friendly-card metric-humidity glass card"><div class="overview-metric-emoji" id="overviewHumidityEmoji">🙂</div><span>ความชื้น</span><b id="overviewHumidity">--</b><small>%RH</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em><p id="overviewHumidityHint">ความชื้นสัมพัทธ์ในพื้นที่</p></div>
+    <div class="overview-metric-card overview-friendly-card metric-heat glass card"><div class="overview-metric-emoji" id="overviewHeatEmoji">🙂</div><span>ดัชนีความร้อน</span><b id="overviewHeat">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint">ความร้อนที่ร่างกายอาจรู้สึก</p></div>
   </div>
 
   <div class="overview-section-head">
@@ -219,23 +230,10 @@
     <button class="overview-node-card glass card" type="button" data-node-jump="3"><span class="overview-node-dot" id="overviewNodeDot3"></span><span class="overview-node-copy"><b id="overviewNodeTitle3">จุดตรวจวัด 3</b><small class="overview-node-location hidden" id="overviewNodeLocation3"></small><small id="overviewNodeStatus3">กำลังตรวจสอบ</small></span><span class="overview-node-arrow">›</span></button>
   </div>
 
-  <section class="mb-4 dashboard-summary-section"><div class="glass card p-5 smart-summary-card">
-<div class="smart-summary-header">
-<div class="smart-summary-title-wrap">
-<div class="smart-summary-icon">✦</div>
-<div>
-<div class="section-title-with-help">
-<h2 class="font-black text-lg">สรุปสถานการณ์</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบาย สรุปสถานการณ์" class="help-button" data-help="smartSummary" type="button">?</button>
-</div>
-</div>
-</div>
-<span class="smart-summary-mode">สรุปอัตโนมัติ</span>
-</div>
-<div class="smart-summary-body" id="aiSummary">
-<div class="smart-summary-loading">กำลังรอข้อมูล...</div>
-</div>
-</div></section>
+  <section class="mb-4 dashboard-summary-section"><div class="glass card p-5 smart-summary-card overview-recommendation-card">
+    <div class="smart-summary-header"><div class="smart-summary-title-wrap"><div class="smart-summary-icon">💡</div><div><div class="section-title-with-help"><h2 class="font-black text-lg">คำแนะนำขณะนี้</h2><button aria-expanded="false" aria-label="ดูคำอธิบายคำแนะนำขณะนี้" class="help-button" data-help="smartSummary" type="button">?</button></div></div></div><span class="smart-summary-mode">สรุปอัตโนมัติ</span></div>
+    <div class="smart-summary-body" id="aiSummary"><div class="smart-summary-loading">กำลังรอข้อมูล...</div></div>
+  </div></section>
 
   <section class="glass card p-5 overview-alert-card">
     <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><div class="section-title-with-help"><h2><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button></div></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
@@ -1621,7 +1619,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260910-v2-7"></script>
+<script defer src="app.js?v=20260910-v2-9"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
