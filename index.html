@@ -22,7 +22,7 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260910-v36-35" rel="stylesheet"/>
+<link href="style.css?v=20260910-v36-36" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -179,7 +179,7 @@
   <div class="site-announcement is-info" id="siteAnnouncement">
     <span class="site-announcement-icon" id="siteAnnouncementIcon">ℹ</span>
     <div class="site-announcement-content">
-      <div class="site-announcement-meta"><span class="site-announcement-label">ประกาศ</span><span class="site-announcement-source">จากสถานีตรวจวัดคุณภาพอากาศ</span></div>
+      <div class="site-announcement-meta"><span class="site-announcement-label" id="siteAnnouncementLabel">ประกาศ</span><span class="site-announcement-source">ข้อมูลจากระบบสถานีตรวจวัด</span></div>
       <strong id="siteAnnouncementTitle">ประกาศจากระบบ</strong>
       <p id="siteAnnouncementMessage"></p>
     </div>
@@ -215,20 +215,20 @@
   </div>
   <div class="overview-metrics-grid overview-metrics-grid-four">
     <div class="overview-metric-card overview-friendly-card metric-pm25 glass card" id="overviewPM25MetricCard">
-      <span class="overview-card-symbol" aria-label="ฝุ่นละออง">🌫️</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character" id="overviewPM25Emoji" aria-hidden="true">😊</div><span>PM2.5</span><b id="overviewPM25Card">--</b><small>µg/m³</small><em class="overview-metric-status no_data" id="overviewPM25Status">รอข้อมูล</em><p id="overviewPM25Hint">คุณภาพอากาศในพื้นที่</p>
+      <span class="overview-card-symbol" aria-label="ฝุ่นละออง">💨</span><span class="overview-card-scene" aria-hidden="true"></span>
+      <div class="overview-metric-character" id="overviewPM25Emoji" aria-hidden="true">😊</div><span>PM2.5</span><b id="overviewPM25Card">--</b><small>µg/m³</small><em class="overview-metric-status no_data" id="overviewPM25Status">รอข้อมูล</em><p id="overviewPM25Hint" class="overview-feeling">กำลังประเมินสภาพอากาศ...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-temp glass card" id="overviewTempMetricCard">
       <span class="overview-card-symbol" aria-label="อุณหภูมิ">🌡️</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character" id="overviewTempEmoji" aria-hidden="true">😊</div><span>อุณหภูมิ</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em><p id="overviewTempHint">สภาพอากาศขณะนี้</p>
+      <div class="overview-metric-character" id="overviewTempEmoji" aria-hidden="true">😊</div><span>อุณหภูมิ</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em><p id="overviewTempHint" class="overview-feeling">กำลังประเมินอุณหภูมิ...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-humidity glass card" id="overviewHumidityMetricCard">
       <span class="overview-card-symbol" aria-label="ความชื้น">💧</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character" id="overviewHumidityEmoji" aria-hidden="true">😊</div><span>ความชื้น</span><b id="overviewHumidity">--</b><small>%RH</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em><p id="overviewHumidityHint">ความชื้นสัมพัทธ์ในพื้นที่</p>
+      <div class="overview-metric-character" id="overviewHumidityEmoji" aria-hidden="true">😊</div><span>ความชื้น</span><b id="overviewHumidity">--</b><small>%RH</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em><p id="overviewHumidityHint" class="overview-feeling">กำลังประเมินความชื้น...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-heat glass card" id="overviewHeatMetricCard">
       <span class="overview-card-symbol" aria-label="ดัชนีความร้อน">🥵</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character" id="overviewHeatEmoji" aria-hidden="true">😊</div><span>ดัชนีความร้อน</span><b id="overviewHeat">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint">ความร้อนที่ร่างกายอาจรู้สึก</p>
+      <div class="overview-metric-character" id="overviewHeatEmoji" aria-hidden="true">😊</div><span>ดัชนีความร้อน</span><b id="overviewHeat">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint" class="overview-feeling">กำลังประเมินความรู้สึกร้อน...</p>
     </div>
   </div>
 
@@ -247,10 +247,6 @@
     <div class="smart-summary-body" id="aiSummary"><div class="smart-summary-loading">กำลังรอข้อมูล...</div></div>
   </div></section>
 
-  <section class="glass card p-5 overview-alert-card">
-    <div class="overview-alert-head"><div><div class="overview-eyebrow">ATTENTION</div><div class="section-title-with-help"><h2><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button></div></div><button class="overview-link-button" type="button" data-go-page="monitoring">ดูข้อมูลจุดตรวจวัด →</button></div>
-    <div class="text-sm text-slate-300" id="overviewAlerts">กำลังตรวจสอบ...</div>
-  </section>
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
@@ -1631,7 +1627,7 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260910-v36-35"></script>
+<script defer src="app.js?v=20260910-v36-37"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
