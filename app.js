@@ -11115,7 +11115,7 @@ async function saveAdminDevices(){
 
 function renderAnnouncementPreview(){
   const root=$("announcementPreview");if(!root)return;const enabled=$("announcementEnabled")?.checked;const sev=$("announcementSeverity")?.value||"info";const title=$("announcementTitle")?.value.trim()||"ประกาศจากระบบ";const msg=$("announcementMessage")?.value.trim()||"ตัวอย่างข้อความประกาศ";
-  root.innerHTML=enabled?`<div class="site-announcement is-${esc(sev)}"><span class="site-announcement-icon">${sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ"}</span><div><strong>${esc(title)}</strong><p>${nl2brEsc(msg)}</p></div></div>`:`<div class="admin-empty">ประกาศถูกปิดอยู่ ผู้ใช้ทั่วไปจะไม่เห็นส่วนนี้</div>`;
+  root.innerHTML=enabled?`<div class="site-announcement is-${esc(sev)}"><span class="site-announcement-icon">${sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ"}</span><div class="site-announcement-content"><div class="site-announcement-meta"><span class="site-announcement-label">${sev==="warning"?"ประกาศสำคัญ":sev==="maintenance"?"แจ้งบำรุงรักษา":"ประกาศทั่วไป"}</span></div><strong>${esc(title)}</strong><p>${nl2brEsc(msg)}</p></div></div>`:`<div class="admin-empty">ประกาศถูกปิดอยู่ ผู้ใช้ทั่วไปจะไม่เห็นส่วนนี้</div>`;
 }
 function loadAnnouncementEditor(){
   const c=publicDisplayConfig?.content||{};if($("announcementEnabled"))$("announcementEnabled").checked=String(c.announcement_enabled||"0")==="1";if($("announcementSeverity"))$("announcementSeverity").value=c.announcement_severity||"info";if($("announcementTitle"))$("announcementTitle").value=c.announcement_title||"";if($("announcementMessage"))$("announcementMessage").value=c.announcement_message||"";renderAnnouncementPreview();
