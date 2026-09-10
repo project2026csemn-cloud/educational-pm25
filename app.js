@@ -9943,6 +9943,40 @@ function setOverviewMetricVisual(cardId,characterId,state,character){
   if($(characterId)) $(characterId).textContent=character;
 }
 
+function overviewFeelingText(metric, info){
+  const level=String(info?.level||"no_data");
+  const label=String(info?.label||"");
+  if(level==="no_data") return "ยังไม่มีข้อมูลเพียงพอ";
+
+  if(metric==="pm25"){
+    if(level==="critical") return "ฝุ่นสูง ควรลดการสัมผัสอากาศภายนอก";
+    if(level==="warning") return "ฝุ่นเริ่มสูง ควรเพิ่มความระมัดระวัง";
+    if(label==="ปานกลาง") return "อากาศอยู่ในระดับปานกลาง";
+    return "อากาศดี ฝุ่นอยู่ในระดับต่ำ";
+  }
+  if(metric==="temperature"){
+    if(level==="very_hot") return "อากาศร้อนจัด อาจรู้สึกไม่สบายตัว";
+    if(level==="hot") return "อากาศค่อนข้างร้อน";
+    if(level==="very_cold") return "อากาศหนาวมาก";
+    if(level==="cold") return "อากาศค่อนข้างหนาว";
+    if(level==="cool") return "อากาศค่อนข้างเย็น";
+    return "อากาศสบาย";
+  }
+  if(metric==="humidity"){
+    if(level==="very_high") return "อากาศชื้นมาก อาจรู้สึกอับและเหนียวตัว";
+    if(level==="high") return "อากาศค่อนข้างชื้น";
+    if(level==="low") return "อากาศค่อนข้างแห้ง";
+    return "ความชื้นอยู่ในระดับสบาย";
+  }
+  if(metric==="heat"){
+    if(level==="critical") return "ร่างกายอาจได้รับผลกระทบจากความร้อน";
+    if(level==="warning") return "ร่างกายอาจรู้สึกร้อนมาก";
+    if(level==="watch") return "เริ่มรู้สึกร้อน ควรพักเป็นระยะ";
+    return "ร่างกายรู้สึกสบายจากความร้อน";
+  }
+  return "";
+}
+
 function updateNavigationDashboard(){
   const pm25=averageLatestField("pm25");
   const temp=averageLatestField("temperature");
@@ -9968,6 +10002,10 @@ function updateNavigationDashboard(){
   if($("overviewTempStatus")){$("overviewTempStatus").textContent=tInfo.label;$("overviewTempStatus").className=`overview-metric-status ${tInfo.severity}`;}
   if($("overviewHumidityStatus")){$("overviewHumidityStatus").textContent=hInfo.label;$("overviewHumidityStatus").className=`overview-metric-status ${hInfo.severity}`;}
   if($("overviewHeatStatus")){$("overviewHeatStatus").textContent=heatInfo.label||"รอข้อมูล";$("overviewHeatStatus").className=`overview-metric-status ${heatInfo.level||"no_data"}`;}
+  if($("overviewPM25Hint")) $("overviewPM25Hint").textContent=overviewFeelingText("pm25",guide);
+  if($("overviewTempHint")) $("overviewTempHint").textContent=overviewFeelingText("temperature",tInfo);
+  if($("overviewHumidityHint")) $("overviewHumidityHint").textContent=overviewFeelingText("humidity",hInfo);
+  if($("overviewHeatHint")) $("overviewHeatHint").textContent=overviewFeelingText("heat",heatInfo);
   if($("overviewFace")) $("overviewFace").textContent=pmCharacter;
   setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,pmCharacter);
   setOverviewMetricVisual("overviewTempMetricCard","overviewTempEmoji",tInfo.level,tempCharacter);
@@ -10038,9 +10076,6 @@ st==="online"
   if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
   if(navText) navText.textContent=navLabel;
 
-  const sourceAlerts=$("alerts");
-  const overviewAlerts=$("overviewAlerts");
-  if(sourceAlerts&&overviewAlerts) overviewAlerts.innerHTML=sourceAlerts.innerHTML;
 }
 
 function bindDashboardNavigation(){
@@ -10175,6 +10210,7 @@ const ab=$("siteAnnouncement");
 const at=$("siteAnnouncementTitle");
 const am=$("siteAnnouncementMessage");
 const ai=$("siteAnnouncementIcon");
+const al=$("siteAnnouncementLabel");
 const enabled=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
 
 if(aw){
@@ -10186,6 +10222,7 @@ ab.className=`site-announcement is-${sev}`;
 at.textContent=String(ann.announcement_title||"ประกาศจากระบบ").trim()||"ประกาศจากระบบ";
 am.textContent=String(ann.announcement_message||"").trim();
 ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
+if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev==="maintenance"?"แจ้งบำรุงรักษา":"ประกาศทั่วไป";
 }
 }
 
