@@ -19273,3 +19273,114 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(max-width:1100px){.overview-people-hero{grid-template-columns:auto minmax(0,1fr)!important}.overview-main-value{grid-column:1/-1}.overview-face-wrap{width:140px;height:140px}.overview-face{font-size:72px}.overview-metrics-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:760px){.site-announcement-wrap{width:calc(100% - 20px)!important}.site-announcement{grid-template-columns:38px minmax(0,1fr);padding:12px!important}.site-announcement-icon{width:36px!important;height:36px!important}.site-announcement-source{display:none}.overview-people-hero{grid-template-columns:1fr!important;text-align:center;min-height:0!important}.overview-face-wrap{width:118px;height:118px;margin:0 auto}.overview-face{font-size:62px}.overview-source-line{justify-content:center}.overview-freshness{justify-content:center}.overview-metrics-grid-four{grid-template-columns:1fr 1fr!important}.overview-friendly-card{min-height:205px;padding:14px!important}.overview-metric-emoji{font-size:36px}.overview-friendly-card b{font-size:1.65rem!important}.overview-advice-state{grid-template-columns:46px minmax(0,1fr);padding:13px}.overview-advice-icon{font-size:28px}}
 @media(max-width:430px){.overview-metrics-grid-four{grid-template-columns:1fr!important}.overview-friendly-card{min-height:0}.overview-face-wrap{width:104px;height:104px}.overview-face{font-size:54px}}
+
+
+/* =====================================================
+   V36.35 — METRIC STORY CARDS + LIGHTER OVERVIEW
+   ===================================================== */
+.overview-friendly-card{
+  isolation:isolate;
+  min-height:238px!important;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px 18px!important;
+}
+.overview-friendly-card:before{display:none!important}
+.overview-card-symbol{
+  position:absolute;
+  z-index:4;
+  top:14px;
+  right:15px;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  background:rgba(7,17,31,.52);
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 8px 20px rgba(0,0,0,.14);
+  font-size:22px;
+}
+.overview-card-scene{
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  opacity:.78;
+  transition:.25s ease;
+}
+.overview-metric-character{
+  position:relative;
+  z-index:2;
+  width:82px;
+  height:82px;
+  margin:3px auto 12px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:54px;
+  line-height:1;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.12));
+  transition:transform .2s ease,background .2s ease;
+}
+.overview-friendly-card:hover .overview-metric-character{transform:translateY(-2px) scale(1.03)}
+.overview-friendly-card>span:not(.overview-card-symbol):not(.overview-card-scene){position:relative;z-index:2}
+.overview-friendly-card>b,.overview-friendly-card>small,.overview-friendly-card>em,.overview-friendly-card>p{position:relative;z-index:2}
+
+/* PM2.5 — อนุภาคในอากาศ */
+.metric-pm25 .overview-card-scene{
+  background:
+    radial-gradient(circle at 14% 22%,rgba(167,243,208,.15) 0 2px,transparent 3px),
+    radial-gradient(circle at 26% 36%,rgba(167,243,208,.12) 0 3px,transparent 4px),
+    radial-gradient(circle at 82% 66%,rgba(148,163,184,.13) 0 2px,transparent 3px),
+    linear-gradient(145deg,rgba(16,185,129,.10),transparent 58%);
+  background-size:auto,auto,auto,auto;
+}
+.metric-pm25.metric-state-warning .overview-card-scene,.metric-pm25.metric-state-critical .overview-card-scene{
+  background:
+    radial-gradient(circle at 14% 22%,rgba(251,191,36,.26) 0 3px,transparent 4px),
+    radial-gradient(circle at 28% 43%,rgba(251,191,36,.20) 0 4px,transparent 5px),
+    radial-gradient(circle at 79% 67%,rgba(203,213,225,.22) 0 4px,transparent 5px),
+    linear-gradient(145deg,rgba(120,113,108,.20),rgba(245,158,11,.07));
+}
+.metric-pm25.metric-state-critical{border-color:rgba(248,113,113,.34)!important}
+
+/* Temperature — air gradient / warm-cold atmosphere */
+.metric-temp .overview-card-scene{background:linear-gradient(155deg,rgba(56,189,248,.13),transparent 56%),radial-gradient(circle at 88% 18%,rgba(125,211,252,.12),transparent 30%)}
+.metric-temp.metric-state-hot .overview-card-scene,.metric-temp.metric-state-very_hot .overview-card-scene{background:linear-gradient(155deg,rgba(249,115,22,.20),transparent 58%),radial-gradient(circle at 86% 18%,rgba(251,191,36,.19),transparent 31%)}
+.metric-temp.metric-state-cold .overview-card-scene,.metric-temp.metric-state-very_cold .overview-card-scene,.metric-temp.metric-state-cool .overview-card-scene{background:linear-gradient(155deg,rgba(59,130,246,.20),transparent 60%),radial-gradient(circle at 86% 18%,rgba(186,230,253,.18),transparent 31%)}
+
+/* Humidity — condensed water / moist atmosphere */
+.metric-humidity .overview-card-scene{background:radial-gradient(ellipse at 18% 78%,rgba(56,189,248,.15),transparent 28%),radial-gradient(ellipse at 82% 20%,rgba(14,165,233,.13),transparent 30%)}
+.metric-humidity.metric-state-high .overview-card-scene,.metric-humidity.metric-state-very_high .overview-card-scene{background:radial-gradient(ellipse at 15% 78%,rgba(56,189,248,.28),transparent 31%),radial-gradient(ellipse at 83% 20%,rgba(14,165,233,.25),transparent 34%),linear-gradient(155deg,rgba(14,116,144,.12),transparent 62%)}
+.metric-humidity.metric-state-low .overview-card-scene{background:linear-gradient(155deg,rgba(180,83,9,.13),transparent 60%),radial-gradient(circle at 85% 18%,rgba(251,191,36,.12),transparent 28%)}
+
+/* Heat Index — perceived heat around the body */
+.metric-heat .overview-card-scene{background:radial-gradient(circle at 82% 18%,rgba(251,191,36,.13),transparent 30%),linear-gradient(155deg,rgba(245,158,11,.07),transparent 62%)}
+.metric-heat.metric-state-watch .overview-card-scene,.metric-heat.metric-state-warning .overview-card-scene,.metric-heat.metric-state-critical .overview-card-scene{background:radial-gradient(circle at 82% 18%,rgba(251,146,60,.28),transparent 34%),linear-gradient(155deg,rgba(239,68,68,.12),rgba(245,158,11,.07),transparent 70%)}
+.metric-heat.metric-state-critical{border-color:rgba(248,113,113,.34)!important}
+
+.overview-advice-simple{padding:15px 16px;border:1px solid rgba(52,211,153,.20);border-radius:15px;background:rgba(16,185,129,.05)}
+.overview-advice-simple.is-watch{border-color:rgba(251,191,36,.23);background:rgba(245,158,11,.05)}
+.overview-advice-simple.is-critical,.overview-advice-simple.is-offline{border-color:rgba(248,113,113,.24);background:rgba(239,68,68,.05)}
+.overview-advice-head{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:12px}
+.overview-advice-head>span{font-size:31px;text-align:center}
+.overview-advice-head b{display:block;color:#f1f5f9;font-size:15px}
+.overview-advice-head p{margin:3px 0 0;color:#7f93aa;font-size:11.5px}
+.overview-advice-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.overview-advice-actions span{display:flex;align-items:center;min-height:42px;padding:9px 11px;border-radius:11px;background:rgba(2,12,22,.35);border:1px solid rgba(148,163,184,.11);color:#dbe7f3;font-size:11.5px;font-weight:700;line-height:1.45}
+.overview-advice-simple>small{display:block;margin-top:10px;color:#64748b;font-size:10.5px}
+
+@media(max-width:760px){
+  .overview-friendly-card{min-height:220px!important}
+  .overview-card-symbol{top:11px;right:11px;width:34px;height:34px;font-size:19px}
+  .overview-metric-character{width:70px;height:70px;font-size:46px}
+  .overview-advice-actions{grid-template-columns:1fr}
+  .overview-advice-actions span{min-height:38px}
+}
+@media(max-width:430px){.overview-friendly-card{min-height:205px!important}}
