@@ -9661,36 +9661,31 @@ async function loadInitial(){
 
 try{
 
-const[latest,mother,alerts]=await Promise.all([
-loadLatest(),
-loadMother(),
-loadAlerts().catch(()=>[])
-]);
+// V2.7 — CRITICAL FIRST
+// แสดงค่าจุดตรวจวัดทันทีที่ latest พร้อม โดยไม่รอ Mother/Alerts
+const latest=await loadLatest();
 
-apiConnectionOnline=
-true;
-
-latestNodes=
-latest;
-
-motherStatus=
-mother;
-
-alertStates=
-alerts;
-
-latestRecord=
-latestNodes.at(-1)||
-null;
+apiConnectionOnline=true;
+latestNodes=latest;
+latestRecord=latestNodes.at(-1)||null;
 
 renderMonitoring();
-
 updateCurrent();
-
 updateSmart();
 
-updateAlertUI();
-checkSituationNotifications();
+// งานรองโหลดต่อเบื้องหลัง ไม่บล็อกค่าหลักของ Dashboard
+Promise.all([
+  loadMother().catch(()=>motherStatus),
+  loadAlerts().catch(()=>alertStates)
+]).then(([mother,alerts])=>{
+  motherStatus=mother;
+  alertStates=Array.isArray(alerts)?alerts:alertStates;
+  renderMonitoring();
+  updateCurrent();
+  updateSmart();
+  updateAlertUI();
+  checkSituationNotifications();
+}).catch(e=>console.warn("Secondary initial load error:",e));
 
 }catch(e){
 
@@ -9914,8 +9909,15 @@ scheduleStartup(setupDeferredSections,220);
 // V2.6: preload AI/Forecast หลังงานหลักของหน้าเสร็จแล้ว
 // ไม่แย่งช่วง initial render/Lighthouse แต่ผู้ใช้ไม่ต้องเข้า Analysis ก่อน
 scheduleStartup(()=>{
-  if(!aiSectionActivated)activateAISection();
-},2200);
+  const startAI=()=>{
+    if(!aiSectionActivated)activateAISection();
+  };
+  if("requestIdleCallback" in window){
+    requestIdleCallback(startAI,{timeout:2500});
+  }else{
+    setTimeout(startAI,1200);
+  }
+},5000);
 
 // =====================================================
 // CLOCK
