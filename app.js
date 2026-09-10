@@ -42,8 +42,6 @@ document.getElementById(id);
 
 let latestNodes=[];
 let records=[];
-let pm10History24h=[];
-let pm10History24hLoadedAt=null;
 let motherStatus=null;
 let alertStates=[];
 let standardsData=null;
@@ -2607,89 +2605,59 @@ $("currentEnvironmentFooter").textContent=
 }
 
 // =====================================================
-// PM10 — ค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงสำหรับการสื่อสารในสรุปสถานการณ์
-// =====================================================
-
-function pm10AreaAverage24h(){
-  const rows=(pm10History24h||[]).filter(r=>finiteNumberOrNull(r?.pm10)!==null);
-  if(!rows.length) return {value:null,buckets:0,nodes:0};
-
-  const areaRows=spatialAverageRows(rows,["pm10"],5*60*1000)
-    .filter(r=>finiteNumberOrNull(r?.pm10)!==null);
-  const values=areaRows.map(r=>finiteNumberOrNull(r.pm10)).filter(v=>v!==null);
-  const nodes=new Set(rows.map(r=>String(r?.device_id||"").trim()).filter(Boolean));
-
-  return {
-    value:values.length?values.reduce((a,b)=>a+b,0)/values.length:null,
-    buckets:values.length,
-    nodes:nodes.size
-  };
-}
-
-async function refreshPM10History24h(){
-  try{
-    const j=await fetchJson(`${API.history}?range=24h`,25000);
-    pm10History24h=(Array.isArray(j?.data)?j.data:[]).map(normalize).filter(Boolean);
-    pm10History24hLoadedAt=new Date();
-    updateSmart();
-  }catch(e){
-    console.warn("PM10 24h summary unavailable:",e);
-  }
-}
-
-function pm10Summary24h(){
-  const result=pm10AreaAverage24h();
-  const value=result.value;
-  if(value===null){
-    return {
-      value:"--",
-      level:"no_data",
-      sub:"ยังไม่มีข้อมูลย้อนหลังเพียงพอสำหรับค่าเฉลี่ย 24 ชั่วโมง"
-    };
-  }
-
-  if(value>120){
-    return {
-      value:`${fmt(value)} µg/m³`,
-      level:"warning",
-      sub:"เฉลี่ยย้อนหลัง 24 ชม. • สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
-    };
-  }
-
-  return {
-    value:`${fmt(value)} µg/m³`,
-    level:"normal",
-    sub:"เฉลี่ยย้อนหลัง 24 ชม. • ไม่สูงกว่าค่าอ้างอิงไทย 120 µg/m³"
-  };
-}
-
-// =====================================================
 // SMART SUMMARY
 // =====================================================
 
 function updateSmart(){
   const e=$("aiSummary");
   if(!e)return;
+
   if(!apiConnectionOnline||!motherOnline()){
-    e.innerHTML=`<div class="overview-advice-state is-offline"><div class="overview-advice-icon">📡</div><div><b>ยังไม่สามารถสรุปคำแนะนำปัจจุบันได้</b><p>รอการเชื่อมต่อและข้อมูลล่าสุดจากสถานีก่อนใช้ประกอบการตัดสินใจ</p></div></div>`;
+    e.innerHTML=`<div class="overview-advice-simple is-offline">
+      <div class="overview-advice-head"><span>📡</span><div><b>ข้อมูลระบบยังไม่พร้อม</b><p>รอข้อมูลล่าสุดก่อนใช้คำแนะนำจากหน้า Overview</p></div></div>
+    </div>`;
     return;
   }
+
   const snap=currentEnvironmentSnapshot();
   const air=pm25Guidance(snap.pm25);
   const heat=heatLevel(snap.heatIndex);
   const hum=humidityLevel(snap.humidity);
   const temp=temperatureLevel(snap.temperature);
   const active=activeCount();
-  let icon="✅", title="สามารถทำกิจกรรมได้ตามปกติ", text="คุณภาพอากาศและสภาพแวดล้อมโดยรวมยังไม่พบระดับที่ต้องเพิ่มความระมัดระวัง";
-  let cls="is-good";
-  if(air.level==="critical") {icon="😷";title="ควรลดกิจกรรมกลางแจ้ง";text="PM2.5 อยู่ในระดับที่ควรระวัง ควรสวมหน้ากากที่เหมาะสมและติดตามสถานการณ์";cls="is-critical";}
-  else if(heat.level==="critical"||temp.severity==="critical") {icon="🥵";title="ควรหลีกเลี่ยงความร้อนจัด";text="พักในที่ร่ม ดื่มน้ำให้เพียงพอ และลดกิจกรรมกลางแจ้งที่ใช้แรงมาก";cls="is-critical";}
-  else if(air.level==="warning") {icon="😷";title="ควรเฝ้าระวังฝุ่น PM2.5";text="ผู้ที่ไวต่อมลพิษทางอากาศควรลดกิจกรรมกลางแจ้งเป็นเวลานาน";cls="is-watch";}
-  else if(heat.level==="warning"||heat.level==="watch") {icon="💧";title="ควรระวังความร้อน";text="ดื่มน้ำให้เพียงพอ พักเป็นระยะ และหลีกเลี่ยงกิจกรรมหนักกลางแจ้งเป็นเวลานาน";cls="is-watch";}
-  else if(hum.severity==="critical"||hum.severity==="warning") {icon="💧";title="ความชื้นในพื้นที่ค่อนข้างสูง";text="ควรติดตามอุณหภูมิและดัชนีความร้อนร่วมกัน โดยเฉพาะเมื่อต้องทำกิจกรรมกลางแจ้ง";cls="is-watch";}
-  else if(temp.severity==="warning") {icon="🌡️";title=`อุณหภูมิอยู่ในระดับ${temp.label}`;text="เลือกกิจกรรมให้เหมาะสมกับสภาพอากาศและติดตามการเปลี่ยนแปลงของอุณหภูมิ";cls="is-watch";}
-  const sourceText=`ข้อมูลภาพรวมคำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
-  e.innerHTML=`<div class="overview-advice-state ${cls}"><div class="overview-advice-icon">${icon}</div><div class="overview-advice-copy"><b>${esc(title)}</b><p>${esc(text)}</p><small>${esc(sourceText)}</small></div></div>`;
+
+  let icon="😊", title="สภาพโดยรวมเหมาะกับกิจกรรมปกติ", cls="is-good";
+  let actions=["🏃 ทำกิจกรรมกลางแจ้งได้ตามปกติ","💧 ดื่มน้ำให้เพียงพอ","📊 ติดตามข้อมูลเป็นระยะ"];
+
+  if(air.level==="critical"){
+    icon="😷"; title="ฝุ่น PM2.5 อยู่ในระดับที่ควรระวัง"; cls="is-critical";
+    actions=["😷 สวมหน้ากากเมื่ออยู่กลางแจ้ง","🏠 ลดเวลาทำกิจกรรมกลางแจ้ง","📊 ติดตามค่าฝุ่นอย่างใกล้ชิด"];
+  }else if(air.level==="warning"){
+    icon="😷"; title="ควรเพิ่มความระมัดระวังเรื่องฝุ่น"; cls="is-watch";
+    actions=["😷 เตรียมหน้ากากเมื่อต้องอยู่กลางแจ้ง","🏃 ลดกิจกรรมกลางแจ้งเป็นเวลานาน","📊 ติดตามค่าฝุ่นรอบถัดไป"];
+  }else if(heat.level==="critical"||temp.severity==="critical"){
+    icon="🥵"; title="ควรระวังความร้อนเป็นพิเศษ"; cls="is-critical";
+    actions=["💧 ดื่มน้ำให้เพียงพอ","🌳 พักในที่ร่มเป็นระยะ","🏃 ลดกิจกรรมหนักกลางแจ้ง"];
+  }else if(heat.level==="warning"||heat.level==="watch"){
+    icon="😅"; title="อากาศเริ่มร้อน ควรดูแลตัวเองระหว่างทำกิจกรรม"; cls="is-watch";
+    actions=["💧 ดื่มน้ำให้เพียงพอ","🌳 พักในที่ร่มเมื่อรู้สึกร้อน","🏃 หลีกเลี่ยงกิจกรรมหนักต่อเนื่อง"];
+  }else if(hum.level==="very_high"||hum.level==="high"){
+    icon="😓"; title="อากาศค่อนข้างชื้น"; cls="is-watch";
+    actions=["👕 เลือกเสื้อผ้าที่ระบายอากาศได้ดี","🌡️ ติดตามดัชนีความร้อนร่วมด้วย","🏃 พักเมื่อรู้สึกอึดอัดหรือร้อน"];
+  }else if(hum.level==="low"){
+    icon="😣"; title="อากาศค่อนข้างแห้ง"; cls="is-watch";
+    actions=["💧 ดื่มน้ำให้เพียงพอ","🌿 หลีกเลี่ยงสภาพแวดล้อมที่แห้งมากเป็นเวลานาน","📊 ติดตามค่าความชื้น"];
+  }else if(temp.severity==="warning"){
+    icon=temp.level==="cold"||temp.level==="cool"?"🥶":"🥵";
+    title=`อุณหภูมิอยู่ในระดับ${temp.label}`; cls="is-watch";
+    actions=["👕 แต่งกายให้เหมาะกับอุณหภูมิ","🏃 ปรับกิจกรรมให้เหมาะกับสภาพอากาศ","📊 ติดตามการเปลี่ยนแปลงของอุณหภูมิ"];
+  }
+
+  e.innerHTML=`<div class="overview-advice-simple ${cls}">
+    <div class="overview-advice-head"><span>${icon}</span><div><b>${esc(title)}</b><p>เลือกดูเฉพาะสิ่งที่ควรทำตอนนี้</p></div></div>
+    <div class="overview-advice-actions">${actions.slice(0,3).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+    <small>ข้อมูลภาพรวมจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด</small>
+  </div>`;
 }
 
 // =====================================================
@@ -9509,10 +9477,42 @@ activateAISection();
 }
 
 // =====================================================
+// V36.35 — FAST WARM START CACHE
+// =====================================================
+const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
+const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
+
+function saveLatestSnapshot(nodes){
+  try{
+    localStorage.setItem(LATEST_CACHE_KEY,JSON.stringify({saved_at:Date.now(),nodes}));
+  }catch(_){}
+}
+
+function restoreLatestSnapshot(){
+  try{
+    const raw=localStorage.getItem(LATEST_CACHE_KEY);
+    if(!raw)return false;
+    const cached=JSON.parse(raw);
+    if(!cached?.saved_at||Date.now()-Number(cached.saved_at)>LATEST_CACHE_MAX_AGE_MS)return false;
+    const nodes=(Array.isArray(cached.nodes)?cached.nodes:[]).map(normalize).filter(Boolean);
+    if(!nodes.length)return false;
+    latestNodes=nodes;
+    latestRecord=latestNodes.at(-1)||null;
+    renderMonitoring();
+    updateCurrent();
+    updateSmart();
+    updateNavigationDashboard();
+    return true;
+  }catch(_){return false;}
+}
+
+// =====================================================
 // INITIAL LOAD
 // =====================================================
 
 async function loadInitial(){
+
+restoreLatestSnapshot();
 
 try{
 
@@ -9523,10 +9523,12 @@ const latest=await loadLatest();
 apiConnectionOnline=true;
 latestNodes=latest;
 latestRecord=latestNodes.at(-1)||null;
+saveLatestSnapshot(latestNodes);
 
 renderMonitoring();
 updateCurrent();
 updateSmart();
+updateNavigationDashboard();
 
 // งานรองโหลดต่อเบื้องหลัง ไม่บล็อกค่าหลักของ Dashboard
 Promise.all([
@@ -9595,6 +9597,7 @@ true;
 
 latestNodes=
 latest;
+saveLatestSnapshot(latestNodes);
 
 motherStatus=
 mother;
@@ -9809,17 +9812,6 @@ loadStandardsOnly,
 );
 
 // =====================================================
-// LOCAL STATUS REFRESH
-// =====================================================
-
-setInterval(()=>{
-  if(document.visibilityState!=="visible")return;
-  renderMonitoring();
-  updateCurrent();
-  updateSmart();
-},15000);
-
-// =====================================================
 // NAVIGATION REDESIGN 2026-08-28
 // =====================================================
 const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
@@ -9890,15 +9882,6 @@ function openDashboardPage(page,{updateHash=true}={}){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function dashboardAlertCount(){
-  const box=$("alerts");
-  if(!box) return 0;
-  const text=(box.textContent||"").trim();
-  if(!text || /กำลังตรวจสอบ|ไม่พบ|ปกติ|ไม่มี.*เตือน/i.test(text)) return 0;
-  const explicit=box.querySelectorAll(".alert-item,.alert-row,[data-alert]").length;
-  return explicit||1;
-}
-
 function latestActiveNodes(){
   return [1,2,3].map(getNode).filter(n=>n && ["online","sleep"].includes(getNodeStatus(n)));
 }
@@ -9945,55 +9928,19 @@ function overviewAdvice(pm25){
   return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
 }
 
-let overviewParticleMetric="pm25";
-let overviewParticleRenderedMetric=null;
-let overviewParticleSwitchTimer=null;
-
-function updateOverviewParticleDisplay(animate=false){
-  const field=overviewParticleMetric;
-  const value=averageLatestField(field);
-  const label="PM2.5 เฉลี่ยในพื้นที่";
-  const box=document.querySelector(".overview-main-value");
-
-  const applyValue=()=>{
-    if($("overviewParticleLabel")) $("overviewParticleLabel").textContent=label;
-    if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
-    overviewParticleRenderedMetric=field;
-  };
-
-  const metricReallyChanged=
-    overviewParticleRenderedMetric!==null &&
-    overviewParticleRenderedMetric!==field;
-
-  if(!animate || !metricReallyChanged){
-    if(overviewParticleSwitchTimer){
-      clearTimeout(overviewParticleSwitchTimer);
-      overviewParticleSwitchTimer=null;
-    }
-    if(box) box.classList.remove("is-switching");
-    applyValue();
-    return;
-  }
-
-  if(overviewParticleSwitchTimer){
-    clearTimeout(overviewParticleSwitchTimer);
-  }
-
-  if(box) box.classList.add("is-switching");
-
-  overviewParticleSwitchTimer=window.setTimeout(()=>{
-    applyValue();
-    requestAnimationFrame(()=>{
-      if(box) box.classList.remove("is-switching");
-    });
-    overviewParticleSwitchTimer=null;
-  },160);
+function updateOverviewParticleDisplay(){
+  const value=averageLatestField("pm25");
+  if($("overviewParticleLabel")) $("overviewParticleLabel").textContent="PM2.5 เฉลี่ยในพื้นที่";
+  if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
 }
 
-function toggleOverviewParticleMetric(){
-  overviewParticleMetric="pm25";
-  updateOverviewParticleDisplay(true);
-  updateSmart();
+function setOverviewMetricVisual(cardId,characterId,state,character){
+  const card=$(cardId);
+  if(card){
+    [...card.classList].filter(x=>x.startsWith("metric-state-")).forEach(x=>card.classList.remove(x));
+    card.classList.add(`metric-state-${state||"no_data"}`);
+  }
+  if($(characterId)) $(characterId).textContent=character;
 }
 
 function updateNavigationDashboard(){
@@ -10003,16 +9950,16 @@ function updateNavigationDashboard(){
   const guide=pm25Guidance(pm25);
   const active=activeCount();
 
-  overviewParticleMetric="pm25";
   updateOverviewParticleDisplay();
   const heatValue=heatIndexC(temp,hum);
   const tInfo=temperatureLevel(temp);
   const hInfo=humidityLevel(hum);
   const heatInfo=heatLevel(heatValue);
-  const faceForPM=()=>guide.level==="critical"?"😷":guide.level==="warning"?"😷":guide.label==="ปานกลาง"?"🙂":"😊";
-  const faceForTemp=()=>tInfo.level==="very_hot"||tInfo.level==="hot"?"🥵":tInfo.level==="very_cold"||tInfo.level==="cold"?"🥶":tInfo.level==="cool"?"🙂":"😊";
-  const faceForHum=()=>hInfo.level==="very_high"?"😓":hInfo.level==="high"?"💧":hInfo.level==="low"?"😐":"😊";
-  const faceForHeat=()=>heatInfo.level==="critical"?"🥵":heatInfo.level==="warning"?"🥵":heatInfo.level==="watch"?"😅":"😊";
+
+  const pmCharacter=guide.level==="critical"?"😵‍💫":guide.level==="warning"?"😷":guide.label==="ปานกลาง"?"😐":"😊";
+  const tempCharacter=tInfo.level==="very_hot"?"😵‍💫":tInfo.level==="hot"?"🥵":tInfo.level==="very_cold"?"🥶":tInfo.level==="cold"?"😖":tInfo.level==="cool"?"🙂":"😊";
+  const humCharacter=hInfo.level==="very_high"?"😵‍💫":hInfo.level==="high"?"😓":hInfo.level==="low"?"😣":"😊";
+  const heatCharacter=heatInfo.level==="critical"?"😵‍💫":heatInfo.level==="warning"?"🥵":heatInfo.level==="watch"?"😅":"😊";
   if($("overviewPM25Card")) $("overviewPM25Card").textContent=pm25===null?"--":fmt(pm25);
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
@@ -10021,11 +9968,11 @@ function updateNavigationDashboard(){
   if($("overviewTempStatus")){$("overviewTempStatus").textContent=tInfo.label;$("overviewTempStatus").className=`overview-metric-status ${tInfo.severity}`;}
   if($("overviewHumidityStatus")){$("overviewHumidityStatus").textContent=hInfo.label;$("overviewHumidityStatus").className=`overview-metric-status ${hInfo.severity}`;}
   if($("overviewHeatStatus")){$("overviewHeatStatus").textContent=heatInfo.label||"รอข้อมูล";$("overviewHeatStatus").className=`overview-metric-status ${heatInfo.level||"no_data"}`;}
-  if($("overviewFace")) $("overviewFace").textContent=faceForPM();
-  if($("overviewPM25Emoji")) $("overviewPM25Emoji").textContent=faceForPM();
-  if($("overviewTempEmoji")) $("overviewTempEmoji").textContent=faceForTemp();
-  if($("overviewHumidityEmoji")) $("overviewHumidityEmoji").textContent=faceForHum();
-  if($("overviewHeatEmoji")) $("overviewHeatEmoji").textContent=faceForHeat();
+  if($("overviewFace")) $("overviewFace").textContent=pmCharacter;
+  setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,pmCharacter);
+  setOverviewMetricVisual("overviewTempMetricCard","overviewTempEmoji",tInfo.level,tempCharacter);
+  setOverviewMetricVisual("overviewHumidityMetricCard","overviewHumidityEmoji",hInfo.level,humCharacter);
+  setOverviewMetricVisual("overviewHeatMetricCard","overviewHeatEmoji",heatInfo.level,heatCharacter);
   if($("overviewSourceLine")) $("overviewSourceLine").textContent=`คำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
 
@@ -10066,7 +10013,6 @@ st==="online"
     }
   }
 
-  const systemOnline=apiConnectionOnline && motherOnline();
   const navDot=$("navSystemDot");
   const navText=$("navSystemStatus");
   let navState="is-offline";
@@ -10133,12 +10079,9 @@ const runWhenIdle=fn=>{
 
 runWhenIdle(()=>{
   loadStandardsOnly();
-  refreshPM10History24h();
 });
 
 setInterval(updateNavigationDashboard,5000);
-setInterval(toggleOverviewParticleMetric,5000);
-setInterval(refreshPM10History24h,300000);
 
 // =====================================================
 // V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
