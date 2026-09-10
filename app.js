@@ -2668,173 +2668,28 @@ function pm10Summary24h(){
 // =====================================================
 
 function updateSmart(){
-
-const e=$("aiSummary");
-if(!e)return;
-
-const waitingCard=(icon,title,sub="รอข้อมูลล่าสุด")=>`
-<div class="smart-summary-stat">
-<div class="smart-summary-stat-label">${icon} ${title}</div>
-<div class="smart-summary-stat-value">ยังประเมินไม่ได้</div>
-<div class="smart-summary-stat-sub">${sub}</div>
-</div>`;
-
-if(!apiConnectionOnline){
-e.innerHTML=`
-<div class="smart-summary-headline offline">🔴 ยังไม่สามารถตรวจสอบสถานการณ์ปัจจุบันได้</div>
-<div class="smart-summary-grid smart-summary-grid-six">
-${waitingCard("🌿","คุณภาพอากาศ")}
-${waitingCard("☀️","ดัชนีความร้อน")}
-${waitingCard("🌡️","อุณหภูมิ")}
-${waitingCard("💧","ความชื้น")}
-${waitingCard("📍","จุดตรวจวัด","ยังยืนยันความพร้อมของจุดตรวจวัดไม่ได้")}
-${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
-</div>
-<div class="smart-summary-note danger">กรุณารอให้ข้อมูลปัจจุบันพร้อมก่อนใช้ประกอบการตัดสินใจ</div>`;
-return;
-}
-
-if(!motherOnline()){
-e.innerHTML=`
-<div class="smart-summary-headline offline">🔴 ยังไม่สามารถยืนยันข้อมูลปัจจุบันได้</div>
-<div class="smart-summary-grid smart-summary-grid-six">
-${waitingCard("🌿","คุณภาพอากาศ")}
-${waitingCard("☀️","ดัชนีความร้อน")}
-${waitingCard("🌡️","อุณหภูมิ")}
-${waitingCard("💧","ความชื้น")}
-${waitingCard("📍","จุดตรวจวัด","ขณะนี้ยังยืนยันความพร้อมไม่ได้")}
-${waitingCard("🏃","กิจกรรมกลางแจ้ง","รอข้อมูลก่อนให้คำแนะนำ")}
-</div>
-<div class="smart-summary-note danger">ข้อมูลเดิมจะไม่ถูกนำมาแสดงเป็นสถานการณ์ปัจจุบันเมื่อยังยืนยันข้อมูลใหม่ไม่ได้</div>`;
-return;
-}
-
-const snap=currentEnvironmentSnapshot();
-const air=combinedAirQualitySummary(snap);
-const heat=heatLevel(snap.heatIndex);
-const tempInfo=temperatureLevel(snap.temperature);
-const humidityInfo=humidityLevel(snap.humidity);
-
-const on=latestNodes.filter(n=>getNodeDisplayStatus(n)==="online").length;
-const off=TOTAL_NODES-on;
-
-let severity="normal";
-let headline="🟢 ภาพรวมปกติ";
-
-if(
-air.level==="critical"||
-heat.level==="critical"||
-tempInfo.severity==="critical"||
-humidityInfo.severity==="critical"
-){
-severity="critical";
-headline="🔴 มีข้อมูลที่ควรให้ความสำคัญ";
-}else if(
-air.level==="warning"||
-heat.level==="warning"||
-heat.level==="watch"||
-tempInfo.severity==="warning"||
-humidityInfo.severity==="warning"||
-off>0
-){
-severity="watch";
-headline="🟡 มีข้อมูลที่ควรติดตาม";
-}
-
-const heatLabel=snap.heatIndex==null
-?"รอข้อมูล"
-:(heat.level==="normal"?"ปกติ":heat.label);
-const heatValue=snap.heatIndex==null
-?"--"
-:`${fmt(snap.heatIndex)} °C`;
-const heatSub=snap.heatIndex==null
-?"ต้องมีอุณหภูมิและความชื้นจึงจะประเมินได้"
-:`${heatLabel} • ใช้ดูความร้อนที่ร่างกายอาจรู้สึก`;
-
-const tempValue=snap.temperature==null
-?"--"
-:`${fmt(snap.temperature)} °C`;
-const tempSub=snap.temperature==null
-?"รอข้อมูลล่าสุด"
-:`${tempInfo.label} • เทียบเพื่อเฝ้าระวังเบื้องต้น`;
-
-const humidityValue=snap.humidity==null
-?"--"
-:`${fmt(snap.humidity)}%`;
-const humiditySub=snap.humidity==null
-?"รอข้อมูลล่าสุด"
-:`${humidityInfo.label} • ควรดูร่วมกับอุณหภูมิ`;
-
-const systemMain=off===0
-?`พร้อม ${on} / ${TOTAL_NODES} จุด`
-:`พร้อม ${on} / ${TOTAL_NODES} จุด`;
-const systemSub=off===0
-?"จุดตรวจวัดทั้งหมดพร้อมแสดงข้อมูลปัจจุบัน"
-:`มี ${off} จุดที่ยังไม่พร้อม`;
-
-const activity=activityRecommendation(snap.pm25,snap.pm10,snap.heatIndex);
-const activityGood=
-!["critical","warning"].includes(air.level)&&
-!["critical","warning"].includes(heat.level)&&
-tempInfo.severity!=="critical"&&
-humidityInfo.severity!=="critical";
-const activityMain=activityGood?"ทำกิจกรรมได้ตามปกติ":"ควรเพิ่มความระมัดระวัง";
-
-const summaryParticle=(typeof overviewParticleMetric!=="undefined"?overviewParticleMetric:"pm25");
-const pm25Now=finiteNumberOrNull(snap.pm25);
-const pm25Info=pm25Guidance(pm25Now);
-const pm10Day=pm10Summary24h();
-
-const airMetricLabel=summaryParticle==="pm10"?"PM10":"PM2.5";
-const airValue=summaryParticle==="pm10"
-?pm10Day.value
-:(pm25Now===null?"รอข้อมูล":`${pm25Info.label} • ${fmt(pm25Now)} µg/m³`);
-const airSub=summaryParticle==="pm10"
-?pm10Day.sub
-:(pm25Now===null
-?"ยังไม่มีข้อมูล PM2.5 ปัจจุบัน"
-:"ใช้ PM2.5 เพื่อสื่อสารระดับคุณภาพอากาศปัจจุบัน");
-
-e.innerHTML=`
-<div class="smart-summary-headline ${severity}">${headline}</div>
-
-<div class="smart-summary-grid smart-summary-grid-six">
-<div class="smart-summary-stat smart-summary-air smart-summary-air-switch">
-<div class="smart-summary-stat-label">🌿 คุณภาพอากาศ • ${airMetricLabel}</div>
-<div class="smart-summary-stat-value">${esc(airValue)}</div>
-<div class="smart-summary-stat-sub">${esc(airSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-heat">
-<div class="smart-summary-stat-label">☀️ ดัชนีความร้อน</div>
-<div class="smart-summary-stat-value">${esc(heatValue)}</div>
-<div class="smart-summary-stat-sub">${esc(heatSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-temperature">
-<div class="smart-summary-stat-label">🌡️ อุณหภูมิ</div>
-<div class="smart-summary-stat-value">${esc(tempValue)}</div>
-<div class="smart-summary-stat-sub">${esc(tempSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-humidity">
-<div class="smart-summary-stat-label">💧 ความชื้น</div>
-<div class="smart-summary-stat-value">${esc(humidityValue)}</div>
-<div class="smart-summary-stat-sub">${esc(humiditySub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-system">
-<div class="smart-summary-stat-label">📍 จุดตรวจวัด</div>
-<div class="smart-summary-stat-value">${esc(systemMain)}</div>
-<div class="smart-summary-stat-sub">${esc(systemSub)}</div>
-</div>
-
-<div class="smart-summary-stat smart-summary-activity-card ${activityGood?"":"is-watch"}">
-<div class="smart-summary-stat-label">🏃 กิจกรรมกลางแจ้ง</div>
-<div class="smart-summary-stat-value">${esc(activityMain)}</div>
-<div class="smart-summary-stat-sub">${esc(activity)}</div>
-</div>
-</div>`;
+  const e=$("aiSummary");
+  if(!e)return;
+  if(!apiConnectionOnline||!motherOnline()){
+    e.innerHTML=`<div class="overview-advice-state is-offline"><div class="overview-advice-icon">📡</div><div><b>ยังไม่สามารถสรุปคำแนะนำปัจจุบันได้</b><p>รอการเชื่อมต่อและข้อมูลล่าสุดจากสถานีก่อนใช้ประกอบการตัดสินใจ</p></div></div>`;
+    return;
+  }
+  const snap=currentEnvironmentSnapshot();
+  const air=pm25Guidance(snap.pm25);
+  const heat=heatLevel(snap.heatIndex);
+  const hum=humidityLevel(snap.humidity);
+  const temp=temperatureLevel(snap.temperature);
+  const active=activeCount();
+  let icon="✅", title="สามารถทำกิจกรรมได้ตามปกติ", text="คุณภาพอากาศและสภาพแวดล้อมโดยรวมยังไม่พบระดับที่ต้องเพิ่มความระมัดระวัง";
+  let cls="is-good";
+  if(air.level==="critical") {icon="😷";title="ควรลดกิจกรรมกลางแจ้ง";text="PM2.5 อยู่ในระดับที่ควรระวัง ควรสวมหน้ากากที่เหมาะสมและติดตามสถานการณ์";cls="is-critical";}
+  else if(heat.level==="critical"||temp.severity==="critical") {icon="🥵";title="ควรหลีกเลี่ยงความร้อนจัด";text="พักในที่ร่ม ดื่มน้ำให้เพียงพอ และลดกิจกรรมกลางแจ้งที่ใช้แรงมาก";cls="is-critical";}
+  else if(air.level==="warning") {icon="😷";title="ควรเฝ้าระวังฝุ่น PM2.5";text="ผู้ที่ไวต่อมลพิษทางอากาศควรลดกิจกรรมกลางแจ้งเป็นเวลานาน";cls="is-watch";}
+  else if(heat.level==="warning"||heat.level==="watch") {icon="💧";title="ควรระวังความร้อน";text="ดื่มน้ำให้เพียงพอ พักเป็นระยะ และหลีกเลี่ยงกิจกรรมหนักกลางแจ้งเป็นเวลานาน";cls="is-watch";}
+  else if(hum.severity==="critical"||hum.severity==="warning") {icon="💧";title="ความชื้นในพื้นที่ค่อนข้างสูง";text="ควรติดตามอุณหภูมิและดัชนีความร้อนร่วมกัน โดยเฉพาะเมื่อต้องทำกิจกรรมกลางแจ้ง";cls="is-watch";}
+  else if(temp.severity==="warning") {icon="🌡️";title=`อุณหภูมิอยู่ในระดับ${temp.label}`;text="เลือกกิจกรรมให้เหมาะสมกับสภาพอากาศและติดตามการเปลี่ยนแปลงของอุณหภูมิ";cls="is-watch";}
+  const sourceText=`ข้อมูลภาพรวมคำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
+  e.innerHTML=`<div class="overview-advice-state ${cls}"><div class="overview-advice-icon">${icon}</div><div class="overview-advice-copy"><b>${esc(title)}</b><p>${esc(text)}</p><small>${esc(sourceText)}</small></div></div>`;
 }
 
 // =====================================================
@@ -10097,7 +9952,7 @@ let overviewParticleSwitchTimer=null;
 function updateOverviewParticleDisplay(animate=false){
   const field=overviewParticleMetric;
   const value=averageLatestField(field);
-  const label=field==="pm10"?"PM10 เฉลี่ยปัจจุบัน":"PM2.5 เฉลี่ยปัจจุบัน";
+  const label="PM2.5 เฉลี่ยในพื้นที่";
   const box=document.querySelector(".overview-main-value");
 
   const applyValue=()=>{
@@ -10136,7 +9991,7 @@ function updateOverviewParticleDisplay(animate=false){
 }
 
 function toggleOverviewParticleMetric(){
-  overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
+  overviewParticleMetric="pm25";
   updateOverviewParticleDisplay(true);
   updateSmart();
 }
@@ -10148,12 +10003,30 @@ function updateNavigationDashboard(){
   const guide=pm25Guidance(pm25);
   const active=activeCount();
 
+  overviewParticleMetric="pm25";
   updateOverviewParticleDisplay();
+  const heatValue=heatIndexC(temp,hum);
+  const tInfo=temperatureLevel(temp);
+  const hInfo=humidityLevel(hum);
+  const heatInfo=heatLevel(heatValue);
+  const faceForPM=()=>guide.level==="critical"?"😷":guide.level==="warning"?"😷":guide.label==="ปานกลาง"?"🙂":"😊";
+  const faceForTemp=()=>tInfo.level==="very_hot"||tInfo.level==="hot"?"🥵":tInfo.level==="very_cold"||tInfo.level==="cold"?"🥶":tInfo.level==="cool"?"🙂":"😊";
+  const faceForHum=()=>hInfo.level==="very_high"?"😓":hInfo.level==="high"?"💧":hInfo.level==="low"?"😐":"😊";
+  const faceForHeat=()=>heatInfo.level==="critical"?"🥵":heatInfo.level==="warning"?"🥵":heatInfo.level==="watch"?"😅":"😊";
+  if($("overviewPM25Card")) $("overviewPM25Card").textContent=pm25===null?"--":fmt(pm25);
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
-  if($("overviewTempStatus")){const t=temperatureLevel(temp);$("overviewTempStatus").textContent=t.label;$("overviewTempStatus").className=`overview-metric-status ${t.severity}`;}
-  if($("overviewHumidityStatus")){const hu=humidityLevel(hum);$("overviewHumidityStatus").textContent=hu.label;$("overviewHumidityStatus").className=`overview-metric-status ${hu.severity}`;}
-  if($("overviewActiveNodes")) $("overviewActiveNodes").textContent=`${active} / ${TOTAL_NODES}`;
+  if($("overviewHeat")) $("overviewHeat").textContent=heatValue===null?"--":fmt(heatValue);
+  if($("overviewPM25Status")){$("overviewPM25Status").textContent=guide.label||"รอข้อมูล";$("overviewPM25Status").className=`overview-metric-status ${guide.level||"no_data"}`;}
+  if($("overviewTempStatus")){$("overviewTempStatus").textContent=tInfo.label;$("overviewTempStatus").className=`overview-metric-status ${tInfo.severity}`;}
+  if($("overviewHumidityStatus")){$("overviewHumidityStatus").textContent=hInfo.label;$("overviewHumidityStatus").className=`overview-metric-status ${hInfo.severity}`;}
+  if($("overviewHeatStatus")){$("overviewHeatStatus").textContent=heatInfo.label||"รอข้อมูล";$("overviewHeatStatus").className=`overview-metric-status ${heatInfo.level||"no_data"}`;}
+  if($("overviewFace")) $("overviewFace").textContent=faceForPM();
+  if($("overviewPM25Emoji")) $("overviewPM25Emoji").textContent=faceForPM();
+  if($("overviewTempEmoji")) $("overviewTempEmoji").textContent=faceForTemp();
+  if($("overviewHumidityEmoji")) $("overviewHumidityEmoji").textContent=faceForHum();
+  if($("overviewHeatEmoji")) $("overviewHeatEmoji").textContent=faceForHeat();
+  if($("overviewSourceLine")) $("overviewSourceLine").textContent=`คำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
 
   const qb=$("overviewQualityBadge");
