@@ -34,7 +34,7 @@ wifiManage:`${BASE}/api/manage/wifi`
 };
 
 const TOTAL_NODES=3;
-const MOTHER_OFFLINE_MS=60*1000;
+const MOTHER_OFFLINE_MS=90*1000;
 
 const $=
 id=>
@@ -9934,13 +9934,45 @@ function updateOverviewParticleDisplay(){
   if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
 }
 
-function setOverviewMetricVisual(cardId,characterId,state,character){
+function overviewCharacterSvg(metric,state="normal"){
+  const s=String(state||"normal");
+  const isCritical=["critical","very_hot","very_high"].includes(s);
+  const isWarn=["warning","hot","high","watch"].includes(s);
+  const isCold=["very_cold","cold","cool"].includes(s);
+  const isLow=s==="low";
+  const face=isCritical?"#f7b09c":isWarn?"#ffc6a8":isCold?"#ffd4bd":"#ffd0b5";
+  const cheek=isCritical?"#f97373":isWarn?"#fb8f78":"#f6a28d";
+  const shirt=metric==="pm25"?"#52c98f":metric==="temperature"?"#67b8f3":metric==="humidity"?"#5fc0ea":"#f29a70";
+  const eyes=isCritical?`<path d="M34 47c3-3 6-3 9 0M61 47c3-3 6-3 9 0" stroke="#3c2a29" stroke-width="3.5" stroke-linecap="round" fill="none"/>`:`<path d="M34 47c2.8 2.4 6.2 2.4 9 0M61 47c2.8 2.4 6.2 2.4 9 0" stroke="#3c2a29" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  const mouth=isCritical?`<path d="M45 66c6-6 12-6 18 0" stroke="#8b3d46" stroke-width="3.2" stroke-linecap="round" fill="none"/>`:`<path d="M44 63c5 6 14 6 19 0" stroke="#8b3d46" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  let accessory="";
+  if(metric==="pm25" && ["warning","critical"].includes(s)) accessory=`<path d="M35 57Q52 51 70 57V70Q52 76 35 70Z" fill="#d8f2fa" stroke="#6aa9bd" stroke-width="2"/><path d="M35 59C28 56 27 65 34 67M70 59C77 56 78 65 71 67" fill="none" stroke="#6aa9bd" stroke-width="2"/>`;
+  if(metric==="temperature" && isCold) accessory+=`<path d="M28 79Q52 72 77 79L72 90H33Z" fill="#7dd3fc"/><path d="M61 79l6 20 8-3-5-19" fill="#38bdf8"/>`;
+  if(metric==="temperature" && (isWarn||isCritical)) accessory+=`<path d="M77 45c6 8 3 14-2 14-6 0-7-7-3-12 1-2 3-4 5-7z" fill="#56b9ef"/>`;
+  if(metric==="humidity" && (isWarn||isCritical)) accessory+=`<path d="M25 52c5 7 2 12-2 12-5 0-6-5-3-10l3-5zM80 45c5 7 2 12-2 12-5 0-6-5-3-10l3-5z" fill="#4eb5ee"/>`;
+  if(metric==="humidity" && isLow) accessory+=`<path d="M24 72l8-3M72 69l9 4" stroke="#d9a15f" stroke-width="3" stroke-linecap="round"/>`;
+  if(metric==="heat" && ["watch","warning","critical"].includes(s)) accessory+=`<path d="M77 42c6 8 3 14-2 14-6 0-7-7-3-12 1-2 3-4 5-7zM29 50c4 6 2 10-2 10s-5-5-2-9l2-4z" fill="#53b8ee"/><circle cx="28" cy="31" r="8" fill="#ffd45b" opacity=".9"/><path d="M28 15v7M28 40v7M12 31h7M37 31h7M17 20l5 5M39 20l-5 5" stroke="#ffb21a" stroke-width="2.5" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 104 104" role="img" aria-hidden="true" focusable="false">
+    <circle cx="52" cy="54" r="43" fill="rgba(255,255,255,.18)"/>
+    <path d="M25 97c3-17 13-24 27-24s24 7 27 24" fill="${shirt}"/>
+    <ellipse cx="52" cy="53" rx="29" ry="31" fill="${face}"/>
+    <path d="M24 49c0-24 12-36 30-36 19 0 30 12 29 34-8-8-14-13-24-15-7 8-17 13-35 17z" fill="#4a3028"/>
+    <path d="M30 37c4-14 14-20 27-20 9 0 17 3 22 11-12-5-22-5-33 0-7 3-11 6-16 9z" fill="#5a392e" opacity=".8"/>
+    ${eyes}
+    <circle cx="35" cy="58" r="5" fill="${cheek}" opacity=".58"/><circle cx="69" cy="58" r="5" fill="${cheek}" opacity=".58"/>
+    ${mouth}
+    ${accessory}
+  </svg>`;
+}
+
+function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
     [...card.classList].filter(x=>x.startsWith("metric-state-")).forEach(x=>card.classList.remove(x));
     card.classList.add(`metric-state-${state||"no_data"}`);
   }
-  if($(characterId)) $(characterId).textContent=character;
+  const el=$(characterId);
+  if(el) el.innerHTML=overviewCharacterSvg(metric,state||"no_data");
 }
 
 function overviewFeelingText(metric, info){
@@ -9990,10 +10022,6 @@ function updateNavigationDashboard(){
   const hInfo=humidityLevel(hum);
   const heatInfo=heatLevel(heatValue);
 
-  const pmCharacter=guide.level==="critical"?"😵‍💫":guide.level==="warning"?"😷":guide.label==="ปานกลาง"?"😐":"😊";
-  const tempCharacter=tInfo.level==="very_hot"?"😵‍💫":tInfo.level==="hot"?"🥵":tInfo.level==="very_cold"?"🥶":tInfo.level==="cold"?"😖":tInfo.level==="cool"?"🙂":"😊";
-  const humCharacter=hInfo.level==="very_high"?"😵‍💫":hInfo.level==="high"?"😓":hInfo.level==="low"?"😣":"😊";
-  const heatCharacter=heatInfo.level==="critical"?"😵‍💫":heatInfo.level==="warning"?"🥵":heatInfo.level==="watch"?"😅":"😊";
   if($("overviewPM25Card")) $("overviewPM25Card").textContent=pm25===null?"--":fmt(pm25);
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
@@ -10006,11 +10034,11 @@ function updateNavigationDashboard(){
   if($("overviewTempHint")) $("overviewTempHint").textContent=overviewFeelingText("temperature",tInfo);
   if($("overviewHumidityHint")) $("overviewHumidityHint").textContent=overviewFeelingText("humidity",hInfo);
   if($("overviewHeatHint")) $("overviewHeatHint").textContent=overviewFeelingText("heat",heatInfo);
-  if($("overviewFace")) $("overviewFace").textContent=pmCharacter;
-  setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,pmCharacter);
-  setOverviewMetricVisual("overviewTempMetricCard","overviewTempEmoji",tInfo.level,tempCharacter);
-  setOverviewMetricVisual("overviewHumidityMetricCard","overviewHumidityEmoji",hInfo.level,humCharacter);
-  setOverviewMetricVisual("overviewHeatMetricCard","overviewHeatEmoji",heatInfo.level,heatCharacter);
+  if($("overviewFace")) $("overviewFace").innerHTML=overviewCharacterSvg("pm25",guide.level||"no_data");
+  setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,"pm25");
+  setOverviewMetricVisual("overviewTempMetricCard","overviewTempEmoji",tInfo.level,"temperature");
+  setOverviewMetricVisual("overviewHumidityMetricCard","overviewHumidityEmoji",hInfo.level,"humidity");
+  setOverviewMetricVisual("overviewHeatMetricCard","overviewHeatEmoji",heatInfo.level,"heat");
   if($("overviewSourceLine")) $("overviewSourceLine").textContent=`คำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
 
@@ -10025,29 +10053,36 @@ function updateNavigationDashboard(){
     $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${thaiNodeReadingDateTime(newest)}`:"ข้อมูลล่าสุด: --";
   }
 
+  const motherIsOnline=motherOnline();
+  const motherDot=$("overviewMotherDot");
+  const motherLabel=$("overviewMotherStatus");
+  const motherUpdated=$("overviewMotherUpdated");
+  if(motherDot) motherDot.className=`overview-mother-dot ${motherIsOnline?"online":"offline"}`;
+  if(motherLabel) motherLabel.textContent=motherIsOnline?"ระบบทำงานปกติ":"ขาดการเชื่อมต่อ";
+  if(motherUpdated){
+    const mt=parseDate(motherStatus?.last_seen||motherStatus?.updated_at);
+    motherUpdated.textContent=mt?`อัปเดตล่าสุด ${thaiNodeReadingDateTime(mt)}`:"อัปเดตล่าสุด --";
+  }
+
   for(let i=1;i<=3;i++){
     const node=getNode(i);
-    const st=getNodeDisplayStatus(node);
+    const raw=getNodeStatus(node);
     const dot=$("overviewNodeDot"+i);
     const label=$("overviewNodeStatus"+i);
-    if(dot) dot.className=`overview-node-dot ${st}`;
+    const readingTime=nodeReadingTime(node);
+    const t=readingTime?thaiNodeReadingDateTime(readingTime):"--";
+    if(!motherIsOnline){
+      if(dot) dot.className="overview-node-dot unknown";
+      if(label) label.textContent="ไม่สามารถยืนยันสถานะ";
+      continue;
+    }
+    if(dot) dot.className=`overview-node-dot ${raw}`;
     if(label){
-      const readingTime=
-nodeReadingTime(
-node
-);
-
-const t=
-readingTime
-?thaiNodeReadingDateTime(
-readingTime
-)
-:"--";
-
-label.textContent=
-st==="online"
-?`ONLINE • ข้อมูลล่าสุด ${t}`
-:"OFFLINE";
+      label.textContent=raw==="online"
+        ?`ออนไลน์ • ${t}`
+        :raw==="sleep"
+          ?`พักการทำงาน • ${t}`
+          :"ออฟไลน์";
     }
   }
 
