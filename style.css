@@ -20891,3 +20891,289 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transform:none!important;
   }
 }
+
+
+/* =====================================================
+   V36.49 — FULL HERO + SYSTEM ARROW FIX
+   ===================================================== */
+
+/* -----------------------------------------------------
+   HERO TITLE + HELP BUTTON
+   ----------------------------------------------------- */
+
+#page-overview .overview-copy{
+  min-width:0!important;
+}
+
+#page-overview .overview-title-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+
+#page-overview .overview-title{
+  flex:0 1 auto!important;
+  min-width:0!important;
+  margin:0!important;
+
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  overflow-wrap:normal!important;
+  overflow:visible!important;
+
+  font-size:clamp(24px,2vw,36px)!important;
+  line-height:1.14!important;
+  letter-spacing:-.025em!important;
+}
+
+#page-overview .overview-title-row .help-button{
+  flex:0 0 27px!important;
+  width:27px!important;
+  height:27px!important;
+  min-width:27px!important;
+  min-height:27px!important;
+
+  margin:0!important;
+  padding:0!important;
+
+  align-self:center!important;
+}
+
+#page-overview .overview-subtitle{
+  margin-top:8px!important;
+}
+
+#page-overview .overview-guidance{
+  margin-top:14px!important;
+  max-width:100%!important;
+}
+
+/* Give the middle column enough room so title does not crowd ? */
+#page-overview .overview-hero-infographic{
+  grid-template-columns:
+    minmax(170px,220px)
+    minmax(0,1fr)
+    minmax(190px,230px)!important;
+
+  column-gap:26px!important;
+}
+
+@media(max-width:1250px){
+  #page-overview .overview-hero-infographic{
+    grid-template-columns:
+      minmax(155px,190px)
+      minmax(0,1fr)
+      minmax(175px,205px)!important;
+
+    column-gap:20px!important;
+  }
+
+  #page-overview .overview-title{
+    font-size:clamp(22px,2vw,32px)!important;
+  }
+}
+
+
+/* -----------------------------------------------------
+   SYSTEM STATUS
+   icon | text | dot | arrow
+   ----------------------------------------------------- */
+
+#page-overview .overview-system-node{
+  display:grid!important;
+
+  grid-template-columns:
+    48px
+    minmax(0,1fr)
+    12px
+    18px!important;
+
+  column-gap:14px!important;
+  align-items:center!important;
+
+  width:100%!important;
+  min-width:0!important;
+}
+
+#page-overview .overview-system-node-pin{
+  grid-column:1!important;
+  justify-self:center!important;
+
+  margin:0!important;
+}
+
+#page-overview .overview-system-node-copy{
+  grid-column:2!important;
+  min-width:0!important;
+
+  margin:0!important;
+  padding:0!important;
+}
+
+#page-overview .overview-system-node-copy b{
+  display:block!important;
+  margin:0 0 3px 0!important;
+
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+
+#page-overview .overview-system-node-copy small,
+#page-overview .overview-system-node-copy>span{
+  display:block!important;
+  margin:0!important;
+}
+
+/* Status dot always stays in its own column */
+#page-overview .overview-system-node .overview-node-dot{
+  grid-column:3!important;
+  justify-self:center!important;
+
+  position:static!important;
+  margin:0!important;
+  transform:none!important;
+}
+
+/* Arrow always at far right */
+#page-overview .overview-system-node .overview-node-arrow{
+  grid-column:4!important;
+  justify-self:center!important;
+  align-self:center!important;
+
+  position:static!important;
+
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+
+  width:18px!important;
+  height:28px!important;
+
+  margin:0!important;
+  padding:0!important;
+
+  color:#7d9bb2!important;
+
+  font-size:20px!important;
+  line-height:1!important;
+
+  transform:none!important;
+  inset:auto!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+}
+
+
+/* -----------------------------------------------------
+   MOTHER / GATEWAY
+   icon | text | dot
+   ----------------------------------------------------- */
+
+#page-overview .overview-mother-status{
+  display:grid!important;
+
+  grid-template-columns:
+    48px
+    minmax(0,1fr)
+    12px!important;
+
+  column-gap:14px!important;
+  align-items:center!important;
+
+  width:100%!important;
+  min-width:0!important;
+}
+
+#page-overview .overview-gateway-icon{
+  grid-column:1!important;
+  justify-self:center!important;
+
+  margin:0!important;
+}
+
+#page-overview .overview-mother-copy{
+  grid-column:2!important;
+  min-width:0!important;
+
+  margin:0!important;
+  padding:0!important;
+}
+
+#page-overview .overview-mother-copy b{
+  display:block!important;
+  margin:0 0 3px 0!important;
+
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+
+#page-overview .overview-mother-copy small,
+#page-overview .overview-mother-copy>span{
+  display:block!important;
+  margin:0!important;
+}
+
+#page-overview .overview-mother-dot{
+  grid-column:3!important;
+  justify-self:center!important;
+
+  position:static!important;
+  margin:0!important;
+  transform:none!important;
+}
+
+
+/* -----------------------------------------------------
+   RESPONSIVE
+   ----------------------------------------------------- */
+
+@media(max-width:980px){
+
+  #page-overview .overview-title-row{
+    flex-wrap:wrap!important;
+  }
+
+  #page-overview .overview-title{
+    white-space:normal!important;
+  }
+
+  #page-overview .overview-title-row .help-button{
+    margin-top:1px!important;
+  }
+}
+
+@media(max-width:840px){
+
+  #page-overview .overview-title-row{
+    justify-content:center!important;
+  }
+
+  #page-overview .overview-title{
+    text-align:center!important;
+  }
+
+  #page-overview .overview-system-node{
+    grid-template-columns:
+      44px
+      minmax(0,1fr)
+      12px
+      18px!important;
+
+    column-gap:11px!important;
+  }
+
+  #page-overview .overview-mother-status{
+    grid-template-columns:
+      44px
+      minmax(0,1fr)
+      12px!important;
+
+    column-gap:11px!important;
+  }
+}
