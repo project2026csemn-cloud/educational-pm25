@@ -10234,6 +10234,12 @@ function overviewCharacterSvg(metric,state="normal"){
   const hair2="#704939";
   const cheek=severe?"#f27676":caution?"#f79584":"#f7a58f";
 
+  // Final face colors start from the base palette.
+  // They must exist BEFORE accessory/arm rendering because some
+  // Heat Index states use faceSkin while building the arm SVG.
+  let faceSkin=skin;
+  let faceCheek=cheek;
+
   // Default happy/normal face.
   let eyes=`<path d="M39 54c3.4 4 7.5 4 11 0M70 54c3.4 4 7.5 4 11 0" fill="none" stroke="#3c2925" stroke-width="3.5" stroke-linecap="round"/>`;
   let mouth=`<path d="M49 72c6 7 16 7 22 0" fill="none" stroke="#a33d49" stroke-width="3.7" stroke-linecap="round"/>`;
@@ -10374,9 +10380,6 @@ function overviewCharacterSvg(metric,state="normal"){
   // FINAL FACE/EXPRESSION OVERRIDES
   // Make each severity readable even without the label.
   // -----------------------------------------------------
-  let faceSkin=skin;
-  let faceCheek=cheek;
-
   if(metric==="temperature"){
     if(s==="very_cold"){
       faceSkin="#dff3ff";
@@ -10431,10 +10434,21 @@ function overviewCharacterSvg(metric,state="normal"){
     }
   }
 
+  if(metric==="pm25" && s==="warning"){
+    faceSkin="#ffd0b8";
+    faceCheek="#ed8a7d";
+    eyes=`<path d="M38 53l5-2.5M49 53l-5-1.5M71 53l5-1.5M82 53l-5-2.5" stroke="#3d2b28" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="44" cy="57" r="2.3" fill="#3d2b28"/>
+      <circle cx="76" cy="57" r="2.3" fill="#3d2b28"/>`;
+    mouth=`<path d="M53 74c4-3 10-3 14 0" fill="none" stroke="#9f4b52" stroke-width="3" stroke-linecap="round"/>`;
+  }
+
   if(metric==="pm25" && s==="critical"){
     faceSkin="#ffc0ad";
     faceCheek="#e96f69";
-    eyes=`<path d="M38 54l5-3M49 53l-5-2M71 53l5-2M82 54l-5-3" stroke="#3d2b28" stroke-width="3.1" stroke-linecap="round"/>`;
+    eyes=`<path d="M37 51l6 3M50 52l-6 2M70 52l6 2M83 51l-6 3" stroke="#3d2b28" stroke-width="3.3" stroke-linecap="round"/>
+      <circle cx="44" cy="58" r="2.5" fill="#3d2b28"/>
+      <circle cx="76" cy="58" r="2.5" fill="#3d2b28"/>`;
     mouth=`<path d="M52 75c5-5 11-5 16 0" fill="none" stroke="#9f3f49" stroke-width="3.4" stroke-linecap="round"/>`;
   }
 
