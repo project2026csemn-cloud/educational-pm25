@@ -24236,3 +24236,10 @@ html body .site-header.is-authenticated #accountRoleBadge{
     margin-left:0;
   }
 }
+
+
+/* V4.3 stability: map errors stay inside the map card */
+.monitoring-map,
+.admin-device-map{
+  position:relative;
+}
