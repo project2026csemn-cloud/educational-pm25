@@ -10921,11 +10921,25 @@ function deviceDisplayName(deviceId){
 // หน้าข้อมูลตรวจวัดเดิมยังคงอยู่ทั้งหมด
 // =====================================================
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
+const MONITORING_WORLD_BOUNDS=[
+  [-85.05112878,-180],
+  [85.05112878,180]
+];
+const ADMIN_DEVICE_MAX_IMAGES=8;
+const ADMIN_DEVICE_IMAGE_DATA_MAX=220000;
+
 let monitoringMap=null;
 let monitoringMarkers=new Map();
 let selectedMonitoringDeviceId=null;
+let monitoringBaseLayers={street:null,satellite:null};
+let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
+
 let adminDeviceMap=null;
 let adminDeviceMarker=null;
+let adminBaseLayers={street:null,satellite:null};
+let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
+let activeAdminDeviceId="Number 1";
+let adminMediaDragIndex=null;
 
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
@@ -10958,10 +10972,59 @@ function monitoringMarkerIcon(number,selected=false){
   if(typeof L==="undefined")return null;
   return L.divIcon({
     className:"monitoring-map-marker-wrap",
-    html:`<div class="monitoring-map-marker${selected?" selected":""}"><span>${esc(number)}</span></div>`,
-    iconSize:[40,40],
-    iconAnchor:[20,39]
+    html:`<div class="monitoring-map-marker-shell${selected?" selected":""}">
+      <span class="monitoring-map-marker-pulse"></span>
+      <div class="monitoring-map-marker-pin"><span>${esc(number)}</span></div>
+    </div>`,
+    iconSize:[46,52],
+    iconAnchor:[23,49]
   });
+}
+
+function createStreetTileLayer(){
+  return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    minZoom:1,
+    maxZoom:19,
+    noWrap:true,
+    bounds:MONITORING_WORLD_BOUNDS,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  });
+}
+
+function createSatelliteTileLayer(){
+  return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
+    minZoom:1,
+    maxZoom:19,
+    noWrap:true,
+    bounds:MONITORING_WORLD_BOUNDS,
+    attribution:'Tiles &copy; Esri'
+  });
+}
+
+function setMapBasemap(scope,mode){
+  const normalized=mode==="satellite"?"satellite":"street";
+  const map=scope==="admin"?adminDeviceMap:monitoringMap;
+  const layers=scope==="admin"?adminBaseLayers:monitoringBaseLayers;
+  if(!map)return;
+
+  Object.values(layers).forEach(layer=>{
+    if(layer&&map.hasLayer(layer))map.removeLayer(layer);
+  });
+  layers[normalized]?.addTo(map);
+
+  if(scope==="admin"){
+    adminBasemapMode=normalized;
+    localStorage.setItem("admin-basemap-mode",normalized);
+    document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.adminBasemap===normalized);
+    });
+  }else{
+    monitoringBasemapMode=normalized;
+    localStorage.setItem("monitoring-basemap-mode",normalized);
+    document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.publicBasemap===normalized);
+    });
+  }
 }
 
 function ensureMonitoringMap(){
@@ -10971,12 +11034,22 @@ function ensureMonitoringMap(){
     setTimeout(()=>monitoringMap.invalidateSize(),0);
     return monitoringMap;
   }
-  monitoringMap=L.map(root,{zoomControl:true,scrollWheelZoom:true})
-    .setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    maxZoom:19,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(monitoringMap);
+
+  monitoringMap=L.map(root,{
+    zoomControl:true,
+    scrollWheelZoom:true,
+    minZoom:1,
+    worldCopyJump:false,
+    maxBounds:MONITORING_WORLD_BOUNDS,
+    maxBoundsViscosity:1.0
+  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+
+  monitoringBaseLayers={
+    street:createStreetTileLayer(),
+    satellite:createSatelliteTileLayer()
+  };
+  setMapBasemap("public",monitoringBasemapMode);
+
   renderMonitoringMap({fit:true});
   return monitoringMap;
 }
@@ -11140,11 +11213,14 @@ function setupMonitoringMapUi(){
   });
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
   $("monitoringMapReset")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+  document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
+    btn.addEventListener("click",()=>setMapBasemap("public",btn.dataset.publicBasemap));
+  });
   renderMonitoringMapNodeTabs();
 }
 
 function adminMapSelectedDeviceId(){
-  return $("adminMapDeviceSelect")?.value||$("adminDevicePreviewSelect")?.value||"Number 1";
+  return activeAdminDeviceId||"Number 1";
 }
 
 function adminMapSelectedCard(){
@@ -11159,14 +11235,29 @@ function ensureAdminDeviceMap(){
     setTimeout(()=>adminDeviceMap.invalidateSize(),0);
     return adminDeviceMap;
   }
-  adminDeviceMap=L.map(root,{zoomControl:true}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    maxZoom:19,
-    attribution:'&copy; OpenStreetMap contributors'
-  }).addTo(adminDeviceMap);
+
+  adminDeviceMap=L.map(root,{
+    zoomControl:true,
+    minZoom:1,
+    worldCopyJump:false,
+    maxBounds:MONITORING_WORLD_BOUNDS,
+    maxBoundsViscosity:1.0
+  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+
+  adminBaseLayers={
+    street:createStreetTileLayer(),
+    satellite:createSatelliteTileLayer()
+  };
+  setMapBasemap("admin",adminBasemapMode);
+
   adminDeviceMap.on("click",e=>{
     setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);
   });
+
+  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{
+    btn.onclick=()=>setMapBasemap("admin",btn.dataset.adminBasemap);
+  });
+
   return adminDeviceMap;
 }
 
@@ -11177,10 +11268,10 @@ function setAdminMapCoordinates(lat,lng){
   const lngInput=card.querySelector(".admin-device-longitude");
   if(latInput)latInput.value=Number(lat).toFixed(7);
   if(lngInput)lngInput.value=Number(lng).toFixed(7);
-  refreshAdminMapEditor();
+  refreshAdminMapEditor({keepZoom:true});
 }
 
-function refreshAdminMapEditor(){
+function refreshAdminMapEditor({keepZoom=false}={}){
   const map=ensureAdminDeviceMap();
   const card=adminMapSelectedCard();
   if(!map||!card)return;
@@ -11199,43 +11290,33 @@ function refreshAdminMapEditor(){
       draggable:true,
       icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)
     }).addTo(map);
+
+    adminDeviceMarker.on("dragstart",()=>{
+      adminDeviceMarker.getElement()?.classList.add("is-dragging");
+    });
     adminDeviceMarker.on("dragend",()=>{
+      adminDeviceMarker.getElement()?.classList.remove("is-dragging");
       const p=adminDeviceMarker.getLatLng();
       setAdminMapCoordinates(p.lat,p.lng);
     });
-    map.setView([lat,lng],18);
-  }else{
+
+    if(!keepZoom)map.setView([lat,lng],18);
+    else map.panTo([lat,lng],{animate:true});
+  }else if(!keepZoom){
     map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
   }
 
   if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
   if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";
 
-  const images=(card.querySelector(".admin-device-images")?.value||"")
-    .split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,12);
-  const video=(card.querySelector(".admin-device-video")?.value||"").trim();
-  const media=$("adminDeviceMediaPreview");
-  if(media){
-    media.innerHTML=images.length
-      ?`<div class="admin-device-media-preview-grid">${images.slice(0,8).map(src=>`<img src="${esc(src)}" alt="" loading="lazy">`).join("")}</div>
-        <div class="admin-device-media-preview-note">${images.length} รูป${video?" • มีวิดีโอ":""}</div>`
-      :`<div class="admin-device-media-preview-note">ยังไม่มีภาพ${video?" • มีวิดีโอแล้ว":""}</div>`;
-  }
+  const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
+  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
   setTimeout(()=>map.invalidateSize(),80);
 }
 
 function syncAdminMapSelectOptions(){
-  const select=$("adminMapDeviceSelect");
-  if(!select)return;
-  const cards=[...document.querySelectorAll(".admin-device-card")];
-  const prev=select.value;
-  select.innerHTML=cards.map((card,i)=>{
-    const name=(card.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
-    return `<option value="${esc(card.dataset.deviceId)}">${esc(name)}</option>`;
-  }).join("");
-  if([...select.options].some(o=>o.value===prev))select.value=prev;
+  // V4 ใช้แท็บ Number 1–3 แทน select
 }
-
 
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
@@ -12148,74 +12229,402 @@ async function saveHelpEditor(){
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
+function adminDeviceImagesFromCard(card){
+  return (card?.querySelector(".admin-device-images")?.value||"")
+    .split(/\r?\n/)
+    .map(v=>v.trim())
+    .filter(Boolean)
+    .slice(0,ADMIN_DEVICE_MAX_IMAGES);
+}
+
+function setAdminDeviceImagesToCard(card,images){
+  const field=card?.querySelector(".admin-device-images");
+  if(!field)return;
+  field.value=(images||[]).map(v=>String(v||"").trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");
+}
+
+function activeAdminDeviceCard(){
+  return adminMapSelectedCard();
+}
+
+function switchAdminDevice(deviceId,{focusMap=false}={}){
+  const exists=[...document.querySelectorAll(".admin-device-card")].some(x=>x.dataset.deviceId===deviceId);
+  if(!exists)return;
+  activeAdminDeviceId=deviceId;
+
+  document.querySelectorAll("[data-admin-device-tab]").forEach(btn=>{
+    const active=btn.dataset.adminDeviceTab===deviceId;
+    btn.classList.toggle("active",active);
+    btn.setAttribute("aria-selected",String(active));
+  });
+  document.querySelectorAll(".admin-device-card").forEach(card=>{
+    card.classList.toggle("active",card.dataset.deviceId===deviceId);
+  });
+
+  syncAdminActiveMediaFields();
+  renderAdminMediaManager();
+  refreshAdminMapEditor();
+
+  if(focusMap&&window.innerWidth<780){
+    $("adminDeviceMap")?.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+}
+
+function syncAdminDeviceTabLabels(){
+  document.querySelectorAll("[data-admin-device-tab]").forEach((btn,i)=>{
+    const card=[...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===btn.dataset.adminDeviceTab);
+    const name=(card?.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
+    const label=btn.querySelector("b");
+    if(label)label.textContent=name||`จุดตรวจวัด ${i+1}`;
+  });
+}
+
+function syncAdminActiveMediaFields(){
+  const card=activeAdminDeviceCard();
+  if(!card)return;
+  const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();
+  if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;
+  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
+
+  const video=$("adminActiveVideoInput");
+  if(video){
+    video.value=card.querySelector(".admin-device-video")?.value||"";
+    video.oninput=()=>{
+      const target=activeAdminDeviceCard()?.querySelector(".admin-device-video");
+      if(target)target.value=video.value;
+    };
+  }
+}
+
 function renderAdminDevices(){
-  const root=$("adminDeviceList");if(!root)return;
+  const root=$("adminDeviceList");
+  const tabs=$("adminDeviceTabs");
+  if(!root||!tabs)return;
+
   const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}">
-    <h4>📍 จุดตรวจวัด ${i+1}</h4>
-    <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div>
-    <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label>
-    <label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label>
-    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="4">${esc(d.description||"")}</textarea></label>
+  if(!devices.some(d=>d.device_id===activeAdminDeviceId)){
+    activeAdminDeviceId=devices[0]?.device_id||"Number 1";
+  }
 
-    <div class="admin-device-map-fields">
-      <label class="admin-field">Latitude
-        <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+  tabs.innerHTML=devices.map((d,i)=>`
+    <button type="button"
+      class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}"
+      data-admin-device-tab="${esc(d.device_id)}"
+      role="tab"
+      aria-selected="${d.device_id===activeAdminDeviceId?"true":"false"}">
+      <span>${i+1}</span>
+      <b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b>
+    </button>
+  `).join("");
+
+  root.innerHTML=devices.map((d,i)=>`
+    <div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}">
+      <div class="admin-device-card-head">
+        <div>
+          <h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4>
+          <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} <span>• เปลี่ยนไม่ได้</span></div>
+        </div>
+      </div>
+
+      <label class="admin-field">ชื่อที่แสดง
+        <input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}">
       </label>
-      <label class="admin-field">Longitude
-        <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+
+      <label class="admin-field">ชื่อตำแหน่ง
+        <input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}" placeholder="เช่น บริเวณหน้าอาคาร...">
       </label>
+
+      <label class="admin-field">รายละเอียดจุดติดตั้ง
+        <textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="8" placeholder="อธิบายบริเวณโดยรอบ ลักษณะพื้นที่ และเหตุผลที่เลือกจุดนี้">${esc(d.description||"")}</textarea>
+      </label>
+
+      <div class="admin-device-map-fields">
+        <label class="admin-field">Latitude
+          <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่">
+        </label>
+        <label class="admin-field">Longitude
+          <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่">
+        </label>
+      </div>
+
+      <textarea class="admin-device-images hidden" aria-hidden="true">${esc(deviceImageList(d).join("\n"))}</textarea>
+      <input class="admin-device-video hidden" value="${esc(d.video_url||"")}">
     </div>
+  `).join("");
 
-    <label class="admin-field">รูปภาพของสถานที่
-      <textarea class="admin-device-images" rows="4" placeholder="1 บรรทัดต่อ 1 รูป เช่น&#10;img/node1-1.jpg&#10;img/node1-2.jpg">${esc(deviceImageList(d).join("\n"))}</textarea>
-      <small>ใช้ path รูปใน GitHub หรือ URL รูปภาพได้</small>
-    </label>
+  tabs.querySelectorAll("[data-admin-device-tab]").forEach(btn=>{
+    btn.addEventListener("click",()=>switchAdminDevice(btn.dataset.adminDeviceTab));
+  });
 
-    <label class="admin-field">วิดีโอ
-      <input class="admin-device-video" maxlength="600" value="${esc(d.video_url||"")}" placeholder="YouTube URL หรือ media/node1.mp4">
-    </label>
-  </div>`).join("");
-  root.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderAdminDevicePreview));
-  const sel=$("adminDevicePreviewSelect");
-  if(sel){
-    sel.innerHTML=devices.map((d,i)=>`<option value="${esc(d.device_id)}">${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</option>`).join("");
-    sel.onchange=renderAdminDevicePreview;
-  }
-  const mapSelect=$("adminMapDeviceSelect");
-  if(mapSelect){
-    mapSelect.onchange=refreshAdminMapEditor;
-  }
-  renderAdminDevicePreview();
+  root.querySelectorAll(".admin-device-display").forEach(el=>el.addEventListener("input",()=>{
+    syncAdminDeviceTabLabels();
+    syncAdminActiveMediaFields();
+    refreshAdminMapEditor({keepZoom:true});
+  }));
+  root.querySelectorAll(".admin-device-location,.admin-device-description").forEach(el=>{
+    el.addEventListener("input",syncAdminDeviceTabLabels);
+  });
+  root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>{
+    el.addEventListener("change",()=>refreshAdminMapEditor());
+  });
+
+  setupAdminMediaManager();
+  switchAdminDevice(activeAdminDeviceId);
   setTimeout(()=>refreshAdminMapEditor(),120);
 }
 
 function renderAdminDevicePreview(){
-  const cards=[...document.querySelectorAll(".admin-device-card")];
-  if(!cards.length)return;
-  const sel=$("adminDevicePreviewSelect");
-  let card=cards.find(x=>x.dataset.deviceId===sel?.value)||cards[0];
-  const name=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
-  const location=(card.querySelector(".admin-device-location")?.value||"").trim();
-  const description=(card.querySelector(".admin-device-description")?.value||"").trim();
-  if($("adminDevicePreviewName"))$("adminDevicePreviewName").textContent=name;
-  if($("adminDevicePreviewLocation")){
-    $("adminDevicePreviewLocation").textContent=location;
-    $("adminDevicePreviewLocation").classList.toggle("hidden",!location);
+  syncAdminDeviceTabLabels();
+  syncAdminActiveMediaFields();
+  refreshAdminMapEditor({keepZoom:true});
+}
+
+function adminMediaSetMessage(text,type=""){
+  const el=$("adminMediaMessage");
+  if(!el)return;
+  el.textContent=text||"";
+  el.classList.toggle("is-error",type==="error");
+  el.classList.toggle("is-success",type==="success");
+}
+
+function renderAdminMediaManager(){
+  const gallery=$("adminMediaGallery");
+  const card=activeAdminDeviceCard();
+  if(!gallery||!card)return;
+  const images=adminDeviceImagesFromCard(card);
+
+  if(!images.length){
+    gallery.innerHTML=`<div class="admin-media-empty">
+      <b>ยังไม่มีรูปของจุดนี้</b>
+      <span>เพิ่มรูปจากเครื่อง ลากวาง หรือวางด้วย Ctrl+V ได้</span>
+    </div>`;
+    return;
   }
-  if($("adminDevicePreviewDescription")){
-    $("adminDevicePreviewDescription").textContent=description;
-    $("adminDevicePreviewDescription").classList.toggle("hidden",!description);
+
+  gallery.innerHTML=images.map((src,i)=>`
+    <article class="admin-media-item${i===0?" is-cover":""}" draggable="true" data-media-index="${i}">
+      <div class="admin-media-thumb">
+        <img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">
+        ${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}
+      </div>
+      <div class="admin-media-item-actions">
+        <button type="button" data-media-cover="${i}" ${i===0?"disabled":""}>★ หลัก</button>
+        <button type="button" data-media-left="${i}" ${i===0?"disabled":""} aria-label="เลื่อนไปทางซ้าย">←</button>
+        <button type="button" data-media-right="${i}" ${i===images.length-1?"disabled":""} aria-label="เลื่อนไปทางขวา">→</button>
+        <button type="button" class="danger" data-media-delete="${i}">ลบ</button>
+      </div>
+    </article>
+  `).join("");
+
+  gallery.querySelectorAll("[data-media-cover]").forEach(btn=>btn.addEventListener("click",()=>{
+    const idx=Number(btn.dataset.mediaCover);
+    const next=adminDeviceImagesFromCard(card);
+    if(idx>0&&idx<next.length){
+      const [picked]=next.splice(idx,1);
+      next.unshift(picked);
+      setAdminDeviceImagesToCard(card,next);
+      renderAdminMediaManager();
+    }
+  }));
+
+  gallery.querySelectorAll("[data-media-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    const idx=Number(btn.dataset.mediaDelete);
+    const next=adminDeviceImagesFromCard(card);
+    next.splice(idx,1);
+    setAdminDeviceImagesToCard(card,next);
+    renderAdminMediaManager();
+  }));
+
+  const move=(from,to)=>{
+    const next=adminDeviceImagesFromCard(card);
+    if(from<0||to<0||from>=next.length||to>=next.length||from===to)return;
+    const [picked]=next.splice(from,1);
+    next.splice(to,0,picked);
+    setAdminDeviceImagesToCard(card,next);
+    renderAdminMediaManager();
+  };
+
+  gallery.querySelectorAll("[data-media-left]").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=Number(btn.dataset.mediaLeft);move(i,i-1);
+  }));
+  gallery.querySelectorAll("[data-media-right]").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=Number(btn.dataset.mediaRight);move(i,i+1);
+  }));
+
+  gallery.querySelectorAll(".admin-media-item").forEach(item=>{
+    item.addEventListener("dragstart",e=>{
+      adminMediaDragIndex=Number(item.dataset.mediaIndex);
+      item.classList.add("is-dragging");
+      if(e.dataTransfer)e.dataTransfer.effectAllowed="move";
+    });
+    item.addEventListener("dragend",()=>{
+      adminMediaDragIndex=null;
+      item.classList.remove("is-dragging");
+    });
+    item.addEventListener("dragover",e=>{e.preventDefault();});
+    item.addEventListener("drop",e=>{
+      e.preventDefault();
+      const to=Number(item.dataset.mediaIndex);
+      if(Number.isFinite(adminMediaDragIndex))move(adminMediaDragIndex,to);
+      adminMediaDragIndex=null;
+    });
+  });
+}
+
+function loadImageElementFromFile(file){
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("ไม่สามารถอ่านรูปภาพได้"));};
+    img.src=url;
+  });
+}
+
+async function optimizeAdminLocationImage(file){
+  if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||"")){
+    throw new Error("รองรับเฉพาะ JPG, PNG และ WEBP");
   }
-  if(sel){
-    [...sel.options].forEach(opt=>{
-      const c=cards.find(x=>x.dataset.deviceId===opt.value);
-      if(c)opt.textContent=(c.querySelector(".admin-device-display")?.value||opt.value).trim();
+  if(file.size>12*1024*1024){
+    throw new Error(`ไฟล์ ${file.name||""} ใหญ่เกิน 12 MB`);
+  }
+
+  const img=await loadImageElementFromFile(file);
+  let maxSide=1500;
+  let quality=.82;
+
+  for(let pass=0;pass<6;pass++){
+    const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const canvas=document.createElement("canvas");
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img,0,0,w,h);
+    const data=canvas.toDataURL("image/jpeg",quality);
+    if(data.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return data;
+    maxSide=Math.round(maxSide*.82);
+    quality=Math.max(.58,quality-.05);
+  }
+  throw new Error(`รูป ${file.name||""} ยังมีขนาดใหญ่เกินไปหลังย่อ`);
+}
+
+async function addAdminImageFiles(fileList){
+  const card=activeAdminDeviceCard();
+  if(!card)return;
+  const current=adminDeviceImagesFromCard(card);
+  const files=[...(fileList||[])].filter(f=>String(f.type||"").startsWith("image/"));
+  if(!files.length)return;
+
+  adminMediaSetMessage("กำลังเตรียมรูป...");
+  let added=0;
+
+  for(const file of files){
+    if(current.length>=ADMIN_DEVICE_MAX_IMAGES)break;
+    try{
+      const data=await optimizeAdminLocationImage(file);
+      current.push(data);
+      added++;
+    }catch(err){
+      adminMediaSetMessage(err.message||"มีรูปที่เพิ่มไม่สำเร็จ","error");
+    }
+  }
+
+  setAdminDeviceImagesToCard(card,current);
+  renderAdminMediaManager();
+  if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึกการเปลี่ยนแปลง`,"success");
+  if(current.length>=ADMIN_DEVICE_MAX_IMAGES&&files.length>added){
+    adminMediaSetMessage(`จุดตรวจวัดเก็บได้สูงสุด ${ADMIN_DEVICE_MAX_IMAGES} รูป`,"error");
+  }
+}
+
+function addAdminImageUrl(raw){
+  const url=String(raw||"").trim();
+  if(!/^https?:\/\//i.test(url)){
+    adminMediaSetMessage("กรุณาใส่ URL ที่ขึ้นต้นด้วย http:// หรือ https://","error");
+    return;
+  }
+  const card=activeAdminDeviceCard();
+  if(!card)return;
+  const images=adminDeviceImagesFromCard(card);
+  if(images.length>=ADMIN_DEVICE_MAX_IMAGES){
+    adminMediaSetMessage(`จุดตรวจวัดเก็บได้สูงสุด ${ADMIN_DEVICE_MAX_IMAGES} รูป`,"error");
+    return;
+  }
+  images.push(url);
+  setAdminDeviceImagesToCard(card,images);
+  renderAdminMediaManager();
+  adminMediaSetMessage("เพิ่ม URL รูปแล้ว กรุณากดบันทึก","success");
+}
+
+function extractDroppedImageUrl(dataTransfer){
+  if(!dataTransfer)return "";
+  const uri=String(dataTransfer.getData("text/uri-list")||"").split(/\r?\n/).find(x=>/^https?:\/\//i.test(x.trim()));
+  if(uri)return uri.trim();
+  const html=String(dataTransfer.getData("text/html")||"");
+  if(html){
+    const doc=new DOMParser().parseFromString(html,"text/html");
+    const src=doc.querySelector("img")?.src;
+    if(/^https?:\/\//i.test(src||""))return src;
+  }
+  const text=String(dataTransfer.getData("text/plain")||"").trim();
+  return /^https?:\/\//i.test(text)?text:"";
+}
+
+function setupAdminMediaManager(){
+  const input=$("adminImageFileInput");
+  const choose=$("adminChooseImagesButton");
+  const drop=$("adminMediaDropzone");
+  const urlInput=$("adminImageUrlInput");
+  const addUrl=$("adminAddImageUrlButton");
+
+  if(choose)choose.onclick=()=>input?.click();
+  if(input)input.onchange=async()=>{
+    await addAdminImageFiles(input.files);
+    input.value="";
+  };
+
+  if(drop&&!drop.dataset.ready){
+    drop.dataset.ready="1";
+    ["dragenter","dragover"].forEach(type=>drop.addEventListener(type,e=>{
+      e.preventDefault();drop.classList.add("is-dragover");
+    }));
+    ["dragleave","drop"].forEach(type=>drop.addEventListener(type,e=>{
+      e.preventDefault();drop.classList.remove("is-dragover");
+    }));
+    drop.addEventListener("drop",async e=>{
+      const files=[...(e.dataTransfer?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));
+      if(files.length){await addAdminImageFiles(files);return;}
+      const url=extractDroppedImageUrl(e.dataTransfer);
+      if(url)addAdminImageUrl(url);
+    });
+    drop.addEventListener("click",()=>input?.click());
+    drop.addEventListener("keydown",e=>{
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();input?.click();}
     });
   }
-  syncAdminMapSelectOptions();
-  refreshAdminMapEditor();
+
+  if(addUrl)addUrl.onclick=()=>{
+    addAdminImageUrl(urlInput?.value);
+    if(urlInput)urlInput.value="";
+  };
+
+  if(!document.body.dataset.adminMediaPasteReady){
+    document.body.dataset.adminMediaPasteReady="1";
+    document.addEventListener("paste",async e=>{
+      const panel=document.querySelector('[data-admin-panel="devices"].active');
+      if(!panel||$("adminCenter")?.classList.contains("hidden"))return;
+      const files=[...(e.clipboardData?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));
+      if(files.length){
+        e.preventDefault();
+        await addAdminImageFiles(files);
+      }
+    });
+  }
 }
+
 async function saveAdminDevices(){
   const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({
     device_id:d.dataset.deviceId,
@@ -12224,12 +12633,24 @@ async function saveAdminDevices(){
     description:d.querySelector(".admin-device-description")?.value||"",
     latitude:d.querySelector(".admin-device-latitude")?.value||null,
     longitude:d.querySelector(".admin-device-longitude")?.value||null,
-    images:(d.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean),
+    images:adminDeviceImagesFromCard(d),
     video_url:d.querySelector(".admin-device-video")?.value||""
   }));
-  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
-  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดและแผนที่แล้ว","success");}
-  catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+
+  const b=$("saveDevicesButton");
+  if(b)b.disabled=true;
+  setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
+
+  try{
+    await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});
+    await loadPublicDisplayConfig();
+    renderAdminDevices();
+    setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัด แผนที่ และรูปภาพแล้ว","success");
+  }catch(e){
+    setAuthMessage("deviceSaveMessage",e.message,"error");
+  }finally{
+    if(b)b.disabled=false;
+  }
 }
 
 function renderAnnouncementPreview(){
@@ -13304,11 +13725,20 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 // =====================================================
 // MAP V2 STARTUP
 // =====================================================
-(function startMapV2(){
+(function startMapV4(){
   const run=()=>{
     setupMonitoringMapUi();
-    const mapSelect=$("adminMapDeviceSelect");
-    if(mapSelect)mapSelect.addEventListener("change",refreshAdminMapEditor);
+
+    let resizeTimer=null;
+    const refreshMaps=()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(()=>{
+        monitoringMap?.invalidateSize();
+        adminDeviceMap?.invalidateSize();
+      },140);
+    };
+    window.addEventListener("resize",refreshMaps,{passive:true});
+    window.addEventListener("orientationchange",refreshMaps,{passive:true});
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
