@@ -20,7 +20,8 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link href="style.css?v=20260911-v36-61" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="style.css?v=20260911-map-v1" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -298,222 +299,78 @@
 </section>
 
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
-  <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
-<div class="dashboard-card-page-head dashboard-card-page-head-split mb-3">
-<div class="dashboard-card-page-copy">
-<div class="overview-eyebrow">MONITORING NODES</div>
-<div class="section-title-with-help">
-<h1>📍 จุดตรวจวัด</h1>
-<button aria-expanded="false" aria-label="ดูคำอธิบายหน้าจุดตรวจวัด" class="help-button" data-help="monitoringPage" type="button">?</button>
-</div>
-<p>ดูข้อมูลล่าสุดจากทั้ง 3 จุดและเปรียบเทียบสถานการณ์ปัจจุบัน</p>
-</div>
-<div class="monitoring-status-cluster">
-<div class="monitoring-status-card monitoring-primary-status">
-<div class="monitoring-status-label">ความพร้อมของระบบ</div>
-<div class="monitoring-status-value">
-<span class="text-slate-500" id="dataStateDotTop">●</span>
-<span id="dataStateStatusTop">กำลังตรวจสอบ</span>
-</div>
-<div class="monitoring-status-hint">แสดงความพร้อมของข้อมูลปัจจุบัน</div>
-</div>
-<div class="monitoring-status-card monitoring-node-count">
-<div class="monitoring-status-label">จุดตรวจวัด ONLINE</div>
-<div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
-<div class="monitoring-status-hint">จำนวนจุดที่ระบบแสดงเป็น ONLINE ขณะนี้</div>
-</div>
-</div>
-</div>
-<div class="grid md:grid-cols-3 gap-3">
+  <div class="map-page-shell">
+    <div class="map-page-heading">
+      <div>
+        <div class="overview-eyebrow">MONITORING LOCATIONS</div>
+        <div class="section-title-with-help">
+          <h1>📍 จุดตรวจวัด</h1>
+          <button aria-expanded="false" aria-label="ดูคำอธิบายหน้าจุดตรวจวัด" class="help-button" data-help="monitoringPage" type="button">?</button>
+        </div>
+        <p>ดูตำแหน่งจริงและรายละเอียดสภาพแวดล้อมของจุดติดตั้งทั้ง 3 จุด</p>
+      </div>
+      <button class="map-reset-button" id="monitoringMapReset" type="button">ดูทั้ง 3 จุด</button>
+    </div>
 
-<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard1">
-<div class="flex justify-between">
-<b class="text-xl">
-                        <span id="nodeTitle1">จุดตรวจวัด 1</span><div class="node-public-location hidden" id="nodeLocation1"></div><div class="node-public-description hidden" id="nodeDescription1"></div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            อัปเดตล่าสุด
-                            <span id="lastUpdate1">
-                                --
-                            </span>
-</div>
-</b>
-<span class="text-slate-500 text-xs font-bold" id="n1status">
-                        ● OFFLINE
-                        
-</span>
-</div>
-<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-<span class="text-slate-400">
-                        PM1.0
-                        <b class="text-white ml-1" id="n1pm1">--</b>
-</span>
-<span class="text-slate-400">
-                        PM2.5
-                        <b class="text-white ml-1" id="n1pm25">--</b>
-</span>
-<span class="text-slate-400">
-                        PM10
-                        <b class="text-white ml-1" id="n1pm10">--</b>
-</span>
-<span class="text-slate-400">
-                        Temp
-                        <b class="text-white ml-1" id="n1temp">--</b>
-</span>
-<span class="text-slate-400">
-                        Humidity
-                        <b class="text-white ml-1" id="n1hum">--</b>
-</span>
-<span class="text-slate-400">
-                        Light
-                        <b class="text-white ml-1" id="n1light">--</b>
-</span>
-</div>
-</div>
+    <div class="map-node-switcher" id="monitoringNodeSwitcher" aria-label="เลือกจุดตรวจวัด">
+      <button class="map-node-button" type="button" data-map-device="Number 1">
+        <span class="map-node-number">1</span>
+        <span><b id="mapNodeName1">จุดตรวจวัด 1</b><small id="mapNodeLocation1">เลือกเพื่อดูรายละเอียด</small></span>
+      </button>
+      <button class="map-node-button" type="button" data-map-device="Number 2">
+        <span class="map-node-number">2</span>
+        <span><b id="mapNodeName2">จุดตรวจวัด 2</b><small id="mapNodeLocation2">เลือกเพื่อดูรายละเอียด</small></span>
+      </button>
+      <button class="map-node-button" type="button" data-map-device="Number 3">
+        <span class="map-node-number">3</span>
+        <span><b id="mapNodeName3">จุดตรวจวัด 3</b><small id="mapNodeLocation3">เลือกเพื่อดูรายละเอียด</small></span>
+      </button>
+    </div>
 
-<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard2">
-<div class="flex justify-between">
-<b class="text-xl">
-                        <span id="nodeTitle2">จุดตรวจวัด 2</span><div class="node-public-location hidden" id="nodeLocation2"></div><div class="node-public-description hidden" id="nodeDescription2"></div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            อัปเดตล่าสุด
-                            <span id="lastUpdate2">
-                                --
-                            </span>
-</div>
-</b>
-<span class="text-slate-500 text-xs font-bold" id="n2status">
-                        ● OFFLINE
-                        
-</span>
-</div>
-<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-<span class="text-slate-400">
-                        PM1.0
-                        <b class="text-white ml-1" id="n2pm1">--</b>
-</span>
-<span class="text-slate-400">
-                        PM2.5
-                        <b class="text-white ml-1" id="n2pm25">--</b>
-</span>
-<span class="text-slate-400">
-                        PM10
-                        <b class="text-white ml-1" id="n2pm10">--</b>
-</span>
-<span class="text-slate-400">
-                        Temp
-                        <b class="text-white ml-1" id="n2temp">--</b>
-</span>
-<span class="text-slate-400">
-                        Humidity
-                        <b class="text-white ml-1" id="n2hum">--</b>
-</span>
-<span class="text-slate-400">
-                        Light
-                        <b class="text-white ml-1" id="n2light">--</b>
-</span>
-</div>
-</div>
+    <div class="monitoring-map-card glass card">
+      <div class="monitoring-map-layout" id="monitoringMapLayout">
+        <div class="monitoring-map-wrap">
+          <div id="monitoringMap" class="monitoring-map" aria-label="แผนที่ตำแหน่งจุดตรวจวัด"></div>
+          <div class="monitoring-map-empty hidden" id="monitoringMapEmpty">
+            <b>ยังไม่ได้กำหนดตำแหน่งจุดตรวจวัด</b>
+            <span>Admin/Owner สามารถปักหมุดจากเมนูจัดการเนื้อหาได้</span>
+          </div>
+        </div>
 
-<div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard3">
-<div class="flex justify-between">
-<b class="text-xl">
-                        <span id="nodeTitle3">จุดตรวจวัด 3</span><div class="node-public-location hidden" id="nodeLocation3"></div><div class="node-public-description hidden" id="nodeDescription3"></div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            อัปเดตล่าสุด
-                            <span id="lastUpdate3">
-                                --
-                            </span>
-</div>
-</b>
-<span class="text-slate-500 text-xs font-bold" id="n3status">
-                        ● OFFLINE
-                        
-</span>
-</div>
-<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
-<span class="text-slate-400">
-                        PM1.0
-                        <b class="text-white ml-1" id="n3pm1">--</b>
-</span>
-<span class="text-slate-400">
-                        PM2.5
-                        <b class="text-white ml-1" id="n3pm25">--</b>
-</span>
-<span class="text-slate-400">
-                        PM10
-                        <b class="text-white ml-1" id="n3pm10">--</b>
-</span>
-<span class="text-slate-400">
-                        Temp
-                        <b class="text-white ml-1" id="n3temp">--</b>
-</span>
-<span class="text-slate-400">
-                        Humidity
-                        <b class="text-white ml-1" id="n3hum">--</b>
-</span>
-<span class="text-slate-400">
-                        Light
-                        <b class="text-white ml-1" id="n3light">--</b>
-</span>
-</div>
-</div>
-</div>
-</div></section>
-  <section class="mb-4 dashboard-current-section"><div class="glass card p-5 lg:col-span-2 current-environment-card">
-<div class="current-environment-header">
-<div>
-<div class="section-title-with-help">
-<h2 class="text-xl font-black">📍 เปรียบเทียบจุดตรวจวัด</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" class="help-button" data-help="currentAir" type="button">?</button>
-</div>
-</div>
-<div class="current-environment-controls">
-<label class="current-metric-label" for="currentMetric">ตัวแปร</label>
-<select aria-label="เลือกตัวแปรข้อมูลปัจจุบัน" class="current-metric-select" id="currentMetric">
-<option selected="" value="pm25">PM2.5</option>
-<option value="pm1">PM1.0</option>
-<option value="pm10">PM10</option>
-<option value="temperature">อุณหภูมิ</option>
-<option value="humidity">ความชื้น</option>
-<option value="light">แสง</option>
-</select>
-<div class="current-quality-badge" id="qualityBadge">รอข้อมูล</div>
-</div>
-</div>
-<div class="current-environment-grid">
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label" id="currentOverallLabel">PM2.5 เฉลี่ยทั้งพื้นที่</span>
-<span class="current-environment-icon">◎</span>
-</div>
-<b class="current-environment-value" id="currentOverallValue">--</b>
-<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดตรวจวัดที่มีสถานะ ONLINE</div>
-</div>
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่ค่าสูงที่สุด</span>
-<span class="current-environment-icon">↑</span>
-</div>
-<b class="current-environment-value" id="currentHighestValue">--</b>
-<div class="current-environment-detail" id="currentHighestNode">--</div>
-</div>
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่ควรสนใจ</span>
-<span class="current-environment-icon">!</span>
-</div>
-<b class="current-environment-value current-watch-value" id="currentWatchNode">--</b>
-<div class="current-environment-detail" id="currentWatchDetail">รอข้อมูล</div>
-</div>
-</div>
-<div class="current-alerts-strip"><div class="section-title-with-help">
-<h2 class="text-xl font-black"><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button>
-</div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
-<span class="current-environment-footer-dot"></span>
-<span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</span>
-</div>
-</div></section>
+        <aside class="map-detail-panel" id="mapDetailPanel" aria-hidden="true">
+          <div class="map-detail-header">
+            <div>
+              <span class="map-detail-kicker">MONITORING LOCATION</span>
+              <h2 id="mapDetailTitle">จุดตรวจวัด</h2>
+              <p id="mapDetailLocation" class="hidden"></p>
+            </div>
+            <button type="button" class="map-detail-close" id="mapDetailClose" aria-label="ปิดรายละเอียด">×</button>
+          </div>
+
+          <div class="map-detail-scroll">
+            <section class="map-detail-section map-detail-gallery-section" id="mapDetailGallerySection">
+              <div class="map-detail-section-title">ภาพบริเวณติดตั้ง</div>
+              <div class="map-detail-main-image-wrap hidden" id="mapDetailMainImageWrap">
+                <img id="mapDetailMainImage" class="map-detail-main-image" alt="ภาพบริเวณจุดตรวจวัด">
+              </div>
+              <div class="map-detail-gallery hidden" id="mapDetailGallery"></div>
+              <div class="map-detail-placeholder" id="mapDetailImageEmpty">ยังไม่มีภาพของจุดนี้</div>
+            </section>
+
+            <section class="map-detail-section">
+              <div class="map-detail-section-title">รายละเอียดจุดติดตั้ง</div>
+              <div class="map-detail-description" id="mapDetailDescription">ยังไม่มีรายละเอียดของจุดนี้</div>
+            </section>
+
+            <section class="map-detail-section hidden" id="mapDetailVideoSection">
+              <div class="map-detail-section-title">วิดีโอ</div>
+              <div class="map-detail-video" id="mapDetailVideo"></div>
+            </section>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="dashboard-page" id="page-history" data-dashboard-page-panel="history">
@@ -1923,41 +1780,46 @@
           </div>
         </section>
         <section class="admin-panel" data-admin-panel="devices">
-          <div class="admin-panel-head"><div><h3>ข้อมูลจุดตรวจวัด</h3><p>แก้ชื่อ ตำแหน่ง และคำอธิบาย พร้อมดูตัวอย่างก่อนบันทึก รหัสภายในของข้อมูลจะไม่เปลี่ยน</p></div></div>
-          <div class="admin-help-layout admin-device-layout-v35">
+          <div class="admin-panel-head">
+            <div>
+              <h3>ข้อมูลจุดตรวจวัดบนแผนที่</h3>
+              <p>แก้ชื่อ ปักหรือย้ายหมุด ใส่ภาพ วิดีโอ และคำอธิบายของสถานที่ โดยรหัส Number 1–3 จะไม่เปลี่ยน</p>
+            </div>
+          </div>
+          <div class="admin-map-editor-layout">
             <div class="admin-editor-card">
               <div class="admin-device-list" id="adminDeviceList"></div>
-              <div class="admin-actions"><button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกข้อมูลจุดตรวจวัด</button></div>
+              <div class="admin-actions">
+                <button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกข้อมูลจุดตรวจวัด</button>
+              </div>
               <div class="admin-inline-message" id="deviceSaveMessage"></div>
             </div>
-            <div class="admin-preview-card admin-device-preview-card">
-              <div class="admin-preview-label">PREVIEW ก่อนบันทึก</div>
-              <label class="admin-field admin-preview-select-label">ดูตัวอย่าง
+
+            <div class="admin-preview-card admin-map-preview-card">
+              <div class="admin-preview-label">ปักหมุด / ดูตัวอย่าง</div>
+              <label class="admin-field admin-preview-select-label">กำลังแก้ไข
                 <select id="adminDevicePreviewSelect">
                   <option value="Number 1">จุดตรวจวัด 1</option>
                   <option value="Number 2">จุดตรวจวัด 2</option>
                   <option value="Number 3">จุดตรวจวัด 3</option>
                 </select>
               </label>
-              <div class="admin-device-live-preview">
-                <div class="admin-device-preview-card-ui">
-                  <div class="admin-device-preview-top">
-                    <span class="admin-device-preview-dot"></span>
-                    <div>
-                      <b id="adminDevicePreviewName">จุดตรวจวัด 1</b>
-                      <small id="adminDevicePreviewStatus">ONLINE</small>
-                    </div>
-                    <span>›</span>
-                  </div>
-                  <div class="admin-device-preview-location hidden" id="adminDevicePreviewLocation"></div>
-                  <div class="admin-device-preview-description hidden" id="adminDevicePreviewDescription"></div>
-                  <div class="admin-device-preview-metrics">
-                    <span><small>PM2.5</small><b>12</b><i>µg/m³</i></span>
-                    <span><small>อุณหภูมิ</small><b>29.4</b><i>°C</i></span>
-                    <span><small>ความชื้น</small><b>61</b><i>%</i></span>
-                  </div>
-                </div>
-                <p class="admin-preview-note">ตัวเลขเป็นข้อมูลตัวอย่างเพื่อดูรูปแบบการแสดงผลเท่านั้น</p>
+
+              <div class="admin-map-help">
+                คลิกบนแผนที่เพื่อปักหมุด หรือจับหมุดลากไปตำแหน่งใหม่
+              </div>
+              <div id="adminDeviceMap" class="admin-device-map" aria-label="แผนที่สำหรับปักหมุดจุดตรวจวัด"></div>
+              <div class="admin-coordinate-readout">
+                <span>Latitude <b id="adminDeviceLatPreview">—</b></span>
+                <span>Longitude <b id="adminDeviceLngPreview">—</b></span>
+              </div>
+
+              <div class="admin-location-preview">
+                <div class="admin-preview-label">ตัวอย่างรายละเอียด</div>
+                <b id="adminDevicePreviewName">จุดตรวจวัด 1</b>
+                <div class="admin-device-preview-location hidden" id="adminDevicePreviewLocation"></div>
+                <div class="admin-device-preview-description hidden" id="adminDevicePreviewDescription"></div>
+                <div class="admin-media-preview" id="adminDeviceMediaPreview"></div>
               </div>
             </div>
           </div>
@@ -2040,7 +1902,8 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script defer src="app.js?v=20260911-v36-61"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="app.js?v=20260911-map-v1"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
