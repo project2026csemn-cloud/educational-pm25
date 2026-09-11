@@ -9719,6 +9719,12 @@ updateSmart();
 
 updateAlertUI();
 
+// Network request has settled. If there was no usable cache,
+// replace the skeleton with the real "no data" state instead of
+// leaving a loading indicator forever.
+setOverviewLoadingState(false);
+updateNavigationDashboard();
+
 }
 
 }
@@ -10026,6 +10032,22 @@ function openDashboardPage(page,{updateHash=true}={}){
   }
 
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
+
+  // V36.60 — About contains many SVG characters. Render them only when
+  // the user actually opens About, so they do not compete with Overview startup.
+  if(page==="about" && !window.__aboutCharacterGuideRendered){
+    const renderGuides=()=>{
+      try{
+        renderAboutCharacterGuide();
+        renderAboutHeroGuide();
+        window.__aboutCharacterGuideRendered=true;
+      }catch(e){
+        console.error("About character guide render error:",e);
+      }
+    };
+    if("requestAnimationFrame" in window) requestAnimationFrame(renderGuides);
+    else setTimeout(renderGuides,0);
+  }
   if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
     setTimeout(()=>{
       try{
@@ -10537,6 +10559,34 @@ function renderAboutHeroGuide(){
   });
 }
 
+function setOverviewLoadingState(isLoading){
+  const characterIds=["overviewFace","overviewWeatherFace","overviewPM25Emoji","overviewTempEmoji","overviewHumidityEmoji","overviewHeatEmoji"];
+  const valueIds=["overviewPM25Card","overviewTemp","overviewHumidity","overviewHeat"];
+  const chipIds=["overviewQualityBadge","overviewWeatherStatus","overviewWeatherSeverity","overviewPM25Status","overviewTempStatus","overviewHumidityStatus","overviewHeatStatus"];
+  const lineIds=["overviewGuidance","overviewWeatherGuidance","overviewPM25Hint","overviewTempHint","overviewHumidityHint","overviewHeatHint"];
+
+  characterIds.forEach(id=>$(id)?.classList.toggle("overview-loading-character",!!isLoading));
+  valueIds.forEach(id=>$(id)?.classList.toggle("overview-loading-value",!!isLoading));
+  chipIds.forEach(id=>{
+    const el=$(id);
+    if(!el)return;
+    el.classList.toggle("overview-loading-text",!!isLoading && (id==="overviewQualityBadge"||id==="overviewWeatherStatus"));
+    el.classList.toggle("overview-loading-chip",!!isLoading && id!=="overviewQualityBadge" && id!=="overviewWeatherStatus");
+  });
+  lineIds.forEach(id=>$(id)?.classList.toggle("overview-loading-line",!!isLoading));
+  document.documentElement.classList.toggle("overview-data-loading",!!isLoading);
+}
+
+function setOverviewCharacter(el,metric,state){
+  if(!el)return;
+  const nextMetric=String(metric||"pm25");
+  const nextState=String(state||"no_data");
+  if(el.dataset.renderedMetric===nextMetric && el.dataset.renderedState===nextState && el.firstElementChild)return;
+  el.innerHTML=overviewCharacterSvg(nextMetric,nextState);
+  el.dataset.renderedMetric=nextMetric;
+  el.dataset.renderedState=nextState;
+}
+
 function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
@@ -10544,7 +10594,7 @@ function setOverviewMetricVisual(cardId,characterId,state,metric){
     card.classList.add(`metric-state-${state||"no_data"}`);
   }
   const el=$(characterId);
-  if(el) el.innerHTML=overviewCharacterSvg(metric,state||"no_data");
+  setOverviewCharacter(el,metric,state||"no_data");
 }
 
 function overviewFeelingText(metric, info){
@@ -10582,11 +10632,7 @@ function overviewFeelingText(metric, info){
 }
 
 function updateNavigationDashboard(){
-  if(!window.__aboutCharacterGuideRendered){
-    renderAboutCharacterGuide();
-    renderAboutHeroGuide();
-    window.__aboutCharacterGuideRendered=true;
-  }
+  setOverviewLoadingState(false);
   const pm25=averageLatestField("pm25");
   const temp=averageLatestField("temperature");
   const hum=averageLatestField("humidity");
@@ -10626,8 +10672,8 @@ function updateNavigationDashboard(){
   const dustSummary=overviewDustStatus(guide);
   const weatherSummary=overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo);
 
-  if($("overviewFace")) $("overviewFace").innerHTML=overviewCharacterSvg("pm25",guide.level||"no_data");
-  if($("overviewWeatherFace")) $("overviewWeatherFace").innerHTML=overviewCharacterSvg("heat",weatherSummary.characterState||"no_data");
+  setOverviewCharacter($("overviewFace"),"pm25",guide.level||"no_data");
+  setOverviewCharacter($("overviewWeatherFace"),"heat",weatherSummary.characterState||"no_data");
 
   if($("overviewWeatherStatus")){
     $("overviewWeatherStatus").textContent=weatherSummary.label;
