@@ -10049,10 +10049,54 @@ function overviewAdvice(pm25){
   return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
 }
 
-function updateOverviewParticleDisplay(){
-  const value=averageLatestField("pm25");
-  if($("overviewParticleLabel")) $("overviewParticleLabel").textContent="PM2.5 เฉลี่ยในพื้นที่";
-  if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
+let overviewParticleMetric="pm25";
+let overviewParticleRenderedMetric=null;
+let overviewParticleSwitchTimer=null;
+
+function updateOverviewParticleDisplay(animate=false){
+  const field=overviewParticleMetric;
+  const value=averageLatestField(field);
+  const label=field==="pm10"?"PM10 เฉลี่ยในพื้นที่":"PM2.5 เฉลี่ยในพื้นที่";
+  const box=document.querySelector(".overview-main-value");
+
+  const applyValue=()=>{
+    if($("overviewParticleLabel")) $("overviewParticleLabel").textContent=label;
+    if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
+    overviewParticleRenderedMetric=field;
+  };
+
+  const metricReallyChanged=
+    overviewParticleRenderedMetric!==null &&
+    overviewParticleRenderedMetric!==field;
+
+  if(!animate || !metricReallyChanged){
+    if(overviewParticleSwitchTimer){
+      clearTimeout(overviewParticleSwitchTimer);
+      overviewParticleSwitchTimer=null;
+    }
+    if(box) box.classList.remove("is-switching");
+    applyValue();
+    return;
+  }
+
+  if(overviewParticleSwitchTimer){
+    clearTimeout(overviewParticleSwitchTimer);
+  }
+
+  if(box) box.classList.add("is-switching");
+
+  overviewParticleSwitchTimer=window.setTimeout(()=>{
+    applyValue();
+    requestAnimationFrame(()=>{
+      if(box) box.classList.remove("is-switching");
+    });
+    overviewParticleSwitchTimer=null;
+  },180);
+}
+
+function toggleOverviewParticleMetric(){
+  overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
+  updateOverviewParticleDisplay(true);
 }
 
 function overviewCharacterSvg(metric,state="normal"){
@@ -10341,6 +10385,7 @@ runWhenIdle(()=>{
 });
 
 setInterval(updateNavigationDashboard,5000);
+setInterval(toggleOverviewParticleMetric,5000);
 
 // =====================================================
 // V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
