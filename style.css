@@ -22241,3 +22241,585 @@ html body .site-header.is-authenticated #accountRoleBadge{
     bottom:-46%!important;
   }
 }
+
+
+/* =====================================================
+   V36.53 — FRIENDLY HERO + HELP BUTTONS
+   ===================================================== */
+
+/* Title + ? stay together and never squeeze the Thai heading. */
+#page-overview .overview-summary-title-help{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  width:auto!important;
+}
+
+#page-overview .overview-summary-title-help h1,
+#page-overview .overview-summary-title-help h2{
+  flex:0 1 auto!important;
+  min-width:0!important;
+  width:auto!important;
+  margin:0!important;
+}
+
+#page-overview .overview-hero-help-button{
+  flex:0 0 auto!important;
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  border:1px solid rgba(15,78,103,.16)!important;
+  color:#155e75!important;
+  background:rgba(255,255,255,.62)!important;
+  box-shadow:
+    0 4px 12px rgba(23,52,70,.08),
+    inset 0 1px 0 rgba(255,255,255,.7)!important;
+  backdrop-filter:blur(5px)!important;
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease!important;
+}
+
+#page-overview .overview-hero-help-button:hover,
+#page-overview .overview-hero-help-button.is-active{
+  transform:translateY(-1px) scale(1.05)!important;
+  background:rgba(255,255,255,.88)!important;
+  box-shadow:
+    0 7px 16px rgba(23,52,70,.12),
+    inset 0 1px 0 rgba(255,255,255,.82)!important;
+}
+
+/* Softer, friendlier glass copy panel. */
+#page-overview .overview-summary-copy{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.36),rgba(255,255,255,.16))!important;
+  border-color:rgba(255,255,255,.38)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.50),
+    0 8px 22px rgba(20,57,69,.035)!important;
+}
+
+/* Give the characters a warm floating presence. */
+#page-overview .overview-summary-character{
+  animation:overviewCharacterFloat 5.5s ease-in-out infinite!important;
+  transform-origin:center bottom!important;
+}
+
+@keyframes overviewCharacterFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+
+/* Friendly dust scene */
+#page-overview .decor-spark{
+  position:absolute!important;
+  color:rgba(255,255,255,.92)!important;
+  text-shadow:0 0 14px rgba(255,255,255,.7)!important;
+  pointer-events:none!important;
+  opacity:.65!important;
+  animation:overviewSpark 4.8s ease-in-out infinite!important;
+}
+
+#page-overview .decor-spark-a{
+  top:94px!important;
+  right:115px!important;
+  font-size:17px!important;
+}
+
+#page-overview .decor-spark-b{
+  right:54px!important;
+  bottom:72px!important;
+  font-size:13px!important;
+  animation-delay:-2s!important;
+}
+
+@keyframes overviewSpark{
+  0%,100%{opacity:.28;transform:scale(.8) rotate(0deg)}
+  50%{opacity:.78;transform:scale(1.12) rotate(10deg)}
+}
+
+#page-overview .decor-leaf-a{
+  animation:overviewLeafFloat 7s ease-in-out infinite!important;
+}
+
+#page-overview .decor-leaf-b{
+  animation:overviewLeafFloat 8s ease-in-out infinite reverse!important;
+}
+
+@keyframes overviewLeafFloat{
+  0%,100%{translate:0 0}
+  50%{translate:-7px -5px}
+}
+
+/* Weather gets subtle heat movement rather than more icons. */
+#page-overview .decor-warm-wave{
+  position:absolute!important;
+  width:70px!important;
+  height:20px!important;
+  right:42px!important;
+  border-top:2px solid rgba(245,158,11,.18)!important;
+  border-radius:50%!important;
+  opacity:.55!important;
+  animation:overviewWarmWave 4.5s ease-in-out infinite!important;
+}
+
+#page-overview .decor-warm-wave-a{
+  top:142px!important;
+}
+
+#page-overview .decor-warm-wave-b{
+  top:169px!important;
+  right:65px!important;
+  width:54px!important;
+  animation-delay:-1.6s!important;
+}
+
+@keyframes overviewWarmWave{
+  0%,100%{transform:translateY(0) scaleX(.92);opacity:.22}
+  50%{transform:translateY(-7px) scaleX(1.05);opacity:.55}
+}
+
+/* Clouds move very slowly to keep the dashboard alive without distraction. */
+#page-overview .decor-cloud-a,
+#page-overview .decor-cloud-c{
+  animation:overviewCloudDrift 13s ease-in-out infinite!important;
+}
+
+#page-overview .decor-cloud-b,
+#page-overview .decor-cloud-d{
+  animation:overviewCloudDrift 16s ease-in-out infinite reverse!important;
+}
+
+@keyframes overviewCloudDrift{
+  0%,100%{translate:0 0}
+  50%{translate:9px 0}
+}
+
+/* A small ground glow connects illustration and card background. */
+#page-overview .overview-summary-character::after{
+  content:""!important;
+  position:absolute!important;
+  z-index:-2!important;
+  left:17%!important;
+  right:17%!important;
+  bottom:3%!important;
+  height:16px!important;
+  border-radius:50%!important;
+  background:rgba(31,111,84,.11)!important;
+  filter:blur(8px)!important;
+}
+
+#page-overview .overview-weather-summary .overview-summary-character::after{
+  background:rgba(190,107,25,.11)!important;
+}
+
+/* Slightly friendlier status type. */
+#page-overview .overview-summary-status{
+  text-wrap:balance!important;
+}
+
+#page-overview .overview-summary-message{
+  text-wrap:pretty!important;
+}
+
+/* Reduce motion when the OS/user asks for it. */
+@media (prefers-reduced-motion:reduce){
+  #page-overview .overview-summary-character,
+  #page-overview .decor-spark,
+  #page-overview .decor-leaf-a,
+  #page-overview .decor-leaf-b,
+  #page-overview .decor-warm-wave,
+  #page-overview .decor-cloud-a,
+  #page-overview .decor-cloud-b,
+  #page-overview .decor-cloud-c,
+  #page-overview .decor-cloud-d{
+    animation:none!important;
+  }
+}
+
+/* Mobile */
+@media (max-width:600px){
+  #page-overview .overview-summary-title-help{
+    gap:7px!important;
+  }
+
+  #page-overview .overview-hero-help-button{
+    width:26px!important;
+    height:26px!important;
+    min-width:26px!important;
+    font-size:13px!important;
+  }
+
+  #page-overview .decor-spark-a{
+    top:72px!important;
+    right:42px!important;
+  }
+
+  #page-overview .decor-spark-b,
+  #page-overview .decor-warm-wave-b{
+    display:none!important;
+  }
+
+  #page-overview .decor-warm-wave-a{
+    top:112px!important;
+    right:19px!important;
+    width:48px!important;
+  }
+}
+
+
+/* =====================================================
+   V36.54 — CURRENT CONDITIONS SOURCE + CHARACTER GUIDE
+   ===================================================== */
+
+/* Current conditions: make the "3 monitoring points" origin explicit. */
+#page-overview .overview-environment-heading-copy{
+  min-width:0;
+}
+
+#page-overview .overview-environment-source{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
+  padding:7px 11px;
+  border:1px solid rgba(56,189,248,.13);
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(14,165,233,.07),rgba(16,185,129,.055));
+  color:#9fb3c8;
+  font-size:12px;
+  line-height:1.45;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+#page-overview .overview-environment-source b,
+#page-overview .overview-environment-source strong{
+  color:#dcecf7;
+  font-weight:800;
+}
+
+#page-overview .overview-environment-source-icon{
+  flex:0 0 auto;
+  font-size:13px;
+  filter:saturate(.9);
+}
+
+#page-overview .overview-environment-source.is-no-data{
+  border-color:rgba(148,163,184,.12);
+  background:rgba(148,163,184,.055);
+  color:#94a3b8;
+}
+
+/* About: character status guide */
+#page-about .about-character-guide-section{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  margin-bottom:16px;
+  border:1px solid rgba(56,189,248,.11);
+}
+
+#page-about .about-character-guide-section::before,
+#page-about .about-character-guide-section::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  border-radius:999px;
+  filter:blur(2px);
+}
+
+#page-about .about-character-guide-section::before{
+  width:250px;
+  height:250px;
+  right:-95px;
+  top:-105px;
+  background:radial-gradient(circle,rgba(56,189,248,.09),rgba(56,189,248,0) 70%);
+}
+
+#page-about .about-character-guide-section::after{
+  width:220px;
+  height:220px;
+  left:-105px;
+  bottom:-120px;
+  background:radial-gradient(circle,rgba(34,197,94,.07),rgba(34,197,94,0) 70%);
+}
+
+#page-about .about-character-guide-head{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+#page-about .about-character-guide-head > div{
+  min-width:0;
+}
+
+#page-about .about-character-guide-badge{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:7px 11px;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,.15);
+  background:rgba(14,165,233,.07);
+  color:#9edcf5;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+#page-about .about-character-guide-grid{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+
+#page-about .about-character-metric{
+  position:relative;
+  overflow:hidden;
+  padding:17px;
+  border:1px solid rgba(148,163,184,.10);
+  border-radius:18px;
+  background:
+    linear-gradient(135deg,rgba(15,23,42,.62),rgba(15,23,42,.40)),
+    rgba(15,23,42,.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+#page-about .about-character-metric::after{
+  content:"";
+  position:absolute;
+  right:-50px;
+  top:-55px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  opacity:.17;
+  background:radial-gradient(circle,currentColor 0%,transparent 70%);
+  pointer-events:none;
+}
+
+#page-about .about-character-pm25{color:#5ee8ad;}
+#page-about .about-character-temp{color:#ffb36b;}
+#page-about .about-character-humidity{color:#65c9ff;}
+#page-about .about-character-heat{color:#ff9979;}
+
+#page-about .about-character-metric-head{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:14px;
+  color:#e7eef8;
+}
+
+#page-about .about-character-metric-icon{
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  border-radius:12px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.06);
+  font-size:19px;
+}
+
+#page-about .about-character-metric-head b{
+  display:block;
+  color:#f8fafc;
+  font-size:15px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+#page-about .about-character-metric-head span{
+  display:block;
+  margin-top:3px;
+  color:#91a4ba;
+  font-size:11px;
+  line-height:1.35;
+}
+
+#page-about .about-character-flow{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  width:100%;
+  overflow-x:auto;
+  padding:3px 2px 9px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(148,163,184,.22) transparent;
+}
+
+#page-about .about-character-flow::-webkit-scrollbar{
+  height:5px;
+}
+
+#page-about .about-character-flow::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(148,163,184,.22);
+}
+
+#page-about .about-character-state{
+  flex:1 0 110px;
+  min-width:110px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:4px;
+  text-align:center;
+}
+
+#page-about .about-character-avatar{
+  position:relative;
+  width:82px;
+  height:86px;
+  display:grid;
+  place-items:end center;
+  filter:drop-shadow(0 8px 13px rgba(2,8,23,.18));
+}
+
+#page-about .about-character-avatar svg{
+  display:block;
+  width:82px;
+  height:86px;
+  overflow:visible;
+}
+
+#page-about .about-character-state b{
+  max-width:116px;
+  min-height:30px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  color:#e7eef8;
+  font-size:11px;
+  line-height:1.32;
+  font-weight:800;
+  text-wrap:balance;
+}
+
+#page-about .about-character-arrow{
+  flex:0 0 auto;
+  align-self:center;
+  margin-top:28px;
+  color:rgba(148,163,184,.48);
+  font-size:16px;
+  font-weight:900;
+}
+
+#page-about .about-character-note{
+  position:relative;
+  z-index:1;
+  margin:5px 0 0;
+  padding-top:11px;
+  border-top:1px dashed rgba(148,163,184,.10);
+  color:#8fa2b7;
+  font-size:11px;
+  line-height:1.55;
+}
+
+#page-about .about-character-guide-tip{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-top:14px;
+  padding:12px 14px;
+  border:1px solid rgba(34,197,94,.11);
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(34,197,94,.055),rgba(14,165,233,.035));
+}
+
+#page-about .about-character-guide-tip > span{
+  flex:0 0 auto;
+  font-size:17px;
+}
+
+#page-about .about-character-guide-tip p{
+  margin:0;
+  color:#9fb1c4;
+  font-size:12px;
+  line-height:1.58;
+}
+
+#page-about .about-character-guide-tip b{
+  color:#e8f7ef;
+}
+
+@media (min-width:1100px){
+  #page-about .about-character-guide-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media (max-width:700px){
+  #page-overview .overview-environment-source{
+    display:flex;
+    width:100%;
+    align-items:flex-start;
+    border-radius:13px;
+    font-size:11px;
+  }
+
+  #page-about .about-character-guide-section{
+    padding:18px 14px;
+  }
+
+  #page-about .about-character-guide-head{
+    display:block;
+  }
+
+  #page-about .about-character-guide-badge{
+    margin-top:12px;
+    white-space:normal;
+  }
+
+  #page-about .about-character-metric{
+    padding:14px 10px;
+  }
+
+  #page-about .about-character-flow{
+    gap:5px;
+  }
+
+  #page-about .about-character-state{
+    flex-basis:96px;
+    min-width:96px;
+  }
+
+  #page-about .about-character-avatar,
+  #page-about .about-character-avatar svg{
+    width:72px;
+    height:76px;
+  }
+
+  #page-about .about-character-arrow{
+    margin-top:25px;
+    font-size:14px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  #page-about .about-character-avatar{
+    animation:none!important;
+  }
+}
