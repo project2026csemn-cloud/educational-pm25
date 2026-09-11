@@ -993,9 +993,12 @@ MOTHER_OFFLINE_MS
 
 function nodeStatusTime(node){
   if(!node)return null;
+
+  // V5.1 — status_recorded_at from API now represents node_status freshness,
+  // and last_seen is the strongest connectivity signal.
   return parseDate(
-    node.status_recorded_at||
     node.last_seen||
+    node.status_recorded_at||
     node.timestamp||
     node.reading_recorded_at||
     null
@@ -2040,10 +2043,33 @@ return{level:"critical",label:"อันตรายมาก"};
 
 function activeNodes(){
   // ใช้สถานะและ timestamp ของแต่ละจุดโดยตรง
-  // ไม่ซ่อนค่าตรวจวัดเพียงเพราะ heartbeat ของตัวแม่ยังโหลดไม่เสร็จ
   return latestNodes.filter(
     n=>["online","sleep"].includes(getNodeStatus(n))
   );
+}
+
+function latestUsableNodes(field=null){
+  return latestNodes.filter(node=>{
+    if(!node)return false;
+    if(field)return hasFiniteSensorValue(node[field]);
+    return ["pm1","pm25","pm10","temperature","humidity","light"]
+      .some(key=>hasFiniteSensorValue(node[key]));
+  });
+}
+
+function summaryNodes(field=null){
+  const active=activeNodes().filter(node=>
+    field?hasFiniteSensorValue(node[field]):true
+  );
+  if(active.length)return {nodes:active,isFallback:false};
+
+  // V5.1: the node cards may correctly be OFFLINE after 8 minutes,
+  // but the latest measured values are still useful. Do not turn the whole
+  // Overview/Comparison into "รอข้อมูล" while those values are visible.
+  return {
+    nodes:latestUsableNodes(field),
+    isFallback:true
+  };
 }
 
 function averageOf(
@@ -2076,8 +2102,8 @@ a.length
 
 function currentEnvironmentSnapshot(){
 
-const nodes=
-activeNodes();
+const summary=summaryNodes();
+const nodes=summary.nodes;
 
 const temperature=
 averageOf(
@@ -2611,21 +2637,8 @@ if(!latestNodes.length){
   );
 }
 
-const usable=
-latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)&&
-hasFiniteSensorValue(
-n[currentMetric]
-)
-);
+const currentSummary=summaryNodes(currentMetric);
+const usable=currentSummary.nodes;
 
 if(
 !usable.length
@@ -2666,6 +2679,15 @@ a[currentMetric]
 ?b
 :a
 );
+
+if(currentSummary.isFallback){
+  if($("currentOverallDetail")){
+    $("currentOverallDetail").textContent="สรุปจากค่าตรวจวัดล่าสุด • จุดตรวจวัดปัจจุบันอาจ OFFLINE";
+  }
+  if($("currentEnvironmentFooter")){
+    $("currentEnvironmentFooter").textContent="กำลังแสดงค่าตรวจวัดล่าสุดที่มีอยู่ เนื่องจากยังไม่มีจุดที่ ONLINE";
+  }
+}
 
 const watch=
 usable
@@ -4045,6 +4067,36 @@ cubicInterpolationMode:"monotone"
 };
 }
 
+function renderAllMetricHistorySummary(rows,contextLabel=""){
+  const summaryRows=spatialAverageRows(
+    (Array.isArray(rows)?rows:[]).filter(r=>isRealHistoryReading(r,"pm25")),
+    ["pm25"]
+  );
+
+  const s=stats(summaryRows,"pm25");
+  const values=summaryRows
+    .map(r=>finiteNumberOrNull(r.pm25))
+    .filter(v=>v!==null);
+
+  if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":`${fmt(s.avg)} µg/m³`;
+  if($("trendMax"))$("trendMax").textContent=s.max==null?"--":`${fmt(s.max)} µg/m³`;
+  if($("trendMin"))$("trendMin").textContent=s.min==null?"--":`${fmt(s.min)} µg/m³`;
+  if($("trendLast"))$("trendLast").textContent=s.last==null?"--":`${fmt(s.last)} µg/m³`;
+
+  if($("trend")){
+    if(values.length<2){
+      $("trend").textContent=values.length
+        ?`PM2.5 • ${contextLabel||"ข้อมูลล่าสุด"}`
+        :"ไม่มีข้อมูล PM2.5";
+    }else{
+      const diff=values.at(-1)-values[0];
+      const pct=values[0]?diff/Math.abs(values[0])*100:0;
+      const direction=Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
+      $("trend").textContent=`${direction} • PM2.5`;
+    }
+  }
+}
+
 function drawCharts(){
 
 if(typeof Chart==="undefined"){
@@ -4070,7 +4122,10 @@ const nodeText=compareMode
 :averageMode
 ?"ค่าเฉลี่ยพื้นที่"
 :historyNodeLabel(historyNode);
-$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
+$("selectedMetricLabel").textContent=
+  metric==="all"
+    ?`ALL • ${nodeText} • สรุป PM2.5`
+    :`${metricLabel()} • ${nodeText}`;
 }
 
 historyGroupCharts=destroyChartList(historyGroupCharts);
@@ -4099,11 +4154,7 @@ drawForecast([]);
 return;
 }
 
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
+renderAllMetricHistorySummary(allBase,"ค่าเฉลี่ยพื้นที่");
 
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
@@ -4136,11 +4187,7 @@ return;
 }
 
 if(metric==="all"&&compareMode){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
+renderAllMetricHistorySummary(base,"เปรียบเทียบ 3 จุด");
 
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
@@ -4170,11 +4217,7 @@ return;
 }
 
 if(metric==="all"){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
+renderAllMetricHistorySummary(base,historyNodeLabel(historyNode));
 
 area.innerHTML=
 groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
