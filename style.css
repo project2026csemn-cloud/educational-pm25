@@ -23627,3 +23627,32 @@ html body .site-header.is-authenticated #accountRoleBadge{
     animation:none!important;
   }
 }
+
+
+/* =====================================================
+   V36.61 — STARTUP PERFORMANCE / FUTURE HEAVY FEATURE READY
+   ===================================================== */
+
+/* Below-the-fold content does not need full layout/paint during first screen. */
+#page-overview .overview-recommendation-section,
+#page-about .about-character-guide-section,
+#page-about .about-hero-guide-section,
+#page-about .about-standards-section{
+  content-visibility:auto;
+  contain-intrinsic-size:1px 680px;
+}
+
+/* Hidden pages should never animate or paint while another dashboard page is active. */
+[data-dashboard-page-panel]:not(.active) *{
+  animation-play-state:paused!important;
+}
+
+/* Keep first-screen skeleton cheap on slower/mobile devices. */
+@media (max-width:700px){
+  #page-overview .overview-loading-text::after,
+  #page-overview .overview-loading-value::after,
+  #page-overview .overview-loading-chip::after,
+  #page-overview .overview-loading-line::after{
+    animation-duration:1.8s!important;
+  }
+}
