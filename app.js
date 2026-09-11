@@ -9937,96 +9937,103 @@ function updateOverviewParticleDisplay(){
 function overviewCharacterSvg(metric,state="normal"){
   const s=String(state||"normal");
   const noData=s==="no_data";
-  const severe=["critical","very_hot","very_high"].includes(s);
+  const critical=["critical","very_hot","very_high"].includes(s);
   const warning=["warning","hot","high","watch"].includes(s);
-  const cold=["very_cold","cold","cool"].includes(s);
+  const cool=["very_cold","cold","cool"].includes(s);
   const low=s==="low";
 
-  const shirt=
-    metric==="pm25"?"#20b779":
-    metric==="temperature"?"#f59e42":
-    metric==="humidity"?"#2f9ee8":
-    "#f07c57";
+  const palette={
+    pm25:{shirt:"#24b978",hood:"#0b9660"},
+    temperature:{shirt:"#ff9e45",hood:"#f27b2f"},
+    humidity:{shirt:"#2aa9e8",hood:"#137fc4"},
+    heat:{shirt:"#ff8d62",hood:"#ed6348"}
+  }[metric]||{shirt:"#36bca5",hood:"#238a7b"};
 
-  const face=noData?"#f0c4ad":severe?"#f4ae96":warning?"#ffc3a5":"#ffd0b5";
-  const cheek=severe?"#f46f6f":warning?"#f58f78":"#f6a28d";
-  const hair="#493027";
-  const hairHi="#6a4335";
+  const skin=critical?"#ffc2a7":warning?"#ffd0b5":"#ffd8bd";
+  const hair="#442d24";
+  const hair2="#704939";
+  const cheek=critical?"#f27676":warning?"#f79584":"#f7a58f";
 
-  let eyes=`<path d="M39 51c3 3 7 3 10 0M71 51c3 3 7 3 10 0" stroke="#382724" stroke-width="3.5" stroke-linecap="round" fill="none"/>`;
-  let mouth=`<path d="M49 69c6 7 16 7 22 0" stroke="#9a3f49" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+  let eyes=`<path d="M39 54c3.4 4 7.5 4 11 0M70 54c3.4 4 7.5 4 11 0" fill="none" stroke="#3c2925" stroke-width="3.5" stroke-linecap="round"/>`;
+  let mouth=`<path d="M49 72c6 7 16 7 22 0" fill="none" stroke="#a33d49" stroke-width="3.7" stroke-linecap="round"/>`;
+
   if(noData){
-    eyes=`<path d="M40 52h8M72 52h8" stroke="#65483f" stroke-width="3" stroke-linecap="round"/><path d="M54 70h12" stroke="#8b5f56" stroke-width="3" stroke-linecap="round"/>`;
-  }else if(severe){
-    eyes=`<path d="M39 54c3-4 7-4 10 0M71 54c3-4 7-4 10 0" stroke="#382724" stroke-width="3.6" stroke-linecap="round" fill="none"/>`;
-    mouth=`<path d="M50 72c6-6 15-6 21 0" stroke="#9a3f49" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+    eyes=`<path d="M40 54h8M72 54h8" stroke="#68504a" stroke-width="3.2" stroke-linecap="round"/>`;
+    mouth=`<path d="M54 72h12" stroke="#95685f" stroke-width="3.2" stroke-linecap="round"/>`;
+  }else if(critical){
+    eyes=`<path d="M39 56c3-5 8-5 11 0M70 56c3-5 8-5 11 0" fill="none" stroke="#3c2925" stroke-width="3.6" stroke-linecap="round"/>`;
+    mouth=`<path d="M50 75c6-7 15-7 21 0" fill="none" stroke="#a33d49" stroke-width="3.6" stroke-linecap="round"/>`;
   }else if(warning){
-    eyes=`<circle cx="44" cy="53" r="2.4" fill="#382724"/><circle cx="76" cy="53" r="2.4" fill="#382724"/>`;
-    mouth=`<path d="M52 71c5 2 11 2 16 0" stroke="#9a3f49" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+    eyes=`<circle cx="44" cy="55" r="2.6" fill="#3c2925"/><circle cx="76" cy="55" r="2.6" fill="#3c2925"/>`;
+    mouth=`<path d="M53 73c5 2 10 2 15 0" fill="none" stroke="#a33d49" stroke-width="3.2" stroke-linecap="round"/>`;
   }
 
   let accessory="";
-  let arms=`<path d="M33 93c-7 1-12 7-13 15M87 93c7 1 12 7 13 15" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>`;
+  let leftArm=`<path d="M34 98c-8 2-12 8-13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
+  let rightArm=`<path d="M86 98c8 2 12 8 13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
 
-  if(metric==="pm25" && ["warning","critical"].includes(s)){
-    accessory+=`<path d="M40 62Q60 55 81 62V76Q60 83 40 76Z" fill="#e9f8fb" stroke="#76b6ca" stroke-width="2"/>
-      <path d="M40 64C32 61 30 71 39 73M81 64C89 61 91 71 82 73" fill="none" stroke="#76b6ca" stroke-width="2"/>`;
+  if(metric==="pm25"){
+    if(["warning","critical"].includes(s)){
+      accessory+=`<path d="M39 64Q60 56 82 64V78Q60 85 39 78Z" fill="#eefcff" stroke="#67abc1" stroke-width="2"/>
+      <path d="M39 67C31 63 29 74 39 76M82 67C90 63 92 74 82 76" fill="none" stroke="#67abc1" stroke-width="2"/>`;
+    }else{
+      accessory+=`<path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".55"/>`;
+    }
   }
 
-  if(metric==="temperature" && cold){
-    accessory+=`<path d="M34 89Q60 80 87 89L81 102H40Z" fill="#57b6e8"/>
-      <path d="M70 88l8 25 10-4-6-24" fill="#339bd3"/>`;
-    arms=`<path d="M35 94Q50 103 60 98M85 94Q70 103 60 98" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>`;
+  if(metric==="temperature" && cool){
+    accessory+=`<path d="M36 91Q60 83 85 91L82 103H40Z" fill="#4fb1e4"/>
+      <path d="M67 89l10 28 10-4-7-27" fill="#288fc9"/>`;
+    leftArm=`<path d="M35 99Q49 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
+    rightArm=`<path d="M85 99Q71 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
+  }
+  if(metric==="temperature" && (warning||critical)){
+    accessory+=`<path d="M91 42c8 12 4 20-3 20-8 0-10-9-4-18l4-9z" fill="#3bb3ef"/>
+      <circle cx="24" cy="28" r="10" fill="#ffd14c"/><g stroke="#ffae1b" stroke-width="2.2" stroke-linecap="round"><path d="M24 10v7M24 39v7M6 28h7M35 28h7"/></g>`;
   }
 
-  if(metric==="temperature" && (warning||severe)){
-    accessory+=`<path d="M88 43c8 11 4 19-3 19-8 0-10-9-4-17 2-3 4-6 7-10z" fill="#42aee8"/>
-      <path d="M24 47c5 7 2 13-3 13-6 0-7-7-3-12l3-6z" fill="#75c8ef" opacity=".9"/>`;
-  }
-
-  if(metric==="humidity" && (warning||severe)){
-    accessory+=`<path d="M27 47c6 8 2 14-3 14-7 0-8-7-4-13l4-7zM91 51c5 7 2 12-3 12-5 0-7-6-3-11l3-6z" fill="#3ba8e8"/>`;
-  }
-
-  if(metric==="humidity" && low){
-    accessory+=`<path d="M24 79l10-4M87 77l10 4" stroke="#d0a261" stroke-width="3.2" stroke-linecap="round"/>`;
+  if(metric==="humidity"){
+    if(warning||critical){
+      accessory+=`<path d="M27 46c6 9 2 16-4 16-7 0-9-8-4-14l5-8zM93 50c5 8 2 14-3 14-6 0-8-7-4-12l4-7z" fill="#39a9e8"/>`;
+    }
+    if(low){
+      accessory+=`<path d="M24 83l11-4M86 80l10 5" stroke="#c38a4a" stroke-width="3.4" stroke-linecap="round"/>`;
+    }
   }
 
   if(metric==="heat" && ["watch","warning","critical"].includes(s)){
-    accessory+=`<path d="M91 42c7 10 3 17-3 17-7 0-9-8-4-15l4-9z" fill="#36a9ec"/>
-      <circle cx="27" cy="28" r="11" fill="#ffd84f"/>
-      <g stroke="#ffad17" stroke-width="2.5" stroke-linecap="round">
-        <path d="M27 8v8M27 40v8M7 28h8M39 28h8M13 14l6 6M41 14l-6 6"/>
-      </g>`;
-    arms=`<path d="M34 96c-4 0-8 4-10 11" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>
-      <path d="M85 95Q78 78 69 67" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>
-      <circle cx="68" cy="66" r="5" fill="${face}"/>`;
+    accessory+=`<circle cx="26" cy="27" r="11" fill="#ffd241"/>
+      <g stroke="#ffae17" stroke-width="2.5" stroke-linecap="round"><path d="M26 8v8M26 39v8M7 27h8M38 27h8M12 13l6 6M40 13l-6 6"/></g>
+      <path d="M91 43c7 11 3 18-3 18-7 0-9-8-4-16l4-9z" fill="#33a8ea"/>`;
+    rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
   }
 
-  const sparkle = noData ? "" : `<circle cx="22" cy="69" r="2.2" fill="#fff" opacity=".7"/><circle cx="95" cy="72" r="1.7" fill="#fff" opacity=".55"/>`;
-
-  return `<svg viewBox="0 0 120 120" role="img" aria-hidden="true" focusable="false">
+  return `<svg viewBox="0 0 120 126" role="img" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id="shirt-${metric}-${s}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${shirt}"/><stop offset="1" stop-color="${shirt}" stop-opacity=".78"/>
+        <stop offset="0" stop-color="${palette.shirt}"/><stop offset="1" stop-color="${palette.hood}"/>
       </linearGradient>
     </defs>
-    <circle cx="60" cy="61" r="49" fill="rgba(255,255,255,.18)"/>
-    <circle cx="60" cy="61" r="42" fill="rgba(255,255,255,.12)"/>
-    ${sparkle}
-    <path d="M31 116c3-23 14-34 29-34s26 11 29 34" fill="url(#shirt-${metric}-${s})"/>
-    ${arms}
-    <ellipse cx="60" cy="58" rx="32" ry="34" fill="${face}"/>
-    <path d="M28 53c0-27 13-42 33-42 22 0 34 15 33 40-7-7-15-14-26-17-8 9-20 15-40 19z" fill="${hair}"/>
-    <path d="M34 38c7-15 18-22 31-22 10 0 20 4 25 12-12-5-25-5-36 0-8 3-14 7-20 10z" fill="${hairHi}" opacity=".8"/>
-    <path d="M33 51c-3 0-6 4-6 9 0 6 4 10 8 9M87 51c3 0 6 4 6 9 0 6-4 10-8 9" fill="${face}"/>
+
+    <circle cx="60" cy="60" r="52" fill="rgba(255,255,255,.28)"/>
+    <circle cx="60" cy="60" r="45" fill="rgba(255,255,255,.17)"/>
+
+    <path d="M26 126c2-24 15-39 34-39s32 15 34 39" fill="url(#shirt-${metric}-${s})"/>
+    <path d="M43 94c5 5 11 8 17 8s12-3 17-8l7 32H36z" fill="rgba(255,255,255,.10)"/>
+    ${leftArm}${rightArm}
+
+    <ellipse cx="60" cy="59" rx="32" ry="35" fill="${skin}"/>
+    <path d="M28 54c-1-27 13-44 34-44 22 0 34 16 32 42-8-8-16-14-27-17-8 10-21 16-39 19z" fill="${hair}"/>
+    <path d="M34 36c8-15 19-21 31-21 10 0 19 4 25 11-13-5-26-4-37 1-8 3-14 6-19 9z" fill="${hair2}" opacity=".86"/>
+    <path d="M32 53c-5 0-8 5-7 11 0 7 5 11 10 9M88 53c5 0 8 5 7 11 0 7-5 11-10 9" fill="${skin}"/>
+
     ${eyes}
-    <circle cx="41" cy="64" r="5.5" fill="${cheek}" opacity=".52"/><circle cx="79" cy="64" r="5.5" fill="${cheek}" opacity=".52"/>
+    <circle cx="40" cy="66" r="5.5" fill="${cheek}" opacity=".55"/>
+    <circle cx="80" cy="66" r="5.5" fill="${cheek}" opacity=".55"/>
     ${mouth}
     ${accessory}
   </svg>`;
 }
-
 function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
@@ -10138,13 +10145,12 @@ function updateNavigationDashboard(){
       if(label) label.textContent="ไม่สามารถยืนยันสถานะ";
       continue;
     }
-    if(dot) dot.className=`overview-node-dot ${raw}`;
+    const overviewStatus = raw==="sleep" ? "online" : raw;
+    if(dot) dot.className=`overview-node-dot ${overviewStatus}`;
     if(label){
-      label.textContent=raw==="online"
+      label.textContent=(raw==="online"||raw==="sleep")
         ?`ออนไลน์ • ${t}`
-        :raw==="sleep"
-          ?`พักการทำงาน • ${t}`
-          :"ออฟไลน์";
+        :"ออฟไลน์";
     }
   }
 
