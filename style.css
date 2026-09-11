@@ -23029,3 +23029,36 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
+
+
+/* =====================================================
+   V36.56 — UNIQUE CHARACTER STATES + SVG BODY FIX
+   ===================================================== */
+
+#page-about .about-character-avatar{
+  width:88px!important;
+  height:94px!important;
+  overflow:visible!important;
+}
+
+#page-about .about-character-avatar svg{
+  width:88px!important;
+  height:94px!important;
+  overflow:visible!important;
+}
+
+#page-about .about-character-state{
+  overflow:visible!important;
+}
+
+#page-about .about-character-flow{
+  overflow-y:visible!important;
+}
+
+@media (max-width:700px){
+  #page-about .about-character-avatar,
+  #page-about .about-character-avatar svg{
+    width:78px!important;
+    height:84px!important;
+  }
+}
