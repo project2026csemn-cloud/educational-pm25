@@ -1028,6 +1028,184 @@
     </div>
   </section>
 
+  <section class="glass card about-hero-guide-section" aria-labelledby="aboutHeroGuideTitle">
+    <div class="about-hero-guide-head">
+      <div>
+        <div class="overview-eyebrow">OVERVIEW SUMMARY GUIDE</div>
+        <div class="section-title-with-help">
+          <h2 id="aboutHeroGuideTitle">ตัวละครสรุปภาพรวมด้านบน</h2>
+          <button
+            aria-expanded="false"
+            aria-label="ดูคำอธิบายการสรุปผลบนการ์ดภาพรวม"
+            class="help-button"
+            data-help="aboutHeroGuide"
+            type="button"
+          >?</button>
+        </div>
+        <p class="about-section-lead">
+          การ์ดสรุปด้านบนของหน้าภาพรวมจะใช้ตัวละครช่วยบอกความหมายของสถานการณ์
+          โดยแยกเป็น “คุณภาพฝุ่น” และ “สภาพอากาศโดยรวม”
+        </p>
+      </div>
+    </div>
+
+    <div class="about-hero-guide-grid">
+
+      <article class="about-hero-guide-card about-hero-guide-dust">
+        <div class="about-hero-guide-card-head">
+          <div class="about-hero-guide-icon">🌿</div>
+          <div>
+            <b>คุณภาพฝุ่นในอากาศตอนนี้</b>
+            <span>สรุประดับฝุ่นให้เข้าใจง่ายจากสถานการณ์ปัจจุบัน</span>
+          </div>
+        </div>
+
+        <div class="about-hero-status-flow" aria-label="ตัวอย่างสถานะคุณภาพฝุ่น">
+          <div class="about-hero-status-item">
+            <div class="about-hero-character" data-hero-guide="dust" data-hero-state="excellent"></div>
+            <b>ดีมาก</b>
+            <span>อากาศสะอาด</span>
+          </div>
+
+          <span class="about-hero-status-arrow" aria-hidden="true">→</span>
+
+          <div class="about-hero-status-item">
+            <div class="about-hero-character" data-hero-guide="dust" data-hero-state="good"></div>
+            <b>ดี</b>
+            <span>ยังอยู่ในระดับดี</span>
+          </div>
+
+          <span class="about-hero-status-arrow" aria-hidden="true">→</span>
+
+          <div class="about-hero-status-item">
+            <div class="about-hero-character" data-hero-guide="dust" data-hero-state="moderate"></div>
+            <b>เฝ้าระวัง</b>
+            <span>เริ่มต้องสังเกต</span>
+          </div>
+
+          <span class="about-hero-status-arrow" aria-hidden="true">→</span>
+
+          <div class="about-hero-status-item">
+            <div class="about-hero-character" data-hero-guide="dust" data-hero-state="warning"></div>
+            <b>ควรระวัง</b>
+            <span>ควรลดการรับฝุ่น</span>
+          </div>
+
+          <span class="about-hero-status-arrow" aria-hidden="true">→</span>
+
+          <div class="about-hero-status-item">
+            <div class="about-hero-character" data-hero-guide="dust" data-hero-state="critical"></div>
+            <b>อันตราย</b>
+            <span>ควรหลีกเลี่ยงฝุ่น</span>
+          </div>
+        </div>
+
+        <div class="about-hero-guide-note">
+          <span>💡</span>
+          <p>
+            การ์ดนี้เน้นการบอกว่า “ฝุ่นตอนนี้เป็นอย่างไร” โดยใช้สถานะและตัวละคร
+            ส่วนค่าตัวเลขจริงยังดูได้จากการ์ด PM2.5 และหน้าจุดตรวจวัด
+          </p>
+        </div>
+      </article>
+
+      <article class="about-hero-guide-card about-hero-guide-weather">
+        <div class="about-hero-guide-card-head">
+          <div class="about-hero-guide-icon">🌤️</div>
+          <div>
+            <b>สภาพอากาศโดยรวมตอนนี้</b>
+            <span>สรุปร่วมจากอุณหภูมิ ความชื้น และดัชนีความร้อน</span>
+          </div>
+        </div>
+
+        <div class="about-weather-combo-grid">
+
+          <div class="about-weather-combo-card">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="cold"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศหนาว</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ ต่ำ</span>
+                <span>ความชื้น ปกติ</span>
+                <span>Heat Index ปกติ</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-weather-combo-card">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="comfortable"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศกำลังสบาย</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ ปกติ</span>
+                <span>ความชื้น ปกติ</span>
+                <span>Heat Index ปกติ</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-weather-combo-card">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="humid"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศค่อนข้างชื้น</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ ปกติ</span>
+                <span>ความชื้น สูง</span>
+                <span>Heat Index ปกติ/เฝ้าระวัง</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-weather-combo-card">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="hot_humid"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศร้อนและชื้น</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ ร้อน</span>
+                <span>ความชื้น สูง</span>
+                <span>Heat Index เตือนภัย</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-weather-combo-card">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="very_hot"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศร้อนมาก</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ ร้อนจัด</span>
+                <span>ความชื้น สูง</span>
+                <span>Heat Index อันตราย</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-weather-combo-card about-weather-combo-danger">
+            <div class="about-hero-character" data-hero-guide="weather" data-hero-state="danger"></div>
+            <div class="about-weather-combo-copy">
+              <b>อากาศร้อนอันตราย</b>
+              <div class="about-weather-tags">
+                <span>อุณหภูมิ สูงมาก</span>
+                <span>ความชื้น สูง</span>
+                <span>Heat Index อันตรายมาก</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="about-hero-guide-note about-hero-guide-note-weather">
+          <span>ℹ️</span>
+          <p>
+            สถานะสภาพอากาศโดยรวมไม่ได้ตัดสินจากค่าใดค่าหนึ่ง แต่พิจารณาทั้ง 3 ค่าในเวลาเดียวกัน
+            จึงอาจพบกรณีที่บางค่าอยู่ในระดับปกติ แต่ค่าอื่นอยู่ในระดับที่ต้องเฝ้าระวังได้
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
   <section class="glass card about-standards-section">
     <div class="about-standards-header">
       <div>
