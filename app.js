@@ -11059,7 +11059,8 @@ function monitoringMarkerIcon(number,selected=false){
 function createStreetTileLayer(){
   return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
     minZoom:1,
-    maxZoom:19,
+    maxNativeZoom:19,
+    maxZoom:22,
     noWrap:true,
     bounds:MONITORING_WORLD_BOUNDS,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -11069,7 +11070,11 @@ function createStreetTileLayer(){
 function createSatelliteTileLayer(){
   return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
     minZoom:1,
-    maxZoom:19,
+    // บริเวณโครงการมีภาพจริงละเอียดถึงประมาณระดับนี้
+    // หลังจากนี้ Leaflet จะขยาย tile เดิมแทนการร้องขอ tile ที่ขึ้น
+    // "Map data not yet available"
+    maxNativeZoom:17,
+    maxZoom:22,
     noWrap:true,
     bounds:MONITORING_WORLD_BOUNDS,
     attribution:'Tiles &copy; Esri'
@@ -11116,6 +11121,7 @@ function ensureMonitoringMap(){
     zoomControl:true,
     scrollWheelZoom:true,
     minZoom:1,
+    maxZoom:22,
     worldCopyJump:false,
     maxBounds:MONITORING_WORLD_BOUNDS,
     maxBoundsViscosity:1.0
@@ -11168,7 +11174,7 @@ function renderMonitoringMap({fit=false}={}){
 
   if(fit||!selectedMonitoringDeviceId){
     if(bounds.length===1)map.setView(bounds[0],18);
-    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:18});
+    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:17});
     else map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
   }
   setTimeout(()=>map.invalidateSize(),80);
@@ -11271,7 +11277,7 @@ function selectMonitoringLocation(deviceId){
   renderMonitoringMap();
   const coords=deviceCoordinates(d);
   const map=ensureMonitoringMap();
-  if(map&&coords)map.flyTo(coords,18,{animate:true,duration:.8});
+  if(map&&coords)map.flyTo(coords,19,{animate:true,duration:.8});
   setTimeout(()=>map?.invalidateSize(),250);
 }
 
@@ -11331,6 +11337,7 @@ function ensureAdminDeviceMap(){
   adminDeviceMap=L.map(root,{
     zoomControl:true,
     minZoom:1,
+    maxZoom:22,
     worldCopyJump:false,
     maxBounds:MONITORING_WORLD_BOUNDS,
     maxBoundsViscosity:1.0
@@ -11404,7 +11411,7 @@ function refreshAdminMapEditor({keepZoom=false}={}){
       setAdminMapCoordinates(p.lat,p.lng);
     });
 
-    if(!keepZoom)map.setView([lat,lng],18);
+    if(!keepZoom)map.setView([lat,lng],19);
     else map.panTo([lat,lng],{animate:true});
   }else if(!keepZoom){
     map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
