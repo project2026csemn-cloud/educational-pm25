@@ -10280,7 +10280,13 @@ function overviewCharacterSvg(metric,state="normal"){
       accessory+=`<path d="M39 64Q60 56 82 64V78Q60 85 39 78Z" fill="#eefcff" stroke="#67abc1" stroke-width="2"/>
         <path d="M39 67C31 63 29 74 39 76M82 67C90 63 92 74 82 76" fill="none" stroke="#67abc1" stroke-width="2"/>`;
       if(s==="critical"){
-        accessory+=`<path d="M99 27l5 9h-10z" fill="#ef6a62"/><path d="M99 31v3.5M99 36.5v.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>`;
+        accessory+=`
+          <path d="M99 24l7 12H92z" fill="#ef5b55"/>
+          <path d="M99 28.5v4.5M99 35.5v.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="20" cy="39" r="3.2" fill="#94a3b8" opacity=".55"/>
+          <circle cx="13" cy="48" r="2.4" fill="#94a3b8" opacity=".46"/>
+          <circle cx="104" cy="52" r="2.8" fill="#94a3b8" opacity=".50"/>
+          <circle cx="111" cy="43" r="1.9" fill="#94a3b8" opacity=".40"/>`;
       }
     }else{
       accessory+=`<path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".55"/>`;
@@ -10345,7 +10351,16 @@ function overviewCharacterSvg(metric,state="normal"){
       accessory+=`<circle cx="26" cy="27" r="11" fill="#ffd241"/>
         <g stroke="#ffae17" stroke-width="2.5" stroke-linecap="round"><path d="M26 8v8M26 39v8M7 27h8M38 27h8M12 13l6 6M40 13l-6 6"/></g>
         <path d="M91 43c7 11 3 18-3 18-7 0-9-8-4-16l4-9z" fill="#33a8ea"/>`;
-      rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
+      rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${faceSkin}"/>`;
+    }else if(s==="extreme_heat"){
+      accessory+=`<circle cx="26" cy="27" r="14" fill="#ffb51f"/>
+        <g stroke="#ff7613" stroke-width="3" stroke-linecap="round"><path d="M26 4v10M26 41v10M3 27h10M39 27h10M8 9l8 8M44 9l-8 8"/></g>
+        <path d="M91 38c9 14 5 23-3 23-9 0-11-10-4-21l4-11z" fill="#168fd1"/>
+        <path d="M31 42c6 9 3 16-3 16-6 0-8-8-3-15l3-8z" fill="#44b6ec"/>
+        <path d="M104 57c5 8 2 14-3 14-6 0-7-7-3-13l3-7z" fill="#65c8f2"/>
+        <path d="M13 82l8-5M107 82l-8-5M17 91l9-2M103 91l-9-2" stroke="#ff6f4b" stroke-width="2.6" stroke-linecap="round" opacity=".78"/>`;
+      rightArm=`<path d="M85 99Q80 78 68 67" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="67" cy="66" r="5.2" fill="${skin}"/>`;
+      leftArm=`<path d="M35 99Q40 82 50 73" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="51" cy="72" r="5.2" fill="${skin}"/>`;
     }else if(s==="critical"){
       accessory+=`<circle cx="26" cy="27" r="12" fill="#ffc928"/>
         <g stroke="#ff9e13" stroke-width="2.7" stroke-linecap="round"><path d="M26 6v9M26 40v9M5 27h9M38 27h9M10 11l7 7M42 11l-7 7"/></g>
@@ -10353,6 +10368,74 @@ function overviewCharacterSvg(metric,state="normal"){
         <path d="M32 45c5 8 2 14-3 14-6 0-7-7-3-13l3-7z" fill="#58bff0"/>`;
       rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
     }
+  }
+
+  // -----------------------------------------------------
+  // FINAL FACE/EXPRESSION OVERRIDES
+  // Make each severity readable even without the label.
+  // -----------------------------------------------------
+  let faceSkin=skin;
+  let faceCheek=cheek;
+
+  if(metric==="temperature"){
+    if(s==="very_cold"){
+      faceSkin="#dff3ff";
+      faceCheek="#86c8ec";
+      eyes=`<path d="M39 55c3-3 7-3 10 0M71 55c3-3 7-3 10 0" fill="none" stroke="#2f4250" stroke-width="3.3" stroke-linecap="round"/>`;
+      mouth=`<path d="M50 73l4-2 4 2 4-2 4 2 4-2" fill="none" stroke="#55788c" stroke-width="3.0" stroke-linecap="round" stroke-linejoin="round"/>`;
+      accessory+=`
+        <path d="M15 63l-4 4 4 4M105 63l4 4-4 4" fill="none" stroke="#8bd3f5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 55l-3 3 3 3M100 55l3 3-3 3" fill="none" stroke="#b9e8fb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }else if(s==="cold"){
+      faceSkin="#eaf7ff";
+      faceCheek="#9bd3ee";
+      eyes=`<path d="M39 55c3-2.5 7-2.5 10 0M71 55c3-2.5 7-2.5 10 0" fill="none" stroke="#334957" stroke-width="3.2" stroke-linecap="round"/>`;
+      mouth=`<path d="M52 73c4-2 8-2 12 0" fill="none" stroke="#64899a" stroke-width="3.0" stroke-linecap="round"/>`;
+      accessory+=`<path d="M18 64l-3 3 3 3M102 64l3 3-3 3" fill="none" stroke="#9ad8f4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }else if(s==="cool"){
+      faceSkin="#f2fbff";
+      faceCheek="#b6dff1";
+    }else if(s==="hot"){
+      faceSkin="#ffd0bd";
+      faceCheek="#ef7c72";
+    }else if(s==="very_hot"){
+      faceSkin="#ffb19d";
+      faceCheek="#e95f5f";
+      eyes=`<path d="M39 56c3-4.5 8-4.5 11 0M70 56c3-4.5 8-4.5 11 0" fill="none" stroke="#4b2b28" stroke-width="3.5" stroke-linecap="round"/>`;
+      mouth=`<path d="M50 75c6-6 15-6 21 0" fill="none" stroke="#a83b44" stroke-width="3.5" stroke-linecap="round"/>`;
+    }
+  }
+
+  if(metric==="heat"){
+    if(s==="watch"){
+      faceSkin="#ffd1ba";
+      faceCheek="#ef897b";
+    }else if(s==="warning"){
+      faceSkin="#ffc0a8";
+      faceCheek="#eb746b";
+    }else if(s==="extreme_heat"){
+      faceSkin="#ff8177";
+      faceCheek="#cf4045";
+      eyes=`<path d="M38 56c3-5 8-5 11 0M71 56c3-5 8-5 11 0" fill="none" stroke="#4a2626" stroke-width="3.8" stroke-linecap="round"/>`;
+      mouth=`<ellipse cx="60" cy="75" rx="8" ry="5.5" fill="#9f3540"/><path d="M55 75h10" stroke="#ffc0bd" stroke-width="1.5" stroke-linecap="round"/>`;
+    }else if(s==="critical"){
+      faceSkin="#ff9d8c";
+      faceCheek="#df5555";
+
+      // Distinguish "danger" from "extreme danger".
+      // In the guide, the second critical entry is visually intensified via CSS class below.
+      if(accessory.includes('M32 45c5 8 2 14')){
+        accessory+=`
+          <path d="M15 83c4-7 7-10 11-13M105 83c-4-7-7-10-11-13" stroke="#ff6b4f" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>`;
+      }
+    }
+  }
+
+  if(metric==="pm25" && s==="critical"){
+    faceSkin="#ffc0ad";
+    faceCheek="#e96f69";
+    eyes=`<path d="M38 54l5-3M49 53l-5-2M71 53l5-2M82 54l-5-3" stroke="#3d2b28" stroke-width="3.1" stroke-linecap="round"/>`;
+    mouth=`<path d="M52 75c5-5 11-5 16 0" fill="none" stroke="#9f3f49" stroke-width="3.4" stroke-linecap="round"/>`;
   }
 
   // Important: direct solid fills intentionally avoid duplicated inline-SVG
@@ -10366,14 +10449,14 @@ function overviewCharacterSvg(metric,state="normal"){
     <path d="M43 94c5 5 11 8 17 8s12-3 17-8l7 32H36z" fill="rgba(255,255,255,.10)"/>
     ${leftArm}${rightArm}
 
-    <ellipse cx="60" cy="59" rx="32" ry="35" fill="${skin}"/>
+    <ellipse cx="60" cy="59" rx="32" ry="35" fill="${faceSkin}"/>
     <path d="M28 54c-1-27 13-44 34-44 22 0 34 16 32 42-8-8-16-14-27-17-8 10-21 16-39 19z" fill="${hair}"/>
     <path d="M34 36c8-15 19-21 31-21 10 0 19 4 25 11-13-5-26-4-37 1-8 3-14 6-19 9z" fill="${hair2}" opacity=".86"/>
-    <path d="M32 53c-5 0-8 5-7 11 0 7 5 11 10 9M88 53c5 0 8 5 7 11 0 7-5 11-10 9" fill="${skin}"/>
+    <path d="M32 53c-5 0-8 5-7 11 0 7 5 11 10 9M88 53c5 0 8 5 7 11 0 7-5 11-10 9" fill="${faceSkin}"/>
 
     ${eyes}
-    <circle cx="40" cy="66" r="5.5" fill="${cheek}" opacity=".55"/>
-    <circle cx="80" cy="66" r="5.5" fill="${cheek}" opacity=".55"/>
+    <circle cx="40" cy="66" r="5.5" fill="${faceCheek}" opacity=".60"/>
+    <circle cx="80" cy="66" r="5.5" fill="${faceCheek}" opacity=".60"/>
     ${mouth}
     ${accessory}
   </svg>`;
