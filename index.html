@@ -193,6 +193,12 @@
 
     <section class="overview-summary-card overview-dust-summary glass card" aria-labelledby="overviewDustTitle">
       <div class="overview-summary-scene" aria-hidden="true"></div>
+      <div class="overview-hero-decor overview-dust-decor" aria-hidden="true">
+        <span class="decor-cloud decor-cloud-a"></span>
+        <span class="decor-cloud decor-cloud-b"></span>
+        <span class="decor-leaf decor-leaf-a">🍃</span>
+        <span class="decor-leaf decor-leaf-b">🍃</span>
+      </div>
       <div class="overview-summary-heading">
         <span class="overview-summary-icon" aria-hidden="true">🌿</span>
         <h1 id="overviewDustTitle">คุณภาพฝุ่นในอากาศตอนนี้</h1>
@@ -205,15 +211,15 @@
           <p class="overview-summary-message" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</p>
         </div>
       </div>
-
-      <div class="overview-freshness overview-summary-freshness">
-        <span class="overview-freshness-dot"></span>
-        <span id="overviewLastUpdated">ข้อมูลล่าสุด: --</span>
-      </div>
-    </section>
+</section>
 
     <section class="overview-summary-card overview-weather-summary glass card" aria-labelledby="overviewWeatherTitle">
       <div class="overview-summary-scene" aria-hidden="true"></div>
+      <div class="overview-hero-decor overview-weather-decor" aria-hidden="true">
+        <span class="decor-sun"></span>
+        <span class="decor-cloud decor-cloud-c"></span>
+        <span class="decor-cloud decor-cloud-d"></span>
+      </div>
       <div class="overview-summary-heading">
         <span class="overview-summary-icon" aria-hidden="true">🌤️</span>
         <h2 id="overviewWeatherTitle">สภาพอากาศโดยรวมตอนนี้</h2>
@@ -223,6 +229,7 @@
         <div class="overview-summary-character overview-character-art" id="overviewWeatherFace" aria-hidden="true"></div>
         <div class="overview-summary-copy">
           <div class="overview-summary-status is-waiting" id="overviewWeatherStatus">กำลังตรวจสอบ</div>
+          <div class="overview-weather-severity is-waiting" id="overviewWeatherSeverity">รอข้อมูล</div>
           <p class="overview-summary-message" id="overviewWeatherGuidance">กำลังประเมินสภาพอากาศล่าสุด...</p>
         </div>
       </div>
