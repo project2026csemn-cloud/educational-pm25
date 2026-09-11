@@ -35,6 +35,7 @@ wifiManage:`${BASE}/api/manage/wifi`
 
 const TOTAL_NODES=3;
 const MOTHER_OFFLINE_MS=90*1000;
+const NODE_UI_STALE_MS=8*60*1000; // UI offline rule = 8 นาที
 
 const $=
 id=>
@@ -74,6 +75,8 @@ let calendarSelectionStep=
 "start";
 
 let apiConnectionOnline=false;
+let apiConnectionChecked=false;
+let latestDataSource="none"; // none | cache | network
 let exportRows=[];
 let activeHelpButton=null;
 
@@ -86,9 +89,9 @@ let aiForecastLastLoadedAt=null;
 
 let publicDisplayConfig={
 devices:[
-{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""}
+{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""}
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
@@ -933,6 +936,25 @@ null;
 
 }
 
+function mergeLatestNodes(incoming,previous=latestNodes){
+  const next=Array.isArray(incoming)?incoming.filter(Boolean):[];
+  const old=Array.isArray(previous)?previous.filter(Boolean):[];
+  const byNumber=new Map();
+
+  old.forEach(node=>{
+    const n=nodeNo(node?.device_id);
+    if(n)byNumber.set(n,node);
+  });
+  next.forEach(node=>{
+    const n=nodeNo(node?.device_id);
+    if(n)byNumber.set(n,node);
+  });
+
+  return [1,2,3]
+    .map(n=>byNumber.get(n)||null)
+    .filter(Boolean);
+}
+
 function motherOnline(){
 
 if(
@@ -969,23 +991,36 @@ MOTHER_OFFLINE_MS
 // NODE STATUS RULE
 // =====================================================
 
-function getNodeStatus(node){
-
-if(
-!motherOnline()||
-!node
-){
-return "offline";
+function nodeStatusTime(node){
+  if(!node)return null;
+  return parseDate(
+    node.status_recorded_at||
+    node.last_seen||
+    node.timestamp||
+    node.reading_recorded_at||
+    null
+  );
 }
 
-const s=String(node.status||"offline").toLowerCase();
+function nodeIsFresh(node,maxAgeMs=NODE_UI_STALE_MS){
+  const d=nodeStatusTime(node);
+  if(!d)return false;
+  return Date.now()-d.getTime()<=maxAgeMs;
+}
 
-return s==="sleep"
-?"sleep"
-:s==="online"
-?"online"
-:"offline";
+function getNodeStatus(node){
+  if(!node)return "offline";
 
+  const s=String(
+    node.connection_status==="disconnected"
+      ?"offline"
+      :(node.status||"offline")
+  ).toLowerCase();
+
+  if(!["online","sleep"].includes(s))return "offline";
+  if(!nodeIsFresh(node))return "offline";
+
+  return s;
 }
 
 function activeCount(){
@@ -1040,22 +1075,109 @@ const ROLE_PERMISSION_DEFAULTS={
 
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
 
-// V4.3 emergency auth guard:
-// ผูกปุ่มเข้าสู่ระบบแบบแยกจาก module อื่น เพื่อไม่ให้ error ส่วนอื่นทำให้ปุ่มตาย
-(function registerCriticalLoginGuard(){
-  const bind=()=>{
-    const btn=document.getElementById("accountButton");
-    if(!btn||btn.dataset.criticalLoginGuard==="1")return;
-    btn.dataset.criticalLoginGuard="1";
-    btn.addEventListener("click",()=>{
-      // ถ้า setupAuthCms ผูก handler หลักแล้ว ให้ handler หลักจัดการ
-      if(btn.dataset.authBound==="1")return;
-      if(typeof openAuthModal==="function")openAuthModal("login");
+const AUTH_USER_CACHE_KEY="localAirAuthUserV5";
+
+function readCachedAuthUser(){
+  try{
+    const raw=localStorage.getItem(AUTH_USER_CACHE_KEY);
+    const parsed=raw?JSON.parse(raw):null;
+    return parsed&&typeof parsed==="object"?parsed:null;
+  }catch(_){
+    return null;
+  }
+}
+
+function saveCachedAuthUser(user){
+  try{
+    if(user)localStorage.setItem(AUTH_USER_CACHE_KEY,JSON.stringify(user));
+    else localStorage.removeItem(AUTH_USER_CACHE_KEY);
+  }catch(_){}
+}
+
+function bindOnce(el,key,event,handler){
+  if(!el)return;
+  const flag=`bound${key}`;
+  if(el.dataset[flag]==="1")return;
+  el.dataset[flag]="1";
+  el.addEventListener(event,handler);
+}
+
+function bindCriticalAuthUI(){
+  const accountButton=$("accountButton");
+  bindOnce(accountButton,"Account","click",()=>{
+    if(!authUser){
+      openAuthModal("login");
+      return;
+    }
+    const menu=$("accountDropdown");
+    menu?.classList.toggle("hidden");
+    accountButton?.setAttribute("aria-expanded",String(!menu?.classList.contains("hidden")));
+  });
+
+  document.querySelectorAll("[data-auth-close]").forEach(el=>{
+    bindOnce(el,"AuthClose","click",closeAuthModal);
+  });
+
+  document.querySelectorAll("[data-auth-mode]").forEach(el=>{
+    bindOnce(el,"AuthMode","click",()=>setAuthMode(el.dataset.authMode));
+  });
+
+  document.querySelectorAll("[data-admin-close]").forEach(el=>{
+    bindOnce(el,"AdminClose","click",closeAdminCenter);
+  });
+  document.querySelectorAll("[data-admin-back]").forEach(el=>{
+    bindOnce(el,"AdminBack","click",backFromAdminCenter);
+  });
+
+  document.querySelectorAll("[data-toggle-password]").forEach(button=>{
+    bindOnce(button,"PasswordToggle","click",()=>{
+      const input=$(button.dataset.togglePassword);
+      if(!input)return;
+      const show=input.type==="password";
+      input.type=show?"text":"password";
+      button.classList.toggle("is-visible",show);
+      button.setAttribute("aria-pressed",String(show));
+      button.setAttribute("aria-label",show?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
     });
-  };
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
-  else bind();
-})();
+  });
+
+  bindOnce($("openForgotPasswordButton"),"Forgot","click",openForgotPassword);
+  bindOnce($("backToLoginButton"),"BackLogin","click",()=>setAuthMode("login"));
+
+  bindOnce($("loginForm"),"LoginSubmit","submit",async e=>{
+    e.preventDefault();
+    setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");
+    try{
+      await doLogin(
+        $("loginEmail")?.value||"",
+        $("loginPassword")?.value||""
+      );
+      setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
+      setTimeout(closeAuthModal,250);
+    }catch(err){
+      setAuthMessage("loginMessage",err?.message||"เข้าสู่ระบบไม่สำเร็จ","error");
+    }
+  });
+
+  bindOnce($("registerForm"),"RegisterSubmit","submit",async e=>{
+    e.preventDefault();
+    setAuthMessage("registerMessage","กำลังสร้างบัญชี...");
+    try{
+      await apiJson(API.authRegister,{
+        method:"POST",
+        body:JSON.stringify({
+          display_name:$("registerName")?.value||"",
+          email:$("registerEmail")?.value||"",
+          password:$("registerPassword")?.value||""
+        })
+      });
+      setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");
+      setTimeout(()=>setAuthMode("login"),500);
+    }catch(err){
+      setAuthMessage("registerMessage",err?.message||"สมัครสมาชิกไม่สำเร็จ","error");
+    }
+  });
+}
 
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
@@ -1067,9 +1189,20 @@ if(authToken){
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
-let authUser=null;
+let authUser=authToken?readCachedAuthUser():null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
+
+(function registerCriticalAuthBootstrap(){
+  const run=()=>{
+    try{bindCriticalAuthUI();}catch(err){console.error("Critical auth binding error:",err);}
+    if(authToken&&authUser){
+      try{updateAccountUI();}catch(err){console.warn("Cached account UI error:",err);}
+    }
+  };
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
+  else run();
+})();
 
 // =====================================================
 // FETCH
@@ -1541,43 +1674,22 @@ if(
 return;
 }
 
-if(
-!apiConnectionOnline
-){
-
-dot.className=
-"text-red-400";
-
-st.textContent=
-"ไม่พร้อมใช้งาน";
-
-ac.textContent=
-"ตรวจสอบจำนวนจุดไม่ได้";
-
-}else if(
-motherOnline()
-){
-
-dot.className=
-"text-emerald-400";
-
-st.textContent=
-"ONLINE";
-
-ac.textContent=
-`${activeCount()} / ${TOTAL_NODES} จุด`;
-
+if(!apiConnectionChecked){
+  dot.className="text-amber-400";
+  st.textContent=latestNodes.length?"กำลังอัปเดต":"กำลังเชื่อมต่อ";
+  ac.textContent=latestNodes.length
+    ?`${activeCount()} / ${TOTAL_NODES} จุด`
+    :"กำลังตรวจสอบข้อมูล";
+}else if(apiConnectionOnline){
+  dot.className="text-emerald-400";
+  st.textContent="ONLINE";
+  ac.textContent=`${activeCount()} / ${TOTAL_NODES} จุด`;
 }else{
-
-dot.className=
-"text-red-400";
-
-st.textContent=
-"OFFLINE";
-
-ac.textContent=
-`0 / ${TOTAL_NODES} จุด`;
-
+  dot.className=latestNodes.length?"text-amber-400":"text-red-400";
+  st.textContent=latestNodes.length?"ข้อมูลล่าสุด":"ไม่พร้อมใช้งาน";
+  ac.textContent=latestNodes.length
+    ?`${activeCount()} / ${TOTAL_NODES} จุด • รอเชื่อมต่อใหม่`
+    :"ตรวจสอบจำนวนจุดไม่ได้";
 }
 
 }
@@ -1927,27 +2039,11 @@ return{level:"critical",label:"อันตรายมาก"};
 // =====================================================
 
 function activeNodes(){
-
-if(
-!motherOnline()
-){
-
-return[];
-
-}
-
-return latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)
-);
-
+  // ใช้สถานะและ timestamp ของแต่ละจุดโดยตรง
+  // ไม่ซ่อนค่าตรวจวัดเพียงเพราะ heartbeat ของตัวแม่ยังโหลดไม่เสร็จ
+  return latestNodes.filter(
+    n=>["online","sleep"].includes(getNodeStatus(n))
+  );
 }
 
 function averageOf(
@@ -2507,24 +2603,12 @@ c.label+
 
 }
 
-if(
-!apiConnectionOnline
-){
-
-return resetCurrent(
-"ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้"
-);
-
-}
-
-if(
-!motherOnline()
-){
-
-return resetCurrent(
-"ระบบข้อมูลขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
-);
-
+if(!latestNodes.length){
+  return resetCurrent(
+    apiConnectionChecked
+      ?"ยังไม่มีข้อมูลปัจจุบันจากจุดตรวจวัด"
+      :"กำลังโหลดข้อมูลปัจจุบัน..."
+  );
 }
 
 const usable=
@@ -2678,15 +2762,17 @@ function updateSmart(){
     </div>`;
   };
 
-  if(!apiConnectionOnline||!motherOnline()){
+  if(!activeNodes().length){
     renderAdvice({
       cls:"is-offline",
       icon:"📡",
-      title:"ยังไม่สามารถสรุปคำแนะนำได้",
-      message:"สถานีรับข้อมูลหลักยังไม่พร้อม กรุณารอข้อมูลล่าสุดจากระบบก่อน",
+      title:apiConnectionChecked?"ยังไม่มีข้อมูลล่าสุดที่พร้อมใช้":"กำลังโหลดข้อมูลล่าสุด",
+      message:latestNodes.length
+        ?"ข้อมูลที่มีอยู่เกินช่วงเวลาที่ใช้ยืนยันสถานะ กรุณารอรอบอัปเดตถัดไป"
+        :"ระบบกำลังเชื่อมต่อกับข้อมูลจุดตรวจวัด",
       actions:[
-        {icon:"⏳",title:"รอข้อมูลล่าสุด",detail:"ระบบจะอัปเดตอัตโนมัติเมื่อเชื่อมต่อได้"},
-        {icon:"📊",title:"ตรวจสอบอีกครั้ง",detail:"ติดตามสถานะระบบและจุดตรวจวัด"}
+        {icon:"⏳",title:"รอข้อมูลล่าสุด",detail:"ระบบจะอัปเดตอัตโนมัติเมื่อข้อมูลพร้อม"},
+        {icon:"📊",title:"ตรวจสอบอีกครั้ง",detail:"ติดตามค่าล่าสุดของจุดตรวจวัด"}
       ],
       active:0
     });
@@ -9472,53 +9558,6 @@ closeViewer();
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 // =====================================================
 
-const lazyAssetPromises=new Map();
-
-function loadScriptOnce(src,key=src){
-  if(window[key] && typeof window[key]!=="string") return Promise.resolve(window[key]);
-  if(lazyAssetPromises.has("script:"+key)) return lazyAssetPromises.get("script:"+key);
-
-  const promise=new Promise((resolve,reject)=>{
-    const existing=[...document.scripts].find(s=>s.src===src);
-    if(existing){
-      if(existing.dataset.loaded==="1") return resolve(existing);
-      existing.addEventListener("load",()=>resolve(existing),{once:true});
-      existing.addEventListener("error",reject,{once:true});
-      return;
-    }
-    const s=document.createElement("script");
-    s.src=src;
-    s.async=true;
-    s.dataset.lazyAsset=key;
-    s.addEventListener("load",()=>{s.dataset.loaded="1";resolve(s);},{once:true});
-    s.addEventListener("error",reject,{once:true});
-    document.head.appendChild(s);
-  });
-  lazyAssetPromises.set("script:"+key,promise);
-  return promise;
-}
-
-function loadStyleOnce(href,key=href){
-  if(lazyAssetPromises.has("style:"+key)) return lazyAssetPromises.get("style:"+key);
-
-  const promise=new Promise((resolve,reject)=>{
-    const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(l=>l.href===href);
-    if(existing) return resolve(existing);
-    const l=document.createElement("link");
-    l.rel="stylesheet";
-    l.href=href;
-    l.dataset.lazyAsset=key;
-    l.addEventListener("load",()=>resolve(l),{once:true});
-    l.addEventListener("error",reject,{once:true});
-    document.head.appendChild(l);
-  });
-  lazyAssetPromises.set("style:"+key,promise);
-  return promise;
-}
-
-// Future Map rule: call loadStyleOnce/loadScriptOnce only when Map page opens.
-// Nothing map-related is downloaded during Overview startup.
-
 function ensureChartLibrary(){
 
 if(
@@ -9721,7 +9760,7 @@ activateAISection();
 // V36.35 — FAST WARM START CACHE
 // =====================================================
 const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
-const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
+const LATEST_CACHE_MAX_AGE_MS=24*60*60*1000; // แสดงค่าล่าสุดจาก cache ทันทีระหว่างรอ API
 
 // V36.61 — true only after a usable cache or the first network request settles.
 // This prevents the initial skeleton from being removed by an early UI refresh.
@@ -9743,6 +9782,7 @@ function restoreLatestSnapshot(){
     if(!nodes.length)return false;
     latestNodes=nodes;
     latestRecord=latestNodes.at(-1)||null;
+    latestDataSource="cache";
     overviewInitialSettled=true;
     renderMonitoring();
     updateCurrent();
@@ -9758,7 +9798,12 @@ function restoreLatestSnapshot(){
 
 async function loadInitial(){
 
-restoreLatestSnapshot();
+// V4.6 — แสดง snapshot ก่อนยิง request เพื่อไม่ให้หน้ารีเฟรชค้างเป็น skeleton
+const restoredFromCache=restoreLatestSnapshot();
+if(restoredFromCache){
+  overviewInitialSettled=true;
+  setOverviewLoadingState(false);
+}
 
 try{
 
@@ -9767,7 +9812,9 @@ try{
 const latest=await loadLatest();
 
 apiConnectionOnline=true;
-latestNodes=latest;
+apiConnectionChecked=true;
+latestDataSource="network";
+latestNodes=mergeLatestNodes(latest,latestNodes);
 latestRecord=latestNodes.at(-1)||null;
 overviewInitialSettled=true;
 saveLatestSnapshot(latestNodes);
@@ -9788,6 +9835,7 @@ Promise.all([
   updateCurrent();
   updateSmart();
   updateAlertUI();
+  updateNavigationDashboard();
   checkSituationNotifications();
 }).catch(e=>console.warn("Secondary initial load error:",e));
 
@@ -9798,8 +9846,8 @@ console.error(
 e
 );
 
-apiConnectionOnline=
-false;
+apiConnectionOnline=false;
+apiConnectionChecked=true;
 overviewInitialSettled=true;
 
 renderMonitoring();
@@ -9825,69 +9873,55 @@ updateNavigationDashboard();
 // =====================================================
 
 async function loadRealtime(){
+  try{
+    const latest=await loadLatest();
 
-try{
+    apiConnectionOnline=true;
+    apiConnectionChecked=true;
+    latestDataSource="network";
+    latestNodes=mergeLatestNodes(latest,latestNodes);
+    latestRecord=latestNodes.at(-1)||null;
+    saveLatestSnapshot(latestNodes);
 
-const[
-latest,
-mother,
-alerts
-]=
-await Promise.all([
+    renderMonitoring();
+    updateCurrent();
+    updateSmart();
+    updateNavigationDashboard();
 
-loadLatest(),
+    Promise.allSettled([
+      loadMother(),
+      loadAlerts()
+    ]).then(results=>{
+      const motherResult=results[0];
+      const alertsResult=results[1];
 
-loadMother(),
+      if(motherResult.status==="fulfilled"){
+        motherStatus=motherResult.value;
+      }
+      if(alertsResult.status==="fulfilled"&&Array.isArray(alertsResult.value)){
+        alertStates=alertsResult.value;
+      }
 
-loadAlerts()
-.catch(
-()=>alertStates
-)
+      renderMonitoring();
+      updateCurrent();
+      updateSmart();
+      updateAlertUI();
+      updateNavigationDashboard();
+      checkSituationNotifications();
+    });
 
-]);
+  }catch(e){
+    console.error("Realtime latest-data error:",e);
 
-apiConnectionOnline=
-true;
+    apiConnectionOnline=false;
+    apiConnectionChecked=true;
 
-latestNodes=
-latest;
-saveLatestSnapshot(latestNodes);
-
-motherStatus=
-mother;
-
-alertStates=
-alerts;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-checkSituationNotifications();
-
-}catch(e){
-
-console.error(
-"Realtime error:",
-e
-);
-
-apiConnectionOnline=
-false;
-
-renderMonitoring();
-
-updateCurrent();
-
-updateSmart();
-
-updateAlertUI();
-
-}
-
+    renderMonitoring();
+    updateCurrent();
+    updateSmart();
+    updateAlertUI();
+    updateNavigationDashboard();
+  }
 }
 
 // =====================================================
@@ -9989,29 +10023,29 @@ timeStyle:
 // START
 // =====================================================
 
-updateHistoryRangeButtonLabel();
+function safeStartup(name,fn){
+  try{
+    const result=fn();
+    if(result&&typeof result.catch==="function"){
+      result.catch(e=>console.error(`${name} startup error:`,e));
+    }
+    return result;
+  }catch(e){
+    console.error(`${name} startup error:`,e);
+    return null;
+  }
+}
 
-updateQuickRangeUI(
-averageRange
-);
-
-updateForecastToggle();
-
-renderAI(
-null
-);
-
-renderAIForecast(
-null
-);
-
-updateClock();
-loadInitial();
+safeStartup("history range label",updateHistoryRangeButtonLabel);
+safeStartup("quick range UI",()=>updateQuickRangeUI(averageRange));
+safeStartup("forecast toggle",updateForecastToggle);
+safeStartup("AI placeholder",()=>renderAI(null));
+safeStartup("forecast placeholder",()=>renderAIForecast(null));
+safeStartup("clock",updateClock);
+safeStartup("initial data",loadInitial);
 
 const scheduleStartup=(fn,delay)=>{
-  setTimeout(()=>{
-    try{fn();}catch(e){console.error("Startup task error:",e);}
-  },delay);
+  setTimeout(()=>safeStartup("deferred task",fn),delay);
 };
 
 scheduleStartup(bindEvents,60);
@@ -10114,10 +10148,14 @@ function openDashboardPage(page,{updateHash=true}={}){
 
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
 
-  if(page==="monitoring" && typeof ensureMonitoringMap==="function"){
-    ensureMonitoringMap();
-    renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-    setTimeout(()=>monitoringMap?.invalidateSize(),120);
+  if(page==="monitoring"){
+    // Defer until the whole app file has finished initializing its map globals.
+    setTimeout(()=>{
+      if(typeof activateMonitoringMap!=="function")return;
+      activateMonitoringMap().catch(err=>{
+        console.error("Open monitoring map error:",err);
+      });
+    },0);
   }
 
   // V36.60 — About contains many SVG characters. Render them only when
@@ -10825,21 +10863,28 @@ function updateNavigationDashboard(){
   let navState="is-offline";
   let navLabel="กำลังตรวจสอบสถานะ";
 
-  if(!apiConnectionOnline){
-    navState="is-offline";
-    navLabel="ระบบข้อมูล OFFLINE";
-  }else if(!motherOnline()){
-    navState="is-offline";
-    navLabel="ระบบข้อมูล OFFLINE";
-  }else if(active===TOTAL_NODES){
-    navState="is-online";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
-  }else if(active>0){
+  if(!apiConnectionChecked){
+    navState="is-checking";
+    navLabel=latestNodes.length
+      ?"กำลังอัปเดตข้อมูล"
+      :"กำลังเชื่อมต่อข้อมูล";
+  }else if(apiConnectionOnline){
+    if(active===TOTAL_NODES){
+      navState="is-online";
+      navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
+    }else if(active>0){
+      navState="is-warning";
+      navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
+    }else{
+      navState="is-warning";
+      navLabel="ระบบข้อมูล ONLINE • รอข้อมูลจุดตรวจวัด";
+    }
+  }else if(latestNodes.length){
     navState="is-warning";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+    navLabel="แสดงข้อมูลล่าสุด • กำลังเชื่อมต่อใหม่";
   }else{
     navState="is-offline";
-    navLabel=`จุดตรวจวัด ONLINE 0/${TOTAL_NODES}`;
+    navLabel="ระบบข้อมูล OFFLINE";
   }
 
   if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
@@ -10873,8 +10918,8 @@ function bindDashboardNavigation(){
   openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
 }
 
-bindDashboardNavigation();
-updateNavigationDashboard();
+safeStartup("dashboard navigation",bindDashboardNavigation);
+safeStartup("navigation status",updateNavigationDashboard);
 
 const runWhenIdle=fn=>{
   if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:9000});
@@ -10990,11 +11035,58 @@ function loadExternalScript(src){
   });
 }
 
+let leafletCssPromise=null;
+
+function loadExternalStyle(href){
+  return new Promise((resolve,reject)=>{
+    const link=document.createElement("link");
+    link.rel="stylesheet";
+    link.href=href;
+    link.dataset.leafletCss="1";
+    link.onload=()=>resolve(link);
+    link.onerror=()=>{
+      link.remove();
+      reject(new Error(`โหลด ${href} ไม่สำเร็จ`));
+    };
+    document.head.appendChild(link);
+  });
+}
+
+function ensureLeafletStyles(){
+  if(document.querySelector('link[data-leaflet-css="1"]'))return Promise.resolve();
+  if(leafletCssPromise)return leafletCssPromise;
+
+  leafletCssPromise=(async()=>{
+    const sources=[
+      "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css",
+      "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    ];
+    let lastError=null;
+    for(const href of sources){
+      try{
+        return await loadExternalStyle(href);
+      }catch(err){
+        lastError=err;
+        console.warn("Leaflet CSS source failed:",href,err);
+      }
+    }
+    throw lastError||new Error("โหลด Leaflet CSS ไม่สำเร็จ");
+  })().catch(err=>{
+    leafletCssPromise=null;
+    throw err;
+  });
+
+  return leafletCssPromise;
+}
+
 async function ensureLeafletLibrary(){
   if(typeof window.L!=="undefined")return window.L;
   if(leafletLoadPromise)return leafletLoadPromise;
 
   leafletLoadPromise=(async()=>{
+    // CSS and JS load only when a map is actually opened.
+    ensureLeafletStyles().catch(err=>console.warn("Leaflet CSS load failed:",err));
+
     const sources=[
       "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",
       "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -11223,7 +11315,7 @@ function renderMonitoringLocationDetail(device){
   if(!device)return;
   const title=String(device.display_name||device.device_id||"จุดตรวจวัด").trim();
   const loc=String(device.location_name||"").trim();
-  const desc=String(device.description||"").trim();
+  const desc=String(device.map_description||device.description||"").trim();
   const images=deviceImageList(device);
   const video=String(device.video_url||"").trim();
 
@@ -11310,29 +11402,64 @@ function closeMonitoringLocationDetail({fit=true}={}){
   setTimeout(()=>monitoringMap?.invalidateSize(),250);
 }
 
-async function setupMonitoringMapUi(){
+function setupMonitoringMapUi(){
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
-    btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
+    bindOnce(btn,"MapDevice","click",()=>{
+      const deviceId=btn.dataset.mapDevice;
+      if(monitoringMap){
+        selectMonitoringLocation(deviceId);
+        return;
+      }
+      activateMonitoringMap().then(()=>{
+        selectMonitoringLocation(deviceId);
+      }).catch(err=>{
+        console.error("Map point selection error:",err);
+      });
+    });
   });
-  $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+  bindOnce($("mapDetailClose"),"MapDetailClose","click",()=>closeMonitoringLocationDetail({fit:true}));
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
-    btn.addEventListener("click",()=>setMapBasemap("public",btn.dataset.publicBasemap));
+    bindOnce(btn,"PublicBasemap","click",()=>{
+      if(!monitoringMap){
+        activateMonitoringMap().then(()=>{
+          setMapBasemap("public",btn.dataset.publicBasemap);
+        }).catch(()=>{});
+      }else{
+        setMapBasemap("public",btn.dataset.publicBasemap);
+      }
+    });
   });
-
   renderMonitoringMapNodeTabs();
+}
+
+let monitoringMapActivationPromise=null;
+async function activateMonitoringMap(){
+  if(monitoringMap){
+    setTimeout(()=>monitoringMap.invalidateSize(),0);
+    return monitoringMap;
+  }
+  if(monitoringMapActivationPromise)return monitoringMapActivationPromise;
 
   const root=$("monitoringMap");
-  try{
-    await ensureLeafletLibrary();
-    const map=ensureMonitoringMap();
-    if(map){
-      renderMonitoringMap({fit:true});
-      setTimeout(()=>map.invalidateSize(),120);
+  monitoringMapActivationPromise=(async()=>{
+    try{
+      await ensureLeafletLibrary();
+      const map=ensureMonitoringMap();
+      if(map){
+        renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+        setTimeout(()=>map.invalidateSize(),120);
+      }
+      return map;
+    }catch(err){
+      console.error("Monitoring map initialization error:",err);
+      setMapLoadError(root);
+      return null;
+    }finally{
+      monitoringMapActivationPromise=null;
     }
-  }catch(err){
-    console.error("Monitoring map initialization error:",err);
-    setMapLoadError(root);
-  }
+  })();
+
+  return monitoringMapActivationPromise;
 }
 
 function adminMapSelectedDeviceId(){
@@ -11536,7 +11663,7 @@ return publicDisplayConfig;
 }
 
 (function startPublicDisplayConfig(){
-const run=()=>setTimeout(loadPublicDisplayConfig,350);
+const run=()=>setTimeout(()=>safeStartup("public config",loadPublicDisplayConfig),900);
 if(document.readyState==="loading"){
 document.addEventListener("DOMContentLoaded",run,{once:true});
 }else{
@@ -11723,7 +11850,11 @@ async function apiJson(url,options={}){
   const r=await fetch(url,{...options,headers,cache:"no-store"});
   let j=null;
   try{j=await r.json();}catch(_){j={success:false,message:`HTTP ${r.status}`};}
-  if(!r.ok) throw new Error(j?.message||`HTTP ${r.status}`);
+  if(!r.ok){
+    const err=new Error(j?.message||`HTTP ${r.status}`);
+    err.status=r.status;
+    throw err;
+  }
   return j;
 }
 
@@ -12117,16 +12248,14 @@ async function loadAuthStatus(){
 // V34.5 — REFRESH ACCOUNT AFTER LOGIN
 // =====================================================
 async function refreshAuthUserAfterLogin(){
-  if(!authToken)throw new Error("ไม่พบ session สำหรับเข้าสู่ระบบ");
+  if(!authToken)return authUser;
 
   const j=await apiJson(API.authMe);
-
-  if(!j?.user){
-    throw new Error("ไม่สามารถโหลดข้อมูลบัญชีหลังเข้าสู่ระบบได้");
+  if(j?.user){
+    authUser=j.user;
+    saveCachedAuthUser(authUser);
+    updateAccountUI();
   }
-
-  authUser=j.user;
-  updateAccountUI();
   return authUser;
 }
 
@@ -12240,9 +12369,6 @@ async function handleGoogleCredential(response){
 
   setAuthMessage("loginMessage","กำลังเข้าสู่ระบบด้วย Google...");
 
-  const previousToken=authToken;
-  const previousUser=authUser;
-
   try{
     const j=await apiJson(API.authGoogle,{
       method:"POST",
@@ -12251,47 +12377,62 @@ async function handleGoogleCredential(response){
 
     const nextToken=String(j.token||"");
     const nextUser=j.user||null;
-
     if(!nextToken||!nextUser){
       throw new Error("ข้อมูลเข้าสู่ระบบด้วย Google ไม่สมบูรณ์");
     }
 
     authToken=nextToken;
     authUser=nextUser;
-
-    await refreshAuthUserAfterLogin();
-
     localStorage.setItem(AUTH_TOKEN_KEY,authToken);
     sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    saveCachedAuthUser(authUser);
+    updateAccountUI();
+
+    refreshAuthUserAfterLogin().catch(err=>{
+      console.warn("Google account refresh error:",err);
+    });
 
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
   }catch(e){
-    authToken=previousToken||"";
-    authUser=previousUser||null;
-
-    if(previousToken){
-      localStorage.setItem(AUTH_TOKEN_KEY,previousToken);
-    }else{
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    }
-
-    try{updateAccountUI();}catch(_){}
-    setAuthMessage("loginMessage",e.message,"error");
+    setAuthMessage("loginMessage",e?.message||"เข้าสู่ระบบด้วย Google ไม่สำเร็จ","error");
   }
 }
 
 async function restoreAuthSession(){
-  if(!authToken){authUser=null;updateAccountUI();return;}
-  try{const j=await apiJson(API.authMe);authUser=j.user||null;}catch(_){authToken="";authUser=null;localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);}
-  updateAccountUI();
+  if(!authToken){
+    authUser=null;
+    saveCachedAuthUser(null);
+    updateAccountUI();
+    return;
+  }
+
+  if(authUser){
+    try{updateAccountUI();}catch(_){}
+  }
+
+  try{
+    const j=await apiJson(API.authMe);
+    if(j?.user){
+      authUser=j.user;
+      saveCachedAuthUser(authUser);
+      updateAccountUI();
+    }
+  }catch(err){
+    if(err?.status===401||err?.status===403){
+      authToken="";
+      authUser=null;
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      saveCachedAuthUser(null);
+      updateAccountUI();
+    }else{
+      console.warn("Auth verification delayed; keeping cached session.",err);
+    }
+  }
 }
 
 async function doLogin(email,password){
-  const previousToken=authToken;
-  const previousUser=authUser;
-
   const j=await apiJson(API.authLogin,{
     method:"POST",
     body:JSON.stringify({email,password})
@@ -12304,33 +12445,18 @@ async function doLogin(email,password){
     throw new Error("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์");
   }
 
-  try{
-    authToken=nextToken;
-    authUser=nextUser;
+  authToken=nextToken;
+  authUser=nextUser;
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+  saveCachedAuthUser(authUser);
+  updateAccountUI();
 
-    // ใช้ token ชั่วคราวเพื่อดึง /auth/me และ sync permission ให้ครบ
-    await refreshAuthUserAfterLogin();
+  refreshAuthUserAfterLogin().catch(err=>{
+    console.warn("Account refresh after login delayed:",err);
+  });
 
-    // บันทึก session หลังจาก flow สำเร็จครบแล้วเท่านั้น
-    localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-
-    return j;
-  }catch(err){
-    // rollback ป้องกันสถานะครึ่ง Login
-    authToken=previousToken||"";
-    authUser=previousUser||null;
-
-    if(previousToken){
-      localStorage.setItem(AUTH_TOKEN_KEY,previousToken);
-    }else{
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    }
-
-    try{updateAccountUI();}catch(_){}
-    throw err;
-  }
+  return j;
 }
 
 function applyManagedHelpOverrides(help){
@@ -12528,8 +12654,14 @@ function renderAdminDevices(){
         <input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}" placeholder="เช่น บริเวณหน้าอาคาร...">
       </label>
 
-      <label class="admin-field">รายละเอียดจุดติดตั้ง
-        <textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="8" placeholder="อธิบายบริเวณโดยรอบ ลักษณะพื้นที่ และเหตุผลที่เลือกจุดนี้">${esc(d.description||"")}</textarea>
+      <label class="admin-field">คำอธิบายจุดตรวจวัด
+        <textarea class="admin-device-description" maxlength="900" rows="4" placeholder="ข้อความสั้นที่แสดงอยู่กับการ์ดจุดตรวจวัด เช่น ลักษณะพื้นที่โดยสรุป">${esc(d.description||"")}</textarea>
+        <small>ข้อความนี้ใช้กับส่วน “จุดตรวจวัด” ของ Dashboard</small>
+      </label>
+
+      <label class="admin-field">รายละเอียดในแถบด้านข้างแผนที่
+        <textarea class="admin-device-map-description admin-device-description-map" maxlength="2000" rows="6" placeholder="รายละเอียดสำหรับแถบด้านข้างของแผนที่ เช่น สภาพแวดล้อม เหตุผลที่เลือกติดตั้ง และข้อมูลสถานที่">${esc(d.map_description||"")}</textarea>
+        <small>ข้อความนี้จะแสดงเฉพาะเมื่อกดหมุด/จุดบนแผนที่</small>
       </label>
 
       <div class="admin-device-map-fields">
@@ -12555,7 +12687,7 @@ function renderAdminDevices(){
     syncAdminActiveMediaFields();
     refreshAdminMapEditor({keepZoom:true});
   }));
-  root.querySelectorAll(".admin-device-location,.admin-device-description").forEach(el=>{
+  root.querySelectorAll(".admin-device-location,.admin-device-description,.admin-device-map-description").forEach(el=>{
     el.addEventListener("input",syncAdminDeviceTabLabels);
   });
   root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>{
@@ -12825,6 +12957,7 @@ async function saveAdminDevices(){
     display_name:d.querySelector(".admin-device-display")?.value||"",
     location_name:d.querySelector(".admin-device-location")?.value||"",
     description:d.querySelector(".admin-device-description")?.value||"",
+    map_description:d.querySelector(".admin-device-map-description")?.value||"",
     latitude:d.querySelector(".admin-device-latitude")?.value||null,
     longitude:d.querySelector(".admin-device-longitude")?.value||null,
     images:adminDeviceImagesFromCard(d),
@@ -13775,19 +13908,7 @@ function setupRemoteWiFiManagement(){
     // V4.3 — CRITICAL AUTH BINDINGS FIRST
     // ปุ่มเข้าสู่ระบบต้องทำงานแม้ module รอง เช่น Map/Wi-Fi/AI มี error
     // =====================================================
-    const accountButton=$("accountButton");
-    if(accountButton&&!accountButton.dataset.authBound){
-      accountButton.dataset.authBound="1";
-      accountButton.addEventListener("click",()=>{
-        if(!authUser){
-          openAuthModal("login");
-          return;
-        }
-        const m=$("accountDropdown");
-        m?.classList.toggle("hidden");
-        accountButton.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));
-      });
-    }
+    bindCriticalAuthUI();
 
     try{
       setupRemoteWiFiManagement();
@@ -13807,13 +13928,12 @@ function setupRemoteWiFiManagement(){
       openNotificationDetailFromUrl();
     };
     if(authToken){
-      if("requestIdleCallback" in window){
-        requestIdleCallback(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),{timeout:3500});
-      }else{
-        setTimeout(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),1800);
-      }
+      setTimeout(()=>{
+        restoreSavedSession().catch(e=>console.warn("Auth restore error:",e));
+      },0);
     }else{
       authUser=null;
+      saveCachedAuthUser(null);
       try{
         updateAccountUI();
       }catch(err){
@@ -13823,21 +13943,9 @@ function setupRemoteWiFiManagement(){
       }
       setTimeout(openNotificationDetailFromUrl,250);
     }
-    document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
-    document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
-    document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromAdminCenter));
-    document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
-    document.querySelectorAll("[data-toggle-password]").forEach(button=>button.addEventListener("click",()=>{
-      const input=$(button.dataset.togglePassword);
-      if(!input)return;
-      const show=input.type==="password";
-      input.type=show?"text":"password";
-      button.classList.toggle("is-visible",show);
-      button.setAttribute("aria-pressed",String(show));
-      button.setAttribute("aria-label",show?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
-    }));
-    $("openForgotPasswordButton")?.addEventListener("click",openForgotPassword);
-    $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
+
+    document.querySelectorAll("[data-admin-close]").forEach(x=>bindOnce(x,"AdminClose","click",closeAdminCenter));
+    document.querySelectorAll("[data-admin-back]").forEach(x=>bindOnce(x,"AdminBack","click",backFromAdminCenter));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
     $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
 // =====================================================
@@ -13864,8 +13972,6 @@ function setupRemoteWiFiManagement(){
       }catch(err){alert(err.message);}
     });
 
-    $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
-    $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
     $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
     $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
@@ -13887,7 +13993,7 @@ function setupRemoteWiFiManagement(){
       if(target==="system")document.querySelector('[data-go-page="overview"]')?.click();
       else if(target==="monitoring")document.querySelector('[data-go-page="monitoring"]')?.click();
     });
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(null);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
@@ -13944,14 +14050,11 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 });
 
 // =====================================================
-// MAP V2 STARTUP
+// MAP V5 — LAZY STARTUP
 // =====================================================
-(function startMapV43(){
+(function startMapV5(){
   const run=()=>{
-    Promise.resolve(setupMonitoringMapUi()).catch(err=>{
-      console.error("Map module startup error:",err);
-      setMapLoadError($("monitoringMap"));
-    });
+    safeStartup("map controls",setupMonitoringMapUi);
 
     let resizeTimer=null;
     const refreshMaps=()=>{
