@@ -9936,30 +9936,92 @@ function updateOverviewParticleDisplay(){
 
 function overviewCharacterSvg(metric,state="normal"){
   const s=String(state||"normal");
-  const isCritical=["critical","very_hot","very_high"].includes(s);
-  const isWarn=["warning","hot","high","watch"].includes(s);
-  const isCold=["very_cold","cold","cool"].includes(s);
-  const isLow=s==="low";
-  const face=isCritical?"#f7b09c":isWarn?"#ffc6a8":isCold?"#ffd4bd":"#ffd0b5";
-  const cheek=isCritical?"#f97373":isWarn?"#fb8f78":"#f6a28d";
-  const shirt=metric==="pm25"?"#52c98f":metric==="temperature"?"#67b8f3":metric==="humidity"?"#5fc0ea":"#f29a70";
-  const eyes=isCritical?`<path d="M34 47c3-3 6-3 9 0M61 47c3-3 6-3 9 0" stroke="#3c2a29" stroke-width="3.5" stroke-linecap="round" fill="none"/>`:`<path d="M34 47c2.8 2.4 6.2 2.4 9 0M61 47c2.8 2.4 6.2 2.4 9 0" stroke="#3c2a29" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
-  const mouth=isCritical?`<path d="M45 66c6-6 12-6 18 0" stroke="#8b3d46" stroke-width="3.2" stroke-linecap="round" fill="none"/>`:`<path d="M44 63c5 6 14 6 19 0" stroke="#8b3d46" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  const noData=s==="no_data";
+  const severe=["critical","very_hot","very_high"].includes(s);
+  const warning=["warning","hot","high","watch"].includes(s);
+  const cold=["very_cold","cold","cool"].includes(s);
+  const low=s==="low";
+
+  const shirt=
+    metric==="pm25"?"#20b779":
+    metric==="temperature"?"#f59e42":
+    metric==="humidity"?"#2f9ee8":
+    "#f07c57";
+
+  const face=noData?"#f0c4ad":severe?"#f4ae96":warning?"#ffc3a5":"#ffd0b5";
+  const cheek=severe?"#f46f6f":warning?"#f58f78":"#f6a28d";
+  const hair="#493027";
+  const hairHi="#6a4335";
+
+  let eyes=`<path d="M39 51c3 3 7 3 10 0M71 51c3 3 7 3 10 0" stroke="#382724" stroke-width="3.5" stroke-linecap="round" fill="none"/>`;
+  let mouth=`<path d="M49 69c6 7 16 7 22 0" stroke="#9a3f49" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+  if(noData){
+    eyes=`<path d="M40 52h8M72 52h8" stroke="#65483f" stroke-width="3" stroke-linecap="round"/><path d="M54 70h12" stroke="#8b5f56" stroke-width="3" stroke-linecap="round"/>`;
+  }else if(severe){
+    eyes=`<path d="M39 54c3-4 7-4 10 0M71 54c3-4 7-4 10 0" stroke="#382724" stroke-width="3.6" stroke-linecap="round" fill="none"/>`;
+    mouth=`<path d="M50 72c6-6 15-6 21 0" stroke="#9a3f49" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+  }else if(warning){
+    eyes=`<circle cx="44" cy="53" r="2.4" fill="#382724"/><circle cx="76" cy="53" r="2.4" fill="#382724"/>`;
+    mouth=`<path d="M52 71c5 2 11 2 16 0" stroke="#9a3f49" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  }
+
   let accessory="";
-  if(metric==="pm25" && ["warning","critical"].includes(s)) accessory=`<path d="M35 57Q52 51 70 57V70Q52 76 35 70Z" fill="#d8f2fa" stroke="#6aa9bd" stroke-width="2"/><path d="M35 59C28 56 27 65 34 67M70 59C77 56 78 65 71 67" fill="none" stroke="#6aa9bd" stroke-width="2"/>`;
-  if(metric==="temperature" && isCold) accessory+=`<path d="M28 79Q52 72 77 79L72 90H33Z" fill="#7dd3fc"/><path d="M61 79l6 20 8-3-5-19" fill="#38bdf8"/>`;
-  if(metric==="temperature" && (isWarn||isCritical)) accessory+=`<path d="M77 45c6 8 3 14-2 14-6 0-7-7-3-12 1-2 3-4 5-7z" fill="#56b9ef"/>`;
-  if(metric==="humidity" && (isWarn||isCritical)) accessory+=`<path d="M25 52c5 7 2 12-2 12-5 0-6-5-3-10l3-5zM80 45c5 7 2 12-2 12-5 0-6-5-3-10l3-5z" fill="#4eb5ee"/>`;
-  if(metric==="humidity" && isLow) accessory+=`<path d="M24 72l8-3M72 69l9 4" stroke="#d9a15f" stroke-width="3" stroke-linecap="round"/>`;
-  if(metric==="heat" && ["watch","warning","critical"].includes(s)) accessory+=`<path d="M77 42c6 8 3 14-2 14-6 0-7-7-3-12 1-2 3-4 5-7zM29 50c4 6 2 10-2 10s-5-5-2-9l2-4z" fill="#53b8ee"/><circle cx="28" cy="31" r="8" fill="#ffd45b" opacity=".9"/><path d="M28 15v7M28 40v7M12 31h7M37 31h7M17 20l5 5M39 20l-5 5" stroke="#ffb21a" stroke-width="2.5" stroke-linecap="round"/>`;
-  return `<svg viewBox="0 0 104 104" role="img" aria-hidden="true" focusable="false">
-    <circle cx="52" cy="54" r="43" fill="rgba(255,255,255,.18)"/>
-    <path d="M25 97c3-17 13-24 27-24s24 7 27 24" fill="${shirt}"/>
-    <ellipse cx="52" cy="53" rx="29" ry="31" fill="${face}"/>
-    <path d="M24 49c0-24 12-36 30-36 19 0 30 12 29 34-8-8-14-13-24-15-7 8-17 13-35 17z" fill="#4a3028"/>
-    <path d="M30 37c4-14 14-20 27-20 9 0 17 3 22 11-12-5-22-5-33 0-7 3-11 6-16 9z" fill="#5a392e" opacity=".8"/>
+  let arms=`<path d="M33 93c-7 1-12 7-13 15M87 93c7 1 12 7 13 15" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>`;
+
+  if(metric==="pm25" && ["warning","critical"].includes(s)){
+    accessory+=`<path d="M40 62Q60 55 81 62V76Q60 83 40 76Z" fill="#e9f8fb" stroke="#76b6ca" stroke-width="2"/>
+      <path d="M40 64C32 61 30 71 39 73M81 64C89 61 91 71 82 73" fill="none" stroke="#76b6ca" stroke-width="2"/>`;
+  }
+
+  if(metric==="temperature" && cold){
+    accessory+=`<path d="M34 89Q60 80 87 89L81 102H40Z" fill="#57b6e8"/>
+      <path d="M70 88l8 25 10-4-6-24" fill="#339bd3"/>`;
+    arms=`<path d="M35 94Q50 103 60 98M85 94Q70 103 60 98" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>`;
+  }
+
+  if(metric==="temperature" && (warning||severe)){
+    accessory+=`<path d="M88 43c8 11 4 19-3 19-8 0-10-9-4-17 2-3 4-6 7-10z" fill="#42aee8"/>
+      <path d="M24 47c5 7 2 13-3 13-6 0-7-7-3-12l3-6z" fill="#75c8ef" opacity=".9"/>`;
+  }
+
+  if(metric==="humidity" && (warning||severe)){
+    accessory+=`<path d="M27 47c6 8 2 14-3 14-7 0-8-7-4-13l4-7zM91 51c5 7 2 12-3 12-5 0-7-6-3-11l3-6z" fill="#3ba8e8"/>`;
+  }
+
+  if(metric==="humidity" && low){
+    accessory+=`<path d="M24 79l10-4M87 77l10 4" stroke="#d0a261" stroke-width="3.2" stroke-linecap="round"/>`;
+  }
+
+  if(metric==="heat" && ["watch","warning","critical"].includes(s)){
+    accessory+=`<path d="M91 42c7 10 3 17-3 17-7 0-9-8-4-15l4-9z" fill="#36a9ec"/>
+      <circle cx="27" cy="28" r="11" fill="#ffd84f"/>
+      <g stroke="#ffad17" stroke-width="2.5" stroke-linecap="round">
+        <path d="M27 8v8M27 40v8M7 28h8M39 28h8M13 14l6 6M41 14l-6 6"/>
+      </g>`;
+    arms=`<path d="M34 96c-4 0-8 4-10 11" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path d="M85 95Q78 78 69 67" stroke="${face}" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <circle cx="68" cy="66" r="5" fill="${face}"/>`;
+  }
+
+  const sparkle = noData ? "" : `<circle cx="22" cy="69" r="2.2" fill="#fff" opacity=".7"/><circle cx="95" cy="72" r="1.7" fill="#fff" opacity=".55"/>`;
+
+  return `<svg viewBox="0 0 120 120" role="img" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="shirt-${metric}-${s}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${shirt}"/><stop offset="1" stop-color="${shirt}" stop-opacity=".78"/>
+      </linearGradient>
+    </defs>
+    <circle cx="60" cy="61" r="49" fill="rgba(255,255,255,.18)"/>
+    <circle cx="60" cy="61" r="42" fill="rgba(255,255,255,.12)"/>
+    ${sparkle}
+    <path d="M31 116c3-23 14-34 29-34s26 11 29 34" fill="url(#shirt-${metric}-${s})"/>
+    ${arms}
+    <ellipse cx="60" cy="58" rx="32" ry="34" fill="${face}"/>
+    <path d="M28 53c0-27 13-42 33-42 22 0 34 15 33 40-7-7-15-14-26-17-8 9-20 15-40 19z" fill="${hair}"/>
+    <path d="M34 38c7-15 18-22 31-22 10 0 20 4 25 12-12-5-25-5-36 0-8 3-14 7-20 10z" fill="${hairHi}" opacity=".8"/>
+    <path d="M33 51c-3 0-6 4-6 9 0 6 4 10 8 9M87 51c3 0 6 4 6 9 0 6-4 10-8 9" fill="${face}"/>
     ${eyes}
-    <circle cx="35" cy="58" r="5" fill="${cheek}" opacity=".58"/><circle cx="69" cy="58" r="5" fill="${cheek}" opacity=".58"/>
+    <circle cx="41" cy="64" r="5.5" fill="${cheek}" opacity=".52"/><circle cx="79" cy="64" r="5.5" fill="${cheek}" opacity=".52"/>
     ${mouth}
     ${accessory}
   </svg>`;
