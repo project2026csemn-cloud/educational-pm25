@@ -10321,6 +10321,7 @@ function renderAboutCharacterGuide(){
     const metric=String(el.dataset.characterMetric||"pm25");
     const state=String(el.dataset.characterState||"normal");
     el.innerHTML=overviewCharacterSvg(metric,state);
+    el.classList.add("is-rendered");
   });
 }
 
@@ -10384,8 +10385,10 @@ function updateNavigationDashboard(){
     const textEl=sourceEl.querySelector("span:last-child");
     if(textEl){
       textEl.innerHTML=sourceNodes>0
-        ? `<b>ภาพรวมของพื้นที่</b> · ค่าเฉลี่ยจาก <strong>${sourceNodes} จาก 3 จุดตรวจวัด</strong> ที่มีข้อมูลล่าสุด`
-        : `<b>ภาพรวมของพื้นที่</b> · ขณะนี้ยังไม่มีจุดตรวจวัดที่มีข้อมูลพร้อมสำหรับคำนวณค่าเฉลี่ย`;
+        ? (sourceNodes===3
+            ? `<b>ค่าเฉลี่ยจากจุดตรวจวัดทั้ง 3 จุด</b><small>สรุปจากข้อมูลล่าสุดของพื้นที่</small>`
+            : `<b>ค่าเฉลี่ยจาก ${sourceNodes} จุดตรวจวัด</b><small>ขณะนี้มีข้อมูลพร้อมใช้งาน ${sourceNodes} จากทั้งหมด 3 จุด</small>`)
+        : `<b>ยังไม่สามารถคำนวณค่าเฉลี่ยของพื้นที่ได้</b><small>ขณะนี้ยังไม่มีจุดตรวจวัดที่มีข้อมูลพร้อมใช้งาน</small>`;
     }
     sourceEl.classList.toggle("is-no-data",sourceNodes===0);
   }
