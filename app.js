@@ -10219,88 +10219,150 @@ function toggleOverviewParticleMetric(){
 function overviewCharacterSvg(metric,state="normal"){
   const s=String(state||"normal");
   const noData=s==="no_data";
-  const critical=["critical","very_hot","very_high"].includes(s);
-  const warning=["warning","hot","high","watch"].includes(s);
-  const cool=["very_cold","cold","cool"].includes(s);
-  const low=s==="low";
 
   const palette={
-    pm25:{shirt:"#24b978",hood:"#0b9660"},
-    temperature:{shirt:"#ff9e45",hood:"#f27b2f"},
-    humidity:{shirt:"#2aa9e8",hood:"#137fc4"},
-    heat:{shirt:"#ff8d62",hood:"#ed6348"}
-  }[metric]||{shirt:"#36bca5",hood:"#238a7b"};
+    pm25:{shirt:"#24b978",shirt2:"#0b9660"},
+    temperature:{shirt:"#ff9e45",shirt2:"#f27b2f"},
+    humidity:{shirt:"#2aa9e8",shirt2:"#137fc4"},
+    heat:{shirt:"#ff8d62",shirt2:"#ed6348"}
+  }[metric]||{shirt:"#36bca5",shirt2:"#238a7b"};
 
-  const skin=critical?"#ffc2a7":warning?"#ffd0b5":"#ffd8bd";
+  const severe=["critical","very_hot","very_high"].includes(s);
+  const caution=["warning","hot","high","watch"].includes(s);
+  const skin=severe?"#ffc2a7":caution?"#ffd0b5":"#ffd8bd";
   const hair="#442d24";
   const hair2="#704939";
-  const cheek=critical?"#f27676":warning?"#f79584":"#f7a58f";
+  const cheek=severe?"#f27676":caution?"#f79584":"#f7a58f";
 
+  // Default happy/normal face.
   let eyes=`<path d="M39 54c3.4 4 7.5 4 11 0M70 54c3.4 4 7.5 4 11 0" fill="none" stroke="#3c2925" stroke-width="3.5" stroke-linecap="round"/>`;
   let mouth=`<path d="M49 72c6 7 16 7 22 0" fill="none" stroke="#a33d49" stroke-width="3.7" stroke-linecap="round"/>`;
 
   if(noData){
     eyes=`<path d="M40 54h8M72 54h8" stroke="#68504a" stroke-width="3.2" stroke-linecap="round"/>`;
     mouth=`<path d="M54 72h12" stroke="#95685f" stroke-width="3.2" stroke-linecap="round"/>`;
-  }else if(critical){
+  }else if(["critical","very_hot","very_high"].includes(s)){
     eyes=`<path d="M39 56c3-5 8-5 11 0M70 56c3-5 8-5 11 0" fill="none" stroke="#3c2925" stroke-width="3.6" stroke-linecap="round"/>`;
     mouth=`<path d="M50 75c6-7 15-7 21 0" fill="none" stroke="#a33d49" stroke-width="3.6" stroke-linecap="round"/>`;
-  }else if(warning){
+  }else if(["warning","hot","high","watch","moderate"].includes(s)){
     eyes=`<circle cx="44" cy="55" r="2.6" fill="#3c2925"/><circle cx="76" cy="55" r="2.6" fill="#3c2925"/>`;
-    mouth=`<path d="M53 73c5 2 10 2 15 0" fill="none" stroke="#a33d49" stroke-width="3.2" stroke-linecap="round"/>`;
+    mouth=s==="moderate"
+      ? `<path d="M53 73h14" fill="none" stroke="#a33d49" stroke-width="3.1" stroke-linecap="round"/>`
+      : `<path d="M53 73c5 2 10 2 15 0" fill="none" stroke="#a33d49" stroke-width="3.2" stroke-linecap="round"/>`;
+  }else if(s==="good"){
+    eyes=`<path d="M39 54c3 3.5 7.5 3.5 11 0M70 54c3 3.5 7.5 3.5 11 0" fill="none" stroke="#3c2925" stroke-width="3.4" stroke-linecap="round"/>`;
+    mouth=`<path d="M51 72c5 5 13 5 18 0" fill="none" stroke="#a33d49" stroke-width="3.5" stroke-linecap="round"/>`;
+  }else if(s==="excellent"){
+    eyes=`<path d="M38 53c4 5 8.5 5 12 0M70 53c4 5 8.5 5 12 0" fill="none" stroke="#3c2925" stroke-width="3.6" stroke-linecap="round"/>`;
+    mouth=`<path d="M48 71c7 9 17 9 24 0" fill="#fff0f0" stroke="#a33d49" stroke-width="3.5" stroke-linejoin="round"/>`;
   }
 
   let accessory="";
   let leftArm=`<path d="M34 98c-8 2-12 8-13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
   let rightArm=`<path d="M86 98c8 2 12 8 13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
 
+  // -----------------------------------------------------
+  // PM2.5 — each About state has its own visual language.
+  // -----------------------------------------------------
   if(metric==="pm25"){
-    if(["warning","critical"].includes(s)){
+    if(s==="excellent"){
+      accessory+=`
+        <path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".72"/>
+        <path d="M18 31l2 4 4 2-4 2-2 4-2-4-4-2 4-2zM99 28l1.6 3 3.4 1.6-3.4 1.6-1.6 3-1.6-3-3.4-1.6 3.4-1.6z" fill="#fff6a8"/>`;
+    }else if(s==="good"){
+      accessory+=`<path d="M25 38c6-8 12-10 18-7-2 7-8 11-16 12" fill="#55c98a" opacity=".55"/>`;
+    }else if(s==="moderate"){
+      accessory+=`
+        <circle cx="99" cy="34" r="3" fill="#a8b8c5" opacity=".55"/>
+        <circle cx="106" cy="42" r="2.2" fill="#a8b8c5" opacity=".42"/>
+        <circle cx="96" cy="48" r="1.8" fill="#a8b8c5" opacity=".36"/>`;
+    }else if(["warning","critical"].includes(s)){
       accessory+=`<path d="M39 64Q60 56 82 64V78Q60 85 39 78Z" fill="#eefcff" stroke="#67abc1" stroke-width="2"/>
-      <path d="M39 67C31 63 29 74 39 76M82 67C90 63 92 74 82 76" fill="none" stroke="#67abc1" stroke-width="2"/>`;
+        <path d="M39 67C31 63 29 74 39 76M82 67C90 63 92 74 82 76" fill="none" stroke="#67abc1" stroke-width="2"/>`;
+      if(s==="critical"){
+        accessory+=`<path d="M99 27l5 9h-10z" fill="#ef6a62"/><path d="M99 31v3.5M99 36.5v.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>`;
+      }
     }else{
       accessory+=`<path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".55"/>`;
     }
   }
 
-  if(metric==="temperature" && cool){
-    accessory+=`<path d="M36 91Q60 83 85 91L82 103H40Z" fill="#4fb1e4"/>
-      <path d="M67 89l10 28 10-4-7-27" fill="#288fc9"/>`;
-    leftArm=`<path d="M35 99Q49 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
-    rightArm=`<path d="M85 99Q71 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
-  }
-  if(metric==="temperature" && (warning||critical)){
-    accessory+=`<path d="M91 42c8 12 4 20-3 20-8 0-10-9-4-18l4-9z" fill="#3bb3ef"/>
-      <circle cx="24" cy="28" r="10" fill="#ffd14c"/><g stroke="#ffae1b" stroke-width="2.2" stroke-linecap="round"><path d="M24 10v7M24 39v7M6 28h7M35 28h7"/></g>`;
+  // -----------------------------------------------------
+  // Temperature — progressively different accessories.
+  // -----------------------------------------------------
+  if(metric==="temperature"){
+    if(s==="very_cold"){
+      accessory+=`
+        <path d="M36 91Q60 83 85 91L82 103H40Z" fill="#4fb1e4"/>
+        <path d="M67 89l10 28 10-4-7-27" fill="#288fc9"/>
+        <path d="M18 29l3 2 3-2-1 4 3 2-4 .2-1 4-1.2-3.8-4 .2 3.2-2.4zM98 37l2.5 1.7 2.5-1.7-.8 3 2.5 1.8-3.1.1-.9 3-.9-3-3.1-.1 2.5-1.8z" fill="#d8f4ff"/>`;
+      leftArm=`<path d="M35 99Q49 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
+      rightArm=`<path d="M85 99Q71 109 60 103" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
+    }else if(s==="cold"){
+      accessory+=`<path d="M37 92Q60 85 84 92L82 101H40Z" fill="#5eb8e6"/><path d="M67 90l8 24 8-3-6-23" fill="#318fc3"/>`;
+    }else if(s==="cool"){
+      accessory+=`<path d="M39 94Q60 88 82 94L80 100H41Z" fill="#85cae9" opacity=".8"/>`;
+    }else if(s==="hot"){
+      accessory+=`<circle cx="24" cy="28" r="10" fill="#ffd14c"/><g stroke="#ffae1b" stroke-width="2.2" stroke-linecap="round"><path d="M24 10v7M24 39v7M6 28h7M35 28h7"/></g>
+        <path d="M91 42c7 10 3 17-3 17-7 0-9-8-4-16l4-8z" fill="#3bb3ef"/>`;
+    }else if(s==="very_hot"){
+      accessory+=`<circle cx="24" cy="28" r="12" fill="#ffd14c"/><g stroke="#ff981b" stroke-width="2.5" stroke-linecap="round"><path d="M24 7v8M24 41v8M3 28h8M37 28h8M9 13l6 6M39 13l-6 6"/></g>
+        <path d="M91 40c8 12 4 20-3 20-8 0-10-9-4-18l4-9z" fill="#3bb3ef"/>
+        <path d="M32 45c5 7 2 12-2 12-5 0-6-6-3-11l3-6z" fill="#66c8f4" opacity=".9"/>`;
+    }
   }
 
+  // -----------------------------------------------------
+  // Humidity — low/normal/high/very high are visually unique.
+  // -----------------------------------------------------
   if(metric==="humidity"){
-    if(warning||critical){
+    if(s==="low"){
+      accessory+=`
+        <path d="M24 83l11-4M86 80l10 5" stroke="#c38a4a" stroke-width="3.4" stroke-linecap="round"/>
+        <path d="M18 42l5-3M99 34l4-4" stroke="#d7b27d" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>`;
+    }else if(s==="normal"){
+      accessory+=`<path d="M95 37c4 6 2 10-2 10-4 0-5-5-3-9l3-5z" fill="#6dcaf0" opacity=".65"/>`;
+    }else if(s==="high"){
       accessory+=`<path d="M27 46c6 9 2 16-4 16-7 0-9-8-4-14l5-8zM93 50c5 8 2 14-3 14-6 0-8-7-4-12l4-7z" fill="#39a9e8"/>`;
-    }
-    if(low){
-      accessory+=`<path d="M24 83l11-4M86 80l10 5" stroke="#c38a4a" stroke-width="3.4" stroke-linecap="round"/>`;
+    }else if(s==="very_high"){
+      accessory+=`
+        <path d="M25 42c7 11 3 19-4 19-8 0-10-9-4-17l5-9zM95 46c6 10 3 17-3 17-7 0-9-8-4-15l4-8z" fill="#269fdf"/>
+        <path d="M17 70c4 6 2 11-2 11-5 0-6-6-3-10l3-6zM103 72c4 6 2 11-2 11-5 0-6-6-3-10l3-6z" fill="#6bc8ef" opacity=".88"/>`;
     }
   }
 
-  if(metric==="heat" && ["watch","warning","critical"].includes(s)){
-    accessory+=`<circle cx="26" cy="27" r="11" fill="#ffd241"/>
-      <g stroke="#ffae17" stroke-width="2.5" stroke-linecap="round"><path d="M26 8v8M26 39v8M7 27h8M38 27h8M12 13l6 6M40 13l-6 6"/></g>
-      <path d="M91 43c7 11 3 18-3 18-7 0-9-8-4-16l4-9z" fill="#33a8ea"/>`;
-    rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
+  // -----------------------------------------------------
+  // Heat Index — escalating sun/sweat cues.
+  // -----------------------------------------------------
+  if(metric==="heat"){
+    if(s==="normal"){
+      accessory+=`<circle cx="99" cy="28" r="6" fill="#ffd866" opacity=".82"/>`;
+    }else if(s==="watch"){
+      accessory+=`<circle cx="26" cy="27" r="9" fill="#ffd241"/>
+        <g stroke="#ffae17" stroke-width="2.1" stroke-linecap="round"><path d="M26 10v7M26 37v7M9 27h7M36 27h7"/></g>
+        <path d="M91 43c5 8 2 14-3 14-6 0-8-7-4-12l4-7z" fill="#33a8ea"/>`;
+    }else if(s==="warning"){
+      accessory+=`<circle cx="26" cy="27" r="11" fill="#ffd241"/>
+        <g stroke="#ffae17" stroke-width="2.5" stroke-linecap="round"><path d="M26 8v8M26 39v8M7 27h8M38 27h8M12 13l6 6M40 13l-6 6"/></g>
+        <path d="M91 43c7 11 3 18-3 18-7 0-9-8-4-16l4-9z" fill="#33a8ea"/>`;
+      rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
+    }else if(s==="critical"){
+      accessory+=`<circle cx="26" cy="27" r="12" fill="#ffc928"/>
+        <g stroke="#ff9e13" stroke-width="2.7" stroke-linecap="round"><path d="M26 6v9M26 40v9M5 27h9M38 27h9M10 11l7 7M42 11l-7 7"/></g>
+        <path d="M91 40c8 13 4 21-3 21-8 0-10-9-4-19l4-10z" fill="#249fde"/>
+        <path d="M32 45c5 8 2 14-3 14-6 0-7-7-3-13l3-7z" fill="#58bff0"/>`;
+      rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
+    }
   }
 
+  // Important: direct solid fills intentionally avoid duplicated inline-SVG
+  // gradient IDs, which caused the shirt/body to flash and then disappear.
   return `<svg viewBox="0 0 120 126" role="img" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="shirt-${metric}-${s}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${palette.shirt}"/><stop offset="1" stop-color="${palette.hood}"/>
-      </linearGradient>
-    </defs>
-
     <circle cx="60" cy="60" r="52" fill="rgba(255,255,255,.28)"/>
     <circle cx="60" cy="60" r="45" fill="rgba(255,255,255,.17)"/>
 
-    <path d="M26 126c2-24 15-39 34-39s32 15 34 39" fill="url(#shirt-${metric}-${s})"/>
+    <path d="M26 126c2-24 15-39 34-39s32 15 34 39" fill="${palette.shirt}"/>
+    <path d="M36 126c3-17 12-28 24-28s21 11 24 28" fill="${palette.shirt2}" opacity=".22"/>
     <path d="M43 94c5 5 11 8 17 8s12-3 17-8l7 32H36z" fill="rgba(255,255,255,.10)"/>
     ${leftArm}${rightArm}
 
