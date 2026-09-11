@@ -10042,11 +10042,92 @@ d=>d.getTime()
 
 function overviewAdvice(pm25){
   const g=pm25Guidance(pm25);
-  if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปคุณภาพอากาศ";
-  if(g.level==="critical") return "คุณภาพอากาศอยู่ในระดับที่ควรลดกิจกรรมกลางแจ้งและติดตามสถานการณ์อย่างใกล้ชิด";
-  if(g.level==="warning") return "ควรเฝ้าระวังฝุ่น PM2.5 โดยเฉพาะผู้ที่ไวต่อมลพิษทางอากาศ";
-  if(g.label==="ปานกลาง") return "คุณภาพอากาศโดยรวมอยู่ในระดับปานกลาง สามารถติดตามกิจกรรมได้ตามความเหมาะสม";
-  return "คุณภาพอากาศโดยรวมอยู่ในระดับดี สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
+  if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปปริมาณฝุ่นในอากาศ";
+  if(g.level==="critical") return "ปริมาณฝุ่นในอากาศอยู่ในระดับสูง ควรหลีกเลี่ยงกิจกรรมกลางแจ้ง";
+  if(g.level==="warning") return "ปริมาณฝุ่นในอากาศเริ่มสูงขึ้น ควรเพิ่มความระมัดระวัง";
+  if(g.label==="ปานกลาง") return "ปริมาณฝุ่นในอากาศอยู่ในระดับที่ควรเฝ้าระวังและติดตามสถานการณ์";
+  return "ปริมาณฝุ่นในอากาศอยู่ในระดับต่ำ สามารถทำกิจกรรมได้ตามปกติ";
+}
+
+function overviewDustStatus(guide){
+  if(!guide || guide.level==="no_data") return {label:"รอข้อมูล",state:"waiting"};
+  if(guide.level==="critical") return {label:"อันตราย",state:"critical"};
+  if(guide.level==="warning") return {label:"ควรระวัง",state:"warning"};
+  if(guide.label==="ปานกลาง") return {label:"เฝ้าระวัง",state:"watch"};
+  if(guide.label==="ดีมาก") return {label:"ดีมาก",state:"good"};
+  return {label:"ดี",state:"good"};
+}
+
+function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
+  if(temp===null || hum===null){
+    return {
+      label:"รอข้อมูล",
+      state:"waiting",
+      message:"ยังไม่มีข้อมูลเพียงพอสำหรับสรุปสภาพอากาศ",
+      characterState:"no_data"
+    };
+  }
+
+  if(heatInfo?.level==="critical"){
+    return {
+      label:"อากาศร้อนมาก ควรระวัง",
+      state:"critical",
+      message:"ความร้อนอาจส่งผลต่อร่างกาย ควรหลีกเลี่ยงกิจกรรมหนักและพักในที่ร่ม",
+      characterState:"critical"
+    };
+  }
+
+  if(heatInfo?.level==="warning"){
+    return {
+      label:"อากาศร้อนและชื้น",
+      state:"warning",
+      message:"อาจรู้สึกร้อนและอบอ้าว ควรพักและดื่มน้ำเป็นระยะ",
+      characterState:"warning"
+    };
+  }
+
+  if(heatInfo?.level==="watch"){
+    return {
+      label:hInfo?.level==="high"||hInfo?.level==="very_high"?"อากาศค่อนข้างร้อนและชื้น":"อากาศค่อนข้างร้อน",
+      state:"watch",
+      message:"อาจเริ่มรู้สึกร้อนระหว่างทำกิจกรรม ควรพักและดื่มน้ำให้เพียงพอ",
+      characterState:"watch"
+    };
+  }
+
+  if(tInfo?.level==="very_cold" || tInfo?.level==="cold"){
+    return {
+      label:"อากาศค่อนข้างเย็น",
+      state:"cool",
+      message:"สภาพอากาศโดยรวมค่อนข้างเย็น ควรดูแลร่างกายให้อบอุ่น",
+      characterState:"cold"
+    };
+  }
+
+  if(hInfo?.level==="very_high" || hInfo?.level==="high"){
+    return {
+      label:"อากาศค่อนข้างชื้น",
+      state:"humid",
+      message:"อากาศมีความชื้นสูง อาจรู้สึกอับชื้นหรือเหนียวตัวเล็กน้อย",
+      characterState:"high"
+    };
+  }
+
+  if(hInfo?.level==="low"){
+    return {
+      label:"อากาศค่อนข้างแห้ง",
+      state:"dry",
+      message:"ความชื้นในอากาศค่อนข้างต่ำ ควรดื่มน้ำให้เพียงพอ",
+      characterState:"low"
+    };
+  }
+
+  return {
+    label:"อากาศกำลังสบาย",
+    state:"good",
+    message:"สภาพอากาศโดยรวมเหมาะกับการทำกิจกรรมตามปกติ",
+    characterState:"normal"
+  };
 }
 
 let overviewParticleMetric="pm25";
@@ -10250,7 +10331,6 @@ function updateNavigationDashboard(){
   const guide=pm25Guidance(pm25);
   const active=activeCount();
 
-  updateOverviewParticleDisplay();
   const heatValue=heatIndexC(temp,hum);
   const tInfo=temperatureLevel(temp);
   const hInfo=humidityLevel(hum);
@@ -10268,18 +10348,27 @@ function updateNavigationDashboard(){
   if($("overviewTempHint")) $("overviewTempHint").textContent=overviewFeelingText("temperature",tInfo);
   if($("overviewHumidityHint")) $("overviewHumidityHint").textContent=overviewFeelingText("humidity",hInfo);
   if($("overviewHeatHint")) $("overviewHeatHint").textContent=overviewFeelingText("heat",heatInfo);
+  const dustSummary=overviewDustStatus(guide);
+  const weatherSummary=overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo);
+
   if($("overviewFace")) $("overviewFace").innerHTML=overviewCharacterSvg("pm25",guide.level||"no_data");
+  if($("overviewWeatherFace")) $("overviewWeatherFace").innerHTML=overviewCharacterSvg("heat",weatherSummary.characterState||"no_data");
+
+  if($("overviewWeatherStatus")){
+    $("overviewWeatherStatus").textContent=weatherSummary.label;
+    $("overviewWeatherStatus").className=`overview-summary-status is-${weatherSummary.state}`;
+  }
+  if($("overviewWeatherGuidance")) $("overviewWeatherGuidance").textContent=weatherSummary.message;
   setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,"pm25");
   setOverviewMetricVisual("overviewTempMetricCard","overviewTempEmoji",tInfo.level,"temperature");
   setOverviewMetricVisual("overviewHumidityMetricCard","overviewHumidityEmoji",hInfo.level,"humidity");
   setOverviewMetricVisual("overviewHeatMetricCard","overviewHeatEmoji",heatInfo.level,"heat");
-  if($("overviewSourceLine")) $("overviewSourceLine").textContent=`คำนวณจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด`;
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
 
   const qb=$("overviewQualityBadge");
   if(qb){
-    qb.textContent=guide.label||"รอข้อมูล";
-    qb.className="overview-quality-badge "+(guide.level==="critical"?"is-critical":guide.level==="warning"?"is-warning":guide.level==="normal"?"is-normal":"is-waiting");
+    qb.textContent=dustSummary.label;
+    qb.className=`overview-summary-status is-${dustSummary.state}`;
   }
 
   const newest=newestNodeTime();
