@@ -2612,10 +2612,47 @@ function updateSmart(){
   const e=$("aiSummary");
   if(!e)return;
 
-  if(!apiConnectionOnline||!motherOnline()){
-    e.innerHTML=`<div class="overview-advice-simple is-offline">
-      <div class="overview-advice-head"><span>📡</span><div><b>ข้อมูลระบบยังไม่พร้อม</b><p>รอข้อมูลล่าสุดก่อนใช้คำแนะนำจากหน้า Overview</p></div></div>
+  const renderAdvice=(data)=>{
+    const {
+      cls="is-good",
+      icon="✅",
+      title="สภาพแวดล้อมโดยรวมอยู่ในเกณฑ์ดี",
+      message="สามารถทำกิจกรรมได้ตามปกติ และติดตามข้อมูลอย่างต่อเนื่อง",
+      actions=[],
+      active=0
+    }=data||{};
+
+    e.innerHTML=`<div class="overview-advice-panel ${cls}">
+      <div class="overview-advice-summary">
+        <div class="overview-advice-summary-icon" aria-hidden="true">${icon}</div>
+        <div class="overview-advice-summary-copy">
+          <b>${esc(title)}</b>
+          <p>${esc(message)}</p>
+          <small>ข้อมูลภาพรวมจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด</small>
+        </div>
+      </div>
+      <div class="overview-advice-action-grid">
+        ${actions.slice(0,4).map(a=>`
+          <div class="overview-advice-action">
+            <span class="overview-advice-action-icon" aria-hidden="true">${a.icon}</span>
+            <div><b>${esc(a.title)}</b><small>${esc(a.detail)}</small></div>
+          </div>`).join("")}
+      </div>
     </div>`;
+  };
+
+  if(!apiConnectionOnline||!motherOnline()){
+    renderAdvice({
+      cls:"is-offline",
+      icon:"📡",
+      title:"ยังไม่สามารถสรุปคำแนะนำได้",
+      message:"สถานีรับข้อมูลหลักยังไม่พร้อม กรุณารอข้อมูลล่าสุดจากระบบก่อน",
+      actions:[
+        {icon:"⏳",title:"รอข้อมูลล่าสุด",detail:"ระบบจะอัปเดตอัตโนมัติเมื่อเชื่อมต่อได้"},
+        {icon:"📊",title:"ตรวจสอบอีกครั้ง",detail:"ติดตามสถานะระบบและจุดตรวจวัด"}
+      ],
+      active:0
+    });
     return;
   }
 
@@ -2626,40 +2663,130 @@ function updateSmart(){
   const temp=temperatureLevel(snap.temperature);
   const active=activeCount();
 
-  let icon="😊", title="สภาพโดยรวมเหมาะกับกิจกรรมปกติ", cls="is-good";
-  let actions=["🏃 ทำกิจกรรมกลางแจ้งได้ตามปกติ","💧 ดื่มน้ำให้เพียงพอ","📊 ติดตามข้อมูลเป็นระยะ"];
+  let data={
+    cls:"is-good",
+    icon:"✅",
+    title:"สภาพแวดล้อมโดยรวมอยู่ในเกณฑ์ดี",
+    message:"สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ และติดตามข้อมูลอย่างต่อเนื่อง",
+    actions:[
+      {icon:"🏃",title:"ทำกิจกรรมกลางแจ้งได้",detail:"สภาพอากาศโดยรวมยังเหมาะสม"},
+      {icon:"💧",title:"ดื่มน้ำให้เพียงพอ",detail:"รักษาสมดุลน้ำของร่างกาย"},
+      {icon:"🌳",title:"พักในที่ร่มเมื่อร้อน",detail:"พักเป็นระยะหากเริ่มรู้สึกไม่สบาย"},
+      {icon:"📊",title:"ติดตามข้อมูล",detail:"ตรวจสอบค่าล่าสุดเป็นระยะ"}
+    ],
+    active
+  };
 
   if(air.level==="critical"){
-    icon="😷"; title="ฝุ่น PM2.5 อยู่ในระดับที่ควรระวัง"; cls="is-critical";
-    actions=["😷 สวมหน้ากากเมื่ออยู่กลางแจ้ง","🏠 ลดเวลาทำกิจกรรมกลางแจ้ง","📊 ติดตามค่าฝุ่นอย่างใกล้ชิด"];
+    data={
+      cls:"is-critical",
+      icon:"😷",
+      title:"ควรระวังฝุ่น PM2.5 เป็นพิเศษ",
+      message:"ปริมาณฝุ่นอยู่ในระดับที่อาจส่งผลต่อสุขภาพ ควรลดการสัมผัสอากาศภายนอก",
+      actions:[
+        {icon:"😷",title:"สวมหน้ากาก",detail:"ใช้หน้ากากที่ช่วยกรองฝุ่นเมื่อต้องออกนอกอาคาร"},
+        {icon:"🏠",title:"ลดเวลานอกอาคาร",detail:"หลีกเลี่ยงการอยู่กลางแจ้งเป็นเวลานาน"},
+        {icon:"🏃",title:"ลดกิจกรรมหนัก",detail:"งดกิจกรรมที่ทำให้หายใจแรงกลางแจ้ง"},
+        {icon:"📊",title:"ติดตามค่าฝุ่น",detail:"ตรวจสอบ PM2.5 รอบถัดไปอย่างใกล้ชิด"}
+      ],
+      active
+    };
   }else if(air.level==="warning"){
-    icon="😷"; title="ควรเพิ่มความระมัดระวังเรื่องฝุ่น"; cls="is-watch";
-    actions=["😷 เตรียมหน้ากากเมื่อต้องอยู่กลางแจ้ง","🏃 ลดกิจกรรมกลางแจ้งเป็นเวลานาน","📊 ติดตามค่าฝุ่นรอบถัดไป"];
+    data={
+      cls:"is-watch",
+      icon:"😷",
+      title:"ควรเพิ่มความระมัดระวังเรื่องฝุ่น",
+      message:"ค่าฝุ่นเริ่มสูงขึ้น ควรลดการสัมผัสฝุ่นโดยไม่จำเป็น โดยเฉพาะเมื่อทำกิจกรรมกลางแจ้งนาน ๆ",
+      actions:[
+        {icon:"😷",title:"เตรียมหน้ากาก",detail:"สวมเมื่อต้องอยู่กลางแจ้งเป็นเวลานาน"},
+        {icon:"🏃",title:"ลดกิจกรรมนาน ๆ",detail:"พักเป็นระยะเมื่อทำกิจกรรมภายนอก"},
+        {icon:"🏠",title:"เลือกพื้นที่อากาศดี",detail:"หลีกเลี่ยงบริเวณที่มีฝุ่นสะสม"},
+        {icon:"📊",title:"ติดตามค่าฝุ่น",detail:"ดูแนวโน้มก่อนออกไปทำกิจกรรม"}
+      ],
+      active
+    };
   }else if(heat.level==="critical"||temp.severity==="critical"){
-    icon="🥵"; title="ควรระวังความร้อนเป็นพิเศษ"; cls="is-critical";
-    actions=["💧 ดื่มน้ำให้เพียงพอ","🌳 พักในที่ร่มเป็นระยะ","🏃 ลดกิจกรรมหนักกลางแจ้ง"];
+    data={
+      cls:"is-critical",
+      icon:"🥵",
+      title:"ควรระวังความร้อนเป็นพิเศษ",
+      message:"ร่างกายอาจได้รับผลกระทบจากความร้อน ควรลดกิจกรรมหนักและพักในที่เย็นเป็นระยะ",
+      actions:[
+        {icon:"💧",title:"ดื่มน้ำบ่อยขึ้น",detail:"อย่ารอให้กระหายน้ำก่อนดื่ม"},
+        {icon:"🌳",title:"พักในที่ร่ม",detail:"หลีกเลี่ยงแดดโดยตรงเป็นเวลานาน"},
+        {icon:"🏃",title:"ลดกิจกรรมหนัก",detail:"เลี่ยงกิจกรรมที่ใช้แรงมากกลางแจ้ง"},
+        {icon:"🧢",title:"ป้องกันแสงแดด",detail:"สวมหมวกหรือใช้ร่มเมื่อต้องออกกลางแจ้ง"}
+      ],
+      active
+    };
   }else if(heat.level==="warning"||heat.level==="watch"){
-    icon="😅"; title="อากาศเริ่มร้อน ควรดูแลตัวเองระหว่างทำกิจกรรม"; cls="is-watch";
-    actions=["💧 ดื่มน้ำให้เพียงพอ","🌳 พักในที่ร่มเมื่อรู้สึกร้อน","🏃 หลีกเลี่ยงกิจกรรมหนักต่อเนื่อง"];
+    data={
+      cls:"is-watch",
+      icon:"😅",
+      title:"อากาศค่อนข้างร้อน ควรดูแลตัวเอง",
+      message:"สามารถทำกิจกรรมได้ แต่ควรพักและดื่มน้ำเป็นระยะ โดยเฉพาะเมื่ออยู่กลางแจ้ง",
+      actions:[
+        {icon:"💧",title:"ดื่มน้ำให้เพียงพอ",detail:"ชดเชยน้ำที่สูญเสียระหว่างทำกิจกรรม"},
+        {icon:"🌳",title:"พักในที่ร่ม",detail:"พักทันทีเมื่อเริ่มรู้สึกร้อนหรือเหนื่อย"},
+        {icon:"🏃",title:"ลดกิจกรรมหนัก",detail:"หลีกเลี่ยงการออกแรงต่อเนื่องนานเกินไป"},
+        {icon:"🧢",title:"ป้องกันแดด",detail:"เลือกเสื้อผ้าและอุปกรณ์ที่เหมาะสม"}
+      ],
+      active
+    };
   }else if(hum.level==="very_high"||hum.level==="high"){
-    icon="😓"; title="อากาศค่อนข้างชื้น"; cls="is-watch";
-    actions=["👕 เลือกเสื้อผ้าที่ระบายอากาศได้ดี","🌡️ ติดตามดัชนีความร้อนร่วมด้วย","🏃 พักเมื่อรู้สึกอึดอัดหรือร้อน"];
+    data={
+      cls:"is-watch",
+      icon:"💧",
+      title:"อากาศค่อนข้างชื้น",
+      message:"ความชื้นสูงอาจทำให้รู้สึกอับหรือเหนียวตัว ควรเลือกกิจกรรมและเสื้อผ้าให้เหมาะสม",
+      actions:[
+        {icon:"👕",title:"เสื้อผ้าระบายอากาศ",detail:"เลือกเสื้อผ้าที่เบาและไม่อับชื้น"},
+        {icon:"💧",title:"ดื่มน้ำให้เพียงพอ",detail:"รักษาสมดุลน้ำระหว่างทำกิจกรรม"},
+        {icon:"🌳",title:"พักเมื่ออึดอัด",detail:"พักในที่ร่มหรืออากาศถ่ายเทเมื่อรู้สึกไม่สบาย"},
+        {icon:"🌡️",title:"ดูดัชนีความร้อน",detail:"พิจารณาความชื้นร่วมกับอุณหภูมิ"}
+      ],
+      active
+    };
   }else if(hum.level==="low"){
-    icon="😣"; title="อากาศค่อนข้างแห้ง"; cls="is-watch";
-    actions=["💧 ดื่มน้ำให้เพียงพอ","🌿 หลีกเลี่ยงสภาพแวดล้อมที่แห้งมากเป็นเวลานาน","📊 ติดตามค่าความชื้น"];
+    data={
+      cls:"is-watch",
+      icon:"🌵",
+      title:"อากาศค่อนข้างแห้ง",
+      message:"ความชื้นต่ำอาจทำให้รู้สึกแห้งหรือระคายเคืองได้ ควรดูแลร่างกายและดื่มน้ำให้เพียงพอ",
+      actions:[
+        {icon:"💧",title:"ดื่มน้ำสม่ำเสมอ",detail:"รักษาความชุ่มชื้นของร่างกาย"},
+        {icon:"🌿",title:"หลีกเลี่ยงที่แห้งมาก",detail:"ไม่อยู่ในสภาพอากาศแห้งต่อเนื่องนานเกินไป"},
+        {icon:"👃",title:"สังเกตอาการระคายเคือง",detail:"พักหากรู้สึกแสบจมูกหรือคอแห้ง"},
+        {icon:"📊",title:"ติดตามความชื้น",detail:"ดูค่ารอบถัดไปประกอบการตัดสินใจ"}
+      ],
+      active
+    };
   }else if(temp.severity==="warning"){
-    icon=temp.level==="cold"||temp.level==="cool"?"🥶":"🥵";
-    title=`อุณหภูมิอยู่ในระดับ${temp.label}`; cls="is-watch";
-    actions=["👕 แต่งกายให้เหมาะกับอุณหภูมิ","🏃 ปรับกิจกรรมให้เหมาะกับสภาพอากาศ","📊 ติดตามการเปลี่ยนแปลงของอุณหภูมิ"];
+    const cold=temp.level==="cold"||temp.level==="cool"||temp.level==="very_cold";
+    data={
+      cls:"is-watch",
+      icon:cold?"🥶":"🌡️",
+      title:cold?"อากาศค่อนข้างเย็น":"อากาศค่อนข้างร้อน",
+      message:cold
+        ?"ควรแต่งกายให้เหมาะสมและสังเกตความรู้สึกของร่างกายระหว่างทำกิจกรรม"
+        :"สามารถทำกิจกรรมได้ แต่ควรหลีกเลี่ยงการอยู่กลางแดดหรืออากาศร้อนเป็นเวลานาน",
+      actions:cold?[
+        {icon:"🧥",title:"แต่งกายให้อบอุ่น",detail:"เลือกเสื้อผ้าให้เหมาะกับอุณหภูมิ"},
+        {icon:"🏃",title:"อบอุ่นร่างกาย",detail:"เตรียมร่างกายก่อนทำกิจกรรม"},
+        {icon:"🌤️",title:"เลือกช่วงเวลาที่เหมาะ",detail:"หลีกเลี่ยงช่วงที่อากาศเย็นจัด"},
+        {icon:"📊",title:"ติดตามอุณหภูมิ",detail:"ดูการเปลี่ยนแปลงระหว่างวัน"}
+      ]:[
+        {icon:"💧",title:"ดื่มน้ำให้เพียงพอ",detail:"ชดเชยน้ำระหว่างทำกิจกรรม"},
+        {icon:"🌳",title:"พักในที่ร่ม",detail:"ลดการรับความร้อนโดยตรง"},
+        {icon:"👕",title:"เสื้อผ้าระบายอากาศ",detail:"เลือกเสื้อผ้าที่ช่วยระบายความร้อน"},
+        {icon:"📊",title:"ติดตามอุณหภูมิ",detail:"ดูแนวโน้มก่อนทำกิจกรรมกลางแจ้ง"}
+      ],
+      active
+    };
   }
 
-  e.innerHTML=`<div class="overview-advice-simple ${cls}">
-    <div class="overview-advice-head"><span>${icon}</span><div><b>${esc(title)}</b><p>เลือกดูเฉพาะสิ่งที่ควรทำตอนนี้</p></div></div>
-    <div class="overview-advice-actions">${actions.slice(0,3).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
-    <small>ข้อมูลภาพรวมจาก ${active}/${TOTAL_NODES} จุดตรวจวัดที่มีข้อมูลล่าสุด</small>
-  </div>`;
+  renderAdvice(data);
 }
-
 // =====================================================
 // ALERT
 // =====================================================
