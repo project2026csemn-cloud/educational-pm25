@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260911-map-v2" rel="stylesheet"/>
+<link href="style.css?v=20260911-map-v4" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -529,7 +529,13 @@
         </div>
         <p>ดูตำแหน่งจริง ภาพ วิดีโอ และรายละเอียดบริเวณที่ติดตั้งอุปกรณ์แต่ละจุด</p>
       </div>
-      <button class="monitoring-map-reset" id="monitoringMapReset" type="button">ดูทั้ง 3 จุด</button>
+      <div class="monitoring-map-head-actions">
+        <div class="map-basemap-switch" aria-label="รูปแบบแผนที่">
+          <button type="button" class="map-basemap-button active" data-public-basemap="street">🗺 แผนที่</button>
+          <button type="button" class="map-basemap-button" data-public-basemap="satellite">🛰 ดาวเทียม</button>
+        </div>
+        <button class="monitoring-map-reset" id="monitoringMapReset" type="button">ดูทั้ง 3 จุด</button>
+      </div>
     </div>
 
     <div class="monitoring-map-node-tabs" id="monitoringMapNodeTabs">
@@ -1998,75 +2004,84 @@
             <div class="admin-preview-card"><div class="admin-preview-label">PREVIEW ก่อนบันทึก</div><div class="help-popover admin-live-preview" id="helpLivePreview"></div></div>
           </div>
         </section>
-        <section class="admin-panel" data-admin-panel="devices">
-          <div class="admin-panel-head"><div><h3>ข้อมูลจุดตรวจวัด</h3><p>แก้ชื่อ ตำแหน่ง และคำอธิบาย พร้อมดูตัวอย่างก่อนบันทึก รหัสภายในของข้อมูลจะไม่เปลี่ยน</p></div></div>
-          <div class="admin-help-layout admin-device-layout-v35">
-            <div class="admin-editor-card">
+        <section class="admin-panel admin-devices-v4" data-admin-panel="devices">
+          <div class="admin-panel-head">
+            <div>
+              <h3>ข้อมูลจุดตรวจวัด</h3>
+              <p>เลือกแก้ไขทีละจุด ปักตำแหน่งจากแผนที่ และเพิ่มภาพได้จากเครื่องโดยตรง รหัส Number 1–3 จะไม่เปลี่ยน</p>
+            </div>
+          </div>
+
+          <div class="admin-device-tabs" id="adminDeviceTabs" role="tablist" aria-label="เลือกจุดตรวจวัด"></div>
+
+          <div class="admin-device-workspace">
+            <div class="admin-editor-card admin-device-editor-main">
               <div class="admin-device-list" id="adminDeviceList"></div>
-              <div class="admin-actions"><button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกข้อมูลจุดตรวจวัด</button></div>
-              <div class="admin-inline-message" id="deviceSaveMessage"></div>
             </div>
-            <div class="admin-preview-card admin-device-preview-card">
-              <div class="admin-preview-label">PREVIEW ก่อนบันทึก</div>
-              <label class="admin-field admin-preview-select-label">ดูตัวอย่าง
-                <select id="adminDevicePreviewSelect">
-                  <option value="Number 1">จุดตรวจวัด 1</option>
-                  <option value="Number 2">จุดตรวจวัด 2</option>
-                  <option value="Number 3">จุดตรวจวัด 3</option>
-                </select>
-              </label>
-              <div class="admin-device-live-preview">
-                <div class="admin-device-preview-card-ui">
-                  <div class="admin-device-preview-top">
-                    <span class="admin-device-preview-dot"></span>
-                    <div>
-                      <b id="adminDevicePreviewName">จุดตรวจวัด 1</b>
-                      <small id="adminDevicePreviewStatus">ONLINE</small>
-                    </div>
-                    <span>›</span>
-                  </div>
-                  <div class="admin-device-preview-location hidden" id="adminDevicePreviewLocation"></div>
-                  <div class="admin-device-preview-description hidden" id="adminDevicePreviewDescription"></div>
-                  <div class="admin-device-preview-metrics">
-                    <span><small>PM2.5</small><b>12</b><i>µg/m³</i></span>
-                    <span><small>อุณหภูมิ</small><b>29.4</b><i>°C</i></span>
-                    <span><small>ความชื้น</small><b>61</b><i>%</i></span>
-                  </div>
+
+            <div class="admin-preview-card admin-map-workspace-card">
+              <div class="admin-map-workspace-head">
+                <div>
+                  <div class="admin-preview-label">ตำแหน่งบนแผนที่</div>
+                  <h4 id="adminMapActiveTitle">จุดตรวจวัด 1</h4>
+                  <p>คลิกบนแผนที่เพื่อปักหมุด หรือจับหมุดลากเพื่อเปลี่ยนตำแหน่ง</p>
                 </div>
-                <p class="admin-preview-note">ตัวเลขเป็นข้อมูลตัวอย่างเพื่อดูรูปแบบการแสดงผลเท่านั้น</p>
+                <div class="map-basemap-switch map-basemap-switch-admin" aria-label="รูปแบบแผนที่แอดมิน">
+                  <button type="button" class="map-basemap-button active" data-admin-basemap="street">🗺 แผนที่</button>
+                  <button type="button" class="map-basemap-button" data-admin-basemap="satellite">🛰 ดาวเทียม</button>
+                </div>
+              </div>
+
+              <div id="adminDeviceMap" class="admin-device-map" aria-label="แผนที่สำหรับปักหมุดจุดตรวจวัด"></div>
+
+              <div class="admin-coordinate-readout">
+                <span>Latitude <b id="adminDeviceLatPreview">ยังไม่ปักหมุด</b></span>
+                <span>Longitude <b id="adminDeviceLngPreview">ยังไม่ปักหมุด</b></span>
               </div>
             </div>
           </div>
 
-          <div class="admin-location-map-editor">
-            <div class="admin-location-map-head">
+          <div class="admin-editor-card admin-media-manager-card">
+            <div class="admin-media-manager-head">
               <div>
-                <h4>🗺️ ตำแหน่งและสื่อของจุดตรวจวัด</h4>
-                <p>ส่วนนี้เพิ่มจากตัวแก้ไขเดิม ใช้ปัก/ย้ายหมุดและดูตัวอย่างรูป–วิดีโอ โดยไม่กระทบข้อมูลตรวจวัด</p>
+                <div class="admin-preview-label">รูปภาพบริเวณติดตั้ง</div>
+                <h4 id="adminMediaActiveTitle">รูปของจุดตรวจวัด 1</h4>
+                <p>รูปแรกจะเป็นภาพหลัก รองรับสูงสุด 8 รูปต่อจุด ระบบจะย่อรูปอัตโนมัติก่อนเก็บใน D1</p>
               </div>
+              <button type="button" class="admin-add-block" id="adminChooseImagesButton">＋ เลือกรูปจากเครื่อง</button>
             </div>
 
-            <label class="admin-field admin-preview-select-label">จุดที่กำลังปักหมุด
-              <select id="adminMapDeviceSelect">
-                <option value="Number 1">จุดตรวจวัด 1</option>
-                <option value="Number 2">จุดตรวจวัด 2</option>
-                <option value="Number 3">จุดตรวจวัด 3</option>
-              </select>
-            </label>
+            <input id="adminImageFileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
 
-            <div class="admin-location-map-help">คลิกบนแผนที่เพื่อปักหมุด หรือจับหมุดลากเพื่อเปลี่ยนตำแหน่ง</div>
-            <div id="adminDeviceMap" class="admin-device-map" aria-label="แผนที่สำหรับปักหมุดจุดตรวจวัด"></div>
-
-            <div class="admin-coordinate-readout">
-              <span>Latitude <b id="adminDeviceLatPreview">—</b></span>
-              <span>Longitude <b id="adminDeviceLngPreview">—</b></span>
+            <div class="admin-media-dropzone" id="adminMediaDropzone" tabindex="0">
+              <b>ลากรูปมาวางที่นี่</b>
+              <span>หรือกด “เลือกรูปจากเครื่อง” • รองรับ Ctrl+V / วางรูปจากคลิปบอร์ด</span>
             </div>
 
-            <div class="admin-location-media-preview">
-              <div class="admin-preview-label">ตัวอย่างสื่อของจุดนี้</div>
-              <div id="adminDeviceMediaPreview" class="admin-device-media-preview"></div>
+            <div class="admin-media-url-row">
+              <input id="adminImageUrlInput" type="url" placeholder="หรือวาง URL รูปภาพ เช่น https://.../photo.jpg">
+              <button id="adminAddImageUrlButton" type="button">เพิ่ม URL</button>
+            </div>
+
+            <div id="adminMediaGallery" class="admin-media-gallery"></div>
+            <div id="adminMediaMessage" class="admin-inline-message"></div>
+
+            <div class="admin-video-editor">
+              <label class="admin-field">วิดีโอ
+                <input id="adminActiveVideoInput" maxlength="600" placeholder="YouTube URL หรือ media/node1.mp4">
+                <small>วิดีโอยังคงใช้ URL เพื่อไม่ทำให้ฐานข้อมูลใหญ่เกินไป</small>
+              </label>
             </div>
           </div>
+
+          <div class="admin-device-savebar">
+            <div>
+              <b>บันทึกข้อมูลจุดตรวจวัด</b>
+              <span>ชื่อ • รายละเอียด • พิกัด • รูปภาพ • วิดีโอ</span>
+            </div>
+            <button class="admin-save-button" id="saveDevicesButton" type="button">บันทึกการเปลี่ยนแปลง</button>
+          </div>
+          <div class="admin-inline-message" id="deviceSaveMessage"></div>
         </section>
         <section class="admin-panel" data-admin-panel="announcement">
           <div class="admin-panel-head"><div><h3>ประกาศบน Dashboard</h3><p>ข้อความนี้จะแสดงให้ผู้ใช้ทั่วไปเห็นด้านบนของหน้า Dashboard</p></div></div>
@@ -2147,7 +2162,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260911-map-v2"></script>
+<script defer src="app.js?v=20260911-map-v4"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
