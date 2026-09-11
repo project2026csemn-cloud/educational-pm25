@@ -9435,6 +9435,53 @@ closeViewer();
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 // =====================================================
 
+const lazyAssetPromises=new Map();
+
+function loadScriptOnce(src,key=src){
+  if(window[key] && typeof window[key]!=="string") return Promise.resolve(window[key]);
+  if(lazyAssetPromises.has("script:"+key)) return lazyAssetPromises.get("script:"+key);
+
+  const promise=new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      if(existing.dataset.loaded==="1") return resolve(existing);
+      existing.addEventListener("load",()=>resolve(existing),{once:true});
+      existing.addEventListener("error",reject,{once:true});
+      return;
+    }
+    const s=document.createElement("script");
+    s.src=src;
+    s.async=true;
+    s.dataset.lazyAsset=key;
+    s.addEventListener("load",()=>{s.dataset.loaded="1";resolve(s);},{once:true});
+    s.addEventListener("error",reject,{once:true});
+    document.head.appendChild(s);
+  });
+  lazyAssetPromises.set("script:"+key,promise);
+  return promise;
+}
+
+function loadStyleOnce(href,key=href){
+  if(lazyAssetPromises.has("style:"+key)) return lazyAssetPromises.get("style:"+key);
+
+  const promise=new Promise((resolve,reject)=>{
+    const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(l=>l.href===href);
+    if(existing) return resolve(existing);
+    const l=document.createElement("link");
+    l.rel="stylesheet";
+    l.href=href;
+    l.dataset.lazyAsset=key;
+    l.addEventListener("load",()=>resolve(l),{once:true});
+    l.addEventListener("error",reject,{once:true});
+    document.head.appendChild(l);
+  });
+  lazyAssetPromises.set("style:"+key,promise);
+  return promise;
+}
+
+// Future Map rule: call loadStyleOnce/loadScriptOnce only when Map page opens.
+// Nothing map-related is downloaded during Overview startup.
+
 function ensureChartLibrary(){
 
 if(
@@ -9639,6 +9686,10 @@ activateAISection();
 const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
 const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
 
+// V36.61 — true only after a usable cache or the first network request settles.
+// This prevents the initial skeleton from being removed by an early UI refresh.
+let overviewInitialSettled=false;
+
 function saveLatestSnapshot(nodes){
   try{
     localStorage.setItem(LATEST_CACHE_KEY,JSON.stringify({saved_at:Date.now(),nodes}));
@@ -9655,6 +9706,7 @@ function restoreLatestSnapshot(){
     if(!nodes.length)return false;
     latestNodes=nodes;
     latestRecord=latestNodes.at(-1)||null;
+    overviewInitialSettled=true;
     renderMonitoring();
     updateCurrent();
     updateSmart();
@@ -9680,6 +9732,7 @@ const latest=await loadLatest();
 apiConnectionOnline=true;
 latestNodes=latest;
 latestRecord=latestNodes.at(-1)||null;
+overviewInitialSettled=true;
 saveLatestSnapshot(latestNodes);
 
 renderMonitoring();
@@ -9710,6 +9763,7 @@ e
 
 apiConnectionOnline=
 false;
+overviewInitialSettled=true;
 
 renderMonitoring();
 
@@ -9923,22 +9977,12 @@ const scheduleStartup=(fn,delay)=>{
   },delay);
 };
 
-scheduleStartup(bindEvents,40);
-scheduleStartup(bindHelp,120);
-scheduleStartup(setupDeferredSections,220);
+scheduleStartup(bindEvents,60);
+scheduleStartup(bindHelp,180);
 
-// V2.6: preload AI/Forecast หลังงานหลักของหน้าเสร็จแล้ว
-// ไม่แย่งช่วง initial render/Lighthouse แต่ผู้ใช้ไม่ต้องเข้า Analysis ก่อน
-scheduleStartup(()=>{
-  const startAI=()=>{
-    if(!aiSectionActivated)activateAISection();
-  };
-  if("requestIdleCallback" in window){
-    requestIdleCallback(startAI,{timeout:2500});
-  }else{
-    setTimeout(startAI,1200);
-  }
-},5000);
+// V36.61 — AI/Forecast is intentionally NOT preloaded on Overview.
+// It is loaded only when History/Analysis is opened. This keeps future
+// heavy features (such as Map) from competing with the first screen.
 
 // =====================================================
 // CLOCK
@@ -10632,7 +10676,7 @@ function overviewFeelingText(metric, info){
 }
 
 function updateNavigationDashboard(){
-  setOverviewLoadingState(false);
+  if(overviewInitialSettled) setOverviewLoadingState(false);
   const pm25=averageLatestField("pm25");
   const temp=averageLatestField("temperature");
   const hum=averageLatestField("humidity");
@@ -10790,16 +10834,24 @@ bindDashboardNavigation();
 updateNavigationDashboard();
 
 const runWhenIdle=fn=>{
-  if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:3000});
-  else setTimeout(fn,1800);
+  if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:9000});
+  else setTimeout(fn,5000);
 };
 
+// Standards are useful but not part of first-screen rendering.
 runWhenIdle(()=>{
-  loadStandardsOnly();
+  if(document.visibilityState==="visible") loadStandardsOnly();
 });
 
-setInterval(updateNavigationDashboard,5000);
-setInterval(toggleOverviewParticleMetric,5000);
+// Avoid recurring DOM work during Lighthouse / the critical first seconds.
+setTimeout(()=>{
+  setInterval(()=>{
+    if(document.visibilityState==="visible") updateNavigationDashboard();
+  },5000);
+  setInterval(()=>{
+    if(document.visibilityState==="visible" && currentDashboardPage==="overview") toggleOverviewParticleMetric();
+  },5000);
+},10000);
 
 // =====================================================
 // V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
@@ -12736,9 +12788,29 @@ function setupRemoteWiFiManagement(){
 (function setupAuthCmsV31(){
   const run=async()=>{
     setupRemoteWiFiManagement();
-    await restoreAuthSession();
-    if(authUser){ensureNotificationPreferences();startNotificationInboxPolling();}
-    setTimeout(openNotificationDetailFromUrl,150);
+
+    // V36.61 — do not let /auth/me compete with the critical Overview request.
+    // All account controls are bound immediately; a saved session is verified
+    // after the first screen has had time to render.
+    const restoreSavedSession=async()=>{
+      await restoreAuthSession();
+      if(authUser){
+        ensureNotificationPreferences();
+        startNotificationInboxPolling();
+      }
+      openNotificationDetailFromUrl();
+    };
+    if(authToken){
+      if("requestIdleCallback" in window){
+        requestIdleCallback(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),{timeout:3500});
+      }else{
+        setTimeout(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),1800);
+      }
+    }else{
+      authUser=null;
+      updateAccountUI();
+      setTimeout(openNotificationDetailFromUrl,250);
+    }
     $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
     document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
