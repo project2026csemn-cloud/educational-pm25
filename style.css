@@ -19903,3 +19903,196 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .overview-metric-character{width:108px!important;height:108px!important}
   .overview-metric-character svg{width:104px!important;height:104px!important}
 }
+
+
+/* =====================================================
+   V36.42 — VISUAL MATCH / CONTRAST / SLEEP-AS-ONLINE
+   ===================================================== */
+
+/* Keep Overview status simple: deep sleep is expected normal operation. */
+.overview-system-node .overview-node-dot.sleep{background:#34d399!important;box-shadow:0 0 10px rgba(52,211,153,.50)!important}
+
+/* Strong, readable status pills */
+.overview-metric-status{
+  min-width:78px!important;
+  min-height:28px!important;
+  padding:5px 13px!important;
+  border:0!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+  box-shadow:0 4px 12px rgba(6,30,45,.10)!important;
+}
+.overview-metric-status.normal,
+.overview-metric-status.good{
+  background:#24c86a!important;
+  color:#062d1d!important;
+}
+.overview-metric-status.moderate,
+.overview-metric-status.watch,
+.overview-metric-status.warning{
+  background:#ffd24a!important;
+  color:#4b3100!important;
+}
+.overview-metric-status.critical,
+.overview-metric-status.very_high,
+.overview-metric-status.very_hot{
+  background:#f15f5f!important;
+  color:#fff!important;
+}
+.overview-metric-status.low,
+.overview-metric-status.cool,
+.overview-metric-status.cold,
+.overview-metric-status.very_cold{
+  background:#55baf0!important;
+  color:#063149!important;
+}
+.overview-metric-status.high,
+.overview-metric-status.hot{
+  background:#ff9f43!important;
+  color:#452100!important;
+}
+.overview-metric-status.no_data,
+.overview-metric-status.info{
+  background:#718096!important;
+  color:#fff!important;
+}
+
+/* Typography: stronger contrast */
+.overview-friendly-card>span:not(.overview-card-symbol):not(.overview-card-scene){
+  color:#08263b!important;
+  text-shadow:none!important;
+}
+.overview-friendly-card b{
+  color:#051f32!important;
+  text-shadow:none!important;
+}
+.overview-friendly-card small{
+  color:#375c70!important;
+}
+.overview-friendly-card .overview-feeling{
+  color:#123a50!important;
+  font-weight:900!important;
+}
+
+/* Character more prominent like the reference illustration */
+.overview-metric-character{
+  width:132px!important;
+  height:132px!important;
+  border:7px solid rgba(255,255,255,.52)!important;
+  background:rgba(255,255,255,.22)!important;
+  box-shadow:0 14px 30px rgba(8,57,76,.13)!important;
+}
+.overview-metric-character svg{
+  width:126px!important;
+  height:126px!important;
+}
+.overview-face-wrap{
+  width:184px!important;
+  height:184px!important;
+}
+.overview-character-large svg{
+  width:168px!important;
+  height:168px!important;
+}
+
+/* Decorative illustrated scenes — code only, no image assets */
+.metric-pm25{
+  background:
+    radial-gradient(ellipse at 18% 102%,rgba(61,199,123,.32) 0 34%,transparent 35%),
+    radial-gradient(ellipse at 82% 105%,rgba(37,181,112,.23) 0 38%,transparent 39%),
+    linear-gradient(180deg,#d9fff0 0%,#bff4dc 100%)!important;
+}
+.metric-pm25 .overview-card-scene{
+  opacity:1!important;
+  background:
+    radial-gradient(ellipse at 15% 23%,rgba(255,255,255,.60) 0 7%,transparent 8%),
+    radial-gradient(ellipse at 23% 23%,rgba(255,255,255,.50) 0 9%,transparent 10%),
+    radial-gradient(ellipse at 30% 23%,rgba(255,255,255,.42) 0 6%,transparent 7%)!important;
+}
+.metric-pm25::before{
+  left:18px!important;bottom:18px!important;width:70px!important;height:95px!important;
+  background:
+    radial-gradient(ellipse at 20% 80%,#47bf70 0 14%,transparent 15%),
+    radial-gradient(ellipse at 50% 58%,#5bd37f 0 17%,transparent 18%),
+    radial-gradient(ellipse at 70% 82%,#37ae66 0 15%,transparent 16%)!important;
+  border-radius:0!important;transform:none!important;box-shadow:none!important;
+}
+
+.metric-temp{
+  background:
+    radial-gradient(ellipse at 18% 108%,rgba(249,184,50,.18) 0 37%,transparent 38%),
+    radial-gradient(ellipse at 77% 109%,rgba(241,144,45,.16) 0 42%,transparent 43%),
+    linear-gradient(180deg,#fff5d8 0%,#ffe6a9 100%)!important;
+}
+.metric-temp .overview-card-scene{
+  opacity:1!important;
+  background:
+    radial-gradient(circle at 86% 16%,#ffd347 0 7%,rgba(255,200,50,.30) 8% 13%,transparent 14%),
+    radial-gradient(ellipse at 20% 21%,rgba(255,255,255,.55) 0 7%,transparent 8%),
+    radial-gradient(ellipse at 27% 21%,rgba(255,255,255,.46) 0 9%,transparent 10%)!important;
+}
+
+.metric-humidity{
+  background:
+    radial-gradient(ellipse at 17% 107%,rgba(84,181,224,.16) 0 38%,transparent 39%),
+    radial-gradient(ellipse at 82% 108%,rgba(83,164,214,.13) 0 42%,transparent 43%),
+    linear-gradient(180deg,#e3f7ff 0%,#c8ebff 100%)!important;
+}
+.metric-humidity .overview-card-scene{
+  opacity:1!important;
+  background:
+    radial-gradient(ellipse at 18% 17%,rgba(255,255,255,.72) 0 7%,transparent 8%),
+    radial-gradient(ellipse at 27% 17%,rgba(255,255,255,.58) 0 10%,transparent 11%),
+    radial-gradient(ellipse at 38% 17%,rgba(255,255,255,.48) 0 7%,transparent 8%),
+    radial-gradient(ellipse at 80% 32%,rgba(63,173,235,.16) 0 3%,transparent 4%),
+    radial-gradient(ellipse at 73% 44%,rgba(63,173,235,.15) 0 2.6%,transparent 3.6%)!important;
+}
+
+.metric-heat{
+  background:
+    radial-gradient(ellipse at 17% 107%,rgba(244,102,75,.13) 0 39%,transparent 40%),
+    radial-gradient(ellipse at 82% 108%,rgba(235,75,68,.12) 0 44%,transparent 45%),
+    linear-gradient(180deg,#ffe5dd 0%,#ffcfc4 100%)!important;
+}
+.metric-heat .overview-card-scene{
+  opacity:1!important;
+  background:
+    radial-gradient(circle at 86% 15%,#ffd23f 0 7%,rgba(255,153,31,.30) 8% 15%,transparent 16%),
+    radial-gradient(ellipse at 20% 24%,rgba(255,255,255,.28) 0 8%,transparent 9%),
+    radial-gradient(ellipse at 30% 24%,rgba(255,255,255,.22) 0 10%,transparent 11%)!important;
+}
+
+/* Larger single symbols in the top-right */
+.overview-card-symbol{
+  font-size:34px!important;
+  right:18px!important;
+  top:16px!important;
+  opacity:1!important;
+}
+.metric-heat .overview-card-symbol{font-size:36px!important}
+
+/* Hero illustration gets fuller landscape and brighter foreground */
+.overview-hero-infographic{
+  background:
+    radial-gradient(ellipse at 78% 20%,rgba(255,255,255,.58) 0 6%,transparent 7%),
+    radial-gradient(ellipse at 85% 20%,rgba(255,255,255,.45) 0 8%,transparent 9%),
+    linear-gradient(180deg,#c6f8f4 0%,#7fdbe8 59%,#6ddbb3 60%,#59c99e 100%)!important;
+}
+.overview-hero-infographic::before{
+  height:42%!important;
+  background:
+    radial-gradient(90% 90% at 4% 115%,#6ed69f 0 36%,transparent 37%),
+    radial-gradient(90% 90% at 48% 118%,#4ec9aa 0 43%,transparent 44%),
+    radial-gradient(75% 80% at 97% 118%,#63d69c 0 45%,transparent 46%)!important;
+}
+.overview-hero-infographic::after{
+  opacity:.16!important;
+}
+
+@media(max-width:840px){
+  .overview-metric-character{width:116px!important;height:116px!important}
+  .overview-metric-character svg{width:110px!important;height:110px!important}
+}
