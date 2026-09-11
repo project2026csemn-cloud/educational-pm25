@@ -21924,3 +21924,320 @@ html body .site-header.is-authenticated #accountRoleBadge{
     display:none!important;
   }
 }
+
+
+/* =====================================================
+   V36.52 — PREMIUM OVERVIEW HERO REFINEMENT
+   ===================================================== */
+
+/* Overall composition */
+#page-overview .overview-summary-grid{
+  gap:22px!important;
+  margin-bottom:22px!important;
+}
+
+#page-overview .overview-summary-card{
+  min-height:330px!important;
+  padding:24px 30px 24px!important;
+  border-radius:28px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.68)!important;
+  box-shadow:
+    0 18px 38px rgba(0,18,38,.16),
+    0 2px 8px rgba(0,18,38,.06),
+    inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+
+/* Richer but calmer backgrounds */
+#page-overview .overview-dust-summary{
+  background:
+    radial-gradient(circle at 8% 5%,rgba(255,255,255,.98),transparent 26%),
+    radial-gradient(circle at 88% 14%,rgba(102,218,171,.22),transparent 31%),
+    linear-gradient(135deg,#effcf6 0%,#d7f4e6 48%,#b9e5d3 100%)!important;
+}
+
+#page-overview .overview-weather-summary{
+  background:
+    radial-gradient(circle at 95% 5%,rgba(255,255,255,.96),transparent 27%),
+    radial-gradient(circle at 84% 78%,rgba(255,189,74,.22),transparent 34%),
+    linear-gradient(135deg,#edf8ff 0%,#eef2f3 47%,#f7ebc9 100%)!important;
+}
+
+/* Thin status accent at top makes cards feel intentional */
+#page-overview .overview-summary-card::after{
+  content:""!important;
+  position:absolute!important;
+  top:0!important;
+  left:32px!important;
+  right:32px!important;
+  height:4px!important;
+  border-radius:0 0 999px 999px!important;
+  opacity:.95!important;
+  z-index:4!important;
+}
+
+#page-overview .overview-dust-summary::after{
+  background:linear-gradient(90deg,#13b97a,#5ed2a5)!important;
+}
+
+#page-overview .overview-weather-summary::after{
+  background:linear-gradient(90deg,#f59e0b,#fb7185)!important;
+}
+
+/* Heading */
+#page-overview .overview-summary-heading{
+  margin-bottom:10px!important;
+  gap:11px!important;
+}
+
+#page-overview .overview-summary-heading h1,
+#page-overview .overview-summary-heading h2{
+  font-size:clamp(23px,1.65vw,30px)!important;
+  font-weight:900!important;
+  letter-spacing:-.025em!important;
+  color:#102a43!important;
+}
+
+#page-overview .overview-summary-icon{
+  font-size:29px!important;
+  transform:translateY(-1px)!important;
+}
+
+/* Body */
+#page-overview .overview-summary-body{
+  grid-template-columns:minmax(180px,34%) minmax(0,1fr)!important;
+  gap:26px!important;
+  min-height:220px!important;
+  align-items:center!important;
+}
+
+#page-overview .overview-summary-character{
+  max-width:225px!important;
+  width:100%!important;
+  position:relative!important;
+  z-index:2!important;
+  transform:none!important;
+}
+
+/* halo behind character */
+#page-overview .overview-summary-character::before{
+  content:""!important;
+  position:absolute!important;
+  width:88%!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  left:6%!important;
+  top:4%!important;
+  z-index:-1!important;
+  background:rgba(255,255,255,.44)!important;
+  box-shadow:
+    0 0 0 12px rgba(255,255,255,.15),
+    0 16px 34px rgba(34,78,88,.10)!important;
+}
+
+#page-overview .overview-summary-character svg{
+  position:relative!important;
+  z-index:1!important;
+}
+
+/* Main text area gets a subtle focus panel */
+#page-overview .overview-summary-copy{
+  position:relative!important;
+  padding:18px 20px 18px 22px!important;
+  border-radius:22px!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.44),rgba(255,255,255,.20))!important;
+  border:1px solid rgba(255,255,255,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.58)!important;
+  backdrop-filter:blur(2px)!important;
+}
+
+#page-overview .overview-summary-copy::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:18px!important;
+  bottom:18px!important;
+  width:4px!important;
+  border-radius:0 999px 999px 0!important;
+}
+
+#page-overview .overview-dust-summary .overview-summary-copy::before{
+  background:#17b978!important;
+}
+
+#page-overview .overview-weather-summary .overview-summary-copy::before{
+  background:#f97316!important;
+}
+
+/* Status hierarchy */
+#page-overview .overview-summary-status{
+  max-width:100%!important;
+  margin:0 0 8px!important;
+  font-size:clamp(40px,3.15vw,58px)!important;
+  font-weight:950!important;
+  line-height:1.02!important;
+  letter-spacing:-.045em!important;
+}
+
+#page-overview .overview-dust-summary .overview-summary-status{
+  color:#08734f!important;
+}
+
+#page-overview .overview-weather-summary .overview-summary-status{
+  color:#b91c1c!important;
+  font-size:clamp(36px,2.7vw,52px)!important;
+}
+
+/* Severity looks like a real status chip */
+#page-overview .overview-weather-severity{
+  margin:2px 0 4px!important;
+  min-height:34px!important;
+  padding:6px 15px!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  box-shadow:none!important;
+}
+
+/* Supporting copy */
+#page-overview .overview-summary-message{
+  margin-top:10px!important;
+  max-width:36ch!important;
+  color:#2f4c68!important;
+  font-size:clamp(15.5px,1vw,18px)!important;
+  line-height:1.65!important;
+  font-weight:720!important;
+}
+
+/* Decorative elements toned down so they don't compete with the status */
+#page-overview .overview-hero-decor{
+  opacity:.72!important;
+}
+
+#page-overview .decor-cloud{
+  opacity:.30!important;
+}
+
+#page-overview .decor-leaf{
+  opacity:.13!important;
+}
+
+#page-overview .decor-sun{
+  opacity:.70!important;
+}
+
+/* Better landscape grounding */
+#page-overview .overview-summary-scene{
+  bottom:-38%!important;
+  height:70%!important;
+  opacity:.58!important;
+}
+
+#page-overview .overview-dust-summary .overview-summary-scene{
+  background:
+    radial-gradient(ellipse at 8% 44%,rgba(66,170,111,.25) 0 18%,transparent 19%),
+    radial-gradient(ellipse at 33% 48%,rgba(73,194,132,.20) 0 19%,transparent 20%),
+    radial-gradient(ellipse at 70% 38%,rgba(57,160,108,.20) 0 18%,transparent 19%),
+    linear-gradient(180deg,rgba(75,181,121,.03),rgba(44,158,107,.16))!important;
+}
+
+#page-overview .overview-weather-summary .overview-summary-scene{
+  background:
+    radial-gradient(ellipse at 15% 42%,rgba(114,190,221,.17) 0 18%,transparent 19%),
+    radial-gradient(ellipse at 82% 47%,rgba(243,184,52,.22) 0 22%,transparent 23%),
+    linear-gradient(180deg,rgba(99,179,215,.03),rgba(224,179,77,.12))!important;
+}
+
+/* Bring section title closer while preserving breathing room */
+#page-overview .overview-environment-head{
+  margin-top:16px!important;
+}
+
+/* Tablet */
+@media (max-width:900px){
+  #page-overview .overview-summary-card{
+    min-height:305px!important;
+    padding:22px 24px!important;
+  }
+
+  #page-overview .overview-summary-body{
+    grid-template-columns:minmax(160px,32%) minmax(0,1fr)!important;
+    gap:20px!important;
+  }
+
+  #page-overview .overview-summary-copy{
+    padding:16px 18px 16px 20px!important;
+  }
+}
+
+/* Mobile - keep premium feel without squeezing content */
+@media (max-width:600px){
+  #page-overview .overview-summary-grid{
+    gap:14px!important;
+  }
+
+  #page-overview .overview-summary-card{
+    min-height:0!important;
+    padding:17px 15px 18px!important;
+    border-radius:22px!important;
+  }
+
+  #page-overview .overview-summary-card::after{
+    left:20px!important;
+    right:20px!important;
+    height:3px!important;
+  }
+
+  #page-overview .overview-summary-heading{
+    margin-bottom:8px!important;
+  }
+
+  #page-overview .overview-summary-heading h1,
+  #page-overview .overview-summary-heading h2{
+    font-size:clamp(18px,5.2vw,22px)!important;
+  }
+
+  #page-overview .overview-summary-body{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:5px!important;
+  }
+
+  #page-overview .overview-summary-character{
+    width:clamp(130px,41vw,165px)!important;
+  }
+
+  #page-overview .overview-summary-copy{
+    width:100%!important;
+    padding:14px 14px 15px!important;
+    border-radius:18px!important;
+    text-align:center!important;
+  }
+
+  #page-overview .overview-summary-copy::before{
+    display:none!important;
+  }
+
+  #page-overview .overview-summary-status{
+    font-size:clamp(32px,9vw,42px)!important;
+    text-align:center!important;
+  }
+
+  #page-overview .overview-weather-summary .overview-summary-status{
+    font-size:clamp(29px,8vw,38px)!important;
+  }
+
+  #page-overview .overview-weather-severity{
+    margin:3px auto 4px!important;
+  }
+
+  #page-overview .overview-summary-message{
+    margin:8px auto 0!important;
+    max-width:32ch!important;
+    font-size:14.5px!important;
+    text-align:center!important;
+  }
+
+  #page-overview .overview-summary-scene{
+    bottom:-46%!important;
+  }
+}
