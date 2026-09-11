@@ -21276,3 +21276,302 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 
 }
+
+
+/* =====================================================
+   V36.50 — OVERVIEW SUMMARY CARDS + MOBILE FOUNDATION
+   ===================================================== */
+
+#page-overview .overview-summary-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:stretch!important;
+}
+
+#page-overview .overview-summary-card{
+  position:relative!important;
+  min-width:0!important;
+  min-height:340px!important;
+  overflow:hidden!important;
+  padding:24px 26px 20px!important;
+  border-radius:24px!important;
+  isolation:isolate!important;
+}
+
+#page-overview .overview-dust-summary{
+  background:
+    radial-gradient(circle at 12% 12%,rgba(255,255,255,.70),transparent 30%),
+    linear-gradient(135deg,rgba(222,252,234,.96),rgba(183,239,215,.78))!important;
+}
+
+#page-overview .overview-weather-summary{
+  background:
+    radial-gradient(circle at 88% 12%,rgba(255,255,255,.72),transparent 31%),
+    linear-gradient(135deg,rgba(227,244,255,.96),rgba(255,239,196,.80))!important;
+}
+
+#page-overview .overview-summary-scene{
+  position:absolute!important;
+  inset:auto -7% -26% -7%!important;
+  height:58%!important;
+  z-index:-1!important;
+  opacity:.42!important;
+  border-radius:50% 50% 0 0!important;
+  background:
+    radial-gradient(circle at 18% 34%,rgba(70,181,117,.36) 0 10%,transparent 11%),
+    radial-gradient(circle at 72% 28%,rgba(75,184,128,.28) 0 12%,transparent 13%),
+    linear-gradient(165deg,rgba(116,206,151,.22),rgba(255,255,255,.04))!important;
+}
+
+#page-overview .overview-weather-summary .overview-summary-scene{
+  background:
+    radial-gradient(circle at 78% 20%,rgba(255,197,67,.34) 0 12%,transparent 13%),
+    radial-gradient(circle at 22% 30%,rgba(109,190,236,.26) 0 14%,transparent 15%),
+    linear-gradient(165deg,rgba(119,201,240,.18),rgba(255,207,94,.12))!important;
+}
+
+#page-overview .overview-summary-heading{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+  margin-bottom:18px!important;
+}
+
+#page-overview .overview-summary-heading h1,
+#page-overview .overview-summary-heading h2{
+  margin:0!important;
+  min-width:0!important;
+  width:100%!important;
+  color:#102a43!important;
+  font-size:clamp(20px,1.7vw,28px)!important;
+  font-weight:850!important;
+  line-height:1.25!important;
+  letter-spacing:-.02em!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+}
+
+#page-overview .overview-summary-icon{
+  flex:0 0 auto!important;
+  font-size:30px!important;
+  line-height:1!important;
+}
+
+#page-overview .overview-summary-body{
+  display:grid!important;
+  grid-template-columns:minmax(120px,34%) minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:22px!important;
+  min-width:0!important;
+}
+
+#page-overview .overview-summary-character{
+  width:100%!important;
+  max-width:190px!important;
+  min-width:0!important;
+  aspect-ratio:1/1.05!important;
+  display:grid!important;
+  place-items:center!important;
+  justify-self:center!important;
+}
+
+#page-overview .overview-summary-character svg{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+}
+
+#page-overview .overview-summary-copy{
+  min-width:0!important;
+  width:100%!important;
+}
+
+#page-overview .overview-summary-status{
+  display:block!important;
+  width:fit-content!important;
+  max-width:100%!important;
+  margin:0 0 12px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#126a47!important;
+  font-size:clamp(30px,3vw,48px)!important;
+  font-weight:900!important;
+  line-height:1.08!important;
+  letter-spacing:-.035em!important;
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+}
+
+#page-overview .overview-summary-status.is-watch{color:#a16207!important}
+#page-overview .overview-summary-status.is-warning{color:#c2410c!important}
+#page-overview .overview-summary-status.is-critical{color:#b91c1c!important}
+#page-overview .overview-summary-status.is-cool{color:#0369a1!important}
+#page-overview .overview-summary-status.is-humid{color:#0369a1!important}
+#page-overview .overview-summary-status.is-dry{color:#9a6700!important}
+#page-overview .overview-summary-status.is-waiting{color:#64748b!important}
+
+#page-overview .overview-summary-message{
+  margin:0!important;
+  max-width:42ch!important;
+  color:#334e68!important;
+  font-size:clamp(15px,1.2vw,18px)!important;
+  font-weight:650!important;
+  line-height:1.65!important;
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+}
+
+#page-overview .overview-summary-freshness{
+  position:absolute!important;
+  left:26px!important;
+  bottom:17px!important;
+  margin:0!important;
+  font-size:12px!important;
+  opacity:.72!important;
+}
+
+/* The four numeric cards remain the dedicated place for measured values. */
+#page-overview .overview-environment-head{
+  margin-top:24px!important;
+}
+
+/* Tablet: keep both summaries readable before switching to one column. */
+@media (max-width:900px){
+  #page-overview .overview-summary-grid{
+    grid-template-columns:1fr!important;
+  }
+  #page-overview .overview-summary-card{
+    min-height:300px!important;
+  }
+}
+
+/* Phones: never squeeze Thai text into character-by-character columns. */
+@media (max-width:600px){
+  #page-overview,
+  #page-overview *{
+    min-width:0;
+  }
+
+  #page-overview .overview-summary-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:14px!important;
+    width:100%!important;
+  }
+
+  #page-overview .overview-summary-card{
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:18px 16px 18px!important;
+    border-radius:20px!important;
+  }
+
+  #page-overview .overview-summary-heading{
+    gap:8px!important;
+    margin-bottom:12px!important;
+  }
+
+  #page-overview .overview-summary-heading h1,
+  #page-overview .overview-summary-heading h2{
+    width:auto!important;
+    font-size:clamp(18px,5.2vw,22px)!important;
+    line-height:1.3!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+    white-space:normal!important;
+  }
+
+  #page-overview .overview-summary-icon{
+    font-size:25px!important;
+  }
+
+  #page-overview .overview-summary-body{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    gap:6px!important;
+    width:100%!important;
+  }
+
+  #page-overview .overview-summary-character{
+    width:clamp(126px,42vw,168px)!important;
+    max-width:168px!important;
+    margin:0 auto!important;
+  }
+
+  #page-overview .overview-summary-copy{
+    text-align:center!important;
+  }
+
+  #page-overview .overview-summary-status{
+    width:100%!important;
+    margin:0 0 8px!important;
+    font-size:clamp(30px,9vw,40px)!important;
+    line-height:1.12!important;
+    text-align:center!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+  }
+
+  #page-overview .overview-weather-summary .overview-summary-status{
+    font-size:clamp(26px,7.5vw,34px)!important;
+  }
+
+  #page-overview .overview-summary-message{
+    max-width:34ch!important;
+    margin:0 auto!important;
+    font-size:15px!important;
+    line-height:1.6!important;
+    text-align:center!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+  }
+
+  #page-overview .overview-summary-freshness{
+    position:static!important;
+    justify-content:center!important;
+    margin-top:12px!important;
+    text-align:center!important;
+  }
+
+  #page-overview .overview-metrics-grid-four{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
+
+@media (min-width:420px) and (max-width:767px){
+  #page-overview .overview-metrics-grid-four{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media (max-width:360px){
+  #page-overview .overview-summary-card{
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+
+  #page-overview .overview-summary-heading h1,
+  #page-overview .overview-summary-heading h2{
+    font-size:18px!important;
+  }
+
+  #page-overview .overview-summary-status{
+    font-size:30px!important;
+  }
+
+  #page-overview .overview-weather-summary .overview-summary-status{
+    font-size:26px!important;
+  }
+
+  #page-overview .overview-metrics-grid-four{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
