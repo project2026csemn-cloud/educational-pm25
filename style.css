@@ -20627,3 +20627,267 @@ html body .site-header.is-authenticated #accountRoleBadge{
   line-height:1.8!important;
   font-weight:600!important;
 }
+
+
+/* =====================================================
+   V36.46 — HERO TITLE / HELP ALIGNMENT / STATUS SPACING
+   ===================================================== */
+
+/* HERO — prevent title lines from colliding and keep ? attached nicely */
+#page-overview .overview-copy{
+  min-width:0!important;
+}
+
+#page-overview .overview-title-row{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:8px!important;
+  flex-wrap:nowrap!important;
+  max-width:100%!important;
+}
+
+#page-overview .overview-title{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  margin:0!important;
+  font-size:clamp(26px,2vw,38px)!important;
+  line-height:1.22!important;
+  letter-spacing:-.02em!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+}
+
+#page-overview .overview-title-row .help-button{
+  flex:0 0 26px!important;
+  width:26px!important;
+  height:26px!important;
+  min-width:26px!important;
+  margin-top:4px!important;
+  margin-left:2px!important;
+  align-self:flex-start!important;
+}
+
+/* Give subtitle/guidance breathing room after large title */
+#page-overview .overview-subtitle{
+  margin-top:8px!important;
+}
+
+#page-overview .overview-guidance{
+  margin-top:14px!important;
+  max-width:94%!important;
+}
+
+/* Keep hero grid from squeezing copy too hard */
+#page-overview .overview-hero-infographic{
+  grid-template-columns:minmax(170px,220px) minmax(0,1fr) minmax(190px,230px)!important;
+  column-gap:26px!important;
+}
+
+@media(max-width:1250px){
+  #page-overview .overview-hero-infographic{
+    grid-template-columns:minmax(155px,190px) minmax(0,1fr) minmax(175px,205px)!important;
+    column-gap:20px!important;
+  }
+  #page-overview .overview-title{
+    font-size:clamp(24px,2vw,34px)!important;
+  }
+}
+
+@media(max-width:980px){
+  #page-overview .overview-title-row{
+    flex-wrap:wrap!important;
+  }
+  #page-overview .overview-title-row .help-button{
+    margin-top:1px!important;
+  }
+}
+
+/* SYSTEM STATUS — create explicit gap between icon and copy */
+#page-overview .overview-mother-status,
+#page-overview .overview-system-node{
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  column-gap:14px!important;
+}
+
+#page-overview .overview-gateway-icon,
+#page-overview .overview-system-node-pin{
+  margin:0!important;
+  justify-self:start!important;
+}
+
+#page-overview .overview-mother-copy,
+#page-overview .overview-system-node-copy{
+  min-width:0!important;
+  padding-left:0!important;
+  margin-left:0!important;
+}
+
+#page-overview .overview-system-node-copy b,
+#page-overview .overview-mother-copy b{
+  display:block!important;
+  margin:0 0 3px 0!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+
+#page-overview .overview-system-node-copy small,
+#page-overview .overview-system-node-copy>span,
+#page-overview .overview-mother-copy small,
+#page-overview .overview-mother-copy>span{
+  display:block!important;
+  margin:0!important;
+}
+
+/* Keep status dot / chevron separated on the far right */
+#page-overview .overview-node-tail,
+#page-overview .overview-mother-tail{
+  justify-self:end!important;
+  padding-left:8px!important;
+}
+
+/* Slightly wider panel on desktop for long admin-configured names */
+#page-overview .overview-system-panel{
+  min-width:0!important;
+}
+
+@media(max-width:760px){
+  #page-overview .overview-mother-status,
+  #page-overview .overview-system-node{
+    grid-template-columns:44px minmax(0,1fr) auto!important;
+    column-gap:11px!important;
+  }
+}
+
+
+/* =====================================================
+   V36.47 — SINGLE-LINE OVERVIEW TITLE
+   ===================================================== */
+
+#page-overview .overview-title-row{
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:8px!important;
+}
+
+#page-overview .overview-title{
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:normal!important;
+  word-break:keep-all!important;
+  font-size:clamp(24px,2vw,36px)!important;
+  line-height:1.12!important;
+  letter-spacing:-.025em!important;
+}
+
+#page-overview .overview-title-row .help-button{
+  align-self:center!important;
+  margin-top:0!important;
+  flex:0 0 26px!important;
+}
+
+@media(max-width:1180px){
+  #page-overview .overview-title{
+    font-size:clamp(21px,2vw,31px)!important;
+  }
+}
+
+@media(max-width:980px){
+  #page-overview .overview-title{
+    white-space:normal!important;
+  }
+}
+
+
+/* =====================================================
+   V36.48 — PM2.5/PM10 FADE + MOBILE CENTER
+   ===================================================== */
+
+/* Keep all three lines truly centered on every viewport. */
+#page-overview .overview-main-value{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+}
+
+#page-overview .overview-main-label,
+#page-overview .overview-particle-value,
+#page-overview .overview-main-unit{
+  width:100%!important;
+  text-align:center!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+
+#page-overview .overview-main-label{
+  display:block!important;
+}
+
+#page-overview .overview-particle-value{
+  display:block!important;
+}
+
+#page-overview .overview-main-unit{
+  display:block!important;
+}
+
+/* Fade the whole metric block while PM2.5 / PM10 swaps. */
+#page-overview .overview-main-value{
+  transition:
+    opacity .26s ease,
+    transform .26s ease,
+    border-color .26s ease!important;
+}
+
+#page-overview .overview-main-value.is-switching{
+  opacity:.20!important;
+  transform:scale(.985)!important;
+}
+
+#page-overview .overview-main-label,
+#page-overview .overview-particle-value,
+#page-overview .overview-main-unit{
+  transition:opacity .26s ease!important;
+}
+
+@media(max-width:840px){
+  #page-overview .overview-main-value{
+    width:min(320px,100%)!important;
+    min-width:0!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+
+  #page-overview .overview-main-label{
+    font-size:13px!important;
+    line-height:1.35!important;
+  }
+
+  #page-overview .overview-particle-value{
+    line-height:1!important;
+  }
+
+  #page-overview .overview-main-unit{
+    font-size:13px!important;
+    line-height:1.2!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #page-overview .overview-main-value,
+  #page-overview .overview-main-label,
+  #page-overview .overview-particle-value,
+  #page-overview .overview-main-unit{
+    transition:none!important;
+  }
+  #page-overview .overview-main-value.is-switching{
+    transform:none!important;
+  }
+}
