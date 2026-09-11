@@ -10062,6 +10062,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(temp===null || hum===null){
     return {
       label:"รอข้อมูล",
+      severity:"รอข้อมูล",
       state:"waiting",
       message:"ยังไม่มีข้อมูลเพียงพอสำหรับสรุปสภาพอากาศ",
       characterState:"no_data"
@@ -10070,7 +10071,8 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
 
   if(heatInfo?.level==="critical"){
     return {
-      label:"อากาศร้อนมาก ควรระวัง",
+      label:"อากาศร้อนมาก",
+      severity:"ควรระวัง",
       state:"critical",
       message:"ความร้อนอาจส่งผลต่อร่างกาย ควรหลีกเลี่ยงกิจกรรมหนักและพักในที่ร่ม",
       characterState:"critical"
@@ -10080,6 +10082,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(heatInfo?.level==="warning"){
     return {
       label:"อากาศร้อนและชื้น",
+      severity:"ควรระวัง",
       state:"warning",
       message:"อาจรู้สึกร้อนและอบอ้าว ควรพักและดื่มน้ำเป็นระยะ",
       characterState:"warning"
@@ -10089,6 +10092,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(heatInfo?.level==="watch"){
     return {
       label:hInfo?.level==="high"||hInfo?.level==="very_high"?"อากาศค่อนข้างร้อนและชื้น":"อากาศค่อนข้างร้อน",
+      severity:"เฝ้าระวัง",
       state:"watch",
       message:"อาจเริ่มรู้สึกร้อนระหว่างทำกิจกรรม ควรพักและดื่มน้ำให้เพียงพอ",
       characterState:"watch"
@@ -10098,6 +10102,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(tInfo?.level==="very_cold" || tInfo?.level==="cold"){
     return {
       label:"อากาศค่อนข้างเย็น",
+      severity:"สบาย",
       state:"cool",
       message:"สภาพอากาศโดยรวมค่อนข้างเย็น ควรดูแลร่างกายให้อบอุ่น",
       characterState:"cold"
@@ -10107,6 +10112,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(hInfo?.level==="very_high" || hInfo?.level==="high"){
     return {
       label:"อากาศค่อนข้างชื้น",
+      severity:"ควรสังเกต",
       state:"humid",
       message:"อากาศมีความชื้นสูง อาจรู้สึกอับชื้นหรือเหนียวตัวเล็กน้อย",
       characterState:"high"
@@ -10116,6 +10122,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(hInfo?.level==="low"){
     return {
       label:"อากาศค่อนข้างแห้ง",
+      severity:"ควรสังเกต",
       state:"dry",
       message:"ความชื้นในอากาศค่อนข้างต่ำ ควรดื่มน้ำให้เพียงพอ",
       characterState:"low"
@@ -10124,6 +10131,7 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
 
   return {
     label:"อากาศกำลังสบาย",
+    severity:"สบาย",
     state:"good",
     message:"สภาพอากาศโดยรวมเหมาะกับการทำกิจกรรมตามปกติ",
     characterState:"normal"
@@ -10357,6 +10365,10 @@ function updateNavigationDashboard(){
   if($("overviewWeatherStatus")){
     $("overviewWeatherStatus").textContent=weatherSummary.label;
     $("overviewWeatherStatus").className=`overview-summary-status is-${weatherSummary.state}`;
+  }
+  if($("overviewWeatherSeverity")){
+    $("overviewWeatherSeverity").textContent=weatherSummary.severity||"";
+    $("overviewWeatherSeverity").className=`overview-weather-severity is-${weatherSummary.state}`;
   }
   if($("overviewWeatherGuidance")) $("overviewWeatherGuidance").textContent=weatherSummary.message;
   setOverviewMetricVisual("overviewPM25MetricCard","overviewPM25Emoji",guide.level,"pm25");
