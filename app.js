@@ -11029,7 +11029,12 @@ function setMapBasemap(scope,mode){
 
 function ensureMonitoringMap(){
   const root=$("monitoringMap");
-  if(!root||typeof L==="undefined")return null;
+  if(!root)return null;
+  if(typeof L==="undefined"){
+    root.innerHTML='<div class="monitoring-map-load-error"><b>ไม่สามารถโหลดแผนที่ได้</b><span>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า</span></div>';
+    return null;
+  }
+  root.querySelector(".monitoring-map-load-error")?.remove();
   if(monitoringMap){
     setTimeout(()=>monitoringMap.invalidateSize(),0);
     return monitoringMap;
@@ -11212,7 +11217,6 @@ function setupMonitoringMapUi(){
     btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
   });
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
-  $("monitoringMapReset")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.addEventListener("click",()=>setMapBasemap("public",btn.dataset.publicBasemap));
   });
@@ -11230,7 +11234,12 @@ function adminMapSelectedCard(){
 
 function ensureAdminDeviceMap(){
   const root=$("adminDeviceMap");
-  if(!root||typeof L==="undefined")return null;
+  if(!root)return null;
+  if(typeof L==="undefined"){
+    root.innerHTML='<div class="monitoring-map-load-error"><b>ไม่สามารถโหลดแผนที่ได้</b><span>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า</span></div>';
+    return null;
+  }
+  root.querySelector(".monitoring-map-load-error")?.remove();
   if(adminDeviceMap){
     setTimeout(()=>adminDeviceMap.invalidateSize(),0);
     return adminDeviceMap;
