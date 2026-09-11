@@ -24243,3 +24243,294 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .admin-device-map{
   position:relative;
 }
+
+
+/* ============================================================
+   MAP V4.4 — DETAIL PANEL + ADMIN WORKSPACE LAYOUT FIX
+   ============================================================ */
+
+/* Public map/detail are two independent cards on desktop. */
+.monitoring-map-layout{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 0!important;
+  gap:0!important;
+  min-height:560px!important;
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  transition:grid-template-columns .24s ease,gap .24s ease!important;
+}
+.monitoring-map-layout.has-detail{
+  grid-template-columns:minmax(0,1fr) minmax(350px,420px)!important;
+  gap:14px!important;
+}
+.monitoring-map-wrap{
+  min-height:560px!important;
+  height:560px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(148,163,184,.13)!important;
+  border-radius:18px!important;
+  background:#07111f!important;
+}
+.monitoring-map{
+  min-height:560px!important;
+  height:560px!important;
+  border-radius:18px!important;
+}
+.monitoring-place-detail{
+  width:100%!important;
+  min-width:0!important;
+  height:560px!important;
+  max-height:560px!important;
+  align-self:stretch!important;
+  overflow:hidden!important;
+  border:1px solid rgba(148,163,184,.13)!important;
+  border-left:1px solid rgba(148,163,184,.13)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,#0d1b2d,#07111f)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.14);
+}
+.monitoring-place-detail-head{
+  min-height:82px;
+  padding:16px 17px!important;
+}
+.monitoring-place-detail-scroll{
+  height:calc(560px - 82px)!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-gutter:stable;
+  padding:15px 16px 20px!important;
+}
+.monitoring-place-detail-scroll > *{
+  min-width:0;
+}
+.monitoring-place-description{
+  overflow-wrap:anywhere;
+}
+
+/* Admin modal: use more of the viewport and keep content inside it. */
+.admin-center{
+  padding:16px!important;
+}
+.admin-center-shell{
+  width:min(1680px,calc(100vw - 32px))!important;
+  max-width:calc(100vw - 32px)!important;
+  height:min(940px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
+  overflow:hidden!important;
+}
+.admin-center-layout{
+  min-height:0!important;
+  grid-template-columns:210px minmax(0,1fr)!important;
+}
+.admin-sidebar{
+  min-width:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.admin-main{
+  min-width:0!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding:18px 20px 28px!important;
+  scroll-padding-bottom:32px;
+}
+
+/* Devices editor gets a balanced form/map split instead of a squeezed form. */
+.admin-devices-v4{
+  min-width:0!important;
+  padding-bottom:18px!important;
+}
+.admin-device-tabs{
+  position:sticky;
+  top:-18px;
+  z-index:15;
+  padding:8px 0 10px;
+  margin-bottom:10px!important;
+  background:#071421;
+}
+.admin-device-workspace{
+  grid-template-columns:minmax(330px,.78fr) minmax(480px,1.22fr)!important;
+  gap:14px!important;
+  min-width:0!important;
+  align-items:start!important;
+}
+.admin-device-editor-main,
+.admin-map-workspace-card,
+.admin-media-manager-card{
+  min-width:0!important;
+}
+.admin-device-editor-main{
+  padding:16px!important;
+}
+.admin-device-description-map{
+  min-height:132px!important;
+  max-height:250px;
+}
+.admin-map-workspace-card{
+  position:relative!important;
+  top:auto!important;
+  padding:14px!important;
+}
+.admin-map-workspace-head{
+  margin-bottom:10px!important;
+}
+.admin-device-map{
+  width:100%!important;
+  height:clamp(320px,40vh,440px)!important;
+  min-height:300px!important;
+  max-height:440px!important;
+}
+.admin-coordinate-readout{
+  margin-top:8px!important;
+}
+.admin-media-manager-card{
+  margin-top:14px!important;
+  padding:16px!important;
+}
+
+/* Save bar remains visible, but no longer overlaps/cuts form content. */
+.admin-device-savebar{
+  position:sticky!important;
+  bottom:-28px!important;
+  z-index:20!important;
+  margin:16px 0 0!important;
+  padding:12px 14px!important;
+  border:1px solid rgba(34,211,238,.16)!important;
+  border-radius:14px 14px 0 0!important;
+  background:rgba(7,17,31,.97)!important;
+  box-shadow:0 -10px 28px rgba(0,0,0,.18)!important;
+}
+
+/* Medium desktop / small laptop: stack editor + map before either gets cramped. */
+@media(max-width:1280px){
+  .admin-center-layout{
+    grid-template-columns:190px minmax(0,1fr)!important;
+  }
+  .admin-device-workspace{
+    grid-template-columns:1fr!important;
+  }
+  .admin-device-map{
+    height:clamp(340px,44vh,470px)!important;
+    max-height:470px!important;
+  }
+}
+
+/* Tablet: sidebar becomes a horizontal top menu. */
+@media(max-width:900px){
+  .admin-center{
+    padding:10px!important;
+  }
+  .admin-center-shell{
+    width:calc(100vw - 20px)!important;
+    max-width:calc(100vw - 20px)!important;
+    height:calc(100dvh - 20px)!important;
+    max-height:calc(100dvh - 20px)!important;
+  }
+  .admin-center-layout{
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  .admin-sidebar{
+    display:flex!important;
+    flex:0 0 auto!important;
+    gap:6px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    padding:9px 10px!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(148,163,184,.13)!important;
+  }
+  .admin-nav{
+    flex:0 0 auto!important;
+    width:auto!important;
+    white-space:nowrap!important;
+    margin:0!important;
+  }
+  .admin-main{
+    flex:1 1 auto!important;
+    padding:14px!important;
+  }
+
+  .monitoring-map-layout,
+  .monitoring-map-layout.has-detail{
+    display:block!important;
+    min-height:0!important;
+  }
+  .monitoring-map-layout.has-detail{
+    gap:0!important;
+  }
+  .monitoring-map-wrap,
+  .monitoring-map{
+    height:470px!important;
+    min-height:470px!important;
+  }
+  .monitoring-place-detail{
+    display:none!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    margin-top:12px!important;
+    border-radius:16px!important;
+  }
+  .monitoring-map-layout.has-detail .monitoring-place-detail{
+    display:block!important;
+  }
+  .monitoring-place-detail-scroll{
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+}
+
+/* Phone sizing. */
+@media(max-width:640px){
+  .admin-center{
+    padding:6px!important;
+  }
+  .admin-center-shell{
+    width:calc(100vw - 12px)!important;
+    max-width:calc(100vw - 12px)!important;
+    height:calc(100dvh - 12px)!important;
+    max-height:calc(100dvh - 12px)!important;
+    border-radius:17px!important;
+  }
+  .admin-center-header{
+    padding:15px 14px!important;
+  }
+  .admin-main{
+    padding:10px!important;
+  }
+  .admin-device-tabs{
+    top:-10px;
+    display:flex!important;
+    overflow-x:auto!important;
+    padding-top:6px!important;
+  }
+  .admin-device-tab{
+    min-width:150px!important;
+  }
+  .admin-device-editor-main,
+  .admin-map-workspace-card,
+  .admin-media-manager-card{
+    padding:12px!important;
+  }
+  .admin-device-map{
+    height:340px!important;
+    min-height:300px!important;
+  }
+  .admin-device-savebar{
+    position:static!important;
+    border-radius:13px!important;
+    margin-top:14px!important;
+  }
+
+  .monitoring-map-wrap,
+  .monitoring-map{
+    height:400px!important;
+    min-height:400px!important;
+  }
+}
