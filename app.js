@@ -7277,9 +7277,29 @@ title:'🌿 คุณภาพอากาศโดยรวมในพื้�
 html:`<div class="help-natural-copy">สรุปสถานการณ์คุณภาพอากาศของพื้นที่จากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่ระบบยังยืนยันข้อมูลได้ โดยแสดงค่าเฉลี่ย ระดับคุณภาพอากาศ จำนวนจุดที่นำมาคำนวณ และเวลาของข้อมูลล่าสุด เพื่อให้มองเห็นภาพรวมได้ทันที หากต้องการดูว่าแต่ละตำแหน่งมีค่าเท่าใด สามารถกดไปยังหน้าจุดตรวจวัดเพื่อดูรายละเอียดรายจุดได้</div>`
 },
 
+overviewDustNow:{
+title:'🌿 คุณภาพฝุ่นในอากาศตอนนี้',
+html:`<div class="help-intro-card"><b>สรุปให้รู้ทันทีว่าฝุ่นในอากาศตอนนี้เป็นอย่างไร</b><span>ส่วนนี้เน้นสถานะและความหมายที่อ่านง่าย ไม่แสดงตัวเลขซ้ำกับการ์ดค่าปัจจุบันด้านล่าง</span></div>
+<section class="help-section"><h4>สถานะที่เห็นหมายถึงอะไร?</h4><p>ระบบนำข้อมูลฝุ่นล่าสุดที่มีอยู่มาสรุปเป็นระดับ เช่น <b>ดีมาก</b>, <b>ดี</b>, <b>เฝ้าระวัง</b>, <b>ควรระวัง</b> หรือ <b>อันตราย</b> เพื่อให้ผู้ใช้เข้าใจสถานการณ์ได้รวดเร็ว</p></section>
+<section class="help-section"><h4>ทำไมไม่มีตัวเลขในกล่องนี้?</h4><p>ค่าตัวเลขจริงแสดงอยู่ในการ์ดค่าปัจจุบันและหน้าจุดตรวจวัดอยู่แล้ว กล่องนี้จึงทำหน้าที่สรุปความหมาย ไม่แสดงข้อมูลซ้ำ</p></section>
+<div class="help-warning">สถานะส่วนนี้ใช้บอกสถานการณ์ปัจจุบัน ไม่ใช่การตัดสินว่าเกินหรือผ่านมาตรฐานค่าเฉลี่ย 24 ชั่วโมง</div>`
+},
+
+overviewWeatherNow:{
+title:'🌤️ สภาพอากาศโดยรวมตอนนี้',
+html:`<div class="help-intro-card"><b>สรุปว่าสภาพอากาศตอนนี้ให้ความรู้สึกอย่างไร</b><span>ระบบพิจารณาอุณหภูมิ ความชื้นสัมพัทธ์ และดัชนีความร้อนร่วมกัน แล้วแปลเป็นข้อความที่เข้าใจง่าย</span></div>
+<section class="help-section"><h4>ทำไมต้องดูหลายค่าร่วมกัน?</h4><p>อุณหภูมิเพียงค่าเดียวอาจไม่สะท้อนความรู้สึกของร่างกายทั้งหมด เพราะเมื่อความชื้นสูง ร่างกายอาจรู้สึกร้อนกว่าค่าอุณหภูมิจริง จึงต้องพิจารณาดัชนีความร้อนร่วมด้วย</p></section>
+<section class="help-section"><h4>ตัวอย่างสถานะ</h4><p>เช่น <b>อากาศกำลังสบาย</b>, <b>อากาศค่อนข้างชื้น</b>, <b>อากาศร้อนและชื้น</b> หรือ <b>อากาศร้อนมาก</b> พร้อมป้ายสถานะช่วยบอกว่าควรสังเกต เฝ้าระวัง หรือควรระวังมากขึ้น</p></section>
+<div class="help-tip"><b>อยากดูค่าจริง?</b><span>ดูได้จาก 4 การ์ดค่าปัจจุบันด้านล่าง โดยส่วนนี้ตั้งใจให้เป็นสรุปภาพรวมเท่านั้น</span></div>`
+},
+
 currentConditions:{
 title:'🌤️ สภาพแวดล้อมขณะนี้',
-html:`<div class="help-natural-copy">รวบรวมค่าหลักที่ควรรู้ในขณะนี้ ได้แก่ PM2.5 อุณหภูมิ ความชื้น และดัชนีความร้อน แต่ละการ์ดจะแสดงค่าปัจจุบัน ระดับสถานะ ตัวละคร และข้อความที่ช่วยอธิบายความรู้สึกของสภาพแวดล้อม ทำให้เข้าใจสถานการณ์ได้ง่ายโดยไม่ต้องตีความตัวเลขเพียงอย่างเดียว โดยดัชนีความร้อนเป็นค่าที่คำนวณจากอุณหภูมิและความชื้นร่วมกัน</div>`
+html:`<div class="help-intro-card"><b>เป็นภาพรวมจากจุดตรวจวัดทั้ง 3 จุดของโครงการ</b><span>ค่าบนการ์ด PM2.5 อุณหภูมิ และความชื้นคำนวณจากข้อมูลล่าสุดของจุดตรวจวัดที่ระบบยังมีข้อมูลพร้อมใช้งานในขณะนั้น</span></div>
+<section class="help-section"><h4>ถ้าทั้ง 3 จุดมีข้อมูลพร้อม</h4><p>ระบบจะนำค่าล่าสุดของทั้ง 3 จุดมาหาค่าเฉลี่ย เพื่อให้เห็นภาพรวมของพื้นที่ในเวลานั้น</p></section>
+<section class="help-section"><h4>ถ้ามีบางจุดไม่พร้อม</h4><p>ระบบจะคำนวณจากเฉพาะจุดที่มีข้อมูลพร้อม และบรรทัดใต้หัวข้อจะแสดงจำนวนที่ใช้จริง เช่น <b>2 จาก 3 จุดตรวจวัด</b> เพื่อไม่ให้เข้าใจว่าเป็นข้อมูลครบทุกจุด</p></section>
+<section class="help-section"><h4>ดัชนีความร้อน</h4><p>คำนวณต่อจากค่าเฉลี่ยอุณหภูมิและความชื้นของพื้นที่ เพื่อช่วยอธิบายความร้อนที่ร่างกายอาจรู้สึก</p></section>
+<div class="help-tip"><b>เมื่อต้องการรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</b><span>ให้เปิดหน้า “จุดตรวจวัด” เพราะค่าภาพรวมนี้ไม่ใช่ค่าจริงของจุดใดจุดหนึ่งโดยเฉพาะ</span></div>`
 },
 
 overviewNodes:{
@@ -7399,6 +7419,14 @@ title:"📖 อ่านข้อมูลบน Dashboard อย่างไร
 html:`<div class="help-intro-card"><b>คำแนะนำสำหรับผู้ใช้ทั่วไป</b><span>เริ่มจากภาพรวม แล้วค่อยลงรายละเอียดรายจุดและข้อมูลย้อนหลัง</span></div>
 <section class="help-section"><h4>ข้อมูลรายจุด</h4><p>ใช้เมื่อต้องการรู้สถานการณ์ของตำแหน่งใดตำแหน่งหนึ่ง เพราะแต่ละจุดอาจมีสภาพแวดล้อมต่างกัน</p></section>
 <section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>ช่วยสรุปภาพรวมของจุดที่มีข้อมูลในช่วงนั้น แต่ไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
+},
+
+aboutCharacterGuide:{
+title:"🙂 ตัวละครบอกอะไรเรา?",
+html:`<div class="help-intro-card"><b>ตัวละครเป็นภาษาภาพสำหรับอ่านสถานะได้เร็วขึ้น</b><span>รูปเดียวกับที่ใช้บนการ์ดหน้า Overview ถูกนำมาแสดงเป็นลำดับ เพื่อให้รู้ว่าสีหน้าและองค์ประกอบเปลี่ยนไปอย่างไรเมื่อระดับข้อมูลเปลี่ยน</span></div>
+<section class="help-section"><h4>ควรอ่านอย่างไร?</h4><p>ดูตัวละครและชื่อระดับเพื่อรับรู้สถานการณ์เบื้องต้น จากนั้นดูค่าตัวเลขจริงและคำอธิบายประกอบก่อนสรุปผล</p></section>
+<section class="help-section"><h4>ทำไมบางระดับใช้ตัวละครหน้าตาคล้ายกัน?</h4><p>ตัวละครออกแบบเพื่อสื่อระดับความเร่งด่วนเป็นหลัก จึงมีบางช่วงค่าที่ใช้สีหน้าใกล้เคียงกัน แม้ข้อความสถานะจะต่างกัน</p></section>
+<div class="help-warning">ตัวละครเป็นองค์ประกอบช่วยสื่อสาร ไม่ใช่มาตรฐานหรือผลวินิจฉัยด้านสุขภาพ</div>`
 },
 
 aboutStandards:{
@@ -10288,6 +10316,14 @@ function overviewCharacterSvg(metric,state="normal"){
     ${accessory}
   </svg>`;
 }
+function renderAboutCharacterGuide(){
+  document.querySelectorAll(".about-character-avatar[data-character-metric][data-character-state]").forEach(el=>{
+    const metric=String(el.dataset.characterMetric||"pm25");
+    const state=String(el.dataset.characterState||"normal");
+    el.innerHTML=overviewCharacterSvg(metric,state);
+  });
+}
+
 function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
@@ -10333,11 +10369,26 @@ function overviewFeelingText(metric, info){
 }
 
 function updateNavigationDashboard(){
+  if(!window.__aboutCharacterGuideRendered){
+    renderAboutCharacterGuide();
+    window.__aboutCharacterGuideRendered=true;
+  }
   const pm25=averageLatestField("pm25");
   const temp=averageLatestField("temperature");
   const hum=averageLatestField("humidity");
   const guide=pm25Guidance(pm25);
   const active=activeCount();
+  const sourceNodes=latestActiveNodes().length;
+  const sourceEl=$("overviewEnvironmentSource");
+  if(sourceEl){
+    const textEl=sourceEl.querySelector("span:last-child");
+    if(textEl){
+      textEl.innerHTML=sourceNodes>0
+        ? `<b>ภาพรวมของพื้นที่</b> · ค่าเฉลี่ยจาก <strong>${sourceNodes} จาก 3 จุดตรวจวัด</strong> ที่มีข้อมูลล่าสุด`
+        : `<b>ภาพรวมของพื้นที่</b> · ขณะนี้ยังไม่มีจุดตรวจวัดที่มีข้อมูลพร้อมสำหรับคำนวณค่าเฉลี่ย`;
+    }
+    sourceEl.classList.toggle("is-no-data",sourceNodes===0);
+  }
 
   const heatValue=heatIndexC(temp,hum);
   const tInfo=temperatureLevel(temp);
