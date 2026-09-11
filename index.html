@@ -20,8 +20,8 @@
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260911-map-v4" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="style.css?v=20260911-map-v4-1" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -507,10 +507,7 @@
 <div class="current-environment-detail" id="currentWatchDetail">รอข้อมูล</div>
 </div>
 </div>
-<div class="current-alerts-strip"><div class="section-title-with-help">
-<h2 class="text-xl font-black"><span class="overview-warning-icon" aria-hidden="true">⚠️</span> สิ่งที่ควรระวัง</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบายสิ่งที่ควรระวัง" class="help-button" data-help="alerts" type="button">?</button>
-</div><div class="text-sm text-slate-300" id="alerts">กำลังตรวจสอบ...</div></div><div class="current-environment-footer">
+<div class="current-environment-footer">
 <span class="current-environment-footer-dot"></span>
 <span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</span>
 </div>
@@ -534,7 +531,6 @@
           <button type="button" class="map-basemap-button active" data-public-basemap="street">🗺 แผนที่</button>
           <button type="button" class="map-basemap-button" data-public-basemap="satellite">🛰 ดาวเทียม</button>
         </div>
-        <button class="monitoring-map-reset" id="monitoringMapReset" type="button">ดูทั้ง 3 จุด</button>
       </div>
     </div>
 
@@ -2161,8 +2157,13 @@ window.addEventListener("load",()=>{
   },2500);
 });
 </script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260911-map-v4"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if(!window.L){
+  document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\\/script>');
+}
+</script>
+<script defer src="app.js?v=20260911-map-v4-1"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
