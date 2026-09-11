@@ -7429,6 +7429,14 @@ html:`<div class="help-intro-card"><b>ตัวละครเป็นภาษ
 <div class="help-warning">ตัวละครเป็นองค์ประกอบช่วยสื่อสาร ไม่ใช่มาตรฐานหรือผลวินิจฉัยด้านสุขภาพ</div>`
 },
 
+aboutHeroGuide:{
+title:"🧭 ตัวละครสรุปภาพรวมด้านบน",
+html:`<div class="help-intro-card"><b>การ์ดสรุปด้านบนใช้ตัวละครช่วยตอบคำถาม 2 อย่าง</b><span>ฝุ่นตอนนี้เป็นอย่างไร และสภาพอากาศตอนนี้เป็นอย่างไร โดยตั้งใจให้มองแล้วเข้าใจได้ก่อนอ่านรายละเอียดตัวเลข</span></div>
+<section class="help-section"><h4>คุณภาพฝุ่นในอากาศตอนนี้</h4><p>สรุปสถานการณ์ฝุ่นเป็นระดับ เช่น ดีมาก ดี เฝ้าระวัง ควรระวัง หรืออันตราย แล้วเปลี่ยนตัวละครตามระดับนั้น</p></section>
+<section class="help-section"><h4>สภาพอากาศโดยรวมตอนนี้</h4><p>ไม่ได้ดูจากค่าใดค่าหนึ่ง แต่พิจารณา <b>อุณหภูมิ ความชื้นสัมพัทธ์ และดัชนีความร้อน</b> ร่วมกัน ดังนั้นบางครั้งอุณหภูมิอาจยังปกติ แต่ความชื้นหรือ Heat Index อาจทำให้ข้อความสรุปเปลี่ยนไปได้</p></section>
+<div class="help-tip"><b>ตัวอย่างในหน้านี้เป็นตัวอย่างการสื่อความหมาย</b><span>สถานะจริงบนหน้าภาพรวมจะเปลี่ยนตามข้อมูลที่ระบบได้รับในขณะนั้น</span></div>`
+},
+
 aboutStandards:{
 title:"📚 เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ",
 html:`<div class="help-intro-card"><b>ใช้ตรวจว่าคำว่า “ดี”, “ปกติ”, “ร้อน” หรือ “เฝ้าระวัง” มาจากอะไร</b><span>แต่ละตัวแปรอาจใช้เกณฑ์คนละประเภท จึงต้องอ่านหมายเหตุของตัวแปรนั้น</span></div>
@@ -10484,6 +10492,51 @@ function renderAboutCharacterGuide(){
   });
 }
 
+function renderAboutHeroGuide(){
+  document.querySelectorAll(".about-hero-character[data-hero-guide][data-hero-state]").forEach(el=>{
+    const guide=String(el.dataset.heroGuide||"dust");
+    const state=String(el.dataset.heroState||"comfortable");
+
+    let metric="pm25";
+    let characterState="normal";
+
+    if(guide==="dust"){
+      metric="pm25";
+      const map={
+        excellent:"excellent",
+        good:"good",
+        moderate:"moderate",
+        warning:"warning",
+        critical:"critical"
+      };
+      characterState=map[state]||"normal";
+    }else{
+      if(state==="cold"){
+        metric="temperature";
+        characterState="cold";
+      }else if(state==="comfortable"){
+        metric="temperature";
+        characterState="normal";
+      }else if(state==="humid"){
+        metric="humidity";
+        characterState="high";
+      }else if(state==="hot_humid"){
+        metric="heat";
+        characterState="warning";
+      }else if(state==="very_hot"){
+        metric="heat";
+        characterState="critical";
+      }else if(state==="danger"){
+        metric="heat";
+        characterState="extreme_heat";
+      }
+    }
+
+    el.innerHTML=overviewCharacterSvg(metric,characterState);
+    el.classList.add("is-rendered");
+  });
+}
+
 function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
@@ -10531,6 +10584,7 @@ function overviewFeelingText(metric, info){
 function updateNavigationDashboard(){
   if(!window.__aboutCharacterGuideRendered){
     renderAboutCharacterGuide();
+    renderAboutHeroGuide();
     window.__aboutCharacterGuideRendered=true;
   }
   const pm25=averageLatestField("pm25");
