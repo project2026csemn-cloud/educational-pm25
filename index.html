@@ -197,11 +197,22 @@
         <span class="decor-cloud decor-cloud-a"></span>
         <span class="decor-cloud decor-cloud-b"></span>
         <span class="decor-leaf decor-leaf-a">🍃</span>
-        <span class="decor-leaf decor-leaf-b">🍃</span><span class="decor-sparkle decor-sparkle-a">✦</span><span class="decor-sparkle decor-sparkle-b">✦</span>
+        <span class="decor-leaf decor-leaf-b">🍃</span>
+        <span class="decor-spark decor-spark-a">✦</span>
+        <span class="decor-spark decor-spark-b">✧</span>
       </div>
       <div class="overview-summary-heading">
         <span class="overview-summary-icon" aria-hidden="true">🌿</span>
-        <h1 id="overviewDustTitle">คุณภาพฝุ่นในอากาศตอนนี้</h1><button aria-expanded="false" aria-label="ดูคำอธิบายคุณภาพฝุ่นในอากาศตอนนี้" class="help-button overview-hero-help" data-help="dustNow" type="button">?</button>
+        <div class="section-title-with-help overview-summary-title-help">
+          <h1 id="overviewDustTitle">คุณภาพฝุ่นในอากาศตอนนี้</h1>
+          <button
+            type="button"
+            class="help-button overview-hero-help-button"
+            data-help="overviewDustNow"
+            aria-expanded="false"
+            aria-label="ดูคำอธิบายคุณภาพฝุ่นในอากาศตอนนี้"
+          >?</button>
+        </div>
       </div>
 
       <div class="overview-summary-body">
@@ -218,11 +229,22 @@
       <div class="overview-hero-decor overview-weather-decor" aria-hidden="true">
         <span class="decor-sun"></span>
         <span class="decor-cloud decor-cloud-c"></span>
-        <span class="decor-cloud decor-cloud-d"></span><span class="decor-sparkle decor-sparkle-c">✦</span><span class="decor-sparkle decor-sparkle-d">✦</span>
+        <span class="decor-cloud decor-cloud-d"></span>
+        <span class="decor-warm-wave decor-warm-wave-a"></span>
+        <span class="decor-warm-wave decor-warm-wave-b"></span>
       </div>
       <div class="overview-summary-heading">
         <span class="overview-summary-icon" aria-hidden="true">🌤️</span>
-        <h2 id="overviewWeatherTitle">สภาพอากาศโดยรวมตอนนี้</h2><button aria-expanded="false" aria-label="ดูคำอธิบายสภาพอากาศโดยรวมตอนนี้" class="help-button overview-hero-help" data-help="weatherNow" type="button">?</button>
+        <div class="section-title-with-help overview-summary-title-help">
+          <h2 id="overviewWeatherTitle">สภาพอากาศโดยรวมตอนนี้</h2>
+          <button
+            type="button"
+            class="help-button overview-hero-help-button"
+            data-help="overviewWeatherNow"
+            aria-expanded="false"
+            aria-label="ดูคำอธิบายสภาพอากาศโดยรวมตอนนี้"
+          >?</button>
+        </div>
       </div>
 
       <div class="overview-summary-body">
@@ -238,11 +260,15 @@
   </div>
 
   <div class="overview-section-head overview-environment-head">
-    <div>
+    <div class="overview-environment-heading-copy">
       <div class="overview-eyebrow">CURRENT CONDITIONS</div>
       <div class="section-title-with-help">
         <h2>สภาพแวดล้อมขณะนี้</h2>
         <button aria-expanded="false" aria-label="ดูคำอธิบายสภาพแวดล้อมขณะนี้" class="help-button" data-help="currentConditions" type="button">?</button>
+      </div>
+      <div class="overview-environment-source" id="overviewEnvironmentSource">
+        <span class="overview-environment-source-icon" aria-hidden="true">📍</span>
+        <span><b>ภาพรวมของพื้นที่</b> · ค่าเฉลี่ยจากจุดตรวจวัดที่มีข้อมูลล่าสุด</span>
       </div>
     </div>
   </div>
@@ -812,6 +838,186 @@
     <div class="about-reading-tip">
       <div class="about-reading-tip-icon">💡</div>
       <div><b>วิธีดูที่แนะนำ</b><span>เริ่มจากภาพรวม → ดูจุดที่ควรสนใจ → เปิดกราฟย้อนหลังของจุดนั้นเพื่อดูว่าค่าสูงเพียงชั่วคราวหรือมีแนวโน้มต่อเนื่อง</span></div>
+    </div>
+  </section>
+
+  <section class="glass card about-character-guide-section" aria-labelledby="aboutCharacterGuideTitle">
+    <div class="about-character-guide-head">
+      <div>
+        <div class="overview-eyebrow">CHARACTER STATUS GUIDE</div>
+        <div class="section-title-with-help">
+          <h2 id="aboutCharacterGuideTitle">ตัวละครบอกอะไรเรา?</h2>
+          <button
+            aria-expanded="false"
+            aria-label="ดูคำอธิบายความหมายของตัวละคร"
+            class="help-button"
+            data-help="aboutCharacterGuide"
+            type="button"
+          >?</button>
+        </div>
+        <p class="about-section-lead">
+          ตัวละครในการ์ดจะเปลี่ยนสีหน้าและองค์ประกอบตามระดับของข้อมูล
+          เพื่อช่วยให้มองสถานการณ์ได้ง่ายขึ้นก่อนอ่านตัวเลขรายละเอียด
+        </p>
+      </div>
+      <span class="about-character-guide-badge">ดูภาพ → อ่านสถานะ → ดูค่าจริง</span>
+    </div>
+
+    <div class="about-character-guide-grid">
+
+      <article class="about-character-metric about-character-pm25">
+        <div class="about-character-metric-head">
+          <div class="about-character-metric-icon">💨</div>
+          <div>
+            <b>PM2.5</b>
+            <span>ระดับฝุ่นละอองขนาดเล็ก</span>
+          </div>
+        </div>
+        <div class="about-character-flow" aria-label="ลำดับสถานะ PM2.5">
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="pm25" data-character-state="normal"></div>
+            <b>ดีมาก</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="pm25" data-character-state="normal"></div>
+            <b>ดี</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="pm25" data-character-state="normal"></div>
+            <b>ปานกลาง</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="pm25" data-character-state="warning"></div>
+            <b>เริ่มมีผลกระทบฯ</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="pm25" data-character-state="critical"></div>
+            <b>มีผลกระทบฯ</b>
+          </div>
+        </div>
+        <p class="about-character-note">เมื่อฝุ่นสูงขึ้น ตัวละครจะเพิ่มการป้องกันและเปลี่ยนสีหน้าเพื่อสื่อให้เห็นว่าควรระวังมากขึ้น</p>
+      </article>
+
+      <article class="about-character-metric about-character-temp">
+        <div class="about-character-metric-head">
+          <div class="about-character-metric-icon">🌡️</div>
+          <div>
+            <b>อุณหภูมิ</b>
+            <span>ตั้งแต่หนาวจัดไปจนถึงร้อนจัด</span>
+          </div>
+        </div>
+        <div class="about-character-flow" aria-label="ลำดับสถานะอุณหภูมิ">
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="very_cold"></div>
+            <b>หนาวจัด</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="cold"></div>
+            <b>หนาว</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="cool"></div>
+            <b>เย็น</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="normal"></div>
+            <b>ปกติ</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="hot"></div>
+            <b>ร้อน</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="temperature" data-character-state="very_hot"></div>
+            <b>ร้อนจัด</b>
+          </div>
+        </div>
+        <p class="about-character-note">อากาศเย็นจะมีองค์ประกอบช่วยสื่อความหนาว ส่วนอากาศร้อนจะมีสัญลักษณ์แดดและเหงื่อประกอบ</p>
+      </article>
+
+      <article class="about-character-metric about-character-humidity">
+        <div class="about-character-metric-head">
+          <div class="about-character-metric-icon">💧</div>
+          <div>
+            <b>ความชื้นสัมพัทธ์</b>
+            <span>บอกความแห้งหรือชื้นของอากาศ</span>
+          </div>
+        </div>
+        <div class="about-character-flow" aria-label="ลำดับสถานะความชื้น">
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="humidity" data-character-state="low"></div>
+            <b>ต่ำ</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="humidity" data-character-state="normal"></div>
+            <b>ปกติ</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="humidity" data-character-state="high"></div>
+            <b>สูง</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="humidity" data-character-state="very_high"></div>
+            <b>สูงมาก</b>
+          </div>
+        </div>
+        <p class="about-character-note">เมื่อความชื้นสูง ตัวละครจะแสดงหยดน้ำและสีหน้าที่เปลี่ยนไป ส่วนค่าต่ำจะสื่อถึงอากาศที่ค่อนข้างแห้ง</p>
+      </article>
+
+      <article class="about-character-metric about-character-heat">
+        <div class="about-character-metric-head">
+          <div class="about-character-metric-icon">☀️</div>
+          <div>
+            <b>ดัชนีความร้อน (Heat Index)</b>
+            <span>ความร้อนที่ร่างกายอาจรู้สึก</span>
+          </div>
+        </div>
+        <div class="about-character-flow" aria-label="ลำดับสถานะดัชนีความร้อน">
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="heat" data-character-state="normal"></div>
+            <b>ปกติ</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="heat" data-character-state="watch"></div>
+            <b>เฝ้าระวัง</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="heat" data-character-state="warning"></div>
+            <b>เตือนภัย</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="heat" data-character-state="critical"></div>
+            <b>อันตราย</b>
+          </div>
+          <span class="about-character-arrow" aria-hidden="true">→</span>
+          <div class="about-character-state">
+            <div class="about-character-avatar" data-character-metric="heat" data-character-state="critical"></div>
+            <b>อันตรายมาก</b>
+          </div>
+        </div>
+        <p class="about-character-note">ยิ่งดัชนีความร้อนสูง ตัวละครจะยิ่งแสดงอาการร้อนและสีหน้าที่ควรเพิ่มความระมัดระวัง</p>
+      </article>
+
+    </div>
+
+    <div class="about-character-guide-tip">
+      <span aria-hidden="true">💡</span>
+      <p><b>ตัวละครช่วยให้ดูสถานการณ์ได้เร็วขึ้น</b> แต่เมื่อต้องการประเมินรายละเอียด ควรอ่านค่าตัวเลข สถานะ และคำอธิบายของตัวแปรนั้นร่วมกัน</p>
     </div>
   </section>
 
