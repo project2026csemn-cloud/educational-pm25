@@ -86,9 +86,9 @@ let aiForecastLastLoadedAt=null;
 
 let publicDisplayConfig={
 devices:[
-{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:""},
-{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:""},
-{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:""}
+{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""}
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
@@ -10077,6 +10077,12 @@ function openDashboardPage(page,{updateHash=true}={}){
 
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
 
+  if(page==="monitoring" && typeof ensureMonitoringMap==="function"){
+    ensureMonitoringMap();
+    renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+    setTimeout(()=>monitoringMap?.invalidateSize(),120);
+  }
+
   // V36.60 — About contains many SVG characters. Render them only when
   // the user actually opens About, so they do not compete with Overview startup.
   if(page==="about" && !window.__aboutCharacterGuideRendered){
@@ -10909,6 +10915,328 @@ function deviceDisplayName(deviceId){
   return m?`จุดตรวจวัด ${m[1]}`:id;
 }
 
+
+// =====================================================
+// MAP V2 — ADDITIVE LOCATION MAP
+// หน้าข้อมูลตรวจวัดเดิมยังคงอยู่ทั้งหมด
+// =====================================================
+const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
+let monitoringMap=null;
+let monitoringMarkers=new Map();
+let selectedMonitoringDeviceId=null;
+let adminDeviceMap=null;
+let adminDeviceMarker=null;
+
+function finiteCoordinate(value,min,max){
+  if(value===null||value===undefined||value==="")return null;
+  const n=Number(value);
+  return Number.isFinite(n)&&n>=min&&n<=max?n:null;
+}
+
+function deviceCoordinates(device){
+  const lat=finiteCoordinate(device?.latitude,-90,90);
+  const lng=finiteCoordinate(device?.longitude,-180,180);
+  return lat===null||lng===null?null:[lat,lng];
+}
+
+function deviceImageList(device){
+  if(Array.isArray(device?.images)){
+    return device.images.map(v=>String(v||"").trim()).filter(Boolean).slice(0,12);
+  }
+  if(typeof device?.images==="string"){
+    return device.images.split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,12);
+  }
+  return [];
+}
+
+function mapDeviceNumber(deviceId){
+  const m=String(deviceId||"").match(/(\d+)/);
+  return m?Number(m[1]):1;
+}
+
+function monitoringMarkerIcon(number,selected=false){
+  if(typeof L==="undefined")return null;
+  return L.divIcon({
+    className:"monitoring-map-marker-wrap",
+    html:`<div class="monitoring-map-marker${selected?" selected":""}"><span>${esc(number)}</span></div>`,
+    iconSize:[40,40],
+    iconAnchor:[20,39]
+  });
+}
+
+function ensureMonitoringMap(){
+  const root=$("monitoringMap");
+  if(!root||typeof L==="undefined")return null;
+  if(monitoringMap){
+    setTimeout(()=>monitoringMap.invalidateSize(),0);
+    return monitoringMap;
+  }
+  monitoringMap=L.map(root,{zoomControl:true,scrollWheelZoom:true})
+    .setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(monitoringMap);
+  renderMonitoringMap({fit:true});
+  return monitoringMap;
+}
+
+function renderMonitoringMapNodeTabs(){
+  for(let i=1;i<=3;i++){
+    const d=configDevice(`Number ${i}`)||{};
+    const name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`;
+    const loc=String(d.location_name||"").trim();
+    const n=$(`mapNodeName${i}`);
+    const l=$(`mapNodeLocation${i}`);
+    if(n)n.textContent=name;
+    if(l)l.textContent=loc||"เลือกเพื่อดูรายละเอียด";
+  }
+}
+
+function renderMonitoringMap({fit=false}={}){
+  const map=ensureMonitoringMap();
+  if(!map)return;
+  monitoringMarkers.forEach(marker=>marker.remove());
+  monitoringMarkers.clear();
+
+  const bounds=[];
+  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
+  devices.forEach((d,i)=>{
+    const coords=deviceCoordinates(d);
+    if(!coords)return;
+    const number=mapDeviceNumber(d.device_id)||i+1;
+    const marker=L.marker(coords,{
+      icon:monitoringMarkerIcon(number,d.device_id===selectedMonitoringDeviceId),
+      title:String(d.display_name||`จุดตรวจวัด ${number}`)
+    }).addTo(map);
+    marker.on("click",()=>selectMonitoringLocation(d.device_id));
+    monitoringMarkers.set(d.device_id,marker);
+    bounds.push(coords);
+  });
+
+  $("monitoringMapEmpty")?.classList.toggle("hidden",bounds.length>0);
+
+  if(fit||!selectedMonitoringDeviceId){
+    if(bounds.length===1)map.setView(bounds[0],18);
+    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:18});
+    else map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  }
+  setTimeout(()=>map.invalidateSize(),80);
+}
+
+function youtubeEmbedUrl(url){
+  const raw=String(url||"").trim();
+  if(!raw)return "";
+  try{
+    const u=new URL(raw,location.href);
+    let id="";
+    if(u.hostname.includes("youtu.be")){
+      id=u.pathname.replace(/^\/+/,"").split("/")[0];
+    }else if(u.hostname.includes("youtube.com")){
+      id=u.searchParams.get("v")||"";
+      if(!id&&u.pathname.startsWith("/embed/"))id=u.pathname.split("/embed/")[1]?.split("/")[0]||"";
+      if(!id&&u.pathname.startsWith("/shorts/"))id=u.pathname.split("/shorts/")[1]?.split("/")[0]||"";
+    }
+    return id?`https://www.youtube.com/embed/${encodeURIComponent(id)}`:"";
+  }catch(_){
+    return "";
+  }
+}
+
+function renderMonitoringLocationDetail(device){
+  if(!device)return;
+  const title=String(device.display_name||device.device_id||"จุดตรวจวัด").trim();
+  const loc=String(device.location_name||"").trim();
+  const desc=String(device.description||"").trim();
+  const images=deviceImageList(device);
+  const video=String(device.video_url||"").trim();
+
+  if($("mapDetailTitle"))$("mapDetailTitle").textContent=title;
+  if($("mapDetailLocation")){
+    $("mapDetailLocation").textContent=loc;
+    $("mapDetailLocation").classList.toggle("hidden",!loc);
+  }
+  if($("mapDetailDescription"))$("mapDetailDescription").textContent=desc||"ยังไม่มีรายละเอียดของจุดนี้";
+
+  const mainWrap=$("mapDetailMainImageWrap");
+  const main=$("mapDetailMainImage");
+  const gallery=$("mapDetailGallery");
+  const empty=$("mapDetailImageEmpty");
+
+  if(mainWrap&&main&&gallery&&empty){
+    if(images.length){
+      main.src=images[0];
+      main.alt=`ภาพบริเวณ ${title}`;
+      mainWrap.classList.remove("hidden");
+      empty.classList.add("hidden");
+      gallery.innerHTML=images.map((src,i)=>`
+        <button class="monitoring-place-thumb${i===0?" active":""}" type="button" data-map-image="${esc(src)}">
+          <img src="${esc(src)}" alt="" loading="lazy">
+        </button>`).join("");
+      gallery.classList.toggle("hidden",images.length<=1);
+      gallery.querySelectorAll(".monitoring-place-thumb").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          main.src=btn.dataset.mapImage||"";
+          gallery.querySelectorAll(".monitoring-place-thumb").forEach(x=>x.classList.toggle("active",x===btn));
+        });
+      });
+      main.onerror=()=>{
+        mainWrap.classList.add("hidden");
+        empty.classList.remove("hidden");
+      };
+    }else{
+      mainWrap.classList.add("hidden");
+      gallery.classList.add("hidden");
+      gallery.innerHTML="";
+      empty.classList.remove("hidden");
+    }
+  }
+
+  const videoSec=$("mapDetailVideoSection");
+  const videoRoot=$("mapDetailVideo");
+  if(videoSec&&videoRoot){
+    if(video){
+      const yt=youtubeEmbedUrl(video);
+      videoRoot.innerHTML=yt
+        ?`<iframe src="${esc(yt)}" title="วิดีโอ ${esc(title)}" loading="lazy" allowfullscreen></iframe>`
+        :`<video controls preload="metadata" src="${esc(video)}"></video>`;
+      videoSec.classList.remove("hidden");
+    }else{
+      videoRoot.innerHTML="";
+      videoSec.classList.add("hidden");
+    }
+  }
+}
+
+function selectMonitoringLocation(deviceId){
+  const d=configDevice(deviceId);
+  if(!d)return;
+  selectedMonitoringDeviceId=deviceId;
+  document.querySelectorAll("[data-map-device]").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.mapDevice===deviceId);
+  });
+  $("monitoringMapLayout")?.classList.add("has-detail");
+  $("mapDetailPanel")?.setAttribute("aria-hidden","false");
+  renderMonitoringLocationDetail(d);
+  renderMonitoringMap();
+  const coords=deviceCoordinates(d);
+  const map=ensureMonitoringMap();
+  if(map&&coords)map.flyTo(coords,18,{animate:true,duration:.8});
+  setTimeout(()=>map?.invalidateSize(),250);
+}
+
+function closeMonitoringLocationDetail({fit=true}={}){
+  selectedMonitoringDeviceId=null;
+  document.querySelectorAll("[data-map-device]").forEach(btn=>btn.classList.remove("active"));
+  $("monitoringMapLayout")?.classList.remove("has-detail");
+  $("mapDetailPanel")?.setAttribute("aria-hidden","true");
+  renderMonitoringMap({fit});
+  setTimeout(()=>monitoringMap?.invalidateSize(),250);
+}
+
+function setupMonitoringMapUi(){
+  document.querySelectorAll("[data-map-device]").forEach(btn=>{
+    btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
+  });
+  $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+  $("monitoringMapReset")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+  renderMonitoringMapNodeTabs();
+}
+
+function adminMapSelectedDeviceId(){
+  return $("adminMapDeviceSelect")?.value||$("adminDevicePreviewSelect")?.value||"Number 1";
+}
+
+function adminMapSelectedCard(){
+  const id=adminMapSelectedDeviceId();
+  return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;
+}
+
+function ensureAdminDeviceMap(){
+  const root=$("adminDeviceMap");
+  if(!root||typeof L==="undefined")return null;
+  if(adminDeviceMap){
+    setTimeout(()=>adminDeviceMap.invalidateSize(),0);
+    return adminDeviceMap;
+  }
+  adminDeviceMap=L.map(root,{zoomControl:true}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(adminDeviceMap);
+  adminDeviceMap.on("click",e=>{
+    setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);
+  });
+  return adminDeviceMap;
+}
+
+function setAdminMapCoordinates(lat,lng){
+  const card=adminMapSelectedCard();
+  if(!card)return;
+  const latInput=card.querySelector(".admin-device-latitude");
+  const lngInput=card.querySelector(".admin-device-longitude");
+  if(latInput)latInput.value=Number(lat).toFixed(7);
+  if(lngInput)lngInput.value=Number(lng).toFixed(7);
+  refreshAdminMapEditor();
+}
+
+function refreshAdminMapEditor(){
+  const map=ensureAdminDeviceMap();
+  const card=adminMapSelectedCard();
+  if(!map||!card)return;
+
+  const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
+  const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
+  const valid=lat!==null&&lng!==null;
+
+  if(adminDeviceMarker){
+    adminDeviceMarker.remove();
+    adminDeviceMarker=null;
+  }
+
+  if(valid){
+    adminDeviceMarker=L.marker([lat,lng],{
+      draggable:true,
+      icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)
+    }).addTo(map);
+    adminDeviceMarker.on("dragend",()=>{
+      const p=adminDeviceMarker.getLatLng();
+      setAdminMapCoordinates(p.lat,p.lng);
+    });
+    map.setView([lat,lng],18);
+  }else{
+    map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  }
+
+  if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
+  if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";
+
+  const images=(card.querySelector(".admin-device-images")?.value||"")
+    .split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,12);
+  const video=(card.querySelector(".admin-device-video")?.value||"").trim();
+  const media=$("adminDeviceMediaPreview");
+  if(media){
+    media.innerHTML=images.length
+      ?`<div class="admin-device-media-preview-grid">${images.slice(0,8).map(src=>`<img src="${esc(src)}" alt="" loading="lazy">`).join("")}</div>
+        <div class="admin-device-media-preview-note">${images.length} รูป${video?" • มีวิดีโอ":""}</div>`
+      :`<div class="admin-device-media-preview-note">ยังไม่มีภาพ${video?" • มีวิดีโอแล้ว":""}</div>`;
+  }
+  setTimeout(()=>map.invalidateSize(),80);
+}
+
+function syncAdminMapSelectOptions(){
+  const select=$("adminMapDeviceSelect");
+  if(!select)return;
+  const cards=[...document.querySelectorAll(".admin-device-card")];
+  const prev=select.value;
+  select.innerHTML=cards.map((card,i)=>{
+    const name=(card.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
+    return `<option value="${esc(card.dataset.deviceId)}">${esc(name)}</option>`;
+  }).join("");
+  if([...select.options].some(o=>o.value===prev))select.value=prev;
+}
+
+
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
 const d=configDevice(`Number ${i}`)||{};
@@ -10959,6 +11287,13 @@ am.textContent=String(ann.announcement_message||"").trim();
 ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
 if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev==="maintenance"?"แจ้งบำรุงรักษา":"ประกาศทั่วไป";
 }
+}
+
+renderMonitoringMapNodeTabs();
+if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+if(selectedMonitoringDeviceId){
+  const selected=configDevice(selectedMonitoringDeviceId);
+  if(selected)renderMonitoringLocationDetail(selected);
 }
 
 if(historyActivated&&typeof Chart!=="undefined"){
@@ -11821,7 +12156,25 @@ function renderAdminDevices(){
     <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div>
     <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label>
     <label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label>
-    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description" maxlength="300" rows="3">${esc(d.description||"")}</textarea></label>
+    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="4">${esc(d.description||"")}</textarea></label>
+
+    <div class="admin-device-map-fields">
+      <label class="admin-field">Latitude
+        <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+      </label>
+      <label class="admin-field">Longitude
+        <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+      </label>
+    </div>
+
+    <label class="admin-field">รูปภาพของสถานที่
+      <textarea class="admin-device-images" rows="4" placeholder="1 บรรทัดต่อ 1 รูป เช่น&#10;img/node1-1.jpg&#10;img/node1-2.jpg">${esc(deviceImageList(d).join("\n"))}</textarea>
+      <small>ใช้ path รูปใน GitHub หรือ URL รูปภาพได้</small>
+    </label>
+
+    <label class="admin-field">วิดีโอ
+      <input class="admin-device-video" maxlength="600" value="${esc(d.video_url||"")}" placeholder="YouTube URL หรือ media/node1.mp4">
+    </label>
   </div>`).join("");
   root.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderAdminDevicePreview));
   const sel=$("adminDevicePreviewSelect");
@@ -11829,7 +12182,12 @@ function renderAdminDevices(){
     sel.innerHTML=devices.map((d,i)=>`<option value="${esc(d.device_id)}">${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</option>`).join("");
     sel.onchange=renderAdminDevicePreview;
   }
+  const mapSelect=$("adminMapDeviceSelect");
+  if(mapSelect){
+    mapSelect.onchange=refreshAdminMapEditor;
+  }
   renderAdminDevicePreview();
+  setTimeout(()=>refreshAdminMapEditor(),120);
 }
 
 function renderAdminDevicePreview(){
@@ -11855,11 +12213,22 @@ function renderAdminDevicePreview(){
       if(c)opt.textContent=(c.querySelector(".admin-device-display")?.value||opt.value).trim();
     });
   }
+  syncAdminMapSelectOptions();
+  refreshAdminMapEditor();
 }
 async function saveAdminDevices(){
-  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||""}));
+  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({
+    device_id:d.dataset.deviceId,
+    display_name:d.querySelector(".admin-device-display")?.value||"",
+    location_name:d.querySelector(".admin-device-location")?.value||"",
+    description:d.querySelector(".admin-device-description")?.value||"",
+    latitude:d.querySelector(".admin-device-latitude")?.value||null,
+    longitude:d.querySelector(".admin-device-longitude")?.value||null,
+    images:(d.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean),
+    video_url:d.querySelector(".admin-device-video")?.value||""
+  }));
   const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
-  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกชื่อจุดตรวจวัดแล้ว","success");}
+  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดและแผนที่แล้ว","success");}
   catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
@@ -12931,3 +13300,16 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
         if(document.visibilityState==="visible")window.location.href=TELEGRAM_GROUP_URL;
     },1400);
 });
+
+// =====================================================
+// MAP V2 STARTUP
+// =====================================================
+(function startMapV2(){
+  const run=()=>{
+    setupMonitoringMapUi();
+    const mapSelect=$("adminMapDeviceSelect");
+    if(mapSelect)mapSelect.addEventListener("change",refreshAdminMapEditor);
+  };
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
+  else run();
+})();
