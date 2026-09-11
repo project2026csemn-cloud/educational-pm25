@@ -23062,3 +23062,327 @@ html body .site-header.is-authenticated #accountRoleBadge{
     height:84px!important;
   }
 }
+
+
+/* =====================================================
+   V36.59 — ABOUT HERO SUMMARY GUIDE
+   ===================================================== */
+
+#page-about .about-hero-guide-section{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  margin-bottom:16px;
+  border:1px solid rgba(56,189,248,.11);
+}
+
+#page-about .about-hero-guide-section::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 14% 0%,rgba(16,185,129,.06),transparent 28%),
+    radial-gradient(circle at 88% 12%,rgba(245,158,11,.055),transparent 30%);
+}
+
+#page-about .about-hero-guide-head,
+#page-about .about-hero-guide-grid{
+  position:relative;
+  z-index:1;
+}
+
+#page-about .about-hero-guide-head{
+  margin-bottom:18px;
+}
+
+#page-about .about-hero-guide-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+}
+
+#page-about .about-hero-guide-card{
+  position:relative;
+  overflow:hidden;
+  padding:18px;
+  border:1px solid rgba(148,163,184,.11);
+  border-radius:20px;
+  background:rgba(15,23,42,.44);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+#page-about .about-hero-guide-dust{
+  background:
+    radial-gradient(circle at 95% 0%,rgba(16,185,129,.10),transparent 32%),
+    rgba(15,23,42,.46);
+}
+
+#page-about .about-hero-guide-weather{
+  background:
+    radial-gradient(circle at 95% 0%,rgba(245,158,11,.08),transparent 31%),
+    rgba(15,23,42,.46);
+}
+
+#page-about .about-hero-guide-card-head{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:16px;
+}
+
+#page-about .about-hero-guide-icon{
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.045);
+  font-size:20px;
+}
+
+#page-about .about-hero-guide-card-head b{
+  display:block;
+  color:#f8fafc;
+  font-size:15px;
+  font-weight:900;
+}
+
+#page-about .about-hero-guide-card-head span{
+  display:block;
+  margin-top:3px;
+  color:#91a4ba;
+  font-size:11px;
+}
+
+#page-about .about-hero-status-flow{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 2px 10px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(148,163,184,.22) transparent;
+}
+
+#page-about .about-hero-status-item{
+  flex:1 0 120px;
+  min-width:120px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:4px;
+  padding:8px 6px;
+  border-radius:15px;
+  transition:background .2s ease,transform .2s ease;
+}
+
+#page-about .about-hero-status-item:hover{
+  background:rgba(255,255,255,.035);
+  transform:translateY(-2px);
+}
+
+#page-about .about-hero-character{
+  width:88px;
+  height:94px;
+  display:grid;
+  place-items:end center;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(4px);
+  filter:drop-shadow(0 8px 13px rgba(2,8,23,.18));
+}
+
+#page-about .about-hero-character.is-rendered{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+  transition:opacity .20s ease,transform .24s ease;
+}
+
+#page-about .about-hero-character svg{
+  display:block;
+  width:88px;
+  height:94px;
+  overflow:visible;
+}
+
+#page-about .about-hero-status-item > b{
+  color:#eef6fb;
+  font-size:11px;
+  font-weight:900;
+}
+
+#page-about .about-hero-status-item > span{
+  color:#8196ab;
+  font-size:9.5px;
+  line-height:1.35;
+}
+
+#page-about .about-hero-status-arrow{
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  margin-top:38px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,.08);
+  background:rgba(148,163,184,.05);
+  color:#64788d;
+  font-size:11px;
+}
+
+#page-about .about-weather-combo-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+#page-about .about-weather-combo-card{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid rgba(148,163,184,.09);
+  border-radius:16px;
+  background:rgba(255,255,255,.025);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+
+#page-about .about-weather-combo-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(148,163,184,.16);
+  background:rgba(255,255,255,.035);
+}
+
+#page-about .about-weather-combo-card .about-hero-character{
+  width:72px;
+  height:78px;
+  flex:0 0 72px;
+}
+
+#page-about .about-weather-combo-card .about-hero-character svg{
+  width:72px;
+  height:78px;
+}
+
+#page-about .about-weather-combo-copy{
+  min-width:0;
+}
+
+#page-about .about-weather-combo-copy > b{
+  display:block;
+  color:#f3f7fb;
+  font-size:11.5px;
+  font-weight:900;
+  line-height:1.25;
+}
+
+#page-about .about-weather-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:6px;
+}
+
+#page-about .about-weather-tags span{
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  padding:3px 6px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.08);
+  background:rgba(148,163,184,.05);
+  color:#8fa2b6;
+  font-size:8.5px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+
+#page-about .about-weather-combo-danger{
+  border-color:rgba(248,113,113,.13);
+  background:rgba(127,29,29,.07);
+}
+
+#page-about .about-hero-guide-note{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin-top:13px;
+  padding:11px 12px;
+  border:1px solid rgba(34,197,94,.10);
+  border-radius:13px;
+  background:rgba(34,197,94,.045);
+}
+
+#page-about .about-hero-guide-note-weather{
+  border-color:rgba(56,189,248,.10);
+  background:rgba(14,165,233,.04);
+}
+
+#page-about .about-hero-guide-note > span{
+  flex:0 0 auto;
+}
+
+#page-about .about-hero-guide-note p{
+  margin:0;
+  color:#91a5b9;
+  font-size:10.5px;
+  line-height:1.55;
+}
+
+@media (min-width:1200px){
+  #page-about .about-hero-guide-grid{
+    grid-template-columns:.95fr 1.05fr;
+  }
+}
+
+@media (max-width:900px){
+  #page-about .about-weather-combo-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width:600px){
+  #page-about .about-hero-guide-section{
+    padding:18px 14px;
+  }
+
+  #page-about .about-weather-combo-grid{
+    grid-template-columns:1fr;
+  }
+
+  #page-about .about-weather-combo-card{
+    padding:9px 10px;
+  }
+
+  #page-about .about-hero-status-item{
+    flex-basis:105px;
+    min-width:105px;
+  }
+
+  #page-about .about-hero-character,
+  #page-about .about-hero-character svg{
+    width:78px;
+    height:84px;
+  }
+
+  #page-about .about-weather-combo-card .about-hero-character,
+  #page-about .about-weather-combo-card .about-hero-character svg{
+    width:68px;
+    height:74px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  #page-about .about-hero-character.is-rendered,
+  #page-about .about-hero-status-item,
+  #page-about .about-weather-combo-card{
+    transition:none!important;
+  }
+}
