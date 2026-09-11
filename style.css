@@ -24204,3 +24204,35 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(prefers-reduced-motion:reduce){
   .monitoring-map-marker-shell,.monitoring-map-marker-pulse,.monitoring-map-marker-shell.selected .monitoring-map-marker-pin{animation:none!important}
 }
+
+
+/* MAP V4.1 — clean controls + visible map load error */
+.monitoring-map-head-actions{
+  margin-left:auto;
+}
+.monitoring-map-load-error{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:7px;
+  padding:24px;
+  text-align:center;
+  background:#07111f;
+  color:#e2e8f0;
+}
+.monitoring-map-load-error b{
+  color:#fda4af;
+  font-size:1rem;
+}
+.monitoring-map-load-error span{
+  color:#94a3b8;
+  font-size:.8rem;
+}
+@media(max-width:760px){
+  .monitoring-map-head-actions{
+    margin-left:0;
+  }
+}
