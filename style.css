@@ -23386,3 +23386,244 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
+
+
+/* =====================================================
+   V36.60 — RESPONSIVE HERO + FAST LOADING STATE
+   ===================================================== */
+
+/* -----------------------------------------------------
+   1. Equal Hero status typography
+   Both cards use the same sizing rule.
+   ----------------------------------------------------- */
+#page-overview .overview-summary-body{
+  grid-template-columns:minmax(155px,29%) minmax(0,1fr)!important;
+  gap:20px!important;
+}
+
+#page-overview .overview-summary-copy{
+  min-width:0!important;
+}
+
+#page-overview .overview-summary-status,
+#page-overview .overview-weather-summary .overview-summary-status,
+#page-overview .overview-dust-summary .overview-summary-status{
+  width:100%!important;
+  max-width:none!important;
+  font-size:clamp(34px,2.45vw,48px)!important;
+  line-height:1.04!important;
+  letter-spacing:-.045em!important;
+}
+
+/* Desktop/tablet: keep current Hero result on a single line.
+   The copy column receives more width instead of shrinking only one card. */
+@media (min-width:701px){
+  #page-overview .overview-summary-status{
+    white-space:nowrap!important;
+    overflow:visible!important;
+  }
+}
+
+/* Tablet */
+@media (min-width:701px) and (max-width:1100px){
+  #page-overview .overview-summary-body{
+    grid-template-columns:minmax(135px,27%) minmax(0,1fr)!important;
+    gap:16px!important;
+  }
+
+  #page-overview .overview-summary-status,
+  #page-overview .overview-weather-summary .overview-summary-status,
+  #page-overview .overview-dust-summary .overview-summary-status{
+    font-size:clamp(29px,3.45vw,40px)!important;
+  }
+
+  #page-overview .overview-summary-message{
+    font-size:clamp(14px,1.45vw,17px)!important;
+  }
+}
+
+/* Small screens: both Hero cards still share exactly the same status size.
+   We scale both together; we never make Weather smaller than Dust. */
+@media (max-width:700px){
+  #page-overview .overview-summary-body{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:7px!important;
+  }
+
+  #page-overview .overview-summary-character{
+    width:clamp(122px,39vw,160px)!important;
+  }
+
+  #page-overview .overview-summary-status,
+  #page-overview .overview-weather-summary .overview-summary-status,
+  #page-overview .overview-dust-summary .overview-summary-status{
+    font-size:clamp(24px,7.1vw,38px)!important;
+    line-height:1.08!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+  }
+}
+
+@media (max-width:360px){
+  #page-overview .overview-summary-status,
+  #page-overview .overview-weather-summary .overview-summary-status,
+  #page-overview .overview-dust-summary .overview-summary-status{
+    font-size:clamp(22px,6.8vw,25px)!important;
+    letter-spacing:-.055em!important;
+  }
+
+  #page-overview .overview-summary-copy{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+}
+
+/* -----------------------------------------------------
+   2. Skeleton / loading placeholders
+   Loading is visually different from a real "no data" result.
+   ----------------------------------------------------- */
+@keyframes overviewSkeletonPulse{
+  0%,100%{opacity:.46}
+  50%{opacity:.86}
+}
+
+@keyframes overviewSkeletonSweep{
+  0%{transform:translateX(-120%)}
+  100%{transform:translateX(220%)}
+}
+
+#page-overview .overview-loading-character{
+  position:relative!important;
+  min-height:112px!important;
+}
+
+#page-overview .overview-summary-character.overview-loading-character{
+  min-height:190px!important;
+}
+
+#page-overview .overview-loading-character > *{
+  visibility:hidden!important;
+}
+
+#page-overview .overview-loading-character::after{
+  content:""!important;
+  position:absolute!important;
+  inset:50% auto auto 50%!important;
+  width:min(76%,150px)!important;
+  aspect-ratio:1!important;
+  border-radius:50%!important;
+  transform:translate(-50%,-50%)!important;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.44),rgba(255,255,255,.16))!important;
+  border:2px solid rgba(255,255,255,.58)!important;
+  box-shadow:
+    0 0 0 9px rgba(255,255,255,.10),
+    inset 0 1px 0 rgba(255,255,255,.65)!important;
+  animation:overviewSkeletonPulse 1.25s ease-in-out infinite!important;
+}
+
+#page-overview .overview-metric-character.overview-loading-character::after{
+  width:82px!important;
+}
+
+/* Text skeletons keep their original dimensions so CLS stays low. */
+#page-overview .overview-loading-text,
+#page-overview .overview-loading-value,
+#page-overview .overview-loading-chip,
+#page-overview .overview-loading-line{
+  position:relative!important;
+  color:transparent!important;
+  text-shadow:none!important;
+  border-color:transparent!important;
+  background:transparent!important;
+  overflow:hidden!important;
+}
+
+#page-overview .overview-loading-text::before,
+#page-overview .overview-loading-value::before,
+#page-overview .overview-loading-chip::before,
+#page-overview .overview-loading-line::before{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  border-radius:999px!important;
+  background:rgba(95,122,146,.18)!important;
+  animation:overviewSkeletonPulse 1.25s ease-in-out infinite!important;
+}
+
+#page-overview .overview-loading-text::after,
+#page-overview .overview-loading-value::after,
+#page-overview .overview-loading-chip::after,
+#page-overview .overview-loading-line::after{
+  content:""!important;
+  position:absolute!important;
+  top:0!important;
+  bottom:0!important;
+  width:38%!important;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent)!important;
+  animation:overviewSkeletonSweep 1.45s ease-in-out infinite!important;
+}
+
+#page-overview .overview-loading-text::before{
+  width:min(82%,330px)!important;
+  height:.72em!important;
+}
+
+#page-overview .overview-loading-value::before{
+  width:76px!important;
+  height:.72em!important;
+}
+
+#page-overview .overview-loading-chip::before{
+  width:72px!important;
+  height:24px!important;
+}
+
+#page-overview .overview-loading-line::before{
+  width:min(84%,290px)!important;
+  height:10px!important;
+}
+
+/* Metric loading layout remains stable. */
+#page-overview .overview-metric-card .overview-loading-value{
+  min-width:82px!important;
+  min-height:1.25em!important;
+}
+
+#page-overview .overview-metric-card .overview-loading-chip{
+  min-width:84px!important;
+  min-height:30px!important;
+}
+
+#page-overview .overview-metric-card .overview-loading-line{
+  min-height:22px!important;
+}
+
+/* Once data is ready, characters enter softly rather than popping. */
+#page-overview .overview-character-art:not(.overview-loading-character) svg{
+  animation:overviewDataReady .20s ease-out both;
+}
+
+@keyframes overviewDataReady{
+  from{opacity:0;transform:translateY(3px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Avoid animation work for users/devices asking for less motion. */
+@media (prefers-reduced-motion:reduce){
+  #page-overview .overview-loading-character::after,
+  #page-overview .overview-loading-text::before,
+  #page-overview .overview-loading-value::before,
+  #page-overview .overview-loading-chip::before,
+  #page-overview .overview-loading-line::before,
+  #page-overview .overview-loading-text::after,
+  #page-overview .overview-loading-value::after,
+  #page-overview .overview-loading-chip::after,
+  #page-overview .overview-loading-line::after,
+  #page-overview .overview-character-art:not(.overview-loading-character) svg{
+    animation:none!important;
+  }
+}
