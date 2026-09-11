@@ -24534,3 +24534,74 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-height:400px!important;
   }
 }
+
+
+/* ============================================================
+   V4.6 — ADMIN DEVICE EDITOR CSS FIX
+   สาเหตุคลิป: .admin-device-list เก่ายังเป็น repeat(3,1fr)
+   แม้จะแสดง active card เพียงใบเดียว จึงทำให้ฟอร์มกว้างแค่ 1/3
+   ============================================================ */
+.admin-devices-v4 .admin-device-list{
+  display:block!important;
+  grid-template-columns:1fr!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.admin-devices-v4 .admin-device-card{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.admin-devices-v4 .admin-device-card.active{
+  display:block!important;
+}
+.admin-devices-v4 .admin-device-editor-main{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.admin-devices-v4 .admin-device-card .admin-field{
+  width:100%!important;
+  min-width:0!important;
+}
+.admin-devices-v4 .admin-device-card input,
+.admin-devices-v4 .admin-device-card textarea{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.admin-devices-v4 .admin-field small{
+  display:block;
+  margin-top:2px;
+  color:#64748b;
+  font-size:.72rem;
+  line-height:1.45;
+  font-weight:500;
+}
+.admin-devices-v4 .admin-device-description{
+  min-height:96px!important;
+  resize:vertical;
+}
+.admin-devices-v4 .admin-device-map-description{
+  min-height:132px!important;
+  resize:vertical;
+}
+
+/* Desktop: ให้ form กว้างพออ่านและกรอกจริง */
+@media(min-width:1281px){
+  .admin-device-workspace{
+    grid-template-columns:minmax(410px,.9fr) minmax(560px,1.1fr)!important;
+  }
+}
+
+/* Laptop/tablet: stack ก่อนที่ form จะถูกบีบ */
+@media(max-width:1280px){
+  .admin-device-workspace{
+    grid-template-columns:1fr!important;
+  }
+  .admin-devices-v4 .admin-device-editor-main{
+    max-width:none!important;
+  }
+}
