@@ -1015,6 +1015,26 @@ return st==="offline"?"offline":"online";
 }
 
 // =====================================================
+// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
+// =====================================================
+const PERMISSION_DEFINITIONS=[
+  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
+  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
+  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
+  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
+  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
+  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
+  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
+  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
+];
+
+const ROLE_PERMISSION_DEFAULTS={
+  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
+  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
+  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
+};
+
+// =====================================================
 // AUTH STATE
 // =====================================================
 
@@ -11907,35 +11927,23 @@ function setupProfileEditorInteraction(){
   stage.addEventListener("pointercancel",stop);
 }
 
-// =====================================================
-// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
-// =====================================================
-const PERMISSION_DEFINITIONS=[
-  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
-  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
-  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
-  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
-  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
-  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
-  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
-  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
-];
-
-const ROLE_PERMISSION_DEFAULTS={
-  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
-  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
-  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
-};
-
 function normalizedClientPermissions(user){
   if(!user)return {};
+
   const role=["user","admin","owner"].includes(user.role)?user.role:"user";
-  const base={...(ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user)};
+  const defaults=ROLE_PERMISSION_DEFAULTS?.[role]||ROLE_PERMISSION_DEFAULTS?.user||{};
+  const base={...defaults};
+
   if(role==="owner")return base;
-  const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
-  PERMISSION_DEFINITIONS.forEach(({key})=>{
+
+  const incoming=user.permissions&&typeof user.permissions==="object"
+    ?user.permissions
+    :{};
+
+  (PERMISSION_DEFINITIONS||[]).forEach(({key})=>{
     if(typeof incoming[key]==="boolean")base[key]=incoming[key];
   });
+
   return base;
 }
 
@@ -12109,12 +12117,15 @@ async function loadAuthStatus(){
 // V34.5 — REFRESH ACCOUNT AFTER LOGIN
 // =====================================================
 async function refreshAuthUserAfterLogin(){
-  if(!authToken)return null;
-  try{
-    const j=await apiJson(API.authMe);
-    if(j?.user)authUser=j.user;
-  }catch(_){
+  if(!authToken)throw new Error("ไม่พบ session สำหรับเข้าสู่ระบบ");
+
+  const j=await apiJson(API.authMe);
+
+  if(!j?.user){
+    throw new Error("ไม่สามารถโหลดข้อมูลบัญชีหลังเข้าสู่ระบบได้");
   }
+
+  authUser=j.user;
   updateAccountUI();
   return authUser;
 }
@@ -12226,16 +12237,47 @@ async function initGoogleIdentity(){
 async function handleGoogleCredential(response){
   const credential=String(response?.credential||"");
   if(!credential)return;
+
   setAuthMessage("loginMessage","กำลังเข้าสู่ระบบด้วย Google...");
+
+  const previousToken=authToken;
+  const previousUser=authUser;
+
   try{
-    const j=await apiJson(API.authGoogle,{method:"POST",body:JSON.stringify({credential})});
-    authToken=String(j.token||"");
-    authUser=j.user||null;
-    localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+    const j=await apiJson(API.authGoogle,{
+      method:"POST",
+      body:JSON.stringify({credential})
+    });
+
+    const nextToken=String(j.token||"");
+    const nextUser=j.user||null;
+
+    if(!nextToken||!nextUser){
+      throw new Error("ข้อมูลเข้าสู่ระบบด้วย Google ไม่สมบูรณ์");
+    }
+
+    authToken=nextToken;
+    authUser=nextUser;
+
     await refreshAuthUserAfterLogin();
+
+    localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
   }catch(e){
+    authToken=previousToken||"";
+    authUser=previousUser||null;
+
+    if(previousToken){
+      localStorage.setItem(AUTH_TOKEN_KEY,previousToken);
+    }else{
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+
+    try{updateAccountUI();}catch(_){}
     setAuthMessage("loginMessage",e.message,"error");
   }
 }
@@ -12247,12 +12289,48 @@ async function restoreAuthSession(){
 }
 
 async function doLogin(email,password){
-  const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
-  authToken=String(j.token||"");
-  authUser=j.user||null;
-  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-  await refreshAuthUserAfterLogin();
-  return j;
+  const previousToken=authToken;
+  const previousUser=authUser;
+
+  const j=await apiJson(API.authLogin,{
+    method:"POST",
+    body:JSON.stringify({email,password})
+  });
+
+  const nextToken=String(j.token||"");
+  const nextUser=j.user||null;
+
+  if(!nextToken||!nextUser){
+    throw new Error("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์");
+  }
+
+  try{
+    authToken=nextToken;
+    authUser=nextUser;
+
+    // ใช้ token ชั่วคราวเพื่อดึง /auth/me และ sync permission ให้ครบ
+    await refreshAuthUserAfterLogin();
+
+    // บันทึก session หลังจาก flow สำเร็จครบแล้วเท่านั้น
+    localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+
+    return j;
+  }catch(err){
+    // rollback ป้องกันสถานะครึ่ง Login
+    authToken=previousToken||"";
+    authUser=previousUser||null;
+
+    if(previousToken){
+      localStorage.setItem(AUTH_TOKEN_KEY,previousToken);
+    }else{
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+
+    try{updateAccountUI();}catch(_){}
+    throw err;
+  }
 }
 
 function applyManagedHelpOverrides(help){
