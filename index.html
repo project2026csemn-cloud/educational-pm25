@@ -189,51 +189,45 @@
 <main class="dashboard-pages" id="dashboardPages">
 
 <section class="dashboard-page active" id="page-overview" data-dashboard-page-panel="overview">
-  <div class="overview-top-grid">
-    <div class="overview-hero glass card overview-people-hero overview-hero-infographic">
-      <div class="overview-hero-scenery" aria-hidden="true"><span class="hero-cloud hero-cloud-1"></span><span class="hero-cloud hero-cloud-2"></span><span class="hero-hill hero-hill-1"></span><span class="hero-hill hero-hill-2"></span></div>
-      <div class="overview-face-wrap"><div class="overview-face overview-character-art overview-character-large" id="overviewFace" aria-hidden="true"></div></div>
-      <div class="overview-hero-copy">
-        <div class="overview-eyebrow">AREA AIR QUALITY</div>
-        <div class="section-title-with-help overview-title-help">
-          <h1 class="overview-title">คุณภาพอากาศโดยรวมในพื้นที่</h1>
-          <button aria-expanded="false" aria-label="ดูคำอธิบายภาพรวมคุณภาพอากาศ" class="help-button" data-help="overviewQuality" type="button">?</button>
-        </div>
-        <p class="overview-subtitle">ค่าเฉลี่ยจากจุดตรวจวัดที่มีข้อมูลล่าสุดในพื้นที่</p>
-        <div class="overview-quality-badge is-waiting" id="overviewQualityBadge">รอข้อมูล</div>
-        <div class="overview-guidance" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</div>
-        <div class="overview-source-line" id="overviewSourceLine">กำลังตรวจสอบจุดตรวจวัด...</div>
-        <div class="overview-freshness"><span class="overview-freshness-dot"></span><span id="overviewLastUpdated">อัปเดตล่าสุด: --</span></div>
-      </div>
-      <div class="overview-main-value">
-        <span class="overview-main-label" id="overviewParticleLabel">PM2.5 เฉลี่ยในพื้นที่</span>
-        <strong id="overviewPM25" class="overview-particle-value">--</strong>
-        <span class="overview-main-unit">µg/m³</span>
-      </div>
-    </div>
+  <div class="overview-top-grid overview-summary-grid">
 
-    <aside class="overview-system-panel glass card" aria-label="สถานะระบบและจุดตรวจวัด">
-      <div class="overview-system-head">
-        <div><span class="overview-system-kicker">SYSTEM STATUS</span><h2>สถานะระบบ</h2></div>
-        <button class="overview-link-button" type="button" data-go-page="monitoring">ดูรายละเอียดทั้งหมด →</button>
+    <section class="overview-summary-card overview-dust-summary glass card" aria-labelledby="overviewDustTitle">
+      <div class="overview-summary-scene" aria-hidden="true"></div>
+      <div class="overview-summary-heading">
+        <span class="overview-summary-icon" aria-hidden="true">🌿</span>
+        <h1 id="overviewDustTitle">คุณภาพฝุ่นในอากาศตอนนี้</h1>
       </div>
-      <div class="overview-mother-status" id="overviewMotherCard">
-        <span class="overview-gateway-icon" aria-hidden="true">📡</span>
-        <div class="overview-mother-copy"><small>สถานีรับข้อมูลหลัก</small><b id="overviewMotherStatus">กำลังตรวจสอบ</b><span id="overviewMotherUpdated">อัปเดตล่าสุด --</span></div>
-        <span class="overview-mother-dot" id="overviewMotherDot"></span>
+
+      <div class="overview-summary-body">
+        <div class="overview-summary-character overview-character-art" id="overviewFace" aria-hidden="true"></div>
+        <div class="overview-summary-copy">
+          <div class="overview-summary-status is-waiting" id="overviewQualityBadge">กำลังตรวจสอบ</div>
+          <p class="overview-summary-message" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</p>
+        </div>
       </div>
-      <div class="overview-system-nodes">
-        <button class="overview-system-node" type="button" data-node-jump="1">
-          <span class="overview-system-node-no overview-system-node-pin" aria-hidden="true">📍</span><span class="overview-system-node-copy"><b id="overviewNodeTitle1">จุดตรวจวัด 1</b><small class="overview-node-location hidden" id="overviewNodeLocation1"></small><span id="overviewNodeStatus1">กำลังตรวจสอบ</span></span><span class="overview-node-dot" id="overviewNodeDot1"></span><span class="overview-node-arrow">›</span>
-        </button>
-        <button class="overview-system-node" type="button" data-node-jump="2">
-          <span class="overview-system-node-no overview-system-node-pin" aria-hidden="true">📍</span><span class="overview-system-node-copy"><b id="overviewNodeTitle2">จุดตรวจวัด 2</b><small class="overview-node-location hidden" id="overviewNodeLocation2"></small><span id="overviewNodeStatus2">กำลังตรวจสอบ</span></span><span class="overview-node-dot" id="overviewNodeDot2"></span><span class="overview-node-arrow">›</span>
-        </button>
-        <button class="overview-system-node" type="button" data-node-jump="3">
-          <span class="overview-system-node-no overview-system-node-pin" aria-hidden="true">📍</span><span class="overview-system-node-copy"><b id="overviewNodeTitle3">จุดตรวจวัด 3</b><small class="overview-node-location hidden" id="overviewNodeLocation3"></small><span id="overviewNodeStatus3">กำลังตรวจสอบ</span></span><span class="overview-node-dot" id="overviewNodeDot3"></span><span class="overview-node-arrow">›</span>
-        </button>
+
+      <div class="overview-freshness overview-summary-freshness">
+        <span class="overview-freshness-dot"></span>
+        <span id="overviewLastUpdated">ข้อมูลล่าสุด: --</span>
       </div>
-    </aside>
+    </section>
+
+    <section class="overview-summary-card overview-weather-summary glass card" aria-labelledby="overviewWeatherTitle">
+      <div class="overview-summary-scene" aria-hidden="true"></div>
+      <div class="overview-summary-heading">
+        <span class="overview-summary-icon" aria-hidden="true">🌤️</span>
+        <h2 id="overviewWeatherTitle">สภาพอากาศโดยรวมตอนนี้</h2>
+      </div>
+
+      <div class="overview-summary-body">
+        <div class="overview-summary-character overview-character-art" id="overviewWeatherFace" aria-hidden="true"></div>
+        <div class="overview-summary-copy">
+          <div class="overview-summary-status is-waiting" id="overviewWeatherStatus">กำลังตรวจสอบ</div>
+          <p class="overview-summary-message" id="overviewWeatherGuidance">กำลังประเมินสภาพอากาศล่าสุด...</p>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   <div class="overview-section-head overview-environment-head">
