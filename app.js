@@ -1020,6 +1020,23 @@ return st==="offline"?"offline":"online";
 
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
 
+// V4.3 emergency auth guard:
+// ผูกปุ่มเข้าสู่ระบบแบบแยกจาก module อื่น เพื่อไม่ให้ error ส่วนอื่นทำให้ปุ่มตาย
+(function registerCriticalLoginGuard(){
+  const bind=()=>{
+    const btn=document.getElementById("accountButton");
+    if(!btn||btn.dataset.criticalLoginGuard==="1")return;
+    btn.dataset.criticalLoginGuard="1";
+    btn.addEventListener("click",()=>{
+      // ถ้า setupAuthCms ผูก handler หลักแล้ว ให้ handler หลักจัดการ
+      if(btn.dataset.authBound==="1")return;
+      if(typeof openAuthModal==="function")openAuthModal("login");
+    });
+  };
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind,{once:true});
+  else bind();
+})();
+
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
   sessionStorage.getItem(AUTH_TOKEN_KEY)||
@@ -10928,6 +10945,64 @@ const MONITORING_WORLD_BOUNDS=[
 const ADMIN_DEVICE_MAX_IMAGES=8;
 const ADMIN_DEVICE_IMAGE_DATA_MAX=220000;
 
+// =====================================================
+// MAP V4.3 — ISOLATED LEAFLET LOADER
+// แผนที่จะโหลดแยกจากระบบ Login/Data เพื่อไม่ให้ CDN ของแผนที่
+// ทำให้ฟังก์ชันหลักของ Dashboard หยุดทำงาน
+// =====================================================
+let leafletLoadPromise=null;
+
+function loadExternalScript(src){
+  return new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      if(typeof window.L!=="undefined"){resolve();return;}
+      existing.addEventListener("load",resolve,{once:true});
+      existing.addEventListener("error",()=>reject(new Error(`โหลด ${src} ไม่สำเร็จ`)),{once:true});
+      return;
+    }
+    const script=document.createElement("script");
+    script.src=src;
+    script.async=true;
+    script.onload=resolve;
+    script.onerror=()=>reject(new Error(`โหลด ${src} ไม่สำเร็จ`));
+    document.head.appendChild(script);
+  });
+}
+
+async function ensureLeafletLibrary(){
+  if(typeof window.L!=="undefined")return window.L;
+  if(leafletLoadPromise)return leafletLoadPromise;
+
+  leafletLoadPromise=(async()=>{
+    const sources=[
+      "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",
+      "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    ];
+    let lastError=null;
+    for(const src of sources){
+      try{
+        await loadExternalScript(src);
+        if(typeof window.L!=="undefined")return window.L;
+      }catch(err){
+        lastError=err;
+        console.warn("Leaflet source failed:",src,err);
+      }
+    }
+    throw lastError||new Error("ไม่สามารถโหลด Leaflet ได้");
+  })().catch(err=>{
+    leafletLoadPromise=null;
+    throw err;
+  });
+
+  return leafletLoadPromise;
+}
+
+function setMapLoadError(root,message="ไม่สามารถโหลดแผนที่ได้"){
+  if(!root)return;
+  root.innerHTML=`<div class="monitoring-map-load-error"><b>${esc(message)}</b><span>ระบบส่วนอื่นยังใช้งานได้ตามปกติ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</span></div>`;
+}
+
 let monitoringMap=null;
 let monitoringMarkers=new Map();
 let selectedMonitoringDeviceId=null;
@@ -11030,10 +11105,7 @@ function setMapBasemap(scope,mode){
 function ensureMonitoringMap(){
   const root=$("monitoringMap");
   if(!root)return null;
-  if(typeof L==="undefined"){
-    root.innerHTML='<div class="monitoring-map-load-error"><b>ไม่สามารถโหลดแผนที่ได้</b><span>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า</span></div>';
-    return null;
-  }
+  if(typeof window.L==="undefined")return null;
   root.querySelector(".monitoring-map-load-error")?.remove();
   if(monitoringMap){
     setTimeout(()=>monitoringMap.invalidateSize(),0);
@@ -11212,7 +11284,7 @@ function closeMonitoringLocationDetail({fit=true}={}){
   setTimeout(()=>monitoringMap?.invalidateSize(),250);
 }
 
-function setupMonitoringMapUi(){
+async function setupMonitoringMapUi(){
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
   });
@@ -11223,14 +11295,17 @@ function setupMonitoringMapUi(){
 
   renderMonitoringMapNodeTabs();
 
-  // V4.2 FIX:
-  // ก่อนหน้านี้ setup มีแค่สร้างแท็บ แต่ไม่เคยสร้าง Leaflet map ครั้งแรก
-  // applyPublicDisplayConfig() ก็ render map เฉพาะเมื่อ monitoringMap มีอยู่แล้ว
-  // จึงเกิดกล่องว่างตลอดแม้ Leaflet โหลดสำเร็จ
-  const map=ensureMonitoringMap();
-  if(map){
-    renderMonitoringMap({fit:true});
-    setTimeout(()=>map.invalidateSize(),120);
+  const root=$("monitoringMap");
+  try{
+    await ensureLeafletLibrary();
+    const map=ensureMonitoringMap();
+    if(map){
+      renderMonitoringMap({fit:true});
+      setTimeout(()=>map.invalidateSize(),120);
+    }
+  }catch(err){
+    console.error("Monitoring map initialization error:",err);
+    setMapLoadError(root);
   }
 }
 
@@ -11246,10 +11321,7 @@ function adminMapSelectedCard(){
 function ensureAdminDeviceMap(){
   const root=$("adminDeviceMap");
   if(!root)return null;
-  if(typeof L==="undefined"){
-    root.innerHTML='<div class="monitoring-map-load-error"><b>ไม่สามารถโหลดแผนที่ได้</b><span>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า</span></div>';
-    return null;
-  }
+  if(typeof window.L==="undefined")return null;
   root.querySelector(".monitoring-map-load-error")?.remove();
   if(adminDeviceMap){
     setTimeout(()=>adminDeviceMap.invalidateSize(),0);
@@ -11292,9 +11364,21 @@ function setAdminMapCoordinates(lat,lng){
 }
 
 function refreshAdminMapEditor({keepZoom=false}={}){
-  const map=ensureAdminDeviceMap();
   const card=adminMapSelectedCard();
-  if(!map||!card)return;
+  if(!card)return;
+
+  if(typeof window.L==="undefined"){
+    ensureLeafletLibrary().then(()=>{
+      refreshAdminMapEditor({keepZoom});
+    }).catch(err=>{
+      console.error("Admin map initialization error:",err);
+      setMapLoadError($("adminDeviceMap"));
+    });
+    return;
+  }
+
+  const map=ensureAdminDeviceMap();
+  if(!map)return;
 
   const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
   const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
@@ -11391,8 +11475,12 @@ if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev===
 }
 
 renderMonitoringMapNodeTabs();
-if(!monitoringMap)ensureMonitoringMap();
-if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+if(monitoringMap){
+  renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+}else if(typeof window.L!=="undefined"){
+  ensureMonitoringMap();
+  if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+}
 if(selectedMonitoringDeviceId){
   const selected=configDevice(selectedMonitoringDeviceId);
   if(selected)renderMonitoringLocationDetail(selected);
@@ -13598,7 +13686,29 @@ function setupRemoteWiFiManagement(){
 
 (function setupAuthCmsV31(){
   const run=async()=>{
-    setupRemoteWiFiManagement();
+    // =====================================================
+    // V4.3 — CRITICAL AUTH BINDINGS FIRST
+    // ปุ่มเข้าสู่ระบบต้องทำงานแม้ module รอง เช่น Map/Wi-Fi/AI มี error
+    // =====================================================
+    const accountButton=$("accountButton");
+    if(accountButton&&!accountButton.dataset.authBound){
+      accountButton.dataset.authBound="1";
+      accountButton.addEventListener("click",()=>{
+        if(!authUser){
+          openAuthModal("login");
+          return;
+        }
+        const m=$("accountDropdown");
+        m?.classList.toggle("hidden");
+        accountButton.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));
+      });
+    }
+
+    try{
+      setupRemoteWiFiManagement();
+    }catch(err){
+      console.error("Wi-Fi management setup error:",err);
+    }
 
     // V36.61 — do not let /auth/me compete with the critical Overview request.
     // All account controls are bound immediately; a saved session is verified
@@ -13619,10 +13729,15 @@ function setupRemoteWiFiManagement(){
       }
     }else{
       authUser=null;
-      updateAccountUI();
+      try{
+        updateAccountUI();
+      }catch(err){
+        console.error("Account UI initialization error:",err);
+        const text=$("accountButtonText");
+        if(text)text.textContent="เข้าสู่ระบบ";
+      }
       setTimeout(openNotificationDetailFromUrl,250);
     }
-    $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
     document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
     document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromAdminCenter));
@@ -13746,16 +13861,19 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 // =====================================================
 // MAP V2 STARTUP
 // =====================================================
-(function startMapV4(){
+(function startMapV43(){
   const run=()=>{
-    setupMonitoringMapUi();
+    Promise.resolve(setupMonitoringMapUi()).catch(err=>{
+      console.error("Map module startup error:",err);
+      setMapLoadError($("monitoringMap"));
+    });
 
     let resizeTimer=null;
     const refreshMaps=()=>{
       clearTimeout(resizeTimer);
       resizeTimer=setTimeout(()=>{
-        monitoringMap?.invalidateSize();
-        adminDeviceMap?.invalidateSize();
+        try{monitoringMap?.invalidateSize();}catch(err){console.warn("Public map resize error:",err);}
+        try{adminDeviceMap?.invalidateSize();}catch(err){console.warn("Admin map resize error:",err);}
       },140);
     };
     window.addEventListener("resize",refreshMaps,{passive:true});
