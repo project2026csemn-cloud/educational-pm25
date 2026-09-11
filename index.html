@@ -216,10 +216,10 @@
       </div>
 
       <div class="overview-summary-body">
-        <div class="overview-summary-character overview-character-art" id="overviewFace" aria-hidden="true"></div>
+        <div class="overview-summary-character overview-character-art overview-loading-character" id="overviewFace" aria-hidden="true"></div>
         <div class="overview-summary-copy">
-          <div class="overview-summary-status is-waiting" id="overviewQualityBadge">กำลังตรวจสอบ</div>
-          <p class="overview-summary-message" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</p>
+          <div class="overview-summary-status is-waiting overview-loading-text" id="overviewQualityBadge">กำลังตรวจสอบ</div>
+          <p class="overview-summary-message overview-loading-line" id="overviewGuidance">กำลังรวบรวมข้อมูลล่าสุด...</p>
         </div>
       </div>
 </section>
@@ -248,11 +248,11 @@
       </div>
 
       <div class="overview-summary-body">
-        <div class="overview-summary-character overview-character-art" id="overviewWeatherFace" aria-hidden="true"></div>
+        <div class="overview-summary-character overview-character-art overview-loading-character" id="overviewWeatherFace" aria-hidden="true"></div>
         <div class="overview-summary-copy">
-          <div class="overview-summary-status is-waiting" id="overviewWeatherStatus">กำลังตรวจสอบ</div>
-          <div class="overview-weather-severity is-waiting" id="overviewWeatherSeverity">รอข้อมูล</div>
-          <p class="overview-summary-message" id="overviewWeatherGuidance">กำลังประเมินสภาพอากาศล่าสุด...</p>
+          <div class="overview-summary-status is-waiting overview-loading-text" id="overviewWeatherStatus">กำลังตรวจสอบ</div>
+          <div class="overview-weather-severity is-waiting overview-loading-chip" id="overviewWeatherSeverity">รอข้อมูล</div>
+          <p class="overview-summary-message overview-loading-line" id="overviewWeatherGuidance">กำลังประเมินสภาพอากาศล่าสุด...</p>
         </div>
       </div>
     </section>
@@ -275,19 +275,19 @@
   <div class="overview-metrics-grid overview-metrics-grid-four">
     <div class="overview-metric-card overview-friendly-card metric-pm25 glass card" id="overviewPM25MetricCard">
       <span class="overview-card-symbol" aria-label="ฝุ่นละออง">💨</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character overview-character-art" id="overviewPM25Emoji" aria-hidden="true"></div><span>PM2.5</span><b id="overviewPM25Card">--</b><small>µg/m³</small><em class="overview-metric-status no_data" id="overviewPM25Status">รอข้อมูล</em><p id="overviewPM25Hint" class="overview-feeling">กำลังประเมินสภาพอากาศ...</p>
+      <div class="overview-metric-character overview-character-art overview-loading-character" id="overviewPM25Emoji" aria-hidden="true"></div><span>PM2.5</span><b id="overviewPM25Card" class="overview-loading-value">--</b><small>µg/m³</small><em class="overview-metric-status no_data overview-loading-chip" id="overviewPM25Status">รอข้อมูล</em><p id="overviewPM25Hint" class="overview-feeling overview-loading-line">กำลังประเมินสภาพอากาศ...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-temp glass card" id="overviewTempMetricCard">
       <span class="overview-card-symbol" aria-label="อุณหภูมิ">🌡️</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character overview-character-art" id="overviewTempEmoji" aria-hidden="true"></div><span>อุณหภูมิ</span><b id="overviewTemp">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewTempStatus">รอข้อมูล</em><p id="overviewTempHint" class="overview-feeling">กำลังประเมินอุณหภูมิ...</p>
+      <div class="overview-metric-character overview-character-art overview-loading-character" id="overviewTempEmoji" aria-hidden="true"></div><span>อุณหภูมิ</span><b id="overviewTemp" class="overview-loading-value">--</b><small>°C</small><em class="overview-metric-status no_data overview-loading-chip" id="overviewTempStatus">รอข้อมูล</em><p id="overviewTempHint" class="overview-feeling overview-loading-line">กำลังประเมินอุณหภูมิ...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-humidity glass card" id="overviewHumidityMetricCard">
       <span class="overview-card-symbol" aria-label="ความชื้น">💧</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character overview-character-art" id="overviewHumidityEmoji" aria-hidden="true"></div><span>ความชื้น</span><b id="overviewHumidity">--</b><small>%RH</small><em class="overview-metric-status no_data" id="overviewHumidityStatus">รอข้อมูล</em><p id="overviewHumidityHint" class="overview-feeling">กำลังประเมินความชื้น...</p>
+      <div class="overview-metric-character overview-character-art overview-loading-character" id="overviewHumidityEmoji" aria-hidden="true"></div><span>ความชื้น</span><b id="overviewHumidity" class="overview-loading-value">--</b><small>%RH</small><em class="overview-metric-status no_data overview-loading-chip" id="overviewHumidityStatus">รอข้อมูล</em><p id="overviewHumidityHint" class="overview-feeling overview-loading-line">กำลังประเมินความชื้น...</p>
     </div>
     <div class="overview-metric-card overview-friendly-card metric-heat glass card" id="overviewHeatMetricCard">
       <span class="overview-card-symbol" aria-label="ดัชนีความร้อน">☀️</span><span class="overview-card-scene" aria-hidden="true"></span>
-      <div class="overview-metric-character overview-character-art" id="overviewHeatEmoji" aria-hidden="true"></div><span>ดัชนีความร้อน</span><b id="overviewHeat">--</b><small>°C</small><em class="overview-metric-status no_data" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint" class="overview-feeling">กำลังประเมินความรู้สึกร้อน...</p>
+      <div class="overview-metric-character overview-character-art overview-loading-character" id="overviewHeatEmoji" aria-hidden="true"></div><span>ดัชนีความร้อน</span><b id="overviewHeat" class="overview-loading-value">--</b><small>°C</small><em class="overview-metric-status no_data overview-loading-chip" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint" class="overview-feeling overview-loading-line">กำลังประเมินความรู้สึกร้อน...</p>
     </div>
   </div>
 
