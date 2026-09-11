@@ -35,7 +35,6 @@ wifiManage:`${BASE}/api/manage/wifi`
 
 const TOTAL_NODES=3;
 const MOTHER_OFFLINE_MS=90*1000;
-const NODE_UI_STALE_MS=8*60*1000; // UI offline rule = 8 นาที
 
 const $=
 id=>
@@ -75,8 +74,6 @@ let calendarSelectionStep=
 "start";
 
 let apiConnectionOnline=false;
-let apiConnectionChecked=false;
-let latestDataSource="none"; // none | cache | network
 let exportRows=[];
 let activeHelpButton=null;
 
@@ -89,9 +86,9 @@ let aiForecastLastLoadedAt=null;
 
 let publicDisplayConfig={
 devices:[
-{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""}
+{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""}
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
@@ -936,25 +933,6 @@ null;
 
 }
 
-function mergeLatestNodes(incoming,previous=latestNodes){
-  const next=Array.isArray(incoming)?incoming.filter(Boolean):[];
-  const old=Array.isArray(previous)?previous.filter(Boolean):[];
-  const byNumber=new Map();
-
-  old.forEach(node=>{
-    const n=nodeNo(node?.device_id);
-    if(n)byNumber.set(n,node);
-  });
-  next.forEach(node=>{
-    const n=nodeNo(node?.device_id);
-    if(n)byNumber.set(n,node);
-  });
-
-  return [1,2,3]
-    .map(n=>byNumber.get(n)||null)
-    .filter(Boolean);
-}
-
 function motherOnline(){
 
 if(
@@ -991,39 +969,13 @@ MOTHER_OFFLINE_MS
 // NODE STATUS RULE
 // =====================================================
 
-function nodeStatusTime(node){
-  if(!node)return null;
-
-  // V5.1 — status_recorded_at from API now represents node_status freshness,
-  // and last_seen is the strongest connectivity signal.
-  return parseDate(
-    node.last_seen||
-    node.status_recorded_at||
-    node.timestamp||
-    node.reading_recorded_at||
-    null
-  );
-}
-
-function nodeIsFresh(node,maxAgeMs=NODE_UI_STALE_MS){
-  const d=nodeStatusTime(node);
-  if(!d)return false;
-  return Date.now()-d.getTime()<=maxAgeMs;
-}
-
+function nodeStatusTime(node){if(!node)return null;return parseDate(node.last_seen||node.status_recorded_at||node.timestamp||node.reading_recorded_at||null);}
+function nodeIsFresh(node){const t=nodeStatusTime(node);return Boolean(t)&&Date.now()-t.getTime()<=8*60*1000;}
 function getNodeStatus(node){
   if(!node)return "offline";
-
-  const s=String(
-    node.connection_status==="disconnected"
-      ?"offline"
-      :(node.status||"offline")
-  ).toLowerCase();
-
+  const s=String(node.connection_status==="disconnected"?"offline":(node.status||"offline")).toLowerCase();
   if(!["online","sleep"].includes(s))return "offline";
-  if(!nodeIsFresh(node))return "offline";
-
-  return s;
+  return nodeIsFresh(node)?s:"offline";
 }
 
 function activeCount(){
@@ -1053,134 +1005,13 @@ return st==="offline"?"offline":"online";
 }
 
 // =====================================================
-// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
-// =====================================================
-const PERMISSION_DEFINITIONS=[
-  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
-  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
-  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
-  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
-  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
-  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
-  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
-  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
-];
-
-const ROLE_PERMISSION_DEFAULTS={
-  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
-  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
-  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
-};
-
-// =====================================================
 // AUTH STATE
 // =====================================================
 
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
-
-const AUTH_USER_CACHE_KEY="localAirAuthUserV5";
-
-function readCachedAuthUser(){
-  try{
-    const raw=localStorage.getItem(AUTH_USER_CACHE_KEY);
-    const parsed=raw?JSON.parse(raw):null;
-    return parsed&&typeof parsed==="object"?parsed:null;
-  }catch(_){
-    return null;
-  }
-}
-
-function saveCachedAuthUser(user){
-  try{
-    if(user)localStorage.setItem(AUTH_USER_CACHE_KEY,JSON.stringify(user));
-    else localStorage.removeItem(AUTH_USER_CACHE_KEY);
-  }catch(_){}
-}
-
-function bindOnce(el,key,event,handler){
-  if(!el)return;
-  const flag=`bound${key}`;
-  if(el.dataset[flag]==="1")return;
-  el.dataset[flag]="1";
-  el.addEventListener(event,handler);
-}
-
-function bindCriticalAuthUI(){
-  const accountButton=$("accountButton");
-  bindOnce(accountButton,"Account","click",()=>{
-    if(!authUser){
-      openAuthModal("login");
-      return;
-    }
-    const menu=$("accountDropdown");
-    menu?.classList.toggle("hidden");
-    accountButton?.setAttribute("aria-expanded",String(!menu?.classList.contains("hidden")));
-  });
-
-  document.querySelectorAll("[data-auth-close]").forEach(el=>{
-    bindOnce(el,"AuthClose","click",closeAuthModal);
-  });
-
-  document.querySelectorAll("[data-auth-mode]").forEach(el=>{
-    bindOnce(el,"AuthMode","click",()=>setAuthMode(el.dataset.authMode));
-  });
-
-  document.querySelectorAll("[data-admin-close]").forEach(el=>{
-    bindOnce(el,"AdminClose","click",closeAdminCenter);
-  });
-  document.querySelectorAll("[data-admin-back]").forEach(el=>{
-    bindOnce(el,"AdminBack","click",backFromAdminCenter);
-  });
-
-  document.querySelectorAll("[data-toggle-password]").forEach(button=>{
-    bindOnce(button,"PasswordToggle","click",()=>{
-      const input=$(button.dataset.togglePassword);
-      if(!input)return;
-      const show=input.type==="password";
-      input.type=show?"text":"password";
-      button.classList.toggle("is-visible",show);
-      button.setAttribute("aria-pressed",String(show));
-      button.setAttribute("aria-label",show?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
-    });
-  });
-
-  bindOnce($("openForgotPasswordButton"),"Forgot","click",openForgotPassword);
-  bindOnce($("backToLoginButton"),"BackLogin","click",()=>setAuthMode("login"));
-
-  bindOnce($("loginForm"),"LoginSubmit","submit",async e=>{
-    e.preventDefault();
-    setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");
-    try{
-      await doLogin(
-        $("loginEmail")?.value||"",
-        $("loginPassword")?.value||""
-      );
-      setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
-      setTimeout(closeAuthModal,250);
-    }catch(err){
-      setAuthMessage("loginMessage",err?.message||"เข้าสู่ระบบไม่สำเร็จ","error");
-    }
-  });
-
-  bindOnce($("registerForm"),"RegisterSubmit","submit",async e=>{
-    e.preventDefault();
-    setAuthMessage("registerMessage","กำลังสร้างบัญชี...");
-    try{
-      await apiJson(API.authRegister,{
-        method:"POST",
-        body:JSON.stringify({
-          display_name:$("registerName")?.value||"",
-          email:$("registerEmail")?.value||"",
-          password:$("registerPassword")?.value||""
-        })
-      });
-      setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");
-      setTimeout(()=>setAuthMode("login"),500);
-    }catch(err){
-      setAuthMessage("registerMessage",err?.message||"สมัครสมาชิกไม่สำเร็จ","error");
-    }
-  });
-}
+const AUTH_USER_CACHE_KEY="localAirAuthUserV6";
+function readCachedAuthUser(){try{const x=localStorage.getItem(AUTH_USER_CACHE_KEY);return x?JSON.parse(x):null;}catch(_){return null;}}
+function saveCachedAuthUser(user){try{if(user)localStorage.setItem(AUTH_USER_CACHE_KEY,JSON.stringify(user));else localStorage.removeItem(AUTH_USER_CACHE_KEY);}catch(_){}}
 
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
@@ -1195,17 +1026,6 @@ if(authToken){
 let authUser=authToken?readCachedAuthUser():null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
-
-(function registerCriticalAuthBootstrap(){
-  const run=()=>{
-    try{bindCriticalAuthUI();}catch(err){console.error("Critical auth binding error:",err);}
-    if(authToken&&authUser){
-      try{updateAccountUI();}catch(err){console.warn("Cached account UI error:",err);}
-    }
-  };
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
-  else run();
-})();
 
 // =====================================================
 // FETCH
@@ -1677,22 +1497,10 @@ if(
 return;
 }
 
-if(!apiConnectionChecked){
-  dot.className="text-amber-400";
-  st.textContent=latestNodes.length?"กำลังอัปเดต":"กำลังเชื่อมต่อ";
-  ac.textContent=latestNodes.length
-    ?`${activeCount()} / ${TOTAL_NODES} จุด`
-    :"กำลังตรวจสอบข้อมูล";
-}else if(apiConnectionOnline){
-  dot.className="text-emerald-400";
-  st.textContent="ONLINE";
-  ac.textContent=`${activeCount()} / ${TOTAL_NODES} จุด`;
+if(!apiConnectionOnline){
+  dot.className="text-red-400";st.textContent="ไม่พร้อมใช้งาน";ac.textContent="ตรวจสอบจำนวนจุดไม่ได้";
 }else{
-  dot.className=latestNodes.length?"text-amber-400":"text-red-400";
-  st.textContent=latestNodes.length?"ข้อมูลล่าสุด":"ไม่พร้อมใช้งาน";
-  ac.textContent=latestNodes.length
-    ?`${activeCount()} / ${TOTAL_NODES} จุด • รอเชื่อมต่อใหม่`
-    :"ตรวจสอบจำนวนจุดไม่ได้";
+  dot.className="text-emerald-400";st.textContent="ONLINE";ac.textContent=`${activeCount()} / ${TOTAL_NODES} จุด`;
 }
 
 }
@@ -2042,34 +1850,27 @@ return{level:"critical",label:"อันตรายมาก"};
 // =====================================================
 
 function activeNodes(){
-  // ใช้สถานะและ timestamp ของแต่ละจุดโดยตรง
-  return latestNodes.filter(
-    n=>["online","sleep"].includes(getNodeStatus(n))
-  );
+
+if(
+!motherOnline()
+){
+
+return[];
+
 }
 
-function latestUsableNodes(field=null){
-  return latestNodes.filter(node=>{
-    if(!node)return false;
-    if(field)return hasFiniteSensorValue(node[field]);
-    return ["pm1","pm25","pm10","temperature","humidity","light"]
-      .some(key=>hasFiniteSensorValue(node[key]));
-  });
-}
+return latestNodes
+.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)
+);
 
-function summaryNodes(field=null){
-  const active=activeNodes().filter(node=>
-    field?hasFiniteSensorValue(node[field]):true
-  );
-  if(active.length)return {nodes:active,isFallback:false};
-
-  // V5.1: the node cards may correctly be OFFLINE after 8 minutes,
-  // but the latest measured values are still useful. Do not turn the whole
-  // Overview/Comparison into "รอข้อมูล" while those values are visible.
-  return {
-    nodes:latestUsableNodes(field),
-    isFallback:true
-  };
 }
 
 function averageOf(
@@ -2102,8 +1903,8 @@ a.length
 
 function currentEnvironmentSnapshot(){
 
-const summary=summaryNodes();
-const nodes=summary.nodes;
+const nodes=
+activeNodes();
 
 const temperature=
 averageOf(
@@ -2629,16 +2430,41 @@ c.label+
 
 }
 
-if(!latestNodes.length){
-  return resetCurrent(
-    apiConnectionChecked
-      ?"ยังไม่มีข้อมูลปัจจุบันจากจุดตรวจวัด"
-      :"กำลังโหลดข้อมูลปัจจุบัน..."
-  );
+if(
+!apiConnectionOnline
+){
+
+return resetCurrent(
+"ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้"
+);
+
 }
 
-const currentSummary=summaryNodes(currentMetric);
-const usable=currentSummary.nodes;
+if(
+!motherOnline()
+){
+
+return resetCurrent(
+"ระบบข้อมูลขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
+);
+
+}
+
+const usable=
+latestNodes
+.filter(
+n=>
+[
+"online",
+"sleep"
+]
+.includes(
+getNodeStatus(n)
+)&&
+hasFiniteSensorValue(
+n[currentMetric]
+)
+);
 
 if(
 !usable.length
@@ -2679,15 +2505,6 @@ a[currentMetric]
 ?b
 :a
 );
-
-if(currentSummary.isFallback){
-  if($("currentOverallDetail")){
-    $("currentOverallDetail").textContent="สรุปจากค่าตรวจวัดล่าสุด • จุดตรวจวัดปัจจุบันอาจ OFFLINE";
-  }
-  if($("currentEnvironmentFooter")){
-    $("currentEnvironmentFooter").textContent="กำลังแสดงค่าตรวจวัดล่าสุดที่มีอยู่ เนื่องจากยังไม่มีจุดที่ ONLINE";
-  }
-}
 
 const watch=
 usable
@@ -2784,17 +2601,15 @@ function updateSmart(){
     </div>`;
   };
 
-  if(!activeNodes().length){
+  if(!apiConnectionOnline||!latestNodes.length){
     renderAdvice({
       cls:"is-offline",
       icon:"📡",
-      title:apiConnectionChecked?"ยังไม่มีข้อมูลล่าสุดที่พร้อมใช้":"กำลังโหลดข้อมูลล่าสุด",
-      message:latestNodes.length
-        ?"ข้อมูลที่มีอยู่เกินช่วงเวลาที่ใช้ยืนยันสถานะ กรุณารอรอบอัปเดตถัดไป"
-        :"ระบบกำลังเชื่อมต่อกับข้อมูลจุดตรวจวัด",
+      title:"ยังไม่สามารถสรุปคำแนะนำได้",
+      message:"สถานีรับข้อมูลหลักยังไม่พร้อม กรุณารอข้อมูลล่าสุดจากระบบก่อน",
       actions:[
-        {icon:"⏳",title:"รอข้อมูลล่าสุด",detail:"ระบบจะอัปเดตอัตโนมัติเมื่อข้อมูลพร้อม"},
-        {icon:"📊",title:"ตรวจสอบอีกครั้ง",detail:"ติดตามค่าล่าสุดของจุดตรวจวัด"}
+        {icon:"⏳",title:"รอข้อมูลล่าสุด",detail:"ระบบจะอัปเดตอัตโนมัติเมื่อเชื่อมต่อได้"},
+        {icon:"📊",title:"ตรวจสอบอีกครั้ง",detail:"ติดตามสถานะระบบและจุดตรวจวัด"}
       ],
       active:0
     });
@@ -4067,36 +3882,6 @@ cubicInterpolationMode:"monotone"
 };
 }
 
-function renderAllMetricHistorySummary(rows,contextLabel=""){
-  const summaryRows=spatialAverageRows(
-    (Array.isArray(rows)?rows:[]).filter(r=>isRealHistoryReading(r,"pm25")),
-    ["pm25"]
-  );
-
-  const s=stats(summaryRows,"pm25");
-  const values=summaryRows
-    .map(r=>finiteNumberOrNull(r.pm25))
-    .filter(v=>v!==null);
-
-  if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":`${fmt(s.avg)} µg/m³`;
-  if($("trendMax"))$("trendMax").textContent=s.max==null?"--":`${fmt(s.max)} µg/m³`;
-  if($("trendMin"))$("trendMin").textContent=s.min==null?"--":`${fmt(s.min)} µg/m³`;
-  if($("trendLast"))$("trendLast").textContent=s.last==null?"--":`${fmt(s.last)} µg/m³`;
-
-  if($("trend")){
-    if(values.length<2){
-      $("trend").textContent=values.length
-        ?`PM2.5 • ${contextLabel||"ข้อมูลล่าสุด"}`
-        :"ไม่มีข้อมูล PM2.5";
-    }else{
-      const diff=values.at(-1)-values[0];
-      const pct=values[0]?diff/Math.abs(values[0])*100:0;
-      const direction=Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
-      $("trend").textContent=`${direction} • PM2.5`;
-    }
-  }
-}
-
 function drawCharts(){
 
 if(typeof Chart==="undefined"){
@@ -4122,10 +3907,7 @@ const nodeText=compareMode
 :averageMode
 ?"ค่าเฉลี่ยพื้นที่"
 :historyNodeLabel(historyNode);
-$("selectedMetricLabel").textContent=
-  metric==="all"
-    ?`ALL • ${nodeText} • สรุป PM2.5`
-    :`${metricLabel()} • ${nodeText}`;
+$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
 }
 
 historyGroupCharts=destroyChartList(historyGroupCharts);
@@ -4154,7 +3936,11 @@ drawForecast([]);
 return;
 }
 
-renderAllMetricHistorySummary(allBase,"ค่าเฉลี่ยพื้นที่");
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
 
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
@@ -4187,7 +3973,11 @@ return;
 }
 
 if(metric==="all"&&compareMode){
-renderAllMetricHistorySummary(base,"เปรียบเทียบ 3 จุด");
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
 
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
@@ -4217,7 +4007,11 @@ return;
 }
 
 if(metric==="all"){
-renderAllMetricHistorySummary(base,historyNodeLabel(historyNode));
+if($("trendAvg"))$("trendAvg").textContent="—";
+if($("trendMax"))$("trendMax").textContent="—";
+if($("trendMin"))$("trendMin").textContent="—";
+if($("trendLast"))$("trendLast").textContent="—";
+if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
 
 area.innerHTML=
 groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
@@ -9601,6 +9395,53 @@ closeViewer();
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 // =====================================================
 
+const lazyAssetPromises=new Map();
+
+function loadScriptOnce(src,key=src){
+  if(window[key] && typeof window[key]!=="string") return Promise.resolve(window[key]);
+  if(lazyAssetPromises.has("script:"+key)) return lazyAssetPromises.get("script:"+key);
+
+  const promise=new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      if(existing.dataset.loaded==="1") return resolve(existing);
+      existing.addEventListener("load",()=>resolve(existing),{once:true});
+      existing.addEventListener("error",reject,{once:true});
+      return;
+    }
+    const s=document.createElement("script");
+    s.src=src;
+    s.async=true;
+    s.dataset.lazyAsset=key;
+    s.addEventListener("load",()=>{s.dataset.loaded="1";resolve(s);},{once:true});
+    s.addEventListener("error",reject,{once:true});
+    document.head.appendChild(s);
+  });
+  lazyAssetPromises.set("script:"+key,promise);
+  return promise;
+}
+
+function loadStyleOnce(href,key=href){
+  if(lazyAssetPromises.has("style:"+key)) return lazyAssetPromises.get("style:"+key);
+
+  const promise=new Promise((resolve,reject)=>{
+    const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(l=>l.href===href);
+    if(existing) return resolve(existing);
+    const l=document.createElement("link");
+    l.rel="stylesheet";
+    l.href=href;
+    l.dataset.lazyAsset=key;
+    l.addEventListener("load",()=>resolve(l),{once:true});
+    l.addEventListener("error",reject,{once:true});
+    document.head.appendChild(l);
+  });
+  lazyAssetPromises.set("style:"+key,promise);
+  return promise;
+}
+
+// Future Map rule: call loadStyleOnce/loadScriptOnce only when Map page opens.
+// Nothing map-related is downloaded during Overview startup.
+
 function ensureChartLibrary(){
 
 if(
@@ -9803,7 +9644,7 @@ activateAISection();
 // V36.35 — FAST WARM START CACHE
 // =====================================================
 const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
-const LATEST_CACHE_MAX_AGE_MS=24*60*60*1000; // แสดงค่าล่าสุดจาก cache ทันทีระหว่างรอ API
+const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
 
 // V36.61 — true only after a usable cache or the first network request settles.
 // This prevents the initial skeleton from being removed by an early UI refresh.
@@ -9825,7 +9666,6 @@ function restoreLatestSnapshot(){
     if(!nodes.length)return false;
     latestNodes=nodes;
     latestRecord=latestNodes.at(-1)||null;
-    latestDataSource="cache";
     overviewInitialSettled=true;
     renderMonitoring();
     updateCurrent();
@@ -9841,12 +9681,7 @@ function restoreLatestSnapshot(){
 
 async function loadInitial(){
 
-// V4.6 — แสดง snapshot ก่อนยิง request เพื่อไม่ให้หน้ารีเฟรชค้างเป็น skeleton
-const restoredFromCache=restoreLatestSnapshot();
-if(restoredFromCache){
-  overviewInitialSettled=true;
-  setOverviewLoadingState(false);
-}
+restoreLatestSnapshot();
 
 try{
 
@@ -9855,9 +9690,7 @@ try{
 const latest=await loadLatest();
 
 apiConnectionOnline=true;
-apiConnectionChecked=true;
-latestDataSource="network";
-latestNodes=mergeLatestNodes(latest,latestNodes);
+latestNodes=latest;
 latestRecord=latestNodes.at(-1)||null;
 overviewInitialSettled=true;
 saveLatestSnapshot(latestNodes);
@@ -9878,7 +9711,6 @@ Promise.all([
   updateCurrent();
   updateSmart();
   updateAlertUI();
-  updateNavigationDashboard();
   checkSituationNotifications();
 }).catch(e=>console.warn("Secondary initial load error:",e));
 
@@ -9889,8 +9721,8 @@ console.error(
 e
 );
 
-apiConnectionOnline=false;
-apiConnectionChecked=true;
+apiConnectionOnline=
+false;
 overviewInitialSettled=true;
 
 renderMonitoring();
@@ -9916,55 +9748,69 @@ updateNavigationDashboard();
 // =====================================================
 
 async function loadRealtime(){
-  try{
-    const latest=await loadLatest();
 
-    apiConnectionOnline=true;
-    apiConnectionChecked=true;
-    latestDataSource="network";
-    latestNodes=mergeLatestNodes(latest,latestNodes);
-    latestRecord=latestNodes.at(-1)||null;
-    saveLatestSnapshot(latestNodes);
+try{
 
-    renderMonitoring();
-    updateCurrent();
-    updateSmart();
-    updateNavigationDashboard();
+const[
+latest,
+mother,
+alerts
+]=
+await Promise.all([
 
-    Promise.allSettled([
-      loadMother(),
-      loadAlerts()
-    ]).then(results=>{
-      const motherResult=results[0];
-      const alertsResult=results[1];
+loadLatest(),
 
-      if(motherResult.status==="fulfilled"){
-        motherStatus=motherResult.value;
-      }
-      if(alertsResult.status==="fulfilled"&&Array.isArray(alertsResult.value)){
-        alertStates=alertsResult.value;
-      }
+loadMother(),
 
-      renderMonitoring();
-      updateCurrent();
-      updateSmart();
-      updateAlertUI();
-      updateNavigationDashboard();
-      checkSituationNotifications();
-    });
+loadAlerts()
+.catch(
+()=>alertStates
+)
 
-  }catch(e){
-    console.error("Realtime latest-data error:",e);
+]);
 
-    apiConnectionOnline=false;
-    apiConnectionChecked=true;
+apiConnectionOnline=
+true;
 
-    renderMonitoring();
-    updateCurrent();
-    updateSmart();
-    updateAlertUI();
-    updateNavigationDashboard();
-  }
+latestNodes=
+latest;
+saveLatestSnapshot(latestNodes);
+
+motherStatus=
+mother;
+
+alertStates=
+alerts;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+checkSituationNotifications();
+
+}catch(e){
+
+console.error(
+"Realtime error:",
+e
+);
+
+apiConnectionOnline=
+false;
+
+renderMonitoring();
+
+updateCurrent();
+
+updateSmart();
+
+updateAlertUI();
+
+}
+
 }
 
 // =====================================================
@@ -10066,29 +9912,29 @@ timeStyle:
 // START
 // =====================================================
 
-function safeStartup(name,fn){
-  try{
-    const result=fn();
-    if(result&&typeof result.catch==="function"){
-      result.catch(e=>console.error(`${name} startup error:`,e));
-    }
-    return result;
-  }catch(e){
-    console.error(`${name} startup error:`,e);
-    return null;
-  }
-}
+updateHistoryRangeButtonLabel();
 
-safeStartup("history range label",updateHistoryRangeButtonLabel);
-safeStartup("quick range UI",()=>updateQuickRangeUI(averageRange));
-safeStartup("forecast toggle",updateForecastToggle);
-safeStartup("AI placeholder",()=>renderAI(null));
-safeStartup("forecast placeholder",()=>renderAIForecast(null));
-safeStartup("clock",updateClock);
-safeStartup("initial data",loadInitial);
+updateQuickRangeUI(
+averageRange
+);
+
+updateForecastToggle();
+
+renderAI(
+null
+);
+
+renderAIForecast(
+null
+);
+
+updateClock();
+loadInitial();
 
 const scheduleStartup=(fn,delay)=>{
-  setTimeout(()=>safeStartup("deferred task",fn),delay);
+  setTimeout(()=>{
+    try{fn();}catch(e){console.error("Startup task error:",e);}
+  },delay);
 };
 
 scheduleStartup(bindEvents,60);
@@ -10191,14 +10037,10 @@ function openDashboardPage(page,{updateHash=true}={}){
 
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
 
-  if(page==="monitoring"){
-    // Defer until the whole app file has finished initializing its map globals.
-    setTimeout(()=>{
-      if(typeof activateMonitoringMap!=="function")return;
-      activateMonitoringMap().catch(err=>{
-        console.error("Open monitoring map error:",err);
-      });
-    },0);
+  if(page==="monitoring" && typeof ensureMonitoringMap==="function"){
+    ensureMonitoringMap();
+    renderMonitoringMap({fit:!selectedMonitoringDeviceId});
+    setTimeout(()=>monitoringMap?.invalidateSize(),120);
   }
 
   // V36.60 — About contains many SVG characters. Render them only when
@@ -10906,28 +10748,21 @@ function updateNavigationDashboard(){
   let navState="is-offline";
   let navLabel="กำลังตรวจสอบสถานะ";
 
-  if(!apiConnectionChecked){
-    navState="is-checking";
-    navLabel=latestNodes.length
-      ?"กำลังอัปเดตข้อมูล"
-      :"กำลังเชื่อมต่อข้อมูล";
-  }else if(apiConnectionOnline){
-    if(active===TOTAL_NODES){
-      navState="is-online";
-      navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
-    }else if(active>0){
-      navState="is-warning";
-      navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
-    }else{
-      navState="is-warning";
-      navLabel="ระบบข้อมูล ONLINE • รอข้อมูลจุดตรวจวัด";
-    }
-  }else if(latestNodes.length){
-    navState="is-warning";
-    navLabel="แสดงข้อมูลล่าสุด • กำลังเชื่อมต่อใหม่";
-  }else{
+  if(!apiConnectionOnline){
     navState="is-offline";
     navLabel="ระบบข้อมูล OFFLINE";
+  }else if(!motherOnline()){
+    navState="is-offline";
+    navLabel="ระบบข้อมูล OFFLINE";
+  }else if(active===TOTAL_NODES){
+    navState="is-online";
+    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+  }else if(active>0){
+    navState="is-warning";
+    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+  }else{
+    navState="is-offline";
+    navLabel=`จุดตรวจวัด ONLINE 0/${TOTAL_NODES}`;
   }
 
   if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
@@ -10961,8 +10796,8 @@ function bindDashboardNavigation(){
   openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
 }
 
-safeStartup("dashboard navigation",bindDashboardNavigation);
-safeStartup("navigation status",updateNavigationDashboard);
+bindDashboardNavigation();
+updateNavigationDashboard();
 
 const runWhenIdle=fn=>{
   if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:9000});
@@ -11046,130 +10881,12 @@ function deviceDisplayName(deviceId){
 // หน้าข้อมูลตรวจวัดเดิมยังคงอยู่ทั้งหมด
 // =====================================================
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
-const MONITORING_WORLD_BOUNDS=[
-  [-85.05112878,-180],
-  [85.05112878,180]
-];
+const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
 const ADMIN_DEVICE_MAX_IMAGES=8;
-const ADMIN_DEVICE_IMAGE_DATA_MAX=220000;
-
-// =====================================================
-// MAP V4.3 — ISOLATED LEAFLET LOADER
-// แผนที่จะโหลดแยกจากระบบ Login/Data เพื่อไม่ให้ CDN ของแผนที่
-// ทำให้ฟังก์ชันหลักของ Dashboard หยุดทำงาน
-// =====================================================
-let leafletLoadPromise=null;
-
-function loadExternalScript(src){
-  return new Promise((resolve,reject)=>{
-    const existing=[...document.scripts].find(s=>s.src===src);
-    if(existing){
-      if(typeof window.L!=="undefined"){resolve();return;}
-      existing.addEventListener("load",resolve,{once:true});
-      existing.addEventListener("error",()=>reject(new Error(`โหลด ${src} ไม่สำเร็จ`)),{once:true});
-      return;
-    }
-    const script=document.createElement("script");
-    script.src=src;
-    script.async=true;
-    script.onload=resolve;
-    script.onerror=()=>reject(new Error(`โหลด ${src} ไม่สำเร็จ`));
-    document.head.appendChild(script);
-  });
-}
-
-let leafletCssPromise=null;
-
-function loadExternalStyle(href){
-  return new Promise((resolve,reject)=>{
-    const link=document.createElement("link");
-    link.rel="stylesheet";
-    link.href=href;
-    link.dataset.leafletCss="1";
-    link.onload=()=>resolve(link);
-    link.onerror=()=>{
-      link.remove();
-      reject(new Error(`โหลด ${href} ไม่สำเร็จ`));
-    };
-    document.head.appendChild(link);
-  });
-}
-
-function ensureLeafletStyles(){
-  if(document.querySelector('link[data-leaflet-css="1"]'))return Promise.resolve();
-  if(leafletCssPromise)return leafletCssPromise;
-
-  leafletCssPromise=(async()=>{
-    const sources=[
-      "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css",
-      "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    ];
-    let lastError=null;
-    for(const href of sources){
-      try{
-        return await loadExternalStyle(href);
-      }catch(err){
-        lastError=err;
-        console.warn("Leaflet CSS source failed:",href,err);
-      }
-    }
-    throw lastError||new Error("โหลด Leaflet CSS ไม่สำเร็จ");
-  })().catch(err=>{
-    leafletCssPromise=null;
-    throw err;
-  });
-
-  return leafletCssPromise;
-}
-
-async function ensureLeafletLibrary(){
-  if(typeof window.L!=="undefined")return window.L;
-  if(leafletLoadPromise)return leafletLoadPromise;
-
-  leafletLoadPromise=(async()=>{
-    // CSS and JS load only when a map is actually opened.
-    ensureLeafletStyles().catch(err=>console.warn("Leaflet CSS load failed:",err));
-
-    const sources=[
-      "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",
-      "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    ];
-    let lastError=null;
-    for(const src of sources){
-      try{
-        await loadExternalScript(src);
-        if(typeof window.L!=="undefined")return window.L;
-      }catch(err){
-        lastError=err;
-        console.warn("Leaflet source failed:",src,err);
-      }
-    }
-    throw lastError||new Error("ไม่สามารถโหลด Leaflet ได้");
-  })().catch(err=>{
-    leafletLoadPromise=null;
-    throw err;
-  });
-
-  return leafletLoadPromise;
-}
-
-function setMapLoadError(root,message="ไม่สามารถโหลดแผนที่ได้"){
-  if(!root)return;
-  root.innerHTML=`<div class="monitoring-map-load-error"><b>${esc(message)}</b><span>ระบบส่วนอื่นยังใช้งานได้ตามปกติ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</span></div>`;
-}
-
-let monitoringMap=null;
-let monitoringMarkers=new Map();
-let selectedMonitoringDeviceId=null;
-let monitoringBaseLayers={street:null,satellite:null};
-let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
-
-let adminDeviceMap=null;
-let adminDeviceMarker=null;
-let adminBaseLayers={street:null,satellite:null};
-let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
-let activeAdminDeviceId="Number 1";
-let adminMediaDragIndex=null;
+const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
+let monitoringMap=null;let monitoringMarkers=new Map();let selectedMonitoringDeviceId=null;
+let monitoringBaseLayers={street:null,satellite:null};let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
+let adminDeviceMap=null;let adminDeviceMarker=null;let adminBaseLayers={street:null,satellite:null};let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";let activeAdminDeviceId="Number 1";let adminMediaDragIndex=null;
 
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
@@ -11200,96 +10917,16 @@ function mapDeviceNumber(deviceId){
 
 function monitoringMarkerIcon(number,selected=false){
   if(typeof L==="undefined")return null;
-  return L.divIcon({
-    className:"monitoring-map-marker-wrap",
-    html:`<div class="monitoring-map-marker-shell${selected?" selected":""}">
-      <span class="monitoring-map-marker-pulse"></span>
-      <div class="monitoring-map-marker-pin"><span>${esc(number)}</span></div>
-    </div>`,
-    iconSize:[46,52],
-    iconAnchor:[23,49]
-  });
+  return L.divIcon({className:"monitoring-map-marker-wrap",html:`<div class="monitoring-map-marker-shell${selected?" selected":""}"><span class="monitoring-map-marker-pulse"></span><div class="monitoring-map-marker-pin"><span>${esc(number)}</span></div></div>`,iconSize:[46,52],iconAnchor:[23,49]});
 }
 
-function createStreetTileLayer(){
-  return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    minZoom:1,
-    maxNativeZoom:19,
-    maxZoom:22,
-    noWrap:true,
-    bounds:MONITORING_WORLD_BOUNDS,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  });
-}
-
-function createSatelliteTileLayer(){
-  return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
-    minZoom:1,
-    // บริเวณโครงการมีภาพจริงละเอียดถึงประมาณระดับนี้
-    // หลังจากนี้ Leaflet จะขยาย tile เดิมแทนการร้องขอ tile ที่ขึ้น
-    // "Map data not yet available"
-    maxNativeZoom:17,
-    maxZoom:22,
-    noWrap:true,
-    bounds:MONITORING_WORLD_BOUNDS,
-    attribution:'Tiles &copy; Esri'
-  });
-}
-
-function setMapBasemap(scope,mode){
-  const normalized=mode==="satellite"?"satellite":"street";
-  const map=scope==="admin"?adminDeviceMap:monitoringMap;
-  const layers=scope==="admin"?adminBaseLayers:monitoringBaseLayers;
-  if(!map)return;
-
-  Object.values(layers).forEach(layer=>{
-    if(layer&&map.hasLayer(layer))map.removeLayer(layer);
-  });
-  layers[normalized]?.addTo(map);
-
-  if(scope==="admin"){
-    adminBasemapMode=normalized;
-    localStorage.setItem("admin-basemap-mode",normalized);
-    document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{
-      btn.classList.toggle("active",btn.dataset.adminBasemap===normalized);
-    });
-  }else{
-    monitoringBasemapMode=normalized;
-    localStorage.setItem("monitoring-basemap-mode",normalized);
-    document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
-      btn.classList.toggle("active",btn.dataset.publicBasemap===normalized);
-    });
-  }
-}
-
+function createStreetTileLayer(){return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{minZoom:1,maxNativeZoom:19,maxZoom:22,noWrap:true,bounds:MONITORING_WORLD_BOUNDS,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});}
+function createSatelliteTileLayer(){return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{minZoom:1,maxNativeZoom:17,maxZoom:22,noWrap:true,bounds:MONITORING_WORLD_BOUNDS,attribution:'Tiles &copy; Esri'});}
+function setMapBasemap(scope,mode){const x=mode==="satellite"?"satellite":"street",map=scope==="admin"?adminDeviceMap:monitoringMap,layers=scope==="admin"?adminBaseLayers:monitoringBaseLayers;if(!map)return;Object.values(layers).forEach(l=>{if(l&&map.hasLayer(l))map.removeLayer(l)});layers[x]?.addTo(map);if(scope==="admin"){adminBasemapMode=x;localStorage.setItem("admin-basemap-mode",x);document.querySelectorAll("[data-admin-basemap]").forEach(b=>b.classList.toggle("active",b.dataset.adminBasemap===x));}else{monitoringBasemapMode=x;localStorage.setItem("monitoring-basemap-mode",x);document.querySelectorAll("[data-public-basemap]").forEach(b=>b.classList.toggle("active",b.dataset.publicBasemap===x));}}
 function ensureMonitoringMap(){
-  const root=$("monitoringMap");
-  if(!root)return null;
-  if(typeof window.L==="undefined")return null;
-  root.querySelector(".monitoring-map-load-error")?.remove();
-  if(monitoringMap){
-    setTimeout(()=>monitoringMap.invalidateSize(),0);
-    return monitoringMap;
-  }
-
-  monitoringMap=L.map(root,{
-    zoomControl:true,
-    scrollWheelZoom:true,
-    minZoom:1,
-    maxZoom:22,
-    worldCopyJump:false,
-    maxBounds:MONITORING_WORLD_BOUNDS,
-    maxBoundsViscosity:1.0
-  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-
-  monitoringBaseLayers={
-    street:createStreetTileLayer(),
-    satellite:createSatelliteTileLayer()
-  };
-  setMapBasemap("public",monitoringBasemapMode);
-
-  renderMonitoringMap({fit:true});
-  return monitoringMap;
+  const root=$("monitoringMap");if(!root||typeof L==="undefined")return null;if(monitoringMap){setTimeout(()=>monitoringMap.invalidateSize(),0);return monitoringMap;}
+  monitoringMap=L.map(root,{zoomControl:true,scrollWheelZoom:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  monitoringBaseLayers={street:createStreetTileLayer(),satellite:createSatelliteTileLayer()};setMapBasemap("public",monitoringBasemapMode);renderMonitoringMap({fit:true});return monitoringMap;
 }
 
 function renderMonitoringMapNodeTabs(){
@@ -11445,179 +11082,14 @@ function closeMonitoringLocationDetail({fit=true}={}){
   setTimeout(()=>monitoringMap?.invalidateSize(),250);
 }
 
-function setupMonitoringMapUi(){
-  document.querySelectorAll("[data-map-device]").forEach(btn=>{
-    bindOnce(btn,"MapDevice","click",()=>{
-      const deviceId=btn.dataset.mapDevice;
-      if(monitoringMap){
-        selectMonitoringLocation(deviceId);
-        return;
-      }
-      activateMonitoringMap().then(()=>{
-        selectMonitoringLocation(deviceId);
-      }).catch(err=>{
-        console.error("Map point selection error:",err);
-      });
-    });
-  });
-  bindOnce($("mapDetailClose"),"MapDetailClose","click",()=>closeMonitoringLocationDetail({fit:true}));
-  document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
-    bindOnce(btn,"PublicBasemap","click",()=>{
-      if(!monitoringMap){
-        activateMonitoringMap().then(()=>{
-          setMapBasemap("public",btn.dataset.publicBasemap);
-        }).catch(()=>{});
-      }else{
-        setMapBasemap("public",btn.dataset.publicBasemap);
-      }
-    });
-  });
-  renderMonitoringMapNodeTabs();
-}
+function setupMonitoringMapUi(){document.querySelectorAll("[data-map-device]").forEach(btn=>btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice)));$("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));document.querySelectorAll("[data-public-basemap]").forEach(btn=>btn.addEventListener("click",()=>{if(!monitoringMap)ensureMonitoringMap();setMapBasemap("public",btn.dataset.publicBasemap);}));renderMonitoringMapNodeTabs();}
 
-let monitoringMapActivationPromise=null;
-async function activateMonitoringMap(){
-  if(monitoringMap){
-    setTimeout(()=>monitoringMap.invalidateSize(),0);
-    return monitoringMap;
-  }
-  if(monitoringMapActivationPromise)return monitoringMapActivationPromise;
-
-  const root=$("monitoringMap");
-  monitoringMapActivationPromise=(async()=>{
-    try{
-      await ensureLeafletLibrary();
-      const map=ensureMonitoringMap();
-      if(map){
-        renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-        setTimeout(()=>map.invalidateSize(),120);
-      }
-      return map;
-    }catch(err){
-      console.error("Monitoring map initialization error:",err);
-      setMapLoadError(root);
-      return null;
-    }finally{
-      monitoringMapActivationPromise=null;
-    }
-  })();
-
-  return monitoringMapActivationPromise;
-}
-
-function adminMapSelectedDeviceId(){
-  return activeAdminDeviceId||"Number 1";
-}
-
-function adminMapSelectedCard(){
-  const id=adminMapSelectedDeviceId();
-  return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;
-}
-
-function ensureAdminDeviceMap(){
-  const root=$("adminDeviceMap");
-  if(!root)return null;
-  if(typeof window.L==="undefined")return null;
-  root.querySelector(".monitoring-map-load-error")?.remove();
-  if(adminDeviceMap){
-    setTimeout(()=>adminDeviceMap.invalidateSize(),0);
-    return adminDeviceMap;
-  }
-
-  adminDeviceMap=L.map(root,{
-    zoomControl:true,
-    minZoom:1,
-    maxZoom:22,
-    worldCopyJump:false,
-    maxBounds:MONITORING_WORLD_BOUNDS,
-    maxBoundsViscosity:1.0
-  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-
-  adminBaseLayers={
-    street:createStreetTileLayer(),
-    satellite:createSatelliteTileLayer()
-  };
-  setMapBasemap("admin",adminBasemapMode);
-
-  adminDeviceMap.on("click",e=>{
-    setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);
-  });
-
-  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{
-    btn.onclick=()=>setMapBasemap("admin",btn.dataset.adminBasemap);
-  });
-
-  return adminDeviceMap;
-}
-
-function setAdminMapCoordinates(lat,lng){
-  const card=adminMapSelectedCard();
-  if(!card)return;
-  const latInput=card.querySelector(".admin-device-latitude");
-  const lngInput=card.querySelector(".admin-device-longitude");
-  if(latInput)latInput.value=Number(lat).toFixed(7);
-  if(lngInput)lngInput.value=Number(lng).toFixed(7);
-  refreshAdminMapEditor({keepZoom:true});
-}
-
-function refreshAdminMapEditor({keepZoom=false}={}){
-  const card=adminMapSelectedCard();
-  if(!card)return;
-
-  if(typeof window.L==="undefined"){
-    ensureLeafletLibrary().then(()=>{
-      refreshAdminMapEditor({keepZoom});
-    }).catch(err=>{
-      console.error("Admin map initialization error:",err);
-      setMapLoadError($("adminDeviceMap"));
-    });
-    return;
-  }
-
-  const map=ensureAdminDeviceMap();
-  if(!map)return;
-
-  const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
-  const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
-  const valid=lat!==null&&lng!==null;
-
-  if(adminDeviceMarker){
-    adminDeviceMarker.remove();
-    adminDeviceMarker=null;
-  }
-
-  if(valid){
-    adminDeviceMarker=L.marker([lat,lng],{
-      draggable:true,
-      icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)
-    }).addTo(map);
-
-    adminDeviceMarker.on("dragstart",()=>{
-      adminDeviceMarker.getElement()?.classList.add("is-dragging");
-    });
-    adminDeviceMarker.on("dragend",()=>{
-      adminDeviceMarker.getElement()?.classList.remove("is-dragging");
-      const p=adminDeviceMarker.getLatLng();
-      setAdminMapCoordinates(p.lat,p.lng);
-    });
-
-    if(!keepZoom)map.setView([lat,lng],19);
-    else map.panTo([lat,lng],{animate:true});
-  }else if(!keepZoom){
-    map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  }
-
-  if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
-  if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";
-
-  const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
-  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
-  setTimeout(()=>map.invalidateSize(),80);
-}
-
-function syncAdminMapSelectOptions(){
-  // V4 ใช้แท็บ Number 1–3 แทน select
-}
+function adminMapSelectedDeviceId(){return activeAdminDeviceId||"Number 1";}
+function adminMapSelectedCard(){const id=adminMapSelectedDeviceId();return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;}
+function ensureAdminDeviceMap(){const root=$("adminDeviceMap");if(!root||typeof L==="undefined")return null;if(adminDeviceMap){setTimeout(()=>adminDeviceMap.invalidateSize(),0);return adminDeviceMap;}adminDeviceMap=L.map(root,{zoomControl:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);adminBaseLayers={street:createStreetTileLayer(),satellite:createSatelliteTileLayer()};setMapBasemap("admin",adminBasemapMode);adminDeviceMap.on("click",e=>setAdminMapCoordinates(e.latlng.lat,e.latlng.lng));document.querySelectorAll("[data-admin-basemap]").forEach(btn=>btn.onclick=()=>setMapBasemap("admin",btn.dataset.adminBasemap));return adminDeviceMap;}
+function setAdminMapCoordinates(lat,lng){const card=adminMapSelectedCard();if(!card)return;const a=card.querySelector(".admin-device-latitude"),b=card.querySelector(".admin-device-longitude");if(a)a.value=Number(lat).toFixed(7);if(b)b.value=Number(lng).toFixed(7);refreshAdminMapEditor({keepZoom:true});}
+function refreshAdminMapEditor({keepZoom=false}={}){const map=ensureAdminDeviceMap(),card=adminMapSelectedCard();if(!map||!card)return;const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90),lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180),valid=lat!==null&&lng!==null;if(adminDeviceMarker){adminDeviceMarker.remove();adminDeviceMarker=null;}if(valid){adminDeviceMarker=L.marker([lat,lng],{draggable:true,icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)}).addTo(map);adminDeviceMarker.on("dragend",()=>{const p=adminDeviceMarker.getLatLng();setAdminMapCoordinates(p.lat,p.lng)});if(!keepZoom)map.setView([lat,lng],19);else map.panTo([lat,lng],{animate:true});}else if(!keepZoom)map.setView(MONITORING_MAP_FALLBACK_CENTER,15);if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;setTimeout(()=>map.invalidateSize(),80);}
+function syncAdminMapSelectOptions(){}
 
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
@@ -11672,12 +11144,7 @@ if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev===
 }
 
 renderMonitoringMapNodeTabs();
-if(monitoringMap){
-  renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-}else if(typeof window.L!=="undefined"){
-  ensureMonitoringMap();
-  if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-}
+if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
 if(selectedMonitoringDeviceId){
   const selected=configDevice(selectedMonitoringDeviceId);
   if(selected)renderMonitoringLocationDetail(selected);
@@ -11706,7 +11173,7 @@ return publicDisplayConfig;
 }
 
 (function startPublicDisplayConfig(){
-const run=()=>setTimeout(()=>safeStartup("public config",loadPublicDisplayConfig),900);
+const run=()=>setTimeout(loadPublicDisplayConfig,350);
 if(document.readyState==="loading"){
 document.addEventListener("DOMContentLoaded",run,{once:true});
 }else{
@@ -11893,11 +11360,7 @@ async function apiJson(url,options={}){
   const r=await fetch(url,{...options,headers,cache:"no-store"});
   let j=null;
   try{j=await r.json();}catch(_){j={success:false,message:`HTTP ${r.status}`};}
-  if(!r.ok){
-    const err=new Error(j?.message||`HTTP ${r.status}`);
-    err.status=r.status;
-    throw err;
-  }
+  if(!r.ok){const err=new Error(j?.message||`HTTP ${r.status}`);err.status=r.status;throw err;}
   return j;
 }
 
@@ -12101,23 +11564,35 @@ function setupProfileEditorInteraction(){
   stage.addEventListener("pointercancel",stop);
 }
 
+// =====================================================
+// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
+// =====================================================
+const PERMISSION_DEFINITIONS=[
+  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
+  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
+  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
+  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
+  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
+  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
+  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
+  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
+];
+
+const ROLE_PERMISSION_DEFAULTS={
+  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
+  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
+  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
+};
+
 function normalizedClientPermissions(user){
   if(!user)return {};
-
   const role=["user","admin","owner"].includes(user.role)?user.role:"user";
-  const defaults=ROLE_PERMISSION_DEFAULTS?.[role]||ROLE_PERMISSION_DEFAULTS?.user||{};
-  const base={...defaults};
-
+  const base={...(ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user)};
   if(role==="owner")return base;
-
-  const incoming=user.permissions&&typeof user.permissions==="object"
-    ?user.permissions
-    :{};
-
-  (PERMISSION_DEFINITIONS||[]).forEach(({key})=>{
+  const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
+  PERMISSION_DEFINITIONS.forEach(({key})=>{
     if(typeof incoming[key]==="boolean")base[key]=incoming[key];
   });
-
   return base;
 }
 
@@ -12292,13 +11767,8 @@ async function loadAuthStatus(){
 // =====================================================
 async function refreshAuthUserAfterLogin(){
   if(!authToken)return authUser;
-
   const j=await apiJson(API.authMe);
-  if(j?.user){
-    authUser=j.user;
-    saveCachedAuthUser(authUser);
-    updateAccountUI();
-  }
+  if(j?.user){authUser=j.user;saveCachedAuthUser(authUser);updateAccountUI();}
   return authUser;
 }
 
@@ -12409,96 +11879,33 @@ async function initGoogleIdentity(){
 async function handleGoogleCredential(response){
   const credential=String(response?.credential||"");
   if(!credential)return;
-
   setAuthMessage("loginMessage","กำลังเข้าสู่ระบบด้วย Google...");
-
   try{
-    const j=await apiJson(API.authGoogle,{
-      method:"POST",
-      body:JSON.stringify({credential})
-    });
-
-    const nextToken=String(j.token||"");
-    const nextUser=j.user||null;
-    if(!nextToken||!nextUser){
-      throw new Error("ข้อมูลเข้าสู่ระบบด้วย Google ไม่สมบูรณ์");
-    }
-
-    authToken=nextToken;
-    authUser=nextUser;
+    const j=await apiJson(API.authGoogle,{method:"POST",body:JSON.stringify({credential})});
+    authToken=String(j.token||"");
+    authUser=j.user||null;
     localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    saveCachedAuthUser(authUser);
-    updateAccountUI();
-
-    refreshAuthUserAfterLogin().catch(err=>{
-      console.warn("Google account refresh error:",err);
-    });
-
+    await refreshAuthUserAfterLogin();
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
   }catch(e){
-    setAuthMessage("loginMessage",e?.message||"เข้าสู่ระบบด้วย Google ไม่สำเร็จ","error");
+    setAuthMessage("loginMessage",e.message,"error");
   }
 }
 
 async function restoreAuthSession(){
-  if(!authToken){
-    authUser=null;
-    saveCachedAuthUser(null);
-    updateAccountUI();
-    return;
-  }
-
-  if(authUser){
-    try{updateAccountUI();}catch(_){}
-  }
-
-  try{
-    const j=await apiJson(API.authMe);
-    if(j?.user){
-      authUser=j.user;
-      saveCachedAuthUser(authUser);
-      updateAccountUI();
-    }
-  }catch(err){
-    if(err?.status===401||err?.status===403){
-      authToken="";
-      authUser=null;
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
-      saveCachedAuthUser(null);
-      updateAccountUI();
-    }else{
-      console.warn("Auth verification delayed; keeping cached session.",err);
-    }
-  }
+  if(!authToken){authUser=null;saveCachedAuthUser(null);updateAccountUI();return;}
+  if(authUser){try{updateAccountUI();}catch(_){}}
+  try{const j=await apiJson(API.authMe);if(j?.user){authUser=j.user;saveCachedAuthUser(authUser);updateAccountUI();}}
+  catch(err){if(err?.status===401||err?.status===403){authToken="";authUser=null;localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(null);updateAccountUI();}else console.warn("Auth verification delayed; keeping saved session.",err);}
 }
 
 async function doLogin(email,password){
-  const j=await apiJson(API.authLogin,{
-    method:"POST",
-    body:JSON.stringify({email,password})
-  });
-
-  const nextToken=String(j.token||"");
-  const nextUser=j.user||null;
-
-  if(!nextToken||!nextUser){
-    throw new Error("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์");
-  }
-
-  authToken=nextToken;
-  authUser=nextUser;
-  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-  sessionStorage.removeItem(AUTH_TOKEN_KEY);
-  saveCachedAuthUser(authUser);
-  updateAccountUI();
-
-  refreshAuthUserAfterLogin().catch(err=>{
-    console.warn("Account refresh after login delayed:",err);
-  });
-
+  const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
+  authToken=String(j.token||"");authUser=j.user||null;
+  if(!authToken||!authUser)throw new Error("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์");
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(authUser);updateAccountUI();
+  refreshAuthUserAfterLogin().catch(err=>console.warn("Account refresh delayed:",err));
   return j;
 }
 
@@ -12592,436 +11999,20 @@ async function saveHelpEditor(){
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
-function adminDeviceImagesFromCard(card){
-  return (card?.querySelector(".admin-device-images")?.value||"")
-    .split(/\r?\n/)
-    .map(v=>v.trim())
-    .filter(Boolean)
-    .slice(0,ADMIN_DEVICE_MAX_IMAGES);
-}
-
-function setAdminDeviceImagesToCard(card,images){
-  const field=card?.querySelector(".admin-device-images");
-  if(!field)return;
-  field.value=(images||[]).map(v=>String(v||"").trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");
-}
-
-function activeAdminDeviceCard(){
-  return adminMapSelectedCard();
-}
-
-function switchAdminDevice(deviceId,{focusMap=false}={}){
-  const exists=[...document.querySelectorAll(".admin-device-card")].some(x=>x.dataset.deviceId===deviceId);
-  if(!exists)return;
-  activeAdminDeviceId=deviceId;
-
-  document.querySelectorAll("[data-admin-device-tab]").forEach(btn=>{
-    const active=btn.dataset.adminDeviceTab===deviceId;
-    btn.classList.toggle("active",active);
-    btn.setAttribute("aria-selected",String(active));
-  });
-  document.querySelectorAll(".admin-device-card").forEach(card=>{
-    card.classList.toggle("active",card.dataset.deviceId===deviceId);
-  });
-
-  syncAdminActiveMediaFields();
-  renderAdminMediaManager();
-  refreshAdminMapEditor();
-
-  if(focusMap&&window.innerWidth<780){
-    $("adminDeviceMap")?.scrollIntoView({behavior:"smooth",block:"center"});
-  }
-}
-
-function syncAdminDeviceTabLabels(){
-  document.querySelectorAll("[data-admin-device-tab]").forEach((btn,i)=>{
-    const card=[...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===btn.dataset.adminDeviceTab);
-    const name=(card?.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
-    const label=btn.querySelector("b");
-    if(label)label.textContent=name||`จุดตรวจวัด ${i+1}`;
-  });
-}
-
-function syncAdminActiveMediaFields(){
-  const card=activeAdminDeviceCard();
-  if(!card)return;
-  const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();
-  if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;
-  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
-
-  const video=$("adminActiveVideoInput");
-  if(video){
-    video.value=card.querySelector(".admin-device-video")?.value||"";
-    video.oninput=()=>{
-      const target=activeAdminDeviceCard()?.querySelector(".admin-device-video");
-      if(target)target.value=video.value;
-    };
-  }
-}
-
-function renderAdminDevices(){
-  const root=$("adminDeviceList");
-  const tabs=$("adminDeviceTabs");
-  if(!root||!tabs)return;
-
-  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  if(!devices.some(d=>d.device_id===activeAdminDeviceId)){
-    activeAdminDeviceId=devices[0]?.device_id||"Number 1";
-  }
-
-  tabs.innerHTML=devices.map((d,i)=>`
-    <button type="button"
-      class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}"
-      data-admin-device-tab="${esc(d.device_id)}"
-      role="tab"
-      aria-selected="${d.device_id===activeAdminDeviceId?"true":"false"}">
-      <span>${i+1}</span>
-      <b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b>
-    </button>
-  `).join("");
-
-  root.innerHTML=devices.map((d,i)=>`
-    <div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}">
-      <div class="admin-device-card-head">
-        <div>
-          <h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4>
-          <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} <span>• เปลี่ยนไม่ได้</span></div>
-        </div>
-      </div>
-
-      <label class="admin-field">ชื่อที่แสดง
-        <input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}">
-      </label>
-
-      <label class="admin-field">ชื่อตำแหน่ง
-        <input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}" placeholder="เช่น บริเวณหน้าอาคาร...">
-      </label>
-
-      <label class="admin-field">คำอธิบายจุดตรวจวัด
-        <textarea class="admin-device-description" maxlength="900" rows="4" placeholder="ข้อความสั้นที่แสดงอยู่กับการ์ดจุดตรวจวัด เช่น ลักษณะพื้นที่โดยสรุป">${esc(d.description||"")}</textarea>
-        <small>ข้อความนี้ใช้กับส่วน “จุดตรวจวัด” ของ Dashboard</small>
-      </label>
-
-      <label class="admin-field">รายละเอียดในแถบด้านข้างแผนที่
-        <textarea class="admin-device-map-description admin-device-description-map" maxlength="2000" rows="6" placeholder="รายละเอียดสำหรับแถบด้านข้างของแผนที่ เช่น สภาพแวดล้อม เหตุผลที่เลือกติดตั้ง และข้อมูลสถานที่">${esc(d.map_description||"")}</textarea>
-        <small>ข้อความนี้จะแสดงเฉพาะเมื่อกดหมุด/จุดบนแผนที่</small>
-      </label>
-
-      <div class="admin-device-map-fields">
-        <label class="admin-field">Latitude
-          <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่">
-        </label>
-        <label class="admin-field">Longitude
-          <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่">
-        </label>
-      </div>
-
-      <textarea class="admin-device-images hidden" aria-hidden="true">${esc(deviceImageList(d).join("\n"))}</textarea>
-      <input class="admin-device-video hidden" value="${esc(d.video_url||"")}">
-    </div>
-  `).join("");
-
-  tabs.querySelectorAll("[data-admin-device-tab]").forEach(btn=>{
-    btn.addEventListener("click",()=>switchAdminDevice(btn.dataset.adminDeviceTab));
-  });
-
-  root.querySelectorAll(".admin-device-display").forEach(el=>el.addEventListener("input",()=>{
-    syncAdminDeviceTabLabels();
-    syncAdminActiveMediaFields();
-    refreshAdminMapEditor({keepZoom:true});
-  }));
-  root.querySelectorAll(".admin-device-location,.admin-device-description,.admin-device-map-description").forEach(el=>{
-    el.addEventListener("input",syncAdminDeviceTabLabels);
-  });
-  root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>{
-    el.addEventListener("change",()=>refreshAdminMapEditor());
-  });
-
-  setupAdminMediaManager();
-  switchAdminDevice(activeAdminDeviceId);
-  setTimeout(()=>refreshAdminMapEditor(),120);
-}
-
-function renderAdminDevicePreview(){
-  syncAdminDeviceTabLabels();
-  syncAdminActiveMediaFields();
-  refreshAdminMapEditor({keepZoom:true});
-}
-
-function adminMediaSetMessage(text,type=""){
-  const el=$("adminMediaMessage");
-  if(!el)return;
-  el.textContent=text||"";
-  el.classList.toggle("is-error",type==="error");
-  el.classList.toggle("is-success",type==="success");
-}
-
-function renderAdminMediaManager(){
-  const gallery=$("adminMediaGallery");
-  const card=activeAdminDeviceCard();
-  if(!gallery||!card)return;
-  const images=adminDeviceImagesFromCard(card);
-
-  if(!images.length){
-    gallery.innerHTML=`<div class="admin-media-empty">
-      <b>ยังไม่มีรูปของจุดนี้</b>
-      <span>เพิ่มรูปจากเครื่อง ลากวาง หรือวางด้วย Ctrl+V ได้</span>
-    </div>`;
-    return;
-  }
-
-  gallery.innerHTML=images.map((src,i)=>`
-    <article class="admin-media-item${i===0?" is-cover":""}" draggable="true" data-media-index="${i}">
-      <div class="admin-media-thumb">
-        <img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">
-        ${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}
-      </div>
-      <div class="admin-media-item-actions">
-        <button type="button" data-media-cover="${i}" ${i===0?"disabled":""}>★ หลัก</button>
-        <button type="button" data-media-left="${i}" ${i===0?"disabled":""} aria-label="เลื่อนไปทางซ้าย">←</button>
-        <button type="button" data-media-right="${i}" ${i===images.length-1?"disabled":""} aria-label="เลื่อนไปทางขวา">→</button>
-        <button type="button" class="danger" data-media-delete="${i}">ลบ</button>
-      </div>
-    </article>
-  `).join("");
-
-  gallery.querySelectorAll("[data-media-cover]").forEach(btn=>btn.addEventListener("click",()=>{
-    const idx=Number(btn.dataset.mediaCover);
-    const next=adminDeviceImagesFromCard(card);
-    if(idx>0&&idx<next.length){
-      const [picked]=next.splice(idx,1);
-      next.unshift(picked);
-      setAdminDeviceImagesToCard(card,next);
-      renderAdminMediaManager();
-    }
-  }));
-
-  gallery.querySelectorAll("[data-media-delete]").forEach(btn=>btn.addEventListener("click",()=>{
-    const idx=Number(btn.dataset.mediaDelete);
-    const next=adminDeviceImagesFromCard(card);
-    next.splice(idx,1);
-    setAdminDeviceImagesToCard(card,next);
-    renderAdminMediaManager();
-  }));
-
-  const move=(from,to)=>{
-    const next=adminDeviceImagesFromCard(card);
-    if(from<0||to<0||from>=next.length||to>=next.length||from===to)return;
-    const [picked]=next.splice(from,1);
-    next.splice(to,0,picked);
-    setAdminDeviceImagesToCard(card,next);
-    renderAdminMediaManager();
-  };
-
-  gallery.querySelectorAll("[data-media-left]").forEach(btn=>btn.addEventListener("click",()=>{
-    const i=Number(btn.dataset.mediaLeft);move(i,i-1);
-  }));
-  gallery.querySelectorAll("[data-media-right]").forEach(btn=>btn.addEventListener("click",()=>{
-    const i=Number(btn.dataset.mediaRight);move(i,i+1);
-  }));
-
-  gallery.querySelectorAll(".admin-media-item").forEach(item=>{
-    item.addEventListener("dragstart",e=>{
-      adminMediaDragIndex=Number(item.dataset.mediaIndex);
-      item.classList.add("is-dragging");
-      if(e.dataTransfer)e.dataTransfer.effectAllowed="move";
-    });
-    item.addEventListener("dragend",()=>{
-      adminMediaDragIndex=null;
-      item.classList.remove("is-dragging");
-    });
-    item.addEventListener("dragover",e=>{e.preventDefault();});
-    item.addEventListener("drop",e=>{
-      e.preventDefault();
-      const to=Number(item.dataset.mediaIndex);
-      if(Number.isFinite(adminMediaDragIndex))move(adminMediaDragIndex,to);
-      adminMediaDragIndex=null;
-    });
-  });
-}
-
-function loadImageElementFromFile(file){
-  return new Promise((resolve,reject)=>{
-    const url=URL.createObjectURL(file);
-    const img=new Image();
-    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
-    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("ไม่สามารถอ่านรูปภาพได้"));};
-    img.src=url;
-  });
-}
-
-async function optimizeAdminLocationImage(file){
-  if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||"")){
-    throw new Error("รองรับเฉพาะ JPG, PNG และ WEBP");
-  }
-  if(file.size>12*1024*1024){
-    throw new Error(`ไฟล์ ${file.name||""} ใหญ่เกิน 12 MB`);
-  }
-
-  const img=await loadImageElementFromFile(file);
-  let maxSide=1500;
-  let quality=.82;
-
-  for(let pass=0;pass<6;pass++){
-    const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
-    const w=Math.max(1,Math.round(img.naturalWidth*scale));
-    const h=Math.max(1,Math.round(img.naturalHeight*scale));
-    const canvas=document.createElement("canvas");
-    canvas.width=w;canvas.height=h;
-    const ctx=canvas.getContext("2d");
-    ctx.fillStyle="#ffffff";
-    ctx.fillRect(0,0,w,h);
-    ctx.drawImage(img,0,0,w,h);
-    const data=canvas.toDataURL("image/jpeg",quality);
-    if(data.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return data;
-    maxSide=Math.round(maxSide*.82);
-    quality=Math.max(.58,quality-.05);
-  }
-  throw new Error(`รูป ${file.name||""} ยังมีขนาดใหญ่เกินไปหลังย่อ`);
-}
-
-async function addAdminImageFiles(fileList){
-  const card=activeAdminDeviceCard();
-  if(!card)return;
-  const current=adminDeviceImagesFromCard(card);
-  const files=[...(fileList||[])].filter(f=>String(f.type||"").startsWith("image/"));
-  if(!files.length)return;
-
-  adminMediaSetMessage("กำลังเตรียมรูป...");
-  let added=0;
-
-  for(const file of files){
-    if(current.length>=ADMIN_DEVICE_MAX_IMAGES)break;
-    try{
-      const data=await optimizeAdminLocationImage(file);
-      current.push(data);
-      added++;
-    }catch(err){
-      adminMediaSetMessage(err.message||"มีรูปที่เพิ่มไม่สำเร็จ","error");
-    }
-  }
-
-  setAdminDeviceImagesToCard(card,current);
-  renderAdminMediaManager();
-  if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึกการเปลี่ยนแปลง`,"success");
-  if(current.length>=ADMIN_DEVICE_MAX_IMAGES&&files.length>added){
-    adminMediaSetMessage(`จุดตรวจวัดเก็บได้สูงสุด ${ADMIN_DEVICE_MAX_IMAGES} รูป`,"error");
-  }
-}
-
-function addAdminImageUrl(raw){
-  const url=String(raw||"").trim();
-  if(!/^https?:\/\//i.test(url)){
-    adminMediaSetMessage("กรุณาใส่ URL ที่ขึ้นต้นด้วย http:// หรือ https://","error");
-    return;
-  }
-  const card=activeAdminDeviceCard();
-  if(!card)return;
-  const images=adminDeviceImagesFromCard(card);
-  if(images.length>=ADMIN_DEVICE_MAX_IMAGES){
-    adminMediaSetMessage(`จุดตรวจวัดเก็บได้สูงสุด ${ADMIN_DEVICE_MAX_IMAGES} รูป`,"error");
-    return;
-  }
-  images.push(url);
-  setAdminDeviceImagesToCard(card,images);
-  renderAdminMediaManager();
-  adminMediaSetMessage("เพิ่ม URL รูปแล้ว กรุณากดบันทึก","success");
-}
-
-function extractDroppedImageUrl(dataTransfer){
-  if(!dataTransfer)return "";
-  const uri=String(dataTransfer.getData("text/uri-list")||"").split(/\r?\n/).find(x=>/^https?:\/\//i.test(x.trim()));
-  if(uri)return uri.trim();
-  const html=String(dataTransfer.getData("text/html")||"");
-  if(html){
-    const doc=new DOMParser().parseFromString(html,"text/html");
-    const src=doc.querySelector("img")?.src;
-    if(/^https?:\/\//i.test(src||""))return src;
-  }
-  const text=String(dataTransfer.getData("text/plain")||"").trim();
-  return /^https?:\/\//i.test(text)?text:"";
-}
-
-function setupAdminMediaManager(){
-  const input=$("adminImageFileInput");
-  const choose=$("adminChooseImagesButton");
-  const drop=$("adminMediaDropzone");
-  const urlInput=$("adminImageUrlInput");
-  const addUrl=$("adminAddImageUrlButton");
-
-  if(choose)choose.onclick=()=>input?.click();
-  if(input)input.onchange=async()=>{
-    await addAdminImageFiles(input.files);
-    input.value="";
-  };
-
-  if(drop&&!drop.dataset.ready){
-    drop.dataset.ready="1";
-    ["dragenter","dragover"].forEach(type=>drop.addEventListener(type,e=>{
-      e.preventDefault();drop.classList.add("is-dragover");
-    }));
-    ["dragleave","drop"].forEach(type=>drop.addEventListener(type,e=>{
-      e.preventDefault();drop.classList.remove("is-dragover");
-    }));
-    drop.addEventListener("drop",async e=>{
-      const files=[...(e.dataTransfer?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));
-      if(files.length){await addAdminImageFiles(files);return;}
-      const url=extractDroppedImageUrl(e.dataTransfer);
-      if(url)addAdminImageUrl(url);
-    });
-    drop.addEventListener("click",()=>input?.click());
-    drop.addEventListener("keydown",e=>{
-      if(e.key==="Enter"||e.key===" "){e.preventDefault();input?.click();}
-    });
-  }
-
-  if(addUrl)addUrl.onclick=()=>{
-    addAdminImageUrl(urlInput?.value);
-    if(urlInput)urlInput.value="";
-  };
-
-  if(!document.body.dataset.adminMediaPasteReady){
-    document.body.dataset.adminMediaPasteReady="1";
-    document.addEventListener("paste",async e=>{
-      const panel=document.querySelector('[data-admin-panel="devices"].active');
-      if(!panel||$("adminCenter")?.classList.contains("hidden"))return;
-      const files=[...(e.clipboardData?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));
-      if(files.length){
-        e.preventDefault();
-        await addAdminImageFiles(files);
-      }
-    });
-  }
-}
-
-async function saveAdminDevices(){
-  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({
-    device_id:d.dataset.deviceId,
-    display_name:d.querySelector(".admin-device-display")?.value||"",
-    location_name:d.querySelector(".admin-device-location")?.value||"",
-    description:d.querySelector(".admin-device-description")?.value||"",
-    map_description:d.querySelector(".admin-device-map-description")?.value||"",
-    latitude:d.querySelector(".admin-device-latitude")?.value||null,
-    longitude:d.querySelector(".admin-device-longitude")?.value||null,
-    images:adminDeviceImagesFromCard(d),
-    video_url:d.querySelector(".admin-device-video")?.value||""
-  }));
-
-  const b=$("saveDevicesButton");
-  if(b)b.disabled=true;
-  setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
-
-  try{
-    await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});
-    await loadPublicDisplayConfig();
-    renderAdminDevices();
-    setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัด แผนที่ และรูปภาพแล้ว","success");
-  }catch(e){
-    setAuthMessage("deviceSaveMessage",e.message,"error");
-  }finally{
-    if(b)b.disabled=false;
-  }
-}
+function adminDeviceImagesFromCard(card){return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES);}
+function setAdminDeviceImagesToCard(card,images){const f=card?.querySelector(".admin-device-images");if(f)f.value=(images||[]).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");}
+function switchAdminDevice(id){activeAdminDeviceId=id;document.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.classList.toggle("active",b.dataset.adminDeviceTab===id));document.querySelectorAll(".admin-device-card").forEach(c=>c.classList.toggle("active",c.dataset.deviceId===id));syncAdminActiveMediaFields();renderAdminMediaManager();refreshAdminMapEditor();}
+function syncAdminActiveMediaFields(){const c=adminMapSelectedCard();if(!c)return;const title=(c.querySelector(".admin-device-display")?.value||c.dataset.deviceId).trim();if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;const v=$("adminActiveVideoInput");if(v){v.value=c.querySelector(".admin-device-video")?.value||"";v.oninput=()=>{const t=adminMapSelectedCard()?.querySelector(".admin-device-video");if(t)t.value=v.value;};}}
+function renderAdminDevices(){const root=$("adminDeviceList"),tabs=$("adminDeviceTabs");if(!root||!tabs)return;const ds=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];if(!ds.some(d=>d.device_id===activeAdminDeviceId))activeAdminDeviceId=ds[0]?.device_id||"Number 1";tabs.innerHTML=ds.map((d,i)=>`<button type="button" class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}" data-admin-device-tab="${esc(d.device_id)}"><span>${i+1}</span><b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b></button>`).join("");root.innerHTML=ds.map((d,i)=>`<div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}"><div class="admin-device-card-head"><h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} • เปลี่ยนไม่ได้</div></div><label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label><label class="admin-field">ชื่อตำแหน่ง<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label><label class="admin-field">คำอธิบายจุดตรวจวัด<textarea class="admin-device-description" maxlength="900" rows="4">${esc(d.description||"")}</textarea><small>ใช้กับข้อมูลจุดตรวจวัดบน Dashboard</small></label><label class="admin-field">รายละเอียดในแถบด้านข้างแผนที่<textarea class="admin-device-map-description" maxlength="2000" rows="6">${esc(d.map_description||"")}</textarea><small>แสดงเฉพาะเมื่อกดจุดบนแผนที่</small></label><div class="admin-device-map-fields"><label class="admin-field">Latitude<input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}"></label><label class="admin-field">Longitude<input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}"></label></div><textarea class="admin-device-images hidden">${esc(deviceImageList(d).join("\n"))}</textarea><input class="admin-device-video hidden" value="${esc(d.video_url||"")}"></div>`).join("");tabs.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.onclick=()=>switchAdminDevice(b.dataset.adminDeviceTab));root.querySelectorAll(".admin-device-display").forEach(el=>el.oninput=()=>{const c=el.closest(".admin-device-card"),b=tabs.querySelector(`[data-admin-device-tab="${CSS.escape(c.dataset.deviceId)}"] b`);if(b)b.textContent=el.value.trim()||c.dataset.deviceId;syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});});root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>el.onchange=()=>refreshAdminMapEditor());setupAdminMediaManager();switchAdminDevice(activeAdminDeviceId);}
+function renderAdminDevicePreview(){syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});}
+function adminMediaSetMessage(text,type=""){const e=$("adminMediaMessage");if(!e)return;e.textContent=text||"";e.classList.toggle("is-error",type==="error");e.classList.toggle("is-success",type==="success");}
+function renderAdminMediaManager(){const g=$("adminMediaGallery"),c=adminMapSelectedCard();if(!g||!c)return;const imgs=adminDeviceImagesFromCard(c);if(!imgs.length){g.innerHTML='<div class="admin-media-empty"><b>ยังไม่มีรูปของจุดนี้</b><span>เลือกไฟล์ ลากวาง หรือ Ctrl+V ได้</span></div>';return;}g.innerHTML=imgs.map((src,i)=>`<article class="admin-media-item${i===0?" is-cover":""}" draggable="true" data-media-index="${i}"><div class="admin-media-thumb"><img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}</div><div class="admin-media-item-actions"><button type="button" data-media-cover="${i}" ${i===0?"disabled":""}>★ หลัก</button><button type="button" data-media-left="${i}" ${i===0?"disabled":""}>←</button><button type="button" data-media-right="${i}" ${i===imgs.length-1?"disabled":""}>→</button><button type="button" class="danger" data-media-delete="${i}">ลบ</button></div></article>`).join("");const move=(a,b)=>{const n=adminDeviceImagesFromCard(c);if(a<0||b<0||a>=n.length||b>=n.length||a===b)return;const[p]=n.splice(a,1);n.splice(b,0,p);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();};g.querySelectorAll("[data-media-cover]").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.mediaCover),n=adminDeviceImagesFromCard(c);if(i>0){const[p]=n.splice(i,1);n.unshift(p);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();}});g.querySelectorAll("[data-media-delete]").forEach(b=>b.onclick=()=>{const n=adminDeviceImagesFromCard(c);n.splice(Number(b.dataset.mediaDelete),1);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();});g.querySelectorAll("[data-media-left]").forEach(b=>b.onclick=()=>move(Number(b.dataset.mediaLeft),Number(b.dataset.mediaLeft)-1));g.querySelectorAll("[data-media-right]").forEach(b=>b.onclick=()=>move(Number(b.dataset.mediaRight),Number(b.dataset.mediaRight)+1));g.querySelectorAll(".admin-media-item").forEach(x=>{x.ondragstart=()=>adminMediaDragIndex=Number(x.dataset.mediaIndex);x.ondragover=e=>e.preventDefault();x.ondrop=e=>{e.preventDefault();move(adminMediaDragIndex,Number(x.dataset.mediaIndex));adminMediaDragIndex=null;};});}
+function loadImageElementFromFile(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),img=new Image();img.onload=()=>{URL.revokeObjectURL(u);ok(img)};img.onerror=()=>{URL.revokeObjectURL(u);no(new Error("อ่านรูปภาพไม่สำเร็จ"))};img.src=u;});}
+async function optimizeAdminLocationImage(file){if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||""))throw new Error("รองรับ JPG, PNG และ WEBP");if(file.size>10*1024*1024)throw new Error("รูปใหญ่เกิน 10 MB");const img=await loadImageElementFromFile(file);let max=1200,q=.76;for(let pass=0;pass<7;pass++){const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(img,0,0,cv.width,cv.height);const data=cv.toDataURL("image/jpeg",q);if(data.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return data;max=Math.round(max*.82);q=Math.max(.55,q-.05);}throw new Error("รูปยังใหญ่เกินไปหลังย่อ");}
+async function addAdminImageFiles(list){const c=adminMapSelectedCard();if(!c)return;const imgs=adminDeviceImagesFromCard(c),files=[...(list||[])].filter(f=>String(f.type||"").startsWith("image/"));let added=0;adminMediaSetMessage("กำลังเตรียมรูป...");for(const f of files){if(imgs.length>=ADMIN_DEVICE_MAX_IMAGES)break;try{imgs.push(await optimizeAdminLocationImage(f));added++;}catch(e){adminMediaSetMessage(e.message,"error");}}setAdminDeviceImagesToCard(c,imgs);renderAdminMediaManager();if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึก`,"success");}
+function addAdminImageUrl(raw){const c=adminMapSelectedCard(),u=String(raw||"").trim();if(!c)return;if(!/^https?:\/\//i.test(u)){adminMediaSetMessage("URL ต้องขึ้นต้นด้วย http:// หรือ https://","error");return;}const imgs=adminDeviceImagesFromCard(c);if(imgs.length>=ADMIN_DEVICE_MAX_IMAGES){adminMediaSetMessage("รูปครบ 8 รูปแล้ว","error");return;}imgs.push(u);setAdminDeviceImagesToCard(c,imgs);renderAdminMediaManager();}
+function setupAdminMediaManager(){const input=$("adminImageFileInput"),choose=$("adminChooseImagesButton"),drop=$("adminMediaDropzone"),url=$("adminImageUrlInput"),add=$("adminAddImageUrlButton");if(choose)choose.onclick=()=>input?.click();if(input)input.onchange=async()=>{await addAdminImageFiles(input.files);input.value="";};if(drop&&!drop.dataset.ready){drop.dataset.ready="1";["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("is-dragover")}));["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("is-dragover")}));drop.addEventListener("drop",async e=>{const fs=[...(e.dataTransfer?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));if(fs.length)await addAdminImageFiles(fs);});drop.onclick=()=>input?.click();}if(add)add.onclick=()=>{addAdminImageUrl(url?.value);if(url)url.value="";};if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if($("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const fs=[...(e.clipboardData?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));if(fs.length){e.preventDefault();await addAdminImageFiles(fs);}});}}
+async function saveAdminDevices(){const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d),video_url:d.querySelector(".admin-device-video")?.value||""}));const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดแล้ว","success");}catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}}
 
 function renderAnnouncementPreview(){
   const root=$("announcementPreview");if(!root)return;const enabled=$("announcementEnabled")?.checked;const sev=$("announcementSeverity")?.value||"info";const title=$("announcementTitle")?.value.trim()||"ประกาศจากระบบ";const msg=$("announcementMessage")?.value.trim()||"ตัวอย่างข้อความประกาศ";
@@ -13947,17 +12938,7 @@ function setupRemoteWiFiManagement(){
 
 (function setupAuthCmsV31(){
   const run=async()=>{
-    // =====================================================
-    // V4.3 — CRITICAL AUTH BINDINGS FIRST
-    // ปุ่มเข้าสู่ระบบต้องทำงานแม้ module รอง เช่น Map/Wi-Fi/AI มี error
-    // =====================================================
-    bindCriticalAuthUI();
-
-    try{
-      setupRemoteWiFiManagement();
-    }catch(err){
-      console.error("Wi-Fi management setup error:",err);
-    }
+    try{setupRemoteWiFiManagement();}catch(err){console.error("Wi-Fi setup error:",err);}
 
     // V36.61 — do not let /auth/me compete with the critical Overview request.
     // All account controls are bound immediately; a saved session is verified
@@ -13971,24 +12952,28 @@ function setupRemoteWiFiManagement(){
       openNotificationDetailFromUrl();
     };
     if(authToken){
-      setTimeout(()=>{
-        restoreSavedSession().catch(e=>console.warn("Auth restore error:",e));
-      },0);
+      setTimeout(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),250);
     }else{
       authUser=null;
-      saveCachedAuthUser(null);
-      try{
-        updateAccountUI();
-      }catch(err){
-        console.error("Account UI initialization error:",err);
-        const text=$("accountButtonText");
-        if(text)text.textContent="เข้าสู่ระบบ";
-      }
+      updateAccountUI();
       setTimeout(openNotificationDetailFromUrl,250);
     }
-
-    document.querySelectorAll("[data-admin-close]").forEach(x=>bindOnce(x,"AdminClose","click",closeAdminCenter));
-    document.querySelectorAll("[data-admin-back]").forEach(x=>bindOnce(x,"AdminBack","click",backFromAdminCenter));
+    $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
+    document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
+    document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
+    document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromAdminCenter));
+    document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
+    document.querySelectorAll("[data-toggle-password]").forEach(button=>button.addEventListener("click",()=>{
+      const input=$(button.dataset.togglePassword);
+      if(!input)return;
+      const show=input.type==="password";
+      input.type=show?"text":"password";
+      button.classList.toggle("is-visible",show);
+      button.setAttribute("aria-pressed",String(show));
+      button.setAttribute("aria-label",show?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
+    }));
+    $("openForgotPasswordButton")?.addEventListener("click",openForgotPassword);
+    $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
     $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
 // =====================================================
@@ -14015,6 +13000,8 @@ function setupRemoteWiFiManagement(){
       }catch(err){alert(err.message);}
     });
 
+    $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
+    $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
     $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
     $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
@@ -14093,22 +13080,12 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 });
 
 // =====================================================
-// MAP V5 — LAZY STARTUP
+// MAP V2 STARTUP
 // =====================================================
-(function startMapV5(){
+(function startMapV2(){
   const run=()=>{
-    safeStartup("map controls",setupMonitoringMapUi);
+    setupMonitoringMapUi();
 
-    let resizeTimer=null;
-    const refreshMaps=()=>{
-      clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(()=>{
-        try{monitoringMap?.invalidateSize();}catch(err){console.warn("Public map resize error:",err);}
-        try{adminDeviceMap?.invalidateSize();}catch(err){console.warn("Admin map resize error:",err);}
-      },140);
-    };
-    window.addEventListener("resize",refreshMaps,{passive:true});
-    window.addEventListener("orientationchange",refreshMaps,{passive:true});
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
