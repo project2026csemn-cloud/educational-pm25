@@ -7273,12 +7273,13 @@ html:`<div class="help-intro-card"><b>คู่มือรวมสำหรั
 },
 
 overviewQuality:{
-title:"🌿 ภาพรวมคุณภาพอากาศ",
-html:`<div class="help-intro-card"><b>หัวข้อนี้ตอบว่า “ตอนนี้ภาพรวมของพื้นที่เป็นอย่างไร?”</b><span>สรุปข้อมูลล่าสุดจากจุดตรวจวัดที่พร้อมใช้งาน</span></div>
-<section class="help-section"><h4>PM2.5 และ PM10</h4><p>ช่องค่าฝุ่นด้านบนสลับ PM2.5 และ PM10 ทุกประมาณ 5 วินาที โดยเป็นค่าเฉลี่ยปัจจุบันจากจุดที่พร้อมใช้งาน ค่านี้ไม่ใช่ค่าเฉลี่ย 24 ชั่วโมง</p></section>
-<section class="help-section"><h4>อุณหภูมิและความชื้นเฉลี่ย</h4><p>ช่วยให้เห็นสภาพแวดล้อมโดยรวม อุณหภูมิและความชื้นมีระดับของตัวเอง และยังใช้พิจารณาร่วมกันในดัชนีความร้อนด้วย</p></section>
-<section class="help-section"><h4>จุดตรวจวัดที่พร้อม</h4><p>บอกจำนวนจุดที่ระบบยังยืนยันข้อมูลปัจจุบันได้จากทั้งหมด 3 จุด</p></section>
-<div class="help-tip"><b>เหมาะสำหรับ</b><span>ดูสถานการณ์เร็ว ๆ ก่อนเปิดดูรายละเอียดรายจุด</span></div>`
+title:'🌿 คุณภาพอากาศโดยรวมในพื้นที่',
+html:`<div class="help-natural-copy">สรุปสถานการณ์คุณภาพอากาศของพื้นที่จากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่ระบบยังยืนยันข้อมูลได้ โดยแสดงค่าเฉลี่ย ระดับคุณภาพอากาศ จำนวนจุดที่นำมาคำนวณ และเวลาของข้อมูลล่าสุด เพื่อให้มองเห็นภาพรวมได้ทันที หากต้องการดูว่าแต่ละตำแหน่งมีค่าเท่าใด สามารถกดไปยังหน้าจุดตรวจวัดเพื่อดูรายละเอียดรายจุดได้</div>`
+},
+
+currentConditions:{
+title:'🌤️ สภาพแวดล้อมขณะนี้',
+html:`<div class="help-natural-copy">รวบรวมค่าหลักที่ควรรู้ในขณะนี้ ได้แก่ PM2.5 อุณหภูมิ ความชื้น และดัชนีความร้อน แต่ละการ์ดจะแสดงค่าปัจจุบัน ระดับสถานะ ตัวละคร และข้อความที่ช่วยอธิบายความรู้สึกของสภาพแวดล้อม ทำให้เข้าใจสถานการณ์ได้ง่ายโดยไม่ต้องตีความตัวเลขเพียงอย่างเดียว โดยดัชนีความร้อนเป็นค่าที่คำนวณจากอุณหภูมิและความชื้นร่วมกัน</div>`
 },
 
 overviewNodes:{
@@ -7289,15 +7290,8 @@ html:`<div class="help-intro-card"><b>ดูว่าจุดใดพร้อ
 },
 
 smartSummary:{
-title:"✦ สรุปสถานการณ์",
-html:`<div class="help-intro-card"><b>สรุปสถานการณ์ปัจจุบันเป็น 6 เรื่อง</b><span>แต่ละช่องตอบคนละคำถาม และเชื่อมกันเฉพาะส่วนที่ควรอ่านร่วมกัน</span></div>
-<section class="help-section"><h4>🌿 คุณภาพอากาศ</h4><p>สลับแสดง PM2.5 และ PM10 ทุกประมาณ 5 วินาทีให้ตรงกับค่าฝุ่นด้านบน โดย PM2.5 ใช้สื่อสารระดับคุณภาพอากาศปัจจุบัน ส่วน PM10 แสดงค่าเฉลี่ยย้อนหลัง 24 ชั่วโมงเพื่อเทียบกับค่าอ้างอิงของประเทศไทย 120 µg/m³ จึงไม่เอาค่า PM10 ที่วัดเพียงครั้งเดียวไปตัดสินว่าเกินมาตรฐาน 24 ชั่วโมง</p></section>
-<section class="help-section"><h4>☀️ ดัชนีความร้อน (Heat Index)</h4><p>บอกความร้อนที่ร่างกายอาจรู้สึกเมื่อพิจารณา <b>อุณหภูมิและความชื้นร่วมกัน</b> จึงไม่ใช่ค่าเดียวกับอุณหภูมิอากาศ</p></section>
-<section class="help-section"><h4>🌡️ อุณหภูมิ</h4><p>แปลผลเป็น หนาวจัด / หนาว / เย็น / ปกติ / ร้อน / ร้อนจัด เพื่อช่วยเฝ้าระวังเบื้องต้น การเทียบระดับนี้ไม่ใช่ผลตัดสินมาตรฐานสุขภาพ</p></section>
-<section class="help-section"><h4>💧 ความชื้น</h4><p>แปลผลเป็น ต่ำ / ปกติ / สูง / สูงมาก ตามเกณฑ์เฝ้าระวังของโครงการ ควรอ่านร่วมกับอุณหภูมิและดัชนีความร้อนเมื่อประเมินความรู้สึกร้อน</p></section>
-<section class="help-section"><h4>📍 จุดตรวจวัด</h4><p>บอกจำนวนจุดที่พร้อมแสดงข้อมูลปัจจุบัน เพื่อให้รู้ว่าภาพรวมในขณะนั้นมีข้อมูลจากกี่จุด</p></section>
-<section class="help-section"><h4>🏃 กิจกรรมกลางแจ้ง</h4><p>เป็นคำแนะนำเบื้องต้นจากสถานการณ์ฝุ่นและสภาพความร้อน ใช้ประกอบการตัดสินใจ ไม่ใช่คำแนะนำทางการแพทย์</p></section>
-<div class="help-warning">ส่วนนี้สรุป “สถานการณ์ปัจจุบัน” ไม่ใช่ข้อมูลย้อนหลังและไม่ใช่ค่าคาดการณ์อนาคต</div>`
+title:'💡 คำแนะนำขณะนี้',
+html:`<div class="help-natural-copy">นำค่า PM2.5 อุณหภูมิ ความชื้น และดัชนีความร้อนในขณะนั้นมาสรุปเป็นสิ่งที่ควรทำ เช่น ทำกิจกรรมกลางแจ้งได้ ดื่มน้ำ พักในที่ร่ม ลดกิจกรรมหนัก หรือสวมหน้ากาก หากมีหลายค่าที่ผิดปกติพร้อมกัน ระบบจะเลือกความเสี่ยงที่สำคัญที่สุดขึ้นมาเป็นคำแนะนำหลักก่อน เพื่อให้ผู้ใช้งานตัดสินใจได้ง่ายและไม่สับสน คำแนะนำนี้เป็นข้อมูลเบื้องต้นจากระบบและไม่ใช่คำวินิจฉัยทางการแพทย์</div>`
 },
 
 monitoringPage:{
@@ -11232,18 +11226,33 @@ function applyManagedHelpOverrides(help){
 function nl2brEsc(value){return esc(String(value||"")).replace(/\n/g,"<br>");}
 function managedHelpHtml(model){
   const blocks=Array.isArray(model?.blocks)?model.blocks:[];
-  if(!blocks.length)return `<div class="help-intro-card"><b>${esc(model?.title||"คำอธิบาย")}</b><span>ยังไม่มีคำอธิบายเพิ่มเติม</span></div>`;
-  return blocks.map((b,i)=>`<section class="help-section"><h4>${esc(b?.heading||`หัวข้อ ${i+1}`)}</h4><p>${nl2brEsc(b?.description||"")}</p></section>`).join("");
+  if(!blocks.length)return `<div class="help-natural-copy">ยังไม่มีคำอธิบายเพิ่มเติม</div>`;
+  return blocks.map((b)=>{
+    const heading=String(b?.heading||"").trim();
+    const description=String(b?.description||"").trim();
+    return `<section class="help-section help-section-natural">
+      ${heading?`<h4>${esc(heading)}</h4>`:""}
+      ${description?`<p>${nl2brEsc(description)}</p>`:""}
+    </section>`;
+  }).join("");
 }
 function defaultHelpModel(key){
   const src=HELP_CONTENT?.[key];
   const title=String(src?.title||"คำอธิบาย");
   const box=document.createElement("div");box.innerHTML=String(src?.html||"");
-  let blocks=[...box.querySelectorAll(".help-section")].map((sec,i)=>({id:`block-${i+1}`,heading:sec.querySelector("h4")?.textContent?.trim()||`หัวข้อ ${i+1}`,description:sec.querySelector("p")?.textContent?.trim()||sec.textContent.trim()}));
+  let blocks=[...box.querySelectorAll(".help-section")].map((sec,i)=>({
+    id:`block-${i+1}`,
+    heading:sec.querySelector("h4")?.textContent?.trim()||"",
+    description:sec.querySelector("p")?.textContent?.trim()||sec.textContent.trim()
+  }));
   if(!blocks.length){
+    const natural=box.querySelector(".help-natural-copy");
     const intro=box.querySelector(".help-intro-card");
-    const text=intro?.querySelector("span")?.textContent?.trim()||box.textContent.trim();
-    if(text)blocks=[{id:"block-1",heading:"คำอธิบาย",description:text}];
+    const text=
+      natural?.textContent?.trim()||
+      intro?.querySelector("span")?.textContent?.trim()||
+      box.textContent.trim();
+    if(text)blocks=[{id:"block-1",heading:"",description:text}];
   }
   return {title,blocks};
 }
@@ -11273,7 +11282,7 @@ function renderHelpBlockEditor(blocks){
 }
 function createHelpBlockElement(block={},index=0){
   const d=document.createElement("div");d.className="admin-help-block";d.dataset.blockId=block.id||`block-${Date.now()}-${index}`;
-  d.innerHTML=`<div class="admin-help-block-head"><b>หัวข้อ ${index+1}</b><button type="button" class="admin-remove-block">ลบ</button></div><label class="admin-field">หัวข้อเรื่อง<input class="admin-block-heading" type="text" maxlength="120"></label><label class="admin-field">คำอธิบาย<textarea class="admin-block-description" rows="5" maxlength="1800"></textarea></label>`;
+  d.innerHTML=`<div class="admin-help-block-head"><b>หัวข้อ ${index+1}</b><button type="button" class="admin-remove-block">ลบ</button></div><label class="admin-field">หัวข้อย่อย (ไม่บังคับ)<input class="admin-block-heading" type="text" maxlength="120" placeholder="เว้นว่างได้ หากต้องการคำอธิบายต่อเนื่อง"></label><label class="admin-field">คำอธิบาย<textarea class="admin-block-description" rows="5" maxlength="1800"></textarea></label>`;
   d.querySelector(".admin-block-heading").value=block.heading||"";d.querySelector(".admin-block-description").value=block.description||"";
   d.querySelector(".admin-remove-block").addEventListener("click",()=>{d.remove();renumberHelpBlocks();renderHelpPreview();});
   d.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderHelpPreview));return d;
