@@ -11220,7 +11220,18 @@ function setupMonitoringMapUi(){
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.addEventListener("click",()=>setMapBasemap("public",btn.dataset.publicBasemap));
   });
+
   renderMonitoringMapNodeTabs();
+
+  // V4.2 FIX:
+  // ก่อนหน้านี้ setup มีแค่สร้างแท็บ แต่ไม่เคยสร้าง Leaflet map ครั้งแรก
+  // applyPublicDisplayConfig() ก็ render map เฉพาะเมื่อ monitoringMap มีอยู่แล้ว
+  // จึงเกิดกล่องว่างตลอดแม้ Leaflet โหลดสำเร็จ
+  const map=ensureMonitoringMap();
+  if(map){
+    renderMonitoringMap({fit:true});
+    setTimeout(()=>map.invalidateSize(),120);
+  }
 }
 
 function adminMapSelectedDeviceId(){
@@ -11380,6 +11391,7 @@ if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev===
 }
 
 renderMonitoringMapNodeTabs();
+if(!monitoringMap)ensureMonitoringMap();
 if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
 if(selectedMonitoringDeviceId){
   const selected=configDevice(selectedMonitoringDeviceId);
