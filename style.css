@@ -24413,3 +24413,248 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-metric-extremes,.current-support-range{grid-template-columns:1fr}
   .current-metric-average>b{font-size:21px}
 }
+
+
+/* ============================================================
+   V8.3 — SIMPLE COMPARISON + MONITORING NODE EFFECTS
+   Layout preserved; effects use mostly transform/opacity.
+   ============================================================ */
+
+/* ---------- Comparison: easier to read ---------- */
+.current-summary-board .current-summary-header p{
+  font-size:13px!important;
+  line-height:1.6!important;
+  color:#94a3b8!important;
+}
+.current-summary-board .current-metric-card{
+  padding:18px!important;
+}
+.current-summary-board .current-metric-card-head h3{
+  font-size:16px!important;
+}
+.current-summary-board .current-metric-card-head span{
+  font-size:10px!important;
+}
+.current-summary-board .current-metric-average>b{
+  font-size:clamp(25px,2.2vw,31px)!important;
+}
+.current-summary-board .current-metric-average>small{
+  font-size:11px!important;
+}
+.current-summary-board .current-metric-extremes{
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+}
+.current-summary-board .current-metric-extremes>div{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:9px 10px!important;
+}
+.current-summary-board .current-metric-extremes span{
+  font-size:10px!important;
+  white-space:nowrap!important;
+}
+.current-summary-board .current-metric-extremes b{
+  order:3;
+  margin:0!important;
+  font-size:11px!important;
+  text-align:right!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.current-summary-board .current-metric-extremes small{
+  order:2;
+  margin:0!important;
+  font-size:10px!important;
+  color:#94a3b8!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.current-support-grid-simple{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.current-support-card-simple{
+  display:grid!important;
+  grid-template-columns:minmax(150px,.65fr) minmax(180px,.75fr) minmax(220px,1fr)!important;
+  align-items:center!important;
+  gap:16px!important;
+  padding:14px 16px!important;
+}
+.current-support-card-simple .current-support-average-simple b{
+  font-size:18px!important;
+}
+.current-support-card-simple .current-support-average-simple span{
+  font-size:10px!important;
+}
+.current-support-card-simple>p{
+  margin:0!important;
+  color:#94a3b8!important;
+  font-size:11px!important;
+  line-height:1.55!important;
+}
+.current-support-head span{font-size:12px!important}
+.current-support-head small{font-size:10px!important}
+
+@media(max-width:1180px){
+  .current-support-grid-simple{grid-template-columns:1fr!important}
+}
+@media(max-width:700px){
+  .current-support-card-simple{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+}
+
+/* ---------- Monitoring Nodes: visual polish, same layout ---------- */
+.monitoring-card .node{
+  --node-accent:100,116,139;
+  isolation:isolate;
+  position:relative!important;
+  overflow:hidden!important;
+  transform:translateZ(0);
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease,
+    background-color .22s ease!important;
+  background:
+    radial-gradient(circle at 92% 8%,rgba(var(--node-accent),.08),transparent 32%),
+    #091827!important;
+}
+.monitoring-card .node.node-online{
+  --node-accent:52,211,153;
+  border-color:rgba(52,211,153,.13)!important;
+}
+.monitoring-card .node.node-offline{
+  --node-accent:100,116,139;
+  border-color:rgba(100,116,139,.16)!important;
+}
+
+/* soft light in the corner */
+.monitoring-card .node::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:170px;
+  height:170px;
+  right:-72px;
+  top:-92px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(var(--node-accent),.13),rgba(var(--node-accent),0) 68%);
+  opacity:.72;
+  pointer-events:none;
+  transform:translate3d(0,0,0);
+}
+
+/* subtle shine line, desktop only */
+@keyframes monitoringNodeSweep{
+  0%,72%{transform:translate3d(-130%,0,0);opacity:0}
+  78%{opacity:.18}
+  90%{opacity:.08}
+  100%{transform:translate3d(250%,0,0);opacity:0}
+}
+.monitoring-card .node.node-online > .flex.justify-between::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:34%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(110,231,183,.72),transparent);
+  pointer-events:none;
+  animation:monitoringNodeSweep 6.8s ease-in-out infinite;
+}
+.monitoring-card .node > .flex.justify-between{
+  position:relative;
+}
+
+/* status pulse */
+@keyframes monitoringStatusPulse{
+  0%,100%{opacity:1;transform:scale(1);text-shadow:0 0 0 rgba(52,211,153,0)}
+  50%{opacity:.82;transform:scale(.94);text-shadow:0 0 9px rgba(52,211,153,.55)}
+}
+.monitoring-card .status-online-dot{
+  display:inline-block;
+  transform-origin:center;
+  animation:monitoringStatusPulse 2.4s ease-in-out infinite;
+}
+
+/* changed-value flash; runs only when a value actually changes */
+@keyframes nodeValueUpdated{
+  0%{
+    color:#fff;
+    text-shadow:0 0 0 rgba(34,211,238,0);
+    transform:scale(1);
+  }
+  35%{
+    color:#a5f3fc;
+    text-shadow:0 0 13px rgba(34,211,238,.62);
+    transform:scale(1.045);
+  }
+  100%{
+    color:#fff;
+    text-shadow:0 0 0 rgba(34,211,238,0);
+    transform:scale(1);
+  }
+}
+.monitoring-card .node-value-updated{
+  display:inline-block;
+  animation:nodeValueUpdated .7s ease-out both;
+}
+
+/* make status/card feel alive without changing content placement */
+@media(hover:hover) and (pointer:fine){
+  .monitoring-card .node:hover{
+    transform:translateY(-3px) translateZ(0);
+    border-color:rgba(var(--node-accent),.30)!important;
+    box-shadow:
+      0 15px 34px rgba(0,0,0,.18),
+      0 0 0 1px rgba(var(--node-accent),.05),
+      0 0 26px rgba(var(--node-accent),.055)!important;
+  }
+  .monitoring-card .node:hover::after{
+    opacity:1;
+  }
+}
+
+/* Slightly cleaner metric hover on desktop, no layout change */
+@media(hover:hover) and (pointer:fine){
+  .monitoring-card .node .grid>span{
+    border-radius:7px;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .monitoring-card .node .grid>span:hover{
+    background:rgba(var(--node-accent),.055);
+    color:#cbd5e1!important;
+  }
+}
+
+/* Mobile: keep it light; no continuous sweep or hover work */
+@media(max-width:760px){
+  .monitoring-card .node.node-online > .flex.justify-between::after{
+    animation:none!important;
+    display:none!important;
+  }
+  .monitoring-card .node::after{
+    width:120px;
+    height:120px;
+    right:-58px;
+    top:-66px;
+    opacity:.48;
+  }
+}
+
+/* Accessibility / low-motion preference */
+@media(prefers-reduced-motion:reduce){
+  .monitoring-card .node,
+  .monitoring-card .status-online-dot,
+  .monitoring-card .node-value-updated,
+  .monitoring-card .node.node-online > .flex.justify-between::after{
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+  }
+}
