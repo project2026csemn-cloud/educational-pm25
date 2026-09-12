@@ -2323,285 +2323,99 @@ return"ยังไม่พบข้อจำกัดเด่นจากฝ�
 // CURRENT ENVIRONMENT
 // =====================================================
 
-function currentCfg(){
-
-return CURRENT_METRIC_CONFIG[
-currentMetric
-]||
-CURRENT_METRIC_CONFIG.pm25;
-
-}
-
-function currentValue(v){
-
-const c=
-currentCfg();
-
-return(
-!hasFiniteSensorValue(v)
-)
-?"--"
-:`${fmt(v)} ${c.unit}`;
-
-}
-
-function qualityBadge(l,customLabel=null){
-
-const b=
-$("qualityBadge");
-
-if(!b){
-return;
-}
-
-b.className=
-"current-quality-badge";
-
-const m={
-
-normal:[
-"ปกติ",
-"current-quality-normal"
-],
-
-warning:[
-"เฝ้าระวัง",
-"current-quality-warning"
-],
-
-critical:[
-"สูง",
-"current-quality-critical"
-],
-
-info:[
-"ข้อมูลประกอบ",
-"current-quality-info"
-],
-
-no_data:[
-"รอข้อมูล",
-"current-quality-unavailable"
-]
-
+const CURRENT_SUMMARY_FIELDS={
+  pm25:{unit:"µg/m³"},
+  pm10:{unit:"µg/m³"},
+  temperature:{unit:"°C"},
+  humidity:{unit:"%"},
+  pm1:{unit:"µg/m³"},
+  light:{unit:"lux"}
 };
 
-const x=
-m[l]||
-m.no_data;
+function currentSummaryUsable(field){
+  return latestNodes.filter(n=>
+    ["online","sleep"].includes(getNodeStatus(n)) &&
+    hasFiniteSensorValue(n?.[field])
+  );
+}
 
-b.textContent=
-customLabel||x[0];
+function currentSummaryValue(field,value){
+  if(!hasFiniteSensorValue(value))return"--";
+  const unit=CURRENT_SUMMARY_FIELDS[field]?.unit||"";
+  const n=Number(value);
+  const formatted=field==="light"
+    ?n.toLocaleString("th-TH",{minimumFractionDigits:1,maximumFractionDigits:1})
+    :n.toFixed(1);
+  return `${formatted} ${unit}`;
+}
 
-b.classList.add(
-x[1]
-);
-
+function currentSummaryNodeLabel(node){
+  if(!node)return"--";
+  const no=nodeNo(node.device_id);
+  const cfg=(publicDisplayConfig?.devices||[]).find(d=>d.device_id===node.device_id);
+  return String(cfg?.display_name||`จุดตรวจวัด ${no}`);
 }
 
 function resetCurrent(reason){
-
-const c=
-currentCfg();
-
-if(
-$("currentOverallLabel")
-){
-
-$("currentOverallLabel").textContent=
-c.label+
-" ภาพรวม";
-
-}
-
-for(
-const id of[
-"currentOverallValue",
-"currentHighestValue",
-"currentHighestNode",
-"currentWatchNode"
-]
-){
-
-if($(id)){
-
-$(id).textContent=
-"--";
-
-}
-
-}
-
-if(
-$("currentOverallDetail")
-){
-
-$("currentOverallDetail").textContent=
-"ค่าเฉลี่ยจากจุดที่ ONLINE";
-
-}
-
-if(
-$("currentWatchDetail")
-){
-
-$("currentWatchDetail").textContent=
-reason;
-
-}
-
-if(
-$("currentEnvironmentFooter")
-){
-
-$("currentEnvironmentFooter").textContent=
-reason;
-
-}
-
-qualityBadge(
-"no_data"
-);
-
+  for(const field of Object.keys(CURRENT_SUMMARY_FIELDS)){
+    for(const suffix of["avg","min","max"]){
+      const el=$(`summary-${field}-${suffix}`);
+      if(el)el.textContent="--";
+    }
+    for(const suffix of["min-node","max-node"]){
+      const el=$(`summary-${field}-${suffix}`);
+      if(el)el.textContent="--";
+    }
+  }
+  if($("currentEnvironmentFooter"))$("currentEnvironmentFooter").textContent=reason;
 }
 
 function updateCurrent(){
+  if(!apiConnectionOnline){
+    resetCurrent("ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้");
+    return;
+  }
 
-const c=
-currentCfg();
+  const fields=Object.keys(CURRENT_SUMMARY_FIELDS);
+  const participating=new Set();
 
-if(
-$("currentOverallLabel")
-){
+  for(const field of fields){
+    const usable=currentSummaryUsable(field);
+    usable.forEach(n=>participating.add(n.device_id));
 
-$("currentOverallLabel").textContent=
-c.label+
-" ภาพรวม";
+    if(!usable.length){
+      for(const suffix of["avg","min","max"]){
+        const el=$(`summary-${field}-${suffix}`);
+        if(el)el.textContent="--";
+      }
+      for(const suffix of["min-node","max-node"]){
+        const el=$(`summary-${field}-${suffix}`);
+        if(el)el.textContent="ไม่มีข้อมูล";
+      }
+      continue;
+    }
 
-}
+    const avg=usable.reduce((sum,n)=>sum+Number(n[field]),0)/usable.length;
+    const low=usable.reduce((a,b)=>Number(b[field])<Number(a[field])?b:a);
+    const high=usable.reduce((a,b)=>Number(b[field])>Number(a[field])?b:a);
 
-if(
-!apiConnectionOnline
-){
+    const avgEl=$(`summary-${field}-avg`);
+    const minEl=$(`summary-${field}-min`);
+    const maxEl=$(`summary-${field}-max`);
+    const minNode=$(`summary-${field}-min-node`);
+    const maxNode=$(`summary-${field}-max-node`);
 
-return resetCurrent(
-"ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้"
-);
+    if(avgEl)avgEl.textContent=currentSummaryValue(field,avg);
+    if(minEl)minEl.textContent=currentSummaryValue(field,low[field]);
+    if(maxEl)maxEl.textContent=currentSummaryValue(field,high[field]);
+    if(minNode)minNode.textContent=currentSummaryNodeLabel(low);
+    if(maxNode)maxNode.textContent=currentSummaryNodeLabel(high);
+  }
 
-}
-
-const usable=
-latestNodes
-.filter(
-n=>
-[
-"online",
-"sleep"
-]
-.includes(
-getNodeStatus(n)
-)&&
-hasFiniteSensorValue(
-n[currentMetric]
-)
-);
-
-if(
-!usable.length
-){
-
-return resetCurrent(
-"ไม่มีอุปกรณ์ที่มีข้อมูลสำหรับตัวแปรนี้"
-);
-
-}
-
-const avg=
-usable.reduce(
-(
-sum,
-n
-)=>
-sum+
-Number(
-n[currentMetric]
-),
-0
-)/
-usable.length;
-
-const high=
-usable.reduce(
-(
-a,
-b
-)=>
-Number(
-b[currentMetric]
-)>
-Number(
-a[currentMetric]
-)
-?b
-:a
-);
-
-const watch=
-usable
-.map(n=>{
-const v=Number(n[currentMetric]);
-const status=metricStatus(currentMetric,v);
-return{n,v,l:status.severity,label:status.label,score:status.severity==="critical"?2:status.severity==="warning"?1:0};
-})
-.filter(x=>x.score>0)
-.sort((a,b)=>b.score-a.score || (currentMetric==="temperature"?Math.abs(b.v-29)-Math.abs(a.v-29):b.v-a.v))[0];
-
-$("currentOverallValue").textContent=
-currentValue(
-avg
-);
-
-$("currentOverallDetail").textContent=
-`ค่าเฉลี่ยจาก ${usable.length} จุดที่ ONLINE`;
-
-$("currentHighestValue").textContent=
-currentValue(
-high[currentMetric]
-);
-
-$("currentHighestNode").textContent=
-`จุดตรวจวัด ${nodeNo(high.device_id)}`;
-
-const avgStatus=metricStatus(currentMetric,avg);
-qualityBadge(avgStatus.severity,avgStatus.label);
-
-$("currentWatchNode").textContent=
-watch
-?`จุดตรวจวัด ${nodeNo(watch.n.device_id)}`
-:"ไม่มี";
-
-$("currentWatchDetail").textContent=
-watch
-?`${c.label} ${currentValue(watch.v)} • ${watch.label}`
-:currentMetric==="pm25"
-?"ยังไม่พบจุดที่ PM2.5 เข้าเกณฑ์เฝ้าระวัง"
-:currentMetric==="pm10"
-?"ยังไม่พบค่ารอบล่าสุดของ PM10 สูงกว่า 120 µg/m³ • การตัดสินมาตรฐานต้องใช้ค่าเฉลี่ย 24 ชั่วโมง"
-:currentMetric==="temperature"
-?"อุณหภูมิของจุดที่มีข้อมูลอยู่ในระดับปกติ"
-:currentMetric==="humidity"
-?"ความชื้นของจุดที่มีข้อมูลอยู่ในระดับปกติ"
-:`${c.label} ใช้เป็นข้อมูลประกอบและการเปรียบเทียบ`;
-
-if(
-$("currentEnvironmentFooter")
-){
-
-$("currentEnvironmentFooter").textContent=
-`ใช้ข้อมูลล่าสุดจาก ${usable.length} / ${TOTAL_NODES} จุดตรวจวัด`;
-
-}
-
+  if($("currentEnvironmentFooter")){
+    $("currentEnvironmentFooter").textContent=
+      `ใช้ข้อมูลล่าสุดจาก ${participating.size} / ${TOTAL_NODES} จุดตรวจวัด`;
+  }
 }
 
 // =====================================================
@@ -7330,11 +7144,11 @@ html:`<div class="help-intro-card"><b>การ์ดแต่ละใบเป
 },
 
 currentAir:{
-title:"📊 เปรียบเทียบจุดตรวจวัด",
-html:`<div class="help-intro-card"><b>ใช้เปรียบเทียบตัวแปรเดียวกันระหว่างจุด</b><span>เลือก PM2.5, อุณหภูมิ, ความชื้น หรือค่าที่ต้องการ แล้วดูความแตกต่างของแต่ละจุด</span></div>
-<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>เป็นค่าเฉลี่ยจากจุดที่มีข้อมูลพร้อมในขณะนั้น ใช้ดูภาพรวม ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
-<section class="help-section"><h4>จุดที่ค่าสูงที่สุด</h4><p>ช่วยชี้ว่าจุดใดมีค่ามากที่สุดในรอบล่าสุด แต่คำว่า “สูงที่สุด” ไม่ได้แปลว่า “อันตราย” เสมอไป ต้องดูเกณฑ์ของตัวแปรนั้นด้วย</p></section>
-<section class="help-section"><h4>จุดที่ควรสนใจ</h4><p>จะแสดงเมื่อค่าที่เลือกเข้าเงื่อนไขเฝ้าระวังของตัวแปรนั้น หากไม่เข้าเงื่อนไขจะระบุว่าอยู่ในระดับปกติหรือเป็นข้อมูลประกอบ</p></section>`
+title:"📊 เปรียบเทียบข้อมูลปัจจุบัน",
+html:`<div class="help-intro-card"><b>แสดงทุกค่าพร้อมกันเพื่อเปรียบเทียบได้ทันที</b><span>ค่าหลักประกอบด้วย PM2.5, PM10, อุณหภูมิ และความชื้น ส่วน PM1.0 และแสงแสดงเป็นข้อมูลประกอบ</span></div>
+<section class="help-section"><h4>ค่าเฉลี่ยปัจจุบัน</h4><p>เป็นค่าเฉลี่ยของจุดตรวจวัดที่มีข้อมูลปัจจุบันสำหรับตัวแปรนั้น ใช้ดูภาพรวมของพื้นที่ ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
+<section class="help-section"><h4>ต่ำสุดและสูงสุด</h4><p>แสดงทั้งค่าและชื่อจุดที่ต่ำสุดหรือสูงสุด เพื่อให้เห็นความแตกต่างระหว่างตำแหน่งได้ทันที โดยคำว่า “สูงสุด” ไม่ได้หมายความว่าอันตรายเสมอไป</p></section>
+<section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงยังคงแสดงครบทั้งค่าเฉลี่ย ต่ำสุด และสูงสุด แต่จัดไว้เป็นข้อมูลประกอบเพื่อลดความสับสนกับตัวชี้วัดหลัก</p></section>`
 },
 
 alerts:{
@@ -7677,28 +7491,6 @@ setHistoryRangeMode(button.dataset.historyRangeMode);
 updateRangePickerPreviews();
 });
 });
-
-const currentSelect=
-$("currentMetric");
-
-if(currentSelect){
-
-currentSelect.value=
-currentMetric;
-
-currentSelect.addEventListener(
-"change",
-()=>{
-
-currentMetric=
-currentSelect.value;
-
-updateCurrent();
-
-}
-);
-
-}
 
 const historyNodeSelect=
 $("historyNode");
