@@ -24153,3 +24153,263 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(max-width:900px){.admin-device-tabs{display:flex;overflow-x:auto}.admin-device-tab{flex:0 0 155px}.admin-media-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-map-workspace-head,.admin-media-manager-head{flex-direction:column}.map-basemap-switch-admin{width:100%}.map-basemap-switch-admin .map-basemap-button{flex:1}}
 @media(max-width:600px){.admin-device-map-fields,.admin-coordinate-readout{grid-template-columns:1fr!important}.admin-media-url-row{grid-template-columns:1fr}.admin-media-gallery{grid-template-columns:1fr 1fr}.admin-device-savebar{flex-direction:column;align-items:stretch}.admin-device-savebar .admin-save-button{width:100%}}
 @media(max-width:380px){.admin-media-gallery{grid-template-columns:1fr}}
+
+/* ============================================================
+   V8.2 — BRIGHT CURRENT COMPARISON BOARD
+   Scoped to monitoring comparison only
+   ============================================================ */
+.current-summary-board{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(34,211,238,.10),transparent 24%),
+    radial-gradient(circle at 94% 5%,rgba(52,211,153,.07),transparent 22%),
+    rgba(13,27,45,.90);
+}
+.current-summary-board::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.35),transparent 58%);
+}
+.current-summary-board>*{position:relative;z-index:1}
+.current-summary-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+}
+.current-summary-header p{
+  margin:7px 0 0;
+  color:#8495aa;
+  font-size:12px;
+}
+.current-summary-live{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:36px;
+  padding:0 12px;
+  border:1px solid rgba(52,211,153,.20);
+  border-radius:999px;
+  background:rgba(16,185,129,.065);
+  color:#6ee7b7;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.current-summary-live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#34d399;
+  box-shadow:0 0 10px rgba(52,211,153,.70);
+}
+.current-primary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:18px;
+}
+.current-metric-card{
+  --metric-accent:#22d3ee;
+  --metric-rgb:34,211,238;
+  position:relative;
+  min-width:0;
+  overflow:hidden;
+  padding:16px;
+  border:1px solid rgba(var(--metric-rgb),.20);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(var(--metric-rgb),.14),transparent 38%),
+    linear-gradient(145deg,rgba(7,24,39,.92),rgba(8,31,48,.70));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.current-metric-card::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--metric-accent),transparent);
+  opacity:.55;
+}
+.current-metric-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(var(--metric-rgb),.38);
+  box-shadow:0 10px 28px rgba(var(--metric-rgb),.07),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.metric-pm25{--metric-accent:#38bdf8;--metric-rgb:56,189,248}
+.metric-pm10{--metric-accent:#22d3ee;--metric-rgb:34,211,238}
+.metric-temperature{--metric-accent:#fb923c;--metric-rgb:251,146,60}
+.metric-humidity{--metric-accent:#34d399;--metric-rgb:52,211,153}
+.metric-pm1{--metric-accent:#a78bfa;--metric-rgb:167,139,250}
+.metric-light{--metric-accent:#fbbf24;--metric-rgb:251,191,36}
+.current-metric-card-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.current-metric-icon{
+  width:39px;height:39px;flex:0 0 39px;
+  display:grid;place-items:center;
+  border:1px solid rgba(var(--metric-rgb),.20);
+  border-radius:12px;
+  background:rgba(var(--metric-rgb),.09);
+  font-size:18px;
+}
+.current-metric-card-head span{
+  display:block;
+  color:#718399;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.current-metric-card-head h3{
+  margin:1px 0 0;
+  color:var(--metric-accent);
+  font-size:14px;
+  font-weight:900;
+}
+.current-metric-average{margin-top:17px}
+.current-metric-average>b{
+  display:block;
+  color:#fff;
+  font-size:24px;
+  line-height:1.1;
+  font-weight:950;
+  letter-spacing:-.035em;
+}
+.current-metric-average>small{
+  display:block;
+  margin-top:5px;
+  color:#708196;
+  font-size:9px;
+}
+.current-metric-extremes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:14px;
+}
+.current-metric-extremes>div{
+  min-width:0;
+  padding:9px;
+  border:1px solid rgba(148,163,184,.09);
+  border-radius:11px;
+  background:rgba(2,13,24,.32);
+}
+.current-metric-extremes span{
+  display:block;
+  font-size:8px;
+  font-weight:900;
+}
+.current-metric-extremes .extreme-low{color:#7dd3fc}
+.current-metric-extremes .extreme-high{color:#fda4af}
+.current-metric-extremes b{
+  display:block;
+  margin-top:4px;
+  color:#eaf2f8;
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.current-metric-extremes small{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-size:8px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.current-support-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  margin-top:17px;
+  padding-top:14px;
+  border-top:1px solid rgba(148,163,184,.10);
+}
+.current-support-head span{
+  display:block;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+}
+.current-support-head small{
+  display:block;
+  margin-top:3px;
+  color:#5f7084;
+  font-size:9px;
+}
+.current-support-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:9px;
+}
+.current-support-card{
+  --metric-accent:#a78bfa;
+  --metric-rgb:167,139,250;
+  display:grid;
+  grid-template-columns:minmax(125px,.7fr) minmax(130px,.65fr) minmax(250px,1.3fr);
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  padding:12px 14px;
+  border:1px solid rgba(var(--metric-rgb),.16);
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 100% 50%,rgba(var(--metric-rgb),.09),transparent 42%),
+    rgba(4,20,34,.52);
+}
+.current-support-title{display:flex;align-items:center;gap:9px;min-width:0}
+.current-support-icon{
+  width:34px;height:34px;flex:0 0 34px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:rgba(var(--metric-rgb),.09);
+  color:var(--metric-accent);
+}
+.current-support-title small{display:block;color:#65768a;font-size:8px}
+.current-support-title b{display:block;margin-top:1px;color:var(--metric-accent);font-size:12px}
+.current-support-average b{display:block;color:#fff;font-size:16px;white-space:nowrap}
+.current-support-average span{display:block;color:#64748b;font-size:8px;margin-top:2px}
+.current-support-range{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+.current-support-range>span{
+  min-width:0;
+  padding:7px 8px;
+  border-radius:9px;
+  background:rgba(2,13,24,.30);
+  color:#7c8da2;
+  font-size:8px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.current-support-range b{color:#e2e8f0;font-size:9px}
+.current-support-range small{color:#64748b}
+.current-summary-footer{margin-top:12px!important}
+
+@media(max-width:1180px){
+  .current-primary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .current-support-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .current-summary-header{flex-direction:column}
+  .current-primary-grid{grid-template-columns:1fr}
+  .current-support-card{grid-template-columns:1fr}
+  .current-support-range{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  .current-metric-extremes,.current-support-range{grid-template-columns:1fr}
+  .current-metric-average>b{font-size:21px}
+}
