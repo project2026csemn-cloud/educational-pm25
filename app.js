@@ -86,9 +86,9 @@ let aiForecastLastLoadedAt=null;
 
 let publicDisplayConfig={
 devices:[
-{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""},
-{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",latitude:null,longitude:null,images:[],video_url:""}
+{device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 2",display_name:"จุดตรวจวัด 2",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
+{device_id:"Number 3",display_name:"จุดตรวจวัด 3",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""}
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
@@ -10905,6 +10905,12 @@ let monitoringBaseLayers={street:null,satellite:null};
 let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
 let adminDeviceMap=null;
 let adminDeviceMarker=null;
+let adminBaseLayers={street:null,satellite:null};
+let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
+let activeAdminDeviceId="Number 1";
+let adminMediaDragIndex=null;
+const ADMIN_DEVICE_MAX_IMAGES=5;
+const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
 
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
@@ -11076,7 +11082,7 @@ function renderMonitoringLocationDetail(device){
   if(!device)return;
   const title=String(device.display_name||device.device_id||"จุดตรวจวัด").trim();
   const loc=String(device.location_name||"").trim();
-  const desc=String(device.description||"").trim();
+  const desc=String(device.map_description||device.description||"").trim();
   const images=deviceImageList(device);
   const video=String(device.video_url||"").trim();
 
@@ -11181,97 +11187,57 @@ function setupMonitoringMapUi(){
 }
 
 function adminMapSelectedDeviceId(){
-  return $("adminMapDeviceSelect")?.value||$("adminDevicePreviewSelect")?.value||"Number 1";
+  return activeAdminDeviceId||"Number 1";
 }
-
 function adminMapSelectedCard(){
   const id=adminMapSelectedDeviceId();
   return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;
 }
-
+function setAdminBasemap(mode){
+  if(!adminDeviceMap)return;
+  adminBasemapMode=mode==="satellite"?"satellite":"street";
+  Object.values(adminBaseLayers).forEach(layer=>{if(layer&&adminDeviceMap.hasLayer(layer))adminDeviceMap.removeLayer(layer);});
+  adminBaseLayers[adminBasemapMode]?.addTo(adminDeviceMap);
+  localStorage.setItem("admin-basemap-mode",adminBasemapMode);
+  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>btn.classList.toggle("active",btn.dataset.adminBasemap===adminBasemapMode));
+}
 function ensureAdminDeviceMap(){
   const root=$("adminDeviceMap");
   if(!root||typeof L==="undefined")return null;
-  if(adminDeviceMap){
-    setTimeout(()=>adminDeviceMap.invalidateSize(),0);
-    return adminDeviceMap;
-  }
-  adminDeviceMap=L.map(root,{zoomControl:true}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    maxZoom:19,
-    attribution:'&copy; OpenStreetMap contributors'
-  }).addTo(adminDeviceMap);
-  adminDeviceMap.on("click",e=>{
-    setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);
-  });
+  if(adminDeviceMap){setTimeout(()=>adminDeviceMap.invalidateSize(),0);return adminDeviceMap;}
+  adminDeviceMap=L.map(root,{zoomControl:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  adminBaseLayers={street:createMonitoringStreetLayer(),satellite:createMonitoringSatelliteLayer()};
+  setAdminBasemap(adminBasemapMode);
+  adminDeviceMap.on("click",e=>{if(hasPermission("manage_device_location"))setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);});
+  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{btn.onclick=()=>setAdminBasemap(btn.dataset.adminBasemap);});
   return adminDeviceMap;
 }
-
 function setAdminMapCoordinates(lat,lng){
-  const card=adminMapSelectedCard();
-  if(!card)return;
-  const latInput=card.querySelector(".admin-device-latitude");
-  const lngInput=card.querySelector(".admin-device-longitude");
+  if(!hasPermission("manage_device_location"))return;
+  const card=adminMapSelectedCard();if(!card)return;
+  const latInput=card.querySelector(".admin-device-latitude"),lngInput=card.querySelector(".admin-device-longitude");
   if(latInput)latInput.value=Number(lat).toFixed(7);
   if(lngInput)lngInput.value=Number(lng).toFixed(7);
-  refreshAdminMapEditor();
+  refreshAdminMapEditor({keepZoom:true});
 }
-
-function refreshAdminMapEditor(){
-  const map=ensureAdminDeviceMap();
-  const card=adminMapSelectedCard();
-  if(!map||!card)return;
-
+function refreshAdminMapEditor({keepZoom=false}={}){
+  const map=ensureAdminDeviceMap(),card=adminMapSelectedCard();if(!map||!card)return;
   const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
   const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
-  const valid=lat!==null&&lng!==null;
-
-  if(adminDeviceMarker){
-    adminDeviceMarker.remove();
-    adminDeviceMarker=null;
-  }
-
+  const valid=lat!==null&&lng!==null,canPin=hasPermission("manage_device_location");
+  if(adminDeviceMarker){adminDeviceMarker.remove();adminDeviceMarker=null;}
   if(valid){
-    adminDeviceMarker=L.marker([lat,lng],{
-      draggable:true,
-      icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)
-    }).addTo(map);
-    adminDeviceMarker.on("dragend",()=>{
-      const p=adminDeviceMarker.getLatLng();
-      setAdminMapCoordinates(p.lat,p.lng);
-    });
-    map.setView([lat,lng],18);
-  }else{
-    map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  }
-
+    adminDeviceMarker=L.marker([lat,lng],{draggable:canPin,icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)}).addTo(map);
+    if(canPin)adminDeviceMarker.on("dragend",()=>{const p=adminDeviceMarker.getLatLng();setAdminMapCoordinates(p.lat,p.lng);});
+    if(!keepZoom)map.setView([lat,lng],19);else map.panTo([lat,lng],{animate:true});
+  }else if(!keepZoom){map.setView(MONITORING_MAP_FALLBACK_CENTER,15);}
   if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
   if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";
-
-  const images=(card.querySelector(".admin-device-images")?.value||"")
-    .split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,12);
-  const video=(card.querySelector(".admin-device-video")?.value||"").trim();
-  const media=$("adminDeviceMediaPreview");
-  if(media){
-    media.innerHTML=images.length
-      ?`<div class="admin-device-media-preview-grid">${images.slice(0,8).map(src=>`<img src="${esc(src)}" alt="" loading="lazy">`).join("")}</div>
-        <div class="admin-device-media-preview-note">${images.length} รูป${video?" • มีวิดีโอ":""}</div>`
-      :`<div class="admin-device-media-preview-note">ยังไม่มีภาพ${video?" • มีวิดีโอแล้ว":""}</div>`;
-  }
-  setTimeout(()=>map.invalidateSize(),80);
+  if($("adminMapPermissionHint"))$("adminMapPermissionHint").textContent=canPin?"คลิกบนแผนที่เพื่อปักหมุด หรือจับหมุดลากเพื่อเปลี่ยนตำแหน่ง":"บัญชีนี้ดูตำแหน่งได้ แต่ไม่มีสิทธิ์ปัก/ย้ายหมุด";
+  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();
+  setTimeout(()=>map.invalidateSize(),60);
 }
-
-function syncAdminMapSelectOptions(){
-  const select=$("adminMapDeviceSelect");
-  if(!select)return;
-  const cards=[...document.querySelectorAll(".admin-device-card")];
-  const prev=select.value;
-  select.innerHTML=cards.map((card,i)=>{
-    const name=(card.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
-    return `<option value="${esc(card.dataset.deviceId)}">${esc(name)}</option>`;
-  }).join("");
-  if([...select.options].some(o=>o.value===prev))select.value=prev;
-}
+function syncAdminMapSelectOptions(){}
 
 
 function applyPublicDisplayConfig(){
@@ -11761,15 +11727,17 @@ const PERMISSION_DEFINITIONS=[
   {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
   {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
   {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
-  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ชื่อจุดตรวจวัด",desc:"แก้ชื่อและข้อมูลที่แสดงของจุดตรวจวัด"},
+  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ข้อมูลจุดตรวจวัด",desc:"แก้ชื่อ สถานที่ และคำอธิบายของจุดตรวจวัด"},
+  {key:"manage_device_location",group:"การจัดการระบบ",title:"กำหนดตำแหน่งจุดตรวจวัด",desc:"ปักหมุด ลากหมุด และแก้ Latitude / Longitude"},
+  {key:"manage_device_media",group:"การจัดการระบบ",title:"จัดการรูปภาพจุดตรวจวัด",desc:"เพิ่ม ลบ เรียงลำดับ และตั้งภาพหลัก สูงสุด 5 ภาพต่อจุด"},
   {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
   {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
   {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
 ];
 
 const ROLE_PERMISSION_DEFAULTS={
-  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
-  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
+  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_device_location:false,manage_device_media:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
+  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_device_location:true,manage_device_media:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
   owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
 };
 
@@ -11861,7 +11829,7 @@ function updateAccountUI(){
     if($("accountMenuEmail"))$("accountMenuEmail").textContent=authUser.email||"";
     if(mr)mr.textContent=authRoleLabel(authUser.role);
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
-    const canManageContent=["manage_help","manage_devices","manage_announcement"].some(key=>hasPermission(key));
+    const canManageContent=["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement"].some(key=>hasPermission(key));
     const canManageUsers=hasPermission("manage_users_view");
     const canManageWiFi=hasPermission("manage_mother_wifi");
 
@@ -12210,88 +12178,78 @@ async function saveHelpEditor(){
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
-function renderAdminDevices(){
-  const root=$("adminDeviceList");if(!root)return;
-  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}">
-    <h4>📍 จุดตรวจวัด ${i+1}</h4>
-    <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div>
-    <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label>
-    <label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label>
-    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="4">${esc(d.description||"")}</textarea></label>
-
-    <div class="admin-device-map-fields">
-      <label class="admin-field">Latitude
-        <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
-      </label>
-      <label class="admin-field">Longitude
-        <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
-      </label>
-    </div>
-
-    <label class="admin-field">รูปภาพของสถานที่
-      <textarea class="admin-device-images" rows="4" placeholder="1 บรรทัดต่อ 1 รูป เช่น&#10;img/node1-1.jpg&#10;img/node1-2.jpg">${esc(deviceImageList(d).join("\n"))}</textarea>
-      <small>ใช้ path รูปใน GitHub หรือ URL รูปภาพได้</small>
-    </label>
-
-    <label class="admin-field">วิดีโอ
-      <input class="admin-device-video" maxlength="600" value="${esc(d.video_url||"")}" placeholder="YouTube URL หรือ media/node1.mp4">
-    </label>
-  </div>`).join("");
-  root.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderAdminDevicePreview));
-  const sel=$("adminDevicePreviewSelect");
-  if(sel){
-    sel.innerHTML=devices.map((d,i)=>`<option value="${esc(d.device_id)}">${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</option>`).join("");
-    sel.onchange=renderAdminDevicePreview;
-  }
-  const mapSelect=$("adminMapDeviceSelect");
-  if(mapSelect){
-    mapSelect.onchange=refreshAdminMapEditor;
-  }
-  renderAdminDevicePreview();
-  setTimeout(()=>refreshAdminMapEditor(),120);
+function adminDeviceImagesFromCard(card){
+  return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES);
 }
-
-function renderAdminDevicePreview(){
-  const cards=[...document.querySelectorAll(".admin-device-card")];
-  if(!cards.length)return;
-  const sel=$("adminDevicePreviewSelect");
-  let card=cards.find(x=>x.dataset.deviceId===sel?.value)||cards[0];
-  const name=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
-  const location=(card.querySelector(".admin-device-location")?.value||"").trim();
-  const description=(card.querySelector(".admin-device-description")?.value||"").trim();
-  if($("adminDevicePreviewName"))$("adminDevicePreviewName").textContent=name;
-  if($("adminDevicePreviewLocation")){
-    $("adminDevicePreviewLocation").textContent=location;
-    $("adminDevicePreviewLocation").classList.toggle("hidden",!location);
-  }
-  if($("adminDevicePreviewDescription")){
-    $("adminDevicePreviewDescription").textContent=description;
-    $("adminDevicePreviewDescription").classList.toggle("hidden",!description);
-  }
-  if(sel){
-    [...sel.options].forEach(opt=>{
-      const c=cards.find(x=>x.dataset.deviceId===opt.value);
-      if(c)opt.textContent=(c.querySelector(".admin-device-display")?.value||opt.value).trim();
-    });
-  }
-  syncAdminMapSelectOptions();
-  refreshAdminMapEditor();
+function setAdminDeviceImagesToCard(card,images){const f=card?.querySelector(".admin-device-images");if(f)f.value=(images||[]).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");}
+function switchAdminDevice(id){
+  activeAdminDeviceId=id;
+  document.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.classList.toggle("active",b.dataset.adminDeviceTab===id));
+  document.querySelectorAll(".admin-device-card").forEach(c=>c.classList.toggle("active",c.dataset.deviceId===id));
+  syncAdminActiveMediaFields();renderAdminMediaManager();refreshAdminMapEditor();
+}
+function syncAdminActiveMediaFields(){
+  const c=adminMapSelectedCard();if(!c)return;
+  const title=(c.querySelector(".admin-device-display")?.value||c.dataset.deviceId).trim();
+  if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;
+  if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
+}
+function renderAdminDevices(){
+  const root=$("adminDeviceList"),tabs=$("adminDeviceTabs");if(!root||!tabs)return;
+  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
+  if(!devices.some(d=>d.device_id===activeAdminDeviceId))activeAdminDeviceId=devices[0]?.device_id||"Number 1";
+  const canText=hasPermission("manage_devices"),canPin=hasPermission("manage_device_location"),canMedia=hasPermission("manage_device_media");
+  tabs.innerHTML=devices.map((d,i)=>`<button type="button" class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}" data-admin-device-tab="${esc(d.device_id)}"><span>${i+1}</span><b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b></button>`).join("");
+  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}">
+    <div class="admin-device-card-head"><h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} • เปลี่ยนไม่ได้</div></div>
+    <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}" ${canText?"":"disabled"}></label>
+    <label class="admin-field">ชื่อตำแหน่ง<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}" ${canText?"":"disabled"}></label>
+    <label class="admin-field">คำอธิบายจุดตรวจวัด<textarea class="admin-device-description" maxlength="900" rows="4" ${canText?"":"disabled"}>${esc(d.description||"")}</textarea><small>ใช้กับข้อมูลจุดตรวจวัดบน Dashboard</small></label>
+    <label class="admin-field">รายละเอียดในแถบด้านข้างแผนที่<textarea class="admin-device-map-description" maxlength="2000" rows="6" ${canText?"":"disabled"}>${esc(d.map_description||"")}</textarea><small>แสดงเมื่อกดหมุดบนแผนที่</small></label>
+    <div class="admin-device-map-fields"><label class="admin-field">Latitude<input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" ${canPin?"":"disabled"}></label><label class="admin-field">Longitude<input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" ${canPin?"":"disabled"}></label></div>
+    <textarea class="admin-device-images hidden">${esc(deviceImageList(d).slice(0,5).join("\n"))}</textarea>
+  </div>`).join("");
+  tabs.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.onclick=()=>switchAdminDevice(b.dataset.adminDeviceTab));
+  root.querySelectorAll(".admin-device-display").forEach(el=>el.oninput=()=>{syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});});
+  root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>el.onchange=()=>refreshAdminMapEditor());
+  setupAdminMediaManager();
+  $("adminChooseImagesButton")?.toggleAttribute("disabled",!canMedia);$("adminImageUrlInput")?.toggleAttribute("disabled",!canMedia);$("adminAddImageUrlButton")?.toggleAttribute("disabled",!canMedia);$("adminMediaDropzone")?.classList.toggle("is-disabled",!canMedia);
+  switchAdminDevice(activeAdminDeviceId);
+}
+function renderAdminDevicePreview(){syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});}
+function adminMediaSetMessage(t,type=""){const e=$("adminMediaMessage");if(!e)return;e.textContent=t||"";e.classList.toggle("is-error",type==="error");e.classList.toggle("is-success",type==="success");}
+function renderAdminMediaManager(){
+  const g=$("adminMediaGallery"),c=adminMapSelectedCard();if(!g||!c)return;const a=adminDeviceImagesFromCard(c),can=hasPermission("manage_device_media");
+  if($("adminMediaCount"))$("adminMediaCount").textContent=`${a.length} / 5 ภาพ`;
+  if(!a.length){g.innerHTML=`<div class="admin-media-empty"><b>ยังไม่มีรูปของจุดนี้</b><span>${can?"เพิ่มรูปจากเครื่อง ลากวาง หรือ Ctrl+V ได้":"บัญชีนี้ไม่มีสิทธิ์จัดการรูปภาพ"}</span></div>`;return;}
+  g.innerHTML=a.map((src,i)=>`<article class="admin-media-item${i===0?" is-cover":""}" data-media-index="${i}"><div class="admin-media-thumb"><img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}</div><div class="admin-media-item-actions"><button data-cover="${i}" ${!can||i===0?"disabled":""}>★ หลัก</button><button data-left="${i}" ${!can||i===0?"disabled":""}>←</button><button data-right="${i}" ${!can||i===a.length-1?"disabled":""}>→</button><button class="danger" data-del="${i}" ${can?"":"disabled"}>ลบ</button></div></article>`).join("");
+  if(!can)return;
+  const move=(f,t)=>{const n=adminDeviceImagesFromCard(c);if(f<0||t<0||f>=n.length||t>=n.length||f===t)return;const [x]=n.splice(f,1);n.splice(t,0,x);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();};
+  g.querySelectorAll("[data-cover]").forEach(b=>b.onclick=()=>{const i=+b.dataset.cover,n=adminDeviceImagesFromCard(c);if(i>0){const[x]=n.splice(i,1);n.unshift(x);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();}});
+  g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const n=adminDeviceImagesFromCard(c);n.splice(+b.dataset.del,1);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();});
+  g.querySelectorAll("[data-left]").forEach(b=>b.onclick=()=>move(+b.dataset.left,+b.dataset.left-1));g.querySelectorAll("[data-right]").forEach(b=>b.onclick=()=>move(+b.dataset.right,+b.dataset.right+1));
+}
+function loadAdminImageFromFile(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("อ่านรูปภาพไม่สำเร็จ"))};i.src=u;});}
+async function optimizeAdminLocationImage(file){
+  if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||""))throw new Error("รองรับ JPG, PNG และ WEBP");if(file.size>10*1024*1024)throw new Error("รูปใหญ่เกิน 10 MB");
+  const img=await loadAdminImageFromFile(file);let side=1200,q=.76;
+  for(let p=0;p<7;p++){const s=Math.min(1,side/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(img.naturalWidth*s));cv.height=Math.max(1,Math.round(img.naturalHeight*s));const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,0,cv.width,cv.height);const d=cv.toDataURL("image/jpeg",q);if(d.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return d;side=Math.round(side*.82);q=Math.max(.55,q-.05);}throw new Error("รูปยังใหญ่เกินไปหลังย่อ");
+}
+async function addAdminImageFiles(list){
+  if(!hasPermission("manage_device_media"))return;const c=adminMapSelectedCard();if(!c)return;const a=adminDeviceImagesFromCard(c),files=[...(list||[])].filter(f=>String(f.type||"").startsWith("image/"));let added=0;adminMediaSetMessage("กำลังเตรียมรูป...");
+  for(const f of files){if(a.length>=5)break;try{a.push(await optimizeAdminLocationImage(f));added++;}catch(e){adminMediaSetMessage(e.message,"error");}}
+  setAdminDeviceImagesToCard(c,a);renderAdminMediaManager();if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึก`,"success");if(a.length>=5&&files.length>added)adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");
+}
+function addAdminImageUrl(raw){if(!hasPermission("manage_device_media"))return;const u=String(raw||"").trim(),c=adminMapSelectedCard();if(!c)return;if(!/^https?:\/\//i.test(u)){adminMediaSetMessage("URL ต้องขึ้นต้นด้วย http:// หรือ https://","error");return;}const a=adminDeviceImagesFromCard(c);if(a.length>=5){adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");return;}a.push(u);setAdminDeviceImagesToCard(c,a);renderAdminMediaManager();}
+function setupAdminMediaManager(){
+  const input=$("adminImageFileInput"),choose=$("adminChooseImagesButton"),drop=$("adminMediaDropzone"),url=$("adminImageUrlInput"),add=$("adminAddImageUrlButton");
+  if(choose)choose.onclick=()=>hasPermission("manage_device_media")&&input?.click();if(input)input.onchange=async()=>{await addAdminImageFiles(input.files);input.value="";};if(add)add.onclick=()=>{addAdminImageUrl(url?.value);if(url)url.value="";};
+  if(drop&&!drop.dataset.ready){drop.dataset.ready="1";["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.add("is-dragover");}));["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.remove("is-dragover");}));drop.addEventListener("drop",async e=>{await addAdminImageFiles(e.dataTransfer?.files||[])});drop.onclick=()=>hasPermission("manage_device_media")&&input?.click();}
+  if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if(!hasPermission("manage_device_media")||$("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const f=[...(e.clipboardData?.files||[])].filter(x=>String(x.type||"").startsWith("image/"));if(f.length){e.preventDefault();await addAdminImageFiles(f);}});}
 }
 async function saveAdminDevices(){
-  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({
-    device_id:d.dataset.deviceId,
-    display_name:d.querySelector(".admin-device-display")?.value||"",
-    location_name:d.querySelector(".admin-device-location")?.value||"",
-    description:d.querySelector(".admin-device-description")?.value||"",
-    latitude:d.querySelector(".admin-device-latitude")?.value||null,
-    longitude:d.querySelector(".admin-device-longitude")?.value||null,
-    images:(d.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean),
-    video_url:d.querySelector(".admin-device-video")?.value||""
-  }));
-  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
-  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดและแผนที่แล้ว","success");}
-  catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d)}));
+  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดเรียบร้อย","success");}catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
 function renderAnnouncementPreview(){
@@ -12564,8 +12522,9 @@ function openAdminCenter(targetTab=null){
   const userMode=targetTab==="users";
   if(userMode&&!hasPermission("manage_users_view"))return;
   const contentTabs=["help","devices","announcement"];
-  const permissionMap={help:"manage_help",devices:"manage_devices",announcement:"manage_announcement"};
-  const allowedContent=contentTabs.find(tab=>hasPermission(permissionMap[tab]));
+  const canManageAnyDevice=()=>["manage_devices","manage_device_location","manage_device_media"].some(key=>hasPermission(key));
+  const permissionMap={help:"manage_help",announcement:"manage_announcement"};
+  const allowedContent=contentTabs.find(tab=>tab==="devices"?canManageAnyDevice():hasPermission(permissionMap[tab]));
   if(!userMode&&!allowedContent)return;
 
   m.classList.toggle("admin-users-page",userMode);
@@ -12578,12 +12537,12 @@ function openAdminCenter(targetTab=null){
   if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"จัดการ Role, Permission และบัญชีผู้ใช้งาน":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
 
   document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
-  document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_devices"));
+  document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!canManageAnyDevice());
   document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
   document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!userMode);
 
   if(userMode){loadAdminUsers();switchAdminTab("users");}
-  else{if(hasPermission("manage_help"))populateHelpKeySelect();if(hasPermission("manage_devices"))renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
+  else{if(hasPermission("manage_help"))populateHelpKeySelect();if(canManageAnyDevice())renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
 }
 function closeAdminCenter(){
   const m=$("adminCenter");if(!m)return;
@@ -13365,8 +13324,7 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 (function startMapV2(){
   const run=()=>{
     setupMonitoringMapUi();
-    const mapSelect=$("adminMapDeviceSelect");
-    if(mapSelect)mapSelect.addEventListener("change",refreshAdminMapEditor);
+
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
