@@ -24763,3 +24763,72 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-summary-board .dust-emoji-fine{font-size:19px!important}
   .current-summary-board .dust-emoji-coarse{font-size:25px!important}
 }
+
+
+/* ============================================================
+   V8.8 — COMPACT MONITORING STATUS CARDS
+   ============================================================ */
+.monitoring-status-cluster{
+  gap:10px!important;
+  min-width:min(370px,100%)!important;
+}
+.monitoring-status-card{
+  --status-accent:100,116,139;
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:74px!important;
+  padding:12px 14px!important;
+  border:1px solid rgba(var(--status-accent),.20)!important;
+  border-radius:15px!important;
+  background:rgba(13,35,55,.88)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.08)!important;
+}
+.monitoring-status-card.status-is-online{--status-accent:52,211,153}
+.monitoring-status-card.status-is-partial{--status-accent:251,191,36}
+.monitoring-status-card.status-is-offline{--status-accent:248,113,113}
+.monitoring-status-card.status-is-unknown{--status-accent:148,163,184}
+
+.monitoring-status-label{
+  color:#9aaabd!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+.monitoring-status-value{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin-top:7px!important;
+  color:#f8fbff!important;
+  font-size:17px!important;
+  font-weight:900!important;
+}
+.monitoring-node-count-main{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:7px!important;
+  margin-top:7px!important;
+}
+.monitoring-node-count-value{
+  margin:0!important;
+  color:rgb(var(--status-accent))!important;
+  font-size:21px!important;
+  font-weight:950!important;
+}
+.monitoring-node-count-unit{
+  color:#a0aec0!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+.monitoring-status-hint{display:none!important}
+
+@keyframes v88StatusPulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.65;transform:scale(.82)}
+}
+.status-is-online .monitoring-live-dot{
+  display:inline-block!important;
+  animation:v88StatusPulse 2.2s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce){
+  .status-is-online .monitoring-live-dot{animation:none!important}
+}
