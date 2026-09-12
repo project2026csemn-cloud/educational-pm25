@@ -9945,10 +9945,8 @@ function openDashboardPage(page,{updateHash=true}={}){
 
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
 
-  if(page==="monitoring" && typeof ensureMonitoringMap==="function"){
-    ensureMonitoringMap();
-    renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-    setTimeout(()=>monitoringMap?.invalidateSize(),120);
+  if(page==="monitoring"){
+    scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
   }
 
   // V36.60 — About contains many SVG characters. Render them only when
@@ -10872,33 +10870,84 @@ function setMonitoringBasemap(mode){
   });
 }
 
+let monitoringMapRefreshTimer=null;
+let monitoringMapCreating=false;
+
+function monitoringMapContainerReady(){
+  const root=$("monitoringMap");
+  if(!root)return false;
+  const panel=root.closest("[data-dashboard-page-panel]");
+  if(panel&&!panel.classList.contains("active"))return false;
+  const rect=root.getBoundingClientRect();
+  return rect.width>80&&rect.height>80;
+}
+
+function scheduleMonitoringMapRefresh({fit=false,attempt=0}={}){
+  clearTimeout(monitoringMapRefreshTimer);
+  monitoringMapRefreshTimer=setTimeout(()=>{
+    if(currentDashboardPage!=="monitoring")return;
+
+    if(!monitoringMapContainerReady()){
+      if(attempt<8)scheduleMonitoringMapRefresh({fit,attempt:attempt+1});
+      return;
+    }
+
+    const map=ensureMonitoringMap();
+    if(!map){
+      if(attempt<8)scheduleMonitoringMapRefresh({fit,attempt:attempt+1});
+      return;
+    }
+
+    renderMonitoringMap({fit});
+    requestAnimationFrame(()=>{
+      try{map.invalidateSize({pan:false});}catch(_){}
+    });
+  },attempt===0?50:140);
+}
+
 function ensureMonitoringMap(){
   const root=$("monitoringMap");
   if(!root||typeof L==="undefined")return null;
+  if(!monitoringMapContainerReady())return null;
 
   if(monitoringMap){
-    setTimeout(()=>monitoringMap.invalidateSize(),0);
+    try{monitoringMap.invalidateSize({pan:false});}catch(_){}
     return monitoringMap;
   }
 
-  monitoringMap=L.map(root,{
-    zoomControl:true,
-    scrollWheelZoom:true,
-    minZoom:1,
-    maxZoom:22,
-    worldCopyJump:false,
-    maxBounds:MONITORING_WORLD_BOUNDS,
-    maxBoundsViscosity:1
-  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  if(monitoringMapCreating)return null;
+  monitoringMapCreating=true;
 
-  monitoringBaseLayers={
-    street:createMonitoringStreetLayer(),
-    satellite:createMonitoringSatelliteLayer()
-  };
+  try{
+    if(root._leaflet_id){
+      try{delete root._leaflet_id;}catch(_){root._leaflet_id=undefined;}
+    }
 
-  setMonitoringBasemap(monitoringBasemapMode);
-  renderMonitoringMap({fit:true});
-  return monitoringMap;
+    monitoringMap=L.map(root,{
+      zoomControl:true,
+      scrollWheelZoom:true,
+      minZoom:1,
+      maxZoom:22,
+      worldCopyJump:false,
+      maxBounds:MONITORING_WORLD_BOUNDS,
+      maxBoundsViscosity:1
+    }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+
+    monitoringBaseLayers={
+      street:createMonitoringStreetLayer(),
+      satellite:createMonitoringSatelliteLayer()
+    };
+
+    setMonitoringBasemap(monitoringBasemapMode);
+    return monitoringMap;
+  }catch(error){
+    console.error("Monitoring map initialization error:",error);
+    try{monitoringMap?.remove?.();}catch(_){}
+    monitoringMap=null;
+    return null;
+  }finally{
+    monitoringMapCreating=false;
+  }
 }
 
 function renderMonitoringMapNodeTabs(){
@@ -10914,44 +10963,47 @@ function renderMonitoringMapNodeTabs(){
 }
 
 function renderMonitoringMap({fit=false}={}){
-  const map=ensureMonitoringMap();
+  if(currentDashboardPage!=="monitoring"||!monitoringMapContainerReady())return;
+  const map=monitoringMap||ensureMonitoringMap();
   if(!map)return;
-  monitoringMarkers.forEach(marker=>marker.remove());
+
+  monitoringMarkers.forEach(marker=>{try{marker.remove();}catch(_){}});
   monitoringMarkers.clear();
 
   const bounds=[];
   const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
+
   devices.forEach((d,i)=>{
     const coords=deviceCoordinates(d);
     if(!coords)return;
+
     const number=mapDeviceNumber(d.device_id)||i+1;
     const marker=L.marker(coords,{
       icon:monitoringMarkerIcon(number,d.device_id===selectedMonitoringDeviceId),
       title:String(d.display_name||`จุดตรวจวัด ${number}`)
     }).addTo(map);
+
     marker.on("click",(event)=>{
       if(event?.originalEvent){
         L.DomEvent.stopPropagation(event.originalEvent);
         L.DomEvent.preventDefault(event.originalEvent);
       }
-
-      // Do not rebuild/remove this marker while Leaflet is handling its click.
-      window.setTimeout(()=>{
-        selectMonitoringLocation(d.device_id,{source:"marker"});
-      },0);
+      setTimeout(()=>selectMonitoringLocation(d.device_id,{source:"marker"}),0);
     });
+
     monitoringMarkers.set(d.device_id,marker);
     bounds.push(coords);
   });
 
   $("monitoringMapEmpty")?.classList.toggle("hidden",bounds.length>0);
 
-  if(fit||!selectedMonitoringDeviceId){
-    if(bounds.length===1)map.setView(bounds[0],18);
-    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:18});
-    else map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  if(fit&&!selectedMonitoringDeviceId){
+    if(bounds.length===1)map.setView(bounds[0],18,{animate:false});
+    else if(bounds.length>1)map.fitBounds(bounds,{padding:[36,36],maxZoom:18,animate:false});
+    else map.setView(MONITORING_MAP_FALLBACK_CENTER,15,{animate:false});
   }
-  setTimeout(()=>map.invalidateSize(),80);
+
+  requestAnimationFrame(()=>{try{map.invalidateSize({pan:false});}catch(_){}});
 }
 
 function youtubeEmbedUrl(url){
@@ -11112,36 +11164,26 @@ function selectMonitoringLocation(deviceId,{source="tab"}={}){
     btn.classList.toggle("active",btn.dataset.mapDevice===deviceId);
   });
 
-  $("monitoringMapLayout")?.classList.add("has-detail");
-  $("mapDetailPanel")?.setAttribute("aria-hidden","false");
-
   renderMonitoringLocationDetail(d);
-
-  // Important:
-  // only change existing marker icons.
-  // Do NOT call renderMonitoringMap() here, because a marker click
-  // would delete/recreate the marker while Leaflet is handling it.
   updateMonitoringMarkerSelection();
 
-  const coords=deviceCoordinates(d);
-  const map=ensureMonitoringMap();
+  syncMonitoringDetailHost();
 
-  if(map&&coords){
-    if(source==="marker"){
-      // Marker was already tapped. A gentle pan is enough and avoids
-      // fighting the mobile gesture that opened the detail panel.
-      map.panTo(coords,{animate:true,duration:.35});
-    }else{
-      map.flyTo(
-        coords,
-        monitoringMapMobileMode()?18:19,
-        {animate:true,duration:.65}
-      );
+  $("monitoringMapLayout")?.classList.add("has-detail");
+  $("mapDetailPanel")?.setAttribute("aria-hidden","false");
+  setMobileMonitoringDetailOpen(true);
+
+  const coords=deviceCoordinates(d);
+  if(monitoringMap&&coords){
+    try{
+      if(monitoringMapMobileMode())monitoringMap.panTo(coords,{animate:false});
+      else monitoringMap.flyTo(coords,19,{animate:true,duration:.45});
+    }catch(error){
+      console.warn("Map focus skipped:",error);
     }
   }
 
-  setMobileMonitoringDetailOpen(true);
-  setTimeout(()=>map?.invalidateSize(),180);
+  setTimeout(()=>{try{monitoringMap?.invalidateSize({pan:false});}catch(_){}},220);
 }
 
 function closeMonitoringLocationDetail({fit=true}={}){
@@ -11155,57 +11197,47 @@ function closeMonitoringLocationDetail({fit=true}={}){
   $("mapDetailPanel")?.setAttribute("aria-hidden","true");
 
   setMobileMonitoringDetailOpen(false);
+  syncMonitoringDetailHost();
   updateMonitoringMarkerSelection();
 
-  const map=ensureMonitoringMap();
-
-  if(fit&&map){
-    const bounds=[];
-    const devices=Array.isArray(publicDisplayConfig?.devices)
-      ?publicDisplayConfig.devices
-      :[];
-
-    devices.forEach(d=>{
-      const coords=deviceCoordinates(d);
-      if(coords)bounds.push(coords);
-    });
-
-    if(bounds.length===1){
-      map.setView(bounds[0],18);
-    }else if(bounds.length>1){
-      map.fitBounds(bounds,{padding:[36,36],maxZoom:18});
-    }
+  if(currentDashboardPage==="monitoring"){
+    scheduleMonitoringMapRefresh({fit});
   }
-
-  setTimeout(()=>map?.invalidateSize(),180);
 }
+
+let monitoringMapUiBound=false;
 
 function setupMonitoringMapUi(){
   syncMonitoringDetailHost();
+  renderMonitoringMapNodeTabs();
+
+  if(monitoringMapUiBound){
+    if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
+    return;
+  }
+  monitoringMapUiBound=true;
+
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice,{source:"tab"}));
   });
 
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
 
-  $("mapDetailBackdrop")?.addEventListener("click",()=>{
-    closeMonitoringLocationDetail({fit:false});
-  });
-
   document.addEventListener("keydown",event=>{
-    if(event.key==="Escape"&&selectedMonitoringDeviceId){
-      closeMonitoringLocationDetail({fit:false});
-    }
+    if(event.key==="Escape"&&selectedMonitoringDeviceId)closeMonitoringLocationDetail({fit:false});
   });
 
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      ensureMonitoringMap();
-      setMonitoringBasemap(btn.dataset.publicBasemap);
+      monitoringBasemapMode=btn.dataset.publicBasemap==="satellite"?"satellite":"street";
+      localStorage.setItem("monitoring-basemap-mode",monitoringBasemapMode);
+      const map=ensureMonitoringMap();
+      if(map)setMonitoringBasemap(monitoringBasemapMode);
+      else scheduleMonitoringMapRefresh({fit:false});
     });
   });
 
-  renderMonitoringMapNodeTabs();
+  if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:true});
 }
 
 function adminMapSelectedDeviceId(){
@@ -11335,6 +11367,9 @@ if(!j?.success||!j?.data)throw new Error("Public config unavailable");
 publicDisplayConfig=j.data;
 applyManagedHelpOverrides(publicDisplayConfig?.help||{});
 applyPublicDisplayConfig();
+if(currentDashboardPage==="monitoring"){
+  scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
+}
 return j.data;
 }catch(e){
 console.warn("Public display config unavailable; using defaults.");
@@ -13362,26 +13397,30 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
   else run();
 })();
 
-
 // =====================================================
-// V8.13 — MAP RESPONSIVE HOST SYNC
+// V8.14 — SAFE MAP / DETAIL RESPONSIVE SYNC
 // =====================================================
+let monitoringResponsiveTimer=null;
 window.addEventListener("resize",()=>{
-  syncMonitoringDetailHost();
+  clearTimeout(monitoringResponsiveTimer);
+  monitoringResponsiveTimer=setTimeout(()=>{
+    syncMonitoringDetailHost();
 
-  const panel=$("mapDetailPanel");
-  if(selectedMonitoringDeviceId){
-    if(monitoringMapMobileMode()){
+    const panel=$("mapDetailPanel");
+    if(selectedMonitoringDeviceId&&monitoringMapMobileMode()){
       panel?.classList.add("mobile-detail-open");
       document.body.classList.add("mobile-map-detail-open");
     }else{
       panel?.classList.remove("mobile-detail-open");
       document.body.classList.remove("mobile-map-detail-open");
     }
-  }else{
-    panel?.classList.remove("mobile-detail-open");
-    document.body.classList.remove("mobile-map-detail-open");
-  }
 
-  window.setTimeout(()=>monitoringMap?.invalidateSize(),100);
+    if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:false});
+  },120);
 },{passive:true});
+
+window.addEventListener("pageshow",()=>{
+  if(currentDashboardPage==="monitoring"){
+    scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
+  }
+});
