@@ -1540,6 +1540,12 @@ $("dataStateStatusTop");
 const ac=
 $("nodesActiveTop");
 
+const motherCard=
+$("motherStatusCardTop");
+
+const nodeCountCard=
+$("nodeCountCardTop");
+
 if(
 !dot||
 !st||
@@ -1548,42 +1554,67 @@ if(
 return;
 }
 
+const setTopStatusCardState=(el,state)=>{
+if(!el)return;
+el.classList.remove(
+"status-is-online",
+"status-is-partial",
+"status-is-offline",
+"status-is-unknown"
+);
+el.classList.add(state);
+};
+
 if(
 !apiConnectionOnline
 ){
 
 dot.className=
-"text-red-400";
+"monitoring-live-dot text-red-400";
 
 st.textContent=
 "ไม่พร้อมใช้งาน";
 
 ac.textContent=
-"ตรวจสอบจำนวนจุดไม่ได้";
+`-- / ${TOTAL_NODES}`;
 
-}else if(
-motherOnline()
-){
-
-dot.className=
-"text-emerald-400";
-
-st.textContent=
-"ONLINE";
-
-ac.textContent=
-`${activeCount()} / ${TOTAL_NODES} จุด`;
+setTopStatusCardState(motherCard,"status-is-unknown");
+setTopStatusCardState(nodeCountCard,"status-is-unknown");
 
 }else{
 
+const motherIsOnline=
+motherOnline();
+
+const onlineNodes=
+activeCount();
+
 dot.className=
-"text-red-400";
+motherIsOnline
+?"monitoring-live-dot text-emerald-400"
+:"monitoring-live-dot text-red-400";
 
 st.textContent=
-"OFFLINE";
+motherIsOnline
+?"ONLINE"
+:"OFFLINE";
 
 ac.textContent=
-`0 / ${TOTAL_NODES} จุด`;
+`${onlineNodes} / ${TOTAL_NODES}`;
+
+setTopStatusCardState(
+motherCard,
+motherIsOnline?"status-is-online":"status-is-offline"
+);
+
+setTopStatusCardState(
+nodeCountCard,
+onlineNodes===TOTAL_NODES
+?"status-is-online"
+:onlineNodes>0
+?"status-is-partial"
+:"status-is-offline"
+);
 
 }
 
@@ -9542,6 +9573,15 @@ function restoreLatestSnapshot(){
 }
 
 // =====================================================
+// V8.8 — EARLY GLOBAL DECLARATIONS
+// Fix TDZ: these variables are used during startup before their
+// original declarations later in this file.
+// =====================================================
+// V8.8: monitoringMap declared earlier to avoid startup TDZ
+let monitoringMap=null;
+let notificationCheckBusy=false;
+
+// =====================================================
 // INITIAL LOAD
 // =====================================================
 
@@ -10724,7 +10764,8 @@ function deviceDisplayName(deviceId){
 // =====================================================
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
-let monitoringMap=null;
+// V8.8: monitoringMap declared earlier to avoid startup TDZ
+
 let monitoringMarkers=new Map();
 let selectedMonitoringDeviceId=null;
 let monitoringBaseLayers={street:null,satellite:null};
@@ -12463,7 +12504,8 @@ function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
 const DEFAULT_NOTIFICATION_PREFS={enabled:true,dust:true,temperature:true,humidity:true,heat_index:true,device:true,mother:true};
 let notificationPrefs={...DEFAULT_NOTIFICATION_PREFS};
 let notificationPrefsLoadedFor=null;
-let notificationCheckBusy=false;
+// V8.8: notificationCheckBusy declared earlier to avoid startup TDZ
+
 let notificationSeeded=false;
 let lastNotificationDetail=null;
 let notificationInboxItems=[];
