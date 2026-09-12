@@ -11043,29 +11043,49 @@ function monitoringMapMobileMode(){
   return window.matchMedia("(max-width: 700px)").matches;
 }
 
+function syncMonitoringDetailHost(){
+  const panel=$("mapDetailPanel");
+  const backdrop=$("mapDetailBackdrop");
+  const layout=$("monitoringMapLayout");
+  if(!panel||!layout)return;
+
+  if(monitoringMapMobileMode()){
+    if(panel.parentElement!==document.body){
+      document.body.appendChild(panel);
+    }
+    if(backdrop&&backdrop.parentElement!==document.body){
+      document.body.appendChild(backdrop);
+    }
+  }else{
+    if(backdrop&&backdrop.parentElement!==layout){
+      layout.appendChild(backdrop);
+    }
+    if(panel.parentElement!==layout){
+      layout.appendChild(panel);
+    }
+  }
+}
+
 function setMobileMonitoringDetailOpen(open){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
-  const mobile=monitoringMapMobileMode();
-  const show=Boolean(open)&&mobile;
+  const show=Boolean(open)&&monitoringMapMobileMode();
 
-  document.body.classList.toggle(
-    "mobile-map-detail-open",
-    show
-  );
+  syncMonitoringDetailHost();
 
-  if(backdrop){
-    backdrop.classList.toggle("hidden",!show);
-    backdrop.setAttribute("aria-hidden",show?"false":"true");
-  }
+  document.body.classList.toggle("mobile-map-detail-open",show);
 
   if(panel){
     panel.classList.toggle("mobile-detail-open",show);
     if(show){
-      panel.scrollTop=0;
       const scroller=panel.querySelector(".monitoring-place-detail-scroll");
       if(scroller)scroller.scrollTop=0;
     }
+  }
+
+  if(backdrop){
+    backdrop.classList.add("hidden");
+    backdrop.setAttribute("aria-hidden","true");
   }
 }
 
@@ -11081,21 +11101,6 @@ function updateMonitoringMarkerSelection(){
   });
 }
 
-let mobileMapDetailSavedScrollY=0;
-
-// V8.12: intentionally no body position:fixed lock.
-// The detail panel itself is fixed/full-screen on mobile.
-// This prevents a failed detail-open from freezing page scrolling.
-function lockMobileMapPage(){
-  mobileMapDetailSavedScrollY=
-    window.scrollY||
-    document.documentElement.scrollTop||
-    0;
-}
-
-function unlockMobileMapPage(){
-  // no-op by design
-}
 
 function selectMonitoringLocation(deviceId,{source="tab"}={}){
   const d=configDevice(deviceId);
@@ -11176,6 +11181,7 @@ function closeMonitoringLocationDetail({fit=true}={}){
 }
 
 function setupMonitoringMapUi(){
+  syncMonitoringDetailHost();
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice,{source:"tab"}));
   });
@@ -13356,17 +13362,26 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
   else run();
 })();
 
+
 // =====================================================
-// V8.9 — MOBILE MAP DETAIL RESPONSIVE SYNC
-// Keeps desktop behavior unchanged and re-syncs the bottom sheet
-// when rotating/resizing a phone or tablet.
+// V8.13 — MAP RESPONSIVE HOST SYNC
 // =====================================================
 window.addEventListener("resize",()=>{
-  if(!selectedMonitoringDeviceId){
-    setMobileMonitoringDetailOpen(false);
-    return;
+  syncMonitoringDetailHost();
+
+  const panel=$("mapDetailPanel");
+  if(selectedMonitoringDeviceId){
+    if(monitoringMapMobileMode()){
+      panel?.classList.add("mobile-detail-open");
+      document.body.classList.add("mobile-map-detail-open");
+    }else{
+      panel?.classList.remove("mobile-detail-open");
+      document.body.classList.remove("mobile-map-detail-open");
+    }
+  }else{
+    panel?.classList.remove("mobile-detail-open");
+    document.body.classList.remove("mobile-map-detail-open");
   }
 
-  setMobileMonitoringDetailOpen(true);
   window.setTimeout(()=>monitoringMap?.invalidateSize(),100);
 },{passive:true});
