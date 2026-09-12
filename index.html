@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260912-v8-7-recovery" rel="stylesheet"/>
+<link href="style.css?v=20260912-v8-8-tdzfix" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -310,18 +310,19 @@
 <p>ดูข้อมูลล่าสุดจากทั้ง 3 จุดและเปรียบเทียบสถานการณ์ปัจจุบัน</p>
 </div>
 <div class="monitoring-status-cluster">
-<div class="monitoring-status-card monitoring-primary-status">
-<div class="monitoring-status-label">ความพร้อมของระบบ</div>
+<div class="monitoring-status-card monitoring-primary-status" id="motherStatusCardTop">
+<div class="monitoring-status-label">สถานีหลัก</div>
 <div class="monitoring-status-value">
-<span class="text-slate-500" id="dataStateDotTop">●</span>
+<span class="monitoring-live-dot text-slate-500" id="dataStateDotTop">●</span>
 <span id="dataStateStatusTop">กำลังตรวจสอบ</span>
 </div>
-<div class="monitoring-status-hint">แสดงความพร้อมของข้อมูลปัจจุบัน</div>
 </div>
-<div class="monitoring-status-card monitoring-node-count">
-<div class="monitoring-status-label">จุดตรวจวัด ONLINE</div>
-<div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
-<div class="monitoring-status-hint">จำนวนจุดที่ระบบแสดงเป็น ONLINE ขณะนี้</div>
+<div class="monitoring-status-card monitoring-node-count" id="nodeCountCardTop">
+<div class="monitoring-status-label">จุดตรวจวัด</div>
+<div class="monitoring-node-count-main">
+<span class="monitoring-node-count-value" id="nodesActiveTop">0 / 3</span>
+<span class="monitoring-node-count-unit">จุดออนไลน์</span>
+</div>
 </div>
 </div>
 </div>
@@ -2148,7 +2149,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260912-v8-3-simplefx"></script>
+<script defer src="app.js?v=20260912-v8-8-tdzfix"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
