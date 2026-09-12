@@ -24661,406 +24661,105 @@ html body .site-header.is-authenticated #accountRoleBadge{
 
 
 /* ============================================================
-   V8.4 — BALANCED CURRENT COMPARISON
-   Goal:
-   - Same information and layout
-   - Easier visual hierarchy
-   - All 4 main cards attract the eye equally
-   - No emoji boxes
-   - PM2.5 / PM10 particle icons differ in visual scale
+   V8.7 — SAFE COMPARISON VISUAL FIX
+   Scoped strictly under .current-summary-board.
    ============================================================ */
-
-.current-summary-board{
-  --summary-card-bg:rgba(8,24,39,.88);
-  --summary-card-bg-2:rgba(10,29,46,.92);
-}
-
-/* Make all 4 main cards share the same dark base.
-   Metric color is now an accent, not a full bright background. */
 .current-summary-board .current-metric-card{
   position:relative!important;
   overflow:hidden!important;
-  color:#eaf4ff!important;
-  background:
-    linear-gradient(145deg,var(--summary-card-bg-2),var(--summary-card-bg))!important;
+  background:linear-gradient(145deg,rgba(10,29,46,.95),rgba(8,24,39,.92))!important;
   border:1px solid rgba(148,163,184,.14)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.025),
-    0 10px 28px rgba(0,0,0,.10)!important;
+  border-top:3px solid var(--safe-accent,#67e8f9)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.10)!important;
 }
 
-/* Colored top accent = enough identity without fighting for attention */
-.current-summary-board .current-metric-card::before{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  top:0;
-  height:3px;
-  opacity:.9;
-  background:var(--metric-accent,#67e8f9);
-}
-.current-summary-board .current-metric-card::after{
-  content:"";
-  position:absolute;
-  width:180px;
-  height:180px;
-  right:-100px;
-  top:-105px;
-  border-radius:50%;
-  pointer-events:none;
-  opacity:.13;
-  background:radial-gradient(circle,var(--metric-accent,#67e8f9),transparent 68%);
+.current-summary-board .metric-pm25::before,
+.current-summary-board .metric-pm25::after,
+.current-summary-board .metric-pm10::before,
+.current-summary-board .metric-pm10::after,
+.current-summary-board .metric-temperature::before,
+.current-summary-board .metric-temperature::after,
+.current-summary-board .metric-humidity::before,
+.current-summary-board .metric-humidity::after{
+  content:none!important;
+  display:none!important;
 }
 
-/* Balanced metric accents */
-.current-summary-board .metric-pm25{
-  --metric-accent:#38bdf8;
-}
-.current-summary-board .metric-pm10{
-  --metric-accent:#22d3ee;
-}
-.current-summary-board .metric-temperature{
-  --metric-accent:#fb923c;
-}
-.current-summary-board .metric-humidity{
-  --metric-accent:#34d399;
+.current-summary-board .metric-pm25{--safe-accent:#38bdf8!important}
+.current-summary-board .metric-pm10{--safe-accent:#22d3ee!important}
+.current-summary-board .metric-temperature{--safe-accent:#fb923c!important}
+.current-summary-board .metric-humidity{--safe-accent:#34d399!important}
+
+.current-summary-board .current-metric-card-head h3{
+  color:var(--safe-accent)!important;
 }
 
-/* Remove all icon frames: emoji stands by itself at upper-left */
 .current-summary-board .current-metric-icon{
   width:auto!important;
   height:auto!important;
   min-width:0!important;
   padding:0!important;
-  margin:0 2px 0 0!important;
+  margin:0 3px 0 0!important;
   border:0!important;
-  outline:0!important;
   border-radius:0!important;
   background:transparent!important;
   box-shadow:none!important;
-  backdrop-filter:none!important;
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
-  font-size:24px!important;
   line-height:1!important;
-  filter:none!important;
+  overflow:visible!important;
   flex:0 0 auto!important;
 }
 
-/* Fine vs coarse dust:
-   same emoji family idea, but different visual scale to hint particle size. */
-.current-summary-board .current-metric-icon.particle-fine{
-  font-size:21px!important;
+.current-summary-board .dust-emoji-fine{
+  font-size:20px!important;
   transform:scale(.90);
   transform-origin:left center;
 }
-.current-summary-board .current-metric-icon.particle-coarse{
-  font-size:29px!important;
-  transform:scale(1.03);
+.current-summary-board .dust-emoji-coarse{
+  font-size:28px!important;
+  transform:scale(1.02);
   transform-origin:left center;
 }
 
-/* Clean header spacing after icon-frame removal */
-.current-summary-board .current-metric-card-head{
-  align-items:flex-start!important;
-  gap:10px!important;
-  min-height:42px!important;
-}
-.current-summary-board .current-metric-card-head>div:last-child{
-  min-width:0;
-}
-.current-summary-board .current-metric-card-head span{
-  color:#91a4b9!important;
-  opacity:1!important;
-  font-size:10px!important;
-  line-height:1.25!important;
-}
-.current-summary-board .current-metric-card-head h3{
-  margin-top:3px!important;
-  color:var(--metric-accent,#eaf4ff)!important;
-  font-size:16px!important;
-  line-height:1.15!important;
-  text-shadow:0 0 15px color-mix(in srgb,var(--metric-accent) 24%,transparent);
+.current-summary-board .current-metric-card-head,
+.current-summary-board .current-metric-average,
+.current-summary-board .current-metric-extremes{
+  position:relative!important;
+  z-index:2!important;
 }
 
-/* Main value has equal visual weight on every metric */
 .current-summary-board .current-metric-average>b{
   color:#f8fbff!important;
-  font-weight:800!important;
-  letter-spacing:-.035em!important;
+  font-size:clamp(27px,2.15vw,32px)!important;
   text-shadow:none!important;
 }
-.current-summary-board .current-metric-average>small{
-  color:#91a4b9!important;
-}
 
-/* Lowest / highest rows:
-   neutral panels, only arrow/label receives color.
-   This avoids bright PM2.5 and Humidity cards washing out text. */
 .current-summary-board .current-metric-extremes>div{
-  background:rgba(2,12,23,.42)!important;
+  background:rgba(2,12,23,.48)!important;
   border:1px solid rgba(148,163,184,.09)!important;
   box-shadow:none!important;
 }
+
 .current-summary-board .current-metric-extremes>div:first-child span{
   color:#67e8f9!important;
 }
 .current-summary-board .current-metric-extremes>div:last-child span{
   color:#fb7185!important;
 }
-.current-summary-board .current-metric-extremes b{
-  color:#f8fbff!important;
-}
-.current-summary-board .current-metric-extremes small{
-  color:#8da0b5!important;
-}
 
-/* Hover: subtle, same strength for every card */
 @media(hover:hover) and (pointer:fine){
   .current-summary-board .current-metric-card{
-    transition:
-      transform .20s ease,
-      border-color .20s ease,
-      box-shadow .20s ease!important;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
   }
   .current-summary-board .current-metric-card:hover{
     transform:translateY(-2px);
-    border-color:color-mix(in srgb,var(--metric-accent) 28%,rgba(148,163,184,.14))!important;
-    box-shadow:
-      0 14px 32px rgba(0,0,0,.15),
-      0 0 24px color-mix(in srgb,var(--metric-accent) 7%,transparent)!important;
+    box-shadow:0 14px 30px rgba(0,0,0,.14)!important;
   }
 }
 
-/* Supporting information remains clearly secondary */
-.current-summary-board .current-support-card-simple{
-  background:rgba(15,27,52,.66)!important;
-  border-color:rgba(129,140,248,.15)!important;
-}
-.current-summary-board .current-support-card-simple .current-support-icon{
-  width:auto!important;
-  height:auto!important;
-  min-width:0!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  font-size:22px!important;
-}
-
-/* Mobile: retain readability, no extra GPU-heavy effects */
 @media(max-width:700px){
-  .current-summary-board .current-metric-card::after{
-    width:120px;
-    height:120px;
-    right:-70px;
-    top:-70px;
-    opacity:.10;
-  }
-  .current-summary-board .current-metric-icon.particle-fine{
-    font-size:20px!important;
-  }
-  .current-summary-board .current-metric-icon.particle-coarse{
-    font-size:26px!important;
-  }
-}
-
-/* Fallback for browsers without color-mix: base styles above remain valid */
-@supports not (color:color-mix(in srgb,white 50%,black)){
-  .current-summary-board .current-metric-card-head h3{
-    text-shadow:none!important;
-  }
-  .current-summary-board .current-metric-card:hover{
-    border-color:rgba(103,232,249,.22)!important;
-  }
-}
-
-
-/* ============================================================
-   V8.6 RECOVERY — CURRENT COMPARISON DECORATION FIX
-   Important:
-   older Overview styles also use .metric-pm25 / .metric-humidity.
-   Their pseudo-elements were leaking into this section.
-   ============================================================ */
-
-/* Kill inherited Overview scene pseudo-elements in THIS section only. */
-.current-summary-board .current-metric-card::before,
-.current-summary-board .current-metric-card::after{
-  content:none!important;
-  display:none!important;
-  width:0!important;
-  height:0!important;
-  inset:auto!important;
-  left:auto!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:auto!important;
-  background:none!important;
-  box-shadow:none!important;
-  transform:none!important;
-  animation:none!important;
-}
-
-/* Use a real border instead of pseudo-elements for the metric accent. */
-.current-summary-board .current-metric-card{
-  border-top:3px solid var(--metric-accent,#67e8f9)!important;
-  padding-top:15px!important;
-}
-
-/* Keep all four cards equally dark / equally important. */
-.current-summary-board .metric-pm25,
-.current-summary-board .metric-pm10,
-.current-summary-board .metric-temperature,
-.current-summary-board .metric-humidity{
-  background:
-    linear-gradient(145deg,rgba(10,29,46,.94),rgba(8,24,39,.90))!important;
-}
-
-/* Emoji only — no box/frame. */
-.current-summary-board .current-metric-icon{
-  position:relative!important;
-  z-index:2!important;
-  width:auto!important;
-  height:auto!important;
-  min-width:0!important;
-  flex:0 0 auto!important;
-  padding:0!important;
-  margin:0 2px 0 0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  box-shadow:none!important;
-  overflow:visible!important;
-}
-
-/* Make the fine/coarse dust icons visibly different without adding a frame. */
-.current-summary-board .particle-fine{
-  font-size:20px!important;
-  opacity:.92;
-}
-.current-summary-board .particle-coarse{
-  font-size:28px!important;
-  opacity:1;
-}
-
-/* Readability: do not let any decorative layer sit above the data. */
-.current-summary-board .current-metric-card-head,
-.current-summary-board .current-metric-average,
-.current-summary-board .current-metric-extremes{
-  position:relative!important;
-  z-index:3!important;
-}
-
-/* Give PM2.5 / humidity the same visual weight as the other two cards. */
-.current-summary-board .current-metric-average>b{
-  font-size:clamp(27px,2.1vw,32px)!important;
-  line-height:1.08!important;
-}
-.current-summary-board .current-metric-extremes>div{
-  background:rgba(2,12,23,.48)!important;
-}
-
-/* ============================================================
-   V8.6 — SIMPLIFIED TOP STATUS CARDS (from requested V8.5)
-   ============================================================ */
-.monitoring-status-cluster{
-  gap:10px!important;
-  min-width:min(370px,100%)!important;
-}
-.monitoring-status-card{
-  --status-accent:100,116,139;
-  position:relative!important;
-  overflow:hidden!important;
-  min-height:76px!important;
-  padding:12px 14px!important;
-  border:1px solid rgba(var(--status-accent),.20)!important;
-  border-radius:15px!important;
-  background:
-    radial-gradient(circle at 100% 0%,rgba(var(--status-accent),.10),transparent 50%),
-    rgba(13,35,55,.86)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.025),
-    0 8px 22px rgba(0,0,0,.08)!important;
-  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease!important;
-}
-.monitoring-status-card::before{
-  content:""!important;
-  display:block!important;
-  position:absolute!important;
-  left:0!important;
-  right:auto!important;
-  top:14px!important;
-  bottom:14px!important;
-  width:2px!important;
-  height:auto!important;
-  border-radius:999px!important;
-  background:rgb(var(--status-accent))!important;
-  opacity:.78!important;
-  box-shadow:none!important;
-  transform:none!important;
-}
-.monitoring-status-card.status-is-online{--status-accent:52,211,153}
-.monitoring-status-card.status-is-partial{--status-accent:251,191,36}
-.monitoring-status-card.status-is-offline{--status-accent:248,113,113}
-.monitoring-status-card.status-is-unknown{--status-accent:148,163,184}
-
-.monitoring-status-label{
-  margin-left:3px!important;
-  color:#9aaabd!important;
-  font-size:11px!important;
-  font-weight:800!important;
-  letter-spacing:.03em!important;
-}
-.monitoring-status-value{
-  display:flex!important;
-  align-items:center!important;
-  gap:6px!important;
-  margin-top:7px!important;
-  margin-left:3px!important;
-  color:#f4fbff!important;
-  font-size:17px!important;
-  font-weight:900!important;
-}
-.monitoring-node-count-main{
-  display:flex!important;
-  align-items:baseline!important;
-  gap:7px!important;
-  margin-top:6px!important;
-  margin-left:3px!important;
-}
-.monitoring-node-count-value{
-  margin:0!important;
-  color:rgb(var(--status-accent))!important;
-  font-size:21px!important;
-  font-weight:950!important;
-}
-.monitoring-node-count-unit{
-  color:#a0aec0!important;
-  font-size:10px!important;
-  font-weight:800!important;
-}
-.monitoring-status-hint{display:none!important}
-
-@keyframes monitoringTopDotPulseV86{
-  0%,100%{opacity:1;transform:scale(1)}
-  50%{opacity:.7;transform:scale(.82)}
-}
-.status-is-online .monitoring-live-dot{
-  display:inline-block!important;
-  transform-origin:center;
-  animation:monitoringTopDotPulseV86 2.2s ease-in-out infinite;
-}
-@media(hover:hover) and (pointer:fine){
-  .monitoring-status-card:hover{
-    transform:translateY(-2px);
-    border-color:rgba(var(--status-accent),.34)!important;
-  }
-}
-@media(prefers-reduced-motion:reduce){
-  .status-is-online .monitoring-live-dot{
-    animation:none!important;
-  }
+  .current-summary-board .dust-emoji-fine{font-size:19px!important}
+  .current-summary-board .dust-emoji-coarse{font-size:25px!important}
 }
