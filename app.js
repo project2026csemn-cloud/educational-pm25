@@ -1291,6 +1291,22 @@ Boolean
 // MONITORING NODES
 // =====================================================
 
+function setMonitoringValueText(el,text){
+  if(!el)return;
+
+  const next=String(text??"--");
+  const prev=String(el.textContent??"").trim();
+
+  if(prev && prev!=="--" && next!=="--" && prev!==next){
+    el.classList.remove("node-value-updated");
+    void el.offsetWidth;
+    el.classList.add("node-value-updated");
+    window.setTimeout(()=>el.classList.remove("node-value-updated"),720);
+  }
+
+  el.textContent=next;
+}
+
 function setNodeValues(
 prefix,
 n
@@ -1309,10 +1325,12 @@ $(prefix+k);
 
 if(e){
 
-e.textContent=
+setMonitoringValueText(
+e,
 n
 ?fmt(n[k])
-:"--";
+:"--"
+);
 
 }
 
@@ -1353,11 +1371,17 @@ $(prefix+k);
 
 if(e){
 
-e.textContent=
+setMonitoringValueText(
+e,
 n&&
 n[field]!=null
-?fmt(n[field])+unit
-:"--";
+?(
+field==="light"
+?Number(n[field]).toLocaleString("th-TH",{maximumFractionDigits:0})+unit
+:fmt(n[field])+unit
+)
+:"--"
+);
 
 }
 
@@ -1416,6 +1440,16 @@ s.innerHTML=
 
 card.classList.toggle(
 "offline",
+st==="offline"
+);
+
+card.classList.toggle(
+"node-online",
+st==="online"
+);
+
+card.classList.toggle(
+"node-offline",
 st==="offline"
 );
 
@@ -1506,12 +1540,6 @@ $("dataStateStatusTop");
 const ac=
 $("nodesActiveTop");
 
-const motherCard=
-$("motherStatusCardTop");
-
-const nodeCountCard=
-$("nodeCountCardTop");
-
 if(
 !dot||
 !st||
@@ -1520,67 +1548,42 @@ if(
 return;
 }
 
-const setTopStatusCardState=(el,state)=>{
-if(!el)return;
-el.classList.remove(
-"status-is-online",
-"status-is-partial",
-"status-is-offline",
-"status-is-unknown"
-);
-el.classList.add(state);
-};
-
 if(
 !apiConnectionOnline
 ){
 
 dot.className=
-"monitoring-live-dot text-red-400";
+"text-red-400";
 
 st.textContent=
 "ไม่พร้อมใช้งาน";
 
 ac.textContent=
-`-- / ${TOTAL_NODES}`;
+"ตรวจสอบจำนวนจุดไม่ได้";
 
-setTopStatusCardState(motherCard,"status-is-unknown");
-setTopStatusCardState(nodeCountCard,"status-is-unknown");
+}else if(
+motherOnline()
+){
+
+dot.className=
+"text-emerald-400";
+
+st.textContent=
+"ONLINE";
+
+ac.textContent=
+`${activeCount()} / ${TOTAL_NODES} จุด`;
 
 }else{
 
-const motherIsOnline=
-motherOnline();
-
-const onlineNodes=
-activeCount();
-
 dot.className=
-motherIsOnline
-?"monitoring-live-dot text-emerald-400"
-:"monitoring-live-dot text-red-400";
+"text-red-400";
 
 st.textContent=
-motherIsOnline
-?"ONLINE"
-:"OFFLINE";
+"OFFLINE";
 
 ac.textContent=
-`${onlineNodes} / ${TOTAL_NODES}`;
-
-setTopStatusCardState(
-motherCard,
-motherIsOnline?"status-is-online":"status-is-offline"
-);
-
-setTopStatusCardState(
-nodeCountCard,
-onlineNodes===TOTAL_NODES
-?"status-is-online"
-:onlineNodes>0
-?"status-is-partial"
-:"status-is-offline"
-);
+`0 / ${TOTAL_NODES} จุด`;
 
 }
 
@@ -7179,7 +7182,7 @@ title:"📊 เปรียบเทียบข้อมูลปัจจุ�
 html:`<div class="help-intro-card"><b>แสดงทุกค่าพร้อมกันเพื่อเปรียบเทียบได้ทันที</b><span>ค่าหลักประกอบด้วย PM2.5, PM10, อุณหภูมิ และความชื้น ส่วน PM1.0 และแสงแสดงเป็นข้อมูลประกอบ</span></div>
 <section class="help-section"><h4>ค่าเฉลี่ยปัจจุบัน</h4><p>เป็นค่าเฉลี่ยของจุดตรวจวัดที่มีข้อมูลปัจจุบันสำหรับตัวแปรนั้น ใช้ดูภาพรวมของพื้นที่ ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
 <section class="help-section"><h4>ต่ำสุดและสูงสุด</h4><p>แสดงทั้งค่าและชื่อจุดที่ต่ำสุดหรือสูงสุด เพื่อให้เห็นความแตกต่างระหว่างตำแหน่งได้ทันที โดยคำว่า “สูงสุด” ไม่ได้หมายความว่าอันตรายเสมอไป</p></section>
-<section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงยังคงแสดงครบทั้งค่าเฉลี่ย ต่ำสุด และสูงสุด แต่จัดไว้เป็นข้อมูลประกอบเพื่อลดความสับสนกับตัวชี้วัดหลัก</p></section>`
+<section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงแสดงเฉพาะค่าเฉลี่ยเพื่อให้คนทั่วไปอ่านง่าย โดยใช้เป็นข้อมูลประกอบ ไม่ใช่ตัวชี้วัดสุขภาพหลัก</p></section>`
 },
 
 alerts:{
@@ -13161,22 +13164,3 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
 })();
-
-// =====================================================
-// V8.6 RECOVERY — MAP SIZE RETRY ONLY
-// Does not alter map/auth logic; it only retries Leaflet sizing.
-// =====================================================
-window.addEventListener("load",()=>{
-  window.setTimeout(()=>{
-    try{
-      const panel=document.querySelector('[data-dashboard-page-panel="monitoring"]');
-      if(panel?.classList.contains("active") && typeof ensureMonitoringMap==="function"){
-        ensureMonitoringMap();
-        if(typeof renderMonitoringMap==="function")renderMonitoringMap({fit:!selectedMonitoringDeviceId});
-        monitoringMap?.invalidateSize?.();
-      }
-    }catch(e){
-      console.warn("Monitoring map recovery retry:",e);
-    }
-  },500);
-});
