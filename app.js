@@ -11010,21 +11010,61 @@ function renderMonitoringLocationDetail(device){
   }
 }
 
+
+function monitoringMapMobileMode(){
+  return window.matchMedia("(max-width: 700px)").matches;
+}
+
+function setMobileMonitoringDetailOpen(open){
+  const panel=$("mapDetailPanel");
+  const backdrop=$("mapDetailBackdrop");
+
+  document.body.classList.toggle(
+    "mobile-map-detail-open",
+    Boolean(open)&&monitoringMapMobileMode()
+  );
+
+  if(backdrop){
+    const show=Boolean(open)&&monitoringMapMobileMode();
+    backdrop.classList.toggle("hidden",!show);
+    backdrop.setAttribute("aria-hidden",show?"false":"true");
+  }
+
+  if(panel&&open&&monitoringMapMobileMode()){
+    panel.scrollTop=0;
+    const scroller=panel.querySelector(".monitoring-place-detail-scroll");
+    if(scroller)scroller.scrollTop=0;
+  }
+}
+
 function selectMonitoringLocation(deviceId){
   const d=configDevice(deviceId);
   if(!d)return;
   selectedMonitoringDeviceId=deviceId;
+
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.classList.toggle("active",btn.dataset.mapDevice===deviceId);
   });
+
   $("monitoringMapLayout")?.classList.add("has-detail");
   $("mapDetailPanel")?.setAttribute("aria-hidden","false");
+
   renderMonitoringLocationDetail(d);
   renderMonitoringMap();
+
   const coords=deviceCoordinates(d);
   const map=ensureMonitoringMap();
-  if(map&&coords)map.flyTo(coords,19,{animate:true,duration:.8});
-  setTimeout(()=>map?.invalidateSize(),250);
+
+  if(map&&coords){
+    map.flyTo(
+      coords,
+      monitoringMapMobileMode()?18:19,
+      {animate:true,duration:.72}
+    );
+  }
+
+  setMobileMonitoringDetailOpen(true);
+  setTimeout(()=>map?.invalidateSize(),220);
 }
 
 function closeMonitoringLocationDetail({fit=true}={}){
@@ -11032,8 +11072,9 @@ function closeMonitoringLocationDetail({fit=true}={}){
   document.querySelectorAll("[data-map-device]").forEach(btn=>btn.classList.remove("active"));
   $("monitoringMapLayout")?.classList.remove("has-detail");
   $("mapDetailPanel")?.setAttribute("aria-hidden","true");
+  setMobileMonitoringDetailOpen(false);
   renderMonitoringMap({fit});
-  setTimeout(()=>monitoringMap?.invalidateSize(),250);
+  setTimeout(()=>monitoringMap?.invalidateSize(),220);
 }
 
 function setupMonitoringMapUi(){
@@ -11042,6 +11083,16 @@ function setupMonitoringMapUi(){
   });
 
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+
+  $("mapDetailBackdrop")?.addEventListener("click",()=>{
+    closeMonitoringLocationDetail({fit:false});
+  });
+
+  document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&selectedMonitoringDeviceId){
+      closeMonitoringLocationDetail({fit:false});
+    }
+  });
 
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.addEventListener("click",()=>{
@@ -13206,3 +13257,18 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
 })();
+
+// =====================================================
+// V8.9 — MOBILE MAP DETAIL RESPONSIVE SYNC
+// Keeps desktop behavior unchanged and re-syncs the bottom sheet
+// when rotating/resizing a phone or tablet.
+// =====================================================
+window.addEventListener("resize",()=>{
+  if(!selectedMonitoringDeviceId){
+    setMobileMonitoringDetailOpen(false);
+    return;
+  }
+
+  setMobileMonitoringDetailOpen(true);
+  window.setTimeout(()=>monitoringMap?.invalidateSize(),100);
+},{passive:true});
