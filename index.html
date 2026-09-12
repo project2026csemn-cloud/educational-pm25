@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260912-v8-1-imagefix" rel="stylesheet"/>
+<link href="style.css?v=20260912-v8-2-brightcompare" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -460,58 +460,84 @@
 </div>
 </div>
 </div></section>
-  <section class="mb-4 dashboard-current-section"><div class="glass card p-5 lg:col-span-2 current-environment-card">
-<div class="current-environment-header">
-<div>
-<div class="section-title-with-help">
-<h2 class="text-xl font-black">📍 เปรียบเทียบจุดตรวจวัด</h2>
-<button aria-expanded="false" aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" class="help-button" data-help="currentAir" type="button">?</button>
-</div>
-</div>
-<div class="current-environment-controls">
-<label class="current-metric-label" for="currentMetric">ตัวแปร</label>
-<select aria-label="เลือกตัวแปรข้อมูลปัจจุบัน" class="current-metric-select" id="currentMetric">
-<option selected="" value="pm25">PM2.5</option>
-<option value="pm1">PM1.0</option>
-<option value="pm10">PM10</option>
-<option value="temperature">อุณหภูมิ</option>
-<option value="humidity">ความชื้น</option>
-<option value="light">แสง</option>
-</select>
-<div class="current-quality-badge" id="qualityBadge">รอข้อมูล</div>
-</div>
-</div>
-<div class="current-environment-grid">
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label" id="currentOverallLabel">PM2.5 เฉลี่ยทั้งพื้นที่</span>
-<span class="current-environment-icon">◎</span>
-</div>
-<b class="current-environment-value" id="currentOverallValue">--</b>
-<div class="current-environment-detail" id="currentOverallDetail">ค่าเฉลี่ยจากจุดตรวจวัดที่มีสถานะ ONLINE</div>
-</div>
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่ค่าสูงที่สุด</span>
-<span class="current-environment-icon">↑</span>
-</div>
-<b class="current-environment-value" id="currentHighestValue">--</b>
-<div class="current-environment-detail" id="currentHighestNode">--</div>
-</div>
-<div class="current-environment-item">
-<div class="current-environment-item-top">
-<span class="current-environment-label">จุดที่ควรสนใจ</span>
-<span class="current-environment-icon">!</span>
-</div>
-<b class="current-environment-value current-watch-value" id="currentWatchNode">--</b>
-<div class="current-environment-detail" id="currentWatchDetail">รอข้อมูล</div>
-</div>
-</div>
-<div class="current-environment-footer">
-<span class="current-environment-footer-dot"></span>
-<span id="currentEnvironmentFooter">ใช้ข้อมูลล่าสุดจากจุดตรวจวัดที่มีสถานะ ONLINE</span>
-</div>
-</div></section>
+  <section class="mb-4 dashboard-current-section">
+    <div class="glass card p-5 current-environment-card current-summary-board">
+      <div class="current-summary-header">
+        <div>
+          <div class="section-title-with-help">
+            <h2 class="text-xl font-black">📍 เปรียบเทียบข้อมูลปัจจุบัน</h2>
+            <button aria-expanded="false" aria-label="ดูคำอธิบายข้อมูลปัจจุบัน" class="help-button" data-help="currentAir" type="button">?</button>
+          </div>
+          <p>ดูค่าเฉลี่ย ต่ำสุด และสูงสุดของทุกค่าหลักจากจุดตรวจวัดที่มีข้อมูลปัจจุบัน</p>
+        </div>
+        <div class="current-summary-live">
+          <span class="current-summary-live-dot"></span>
+          <span>ข้อมูลปัจจุบัน</span>
+        </div>
+      </div>
+
+      <div class="current-primary-grid" id="currentPrimaryGrid">
+        <article class="current-metric-card metric-pm25" data-current-field="pm25">
+          <div class="current-metric-card-head"><div class="current-metric-icon">🌫️</div><div><span>ฝุ่นละออง</span><h3>PM2.5</h3></div></div>
+          <div class="current-metric-average"><b id="summary-pm25-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
+          <div class="current-metric-extremes">
+            <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-pm25-min">--</b><small id="summary-pm25-min-node">--</small></div>
+            <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-pm25-max">--</b><small id="summary-pm25-max-node">--</small></div>
+          </div>
+        </article>
+
+        <article class="current-metric-card metric-pm10" data-current-field="pm10">
+          <div class="current-metric-card-head"><div class="current-metric-icon">💨</div><div><span>ฝุ่นละออง</span><h3>PM10</h3></div></div>
+          <div class="current-metric-average"><b id="summary-pm10-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
+          <div class="current-metric-extremes">
+            <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-pm10-min">--</b><small id="summary-pm10-min-node">--</small></div>
+            <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-pm10-max">--</b><small id="summary-pm10-max-node">--</small></div>
+          </div>
+        </article>
+
+        <article class="current-metric-card metric-temperature" data-current-field="temperature">
+          <div class="current-metric-card-head"><div class="current-metric-icon">🌡️</div><div><span>สภาพอากาศ</span><h3>อุณหภูมิ</h3></div></div>
+          <div class="current-metric-average"><b id="summary-temperature-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
+          <div class="current-metric-extremes">
+            <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-temperature-min">--</b><small id="summary-temperature-min-node">--</small></div>
+            <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-temperature-max">--</b><small id="summary-temperature-max-node">--</small></div>
+          </div>
+        </article>
+
+        <article class="current-metric-card metric-humidity" data-current-field="humidity">
+          <div class="current-metric-card-head"><div class="current-metric-icon">💧</div><div><span>สภาพอากาศ</span><h3>ความชื้น</h3></div></div>
+          <div class="current-metric-average"><b id="summary-humidity-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
+          <div class="current-metric-extremes">
+            <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-humidity-min">--</b><small id="summary-humidity-min-node">--</small></div>
+            <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-humidity-max">--</b><small id="summary-humidity-max-node">--</small></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="current-support-head">
+        <div><span>ข้อมูลประกอบ</span><small>ใช้ช่วยอธิบายสภาพแวดล้อม ไม่ใช้เป็นตัวชี้วัดสุขภาพหลัก</small></div>
+      </div>
+
+      <div class="current-support-grid">
+        <article class="current-support-card metric-pm1">
+          <div class="current-support-title"><span class="current-support-icon">◌</span><div><small>ฝุ่นขนาดเล็ก</small><b>PM1.0</b></div></div>
+          <div class="current-support-average"><b id="summary-pm1-avg">--</b><span>เฉลี่ย</span></div>
+          <div class="current-support-range"><span>↓ <b id="summary-pm1-min">--</b> <small id="summary-pm1-min-node">--</small></span><span>↑ <b id="summary-pm1-max">--</b> <small id="summary-pm1-max-node">--</small></span></div>
+        </article>
+
+        <article class="current-support-card metric-light">
+          <div class="current-support-title"><span class="current-support-icon">☀️</span><div><small>สภาพแวดล้อม</small><b>ความเข้มแสง</b></div></div>
+          <div class="current-support-average"><b id="summary-light-avg">--</b><span>เฉลี่ย</span></div>
+          <div class="current-support-range"><span>↓ <b id="summary-light-min">--</b> <small id="summary-light-min-node">--</small></span><span>↑ <b id="summary-light-max">--</b> <small id="summary-light-max-node">--</small></span></div>
+        </article>
+      </div>
+
+      <div class="current-environment-footer current-summary-footer">
+        <span class="current-environment-footer-dot"></span>
+        <span id="currentEnvironmentFooter">กำลังรวบรวมข้อมูลล่าสุด...</span>
+      </div>
+    </div>
+  </section>
 
   <!-- =========================================================
        MAP — เพิ่มต่อจากข้อมูลจุดตรวจวัดเดิม (ไม่แทนที่)
@@ -2101,7 +2127,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260912-v8-1-imagefix"></script>
+<script defer src="app.js?v=20260912-v8-2-brightcompare"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
