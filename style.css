@@ -24422,24 +24422,24 @@ html body .site-header.is-authenticated #accountRoleBadge{
 
 /* ---------- Comparison: easier to read ---------- */
 .current-summary-board .current-summary-header p{
-  font-size:13px!important;
-  line-height:1.6!important;
+  font-size:15px!important;
+  line-height:1.65!important;
   color:#94a3b8!important;
 }
 .current-summary-board .current-metric-card{
   padding:18px!important;
 }
 .current-summary-board .current-metric-card-head h3{
-  font-size:16px!important;
+  font-size:18px!important;
 }
 .current-summary-board .current-metric-card-head span{
-  font-size:10px!important;
+  font-size:12px!important;
 }
 .current-summary-board .current-metric-average>b{
   font-size:clamp(25px,2.2vw,31px)!important;
 }
 .current-summary-board .current-metric-average>small{
-  font-size:11px!important;
+  font-size:13px!important;
 }
 .current-summary-board .current-metric-extremes{
   grid-template-columns:1fr!important;
@@ -24453,13 +24453,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   padding:9px 10px!important;
 }
 .current-summary-board .current-metric-extremes span{
-  font-size:10px!important;
+  font-size:12px!important;
   white-space:nowrap!important;
 }
 .current-summary-board .current-metric-extremes b{
   order:3;
   margin:0!important;
-  font-size:11px!important;
+  font-size:13px!important;
   text-align:right!important;
   overflow:visible!important;
   text-overflow:clip!important;
@@ -24467,7 +24467,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .current-summary-board .current-metric-extremes small{
   order:2;
   margin:0!important;
-  font-size:10px!important;
+  font-size:12px!important;
   color:#94a3b8!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
@@ -24484,19 +24484,19 @@ html body .site-header.is-authenticated #accountRoleBadge{
   padding:14px 16px!important;
 }
 .current-support-card-simple .current-support-average-simple b{
-  font-size:18px!important;
+  font-size:21px!important;
 }
 .current-support-card-simple .current-support-average-simple span{
-  font-size:10px!important;
+  font-size:12px!important;
 }
 .current-support-card-simple>p{
   margin:0!important;
   color:#94a3b8!important;
-  font-size:11px!important;
-  line-height:1.55!important;
+  font-size:13px!important;
+  line-height:1.6!important;
 }
-.current-support-head span{font-size:12px!important}
-.current-support-head small{font-size:10px!important}
+.current-support-head span{font-size:15px!important}
+.current-support-head small{font-size:12px!important}
 
 @media(max-width:1180px){
   .current-support-grid-simple{grid-template-columns:1fr!important}
@@ -24854,9 +24854,8 @@ html body .site-header.is-authenticated #accountRoleBadge{
 
 
 /* ============================================================
-   V8.9 — MOBILE MAP UX
-   Desktop/tablet layouts remain unchanged.
-   On phones: horizontal node tabs + compact map + bottom sheet.
+   V8.13 — CANONICAL MOBILE MAP
+   One mobile implementation only. No V8.9–V8.12 override stack.
    ============================================================ */
 
 .monitoring-map-detail-backdrop,
@@ -24866,35 +24865,34 @@ html body .site-header.is-authenticated #accountRoleBadge{
 
 @media(max-width:700px){
 
-  /* Section itself: use mobile-friendly spacing */
+  /* ---------- section ---------- */
   .monitoring-location-section{
     padding:14px!important;
-    margin-top:14px!important;
     overflow:visible!important;
   }
 
   .monitoring-location-head{
-    gap:12px!important;
+    display:block!important;
     margin-bottom:12px!important;
   }
 
   .monitoring-location-head h2{
     font-size:1.35rem!important;
-    line-height:1.2!important;
+    line-height:1.25!important;
   }
 
   .monitoring-location-head p{
-    font-size:.86rem!important;
+    margin-top:7px!important;
+    font-size:.88rem!important;
     line-height:1.55!important;
-    margin-top:6px!important;
   }
 
-  /* Keep basemap buttons compact instead of full-width chunky controls */
   .map-basemap-switch{
-    width:100%!important;
     display:grid!important;
     grid-template-columns:1fr 1fr!important;
-    gap:5px!important;
+    width:100%!important;
+    margin-top:12px!important;
+    gap:6px!important;
   }
 
   .map-basemap-button{
@@ -24903,548 +24901,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:.84rem!important;
   }
 
-  /* 1 / 2 / 3 become a single horizontal strip */
-  .monitoring-map-node-tabs{
-    display:flex!important;
-    grid-template-columns:none!important;
-    gap:8px!important;
-    margin:0 -2px 12px!important;
-    padding:2px 2px 7px!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    scroll-snap-type:x proximity;
-    overscroll-behavior-x:contain;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  .monitoring-map-node-tabs::-webkit-scrollbar{
-    display:none;
-  }
-
-  .monitoring-map-node-tab{
-    flex:0 0 auto!important;
-    width:auto!important;
-    min-width:145px!important;
-    max-width:210px!important;
-    padding:9px 11px!important;
-    gap:9px!important;
-    border-radius:13px!important;
-    scroll-snap-align:start;
-  }
-
-  .monitoring-map-node-tab > span{
-    width:30px!important;
-    height:30px!important;
-    flex-basis:30px!important;
-    font-size:.9rem!important;
-  }
-
-  .monitoring-map-node-tab b{
-    font-size:.82rem!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-  }
-
-  .monitoring-map-node-tab small{
-    max-width:125px!important;
-    font-size:.68rem!important;
-  }
-
-  /* The map should not consume a whole screen */
-  .monitoring-map-layout,
-  .monitoring-map-layout.has-detail{
-    display:block!important;
-    min-height:0!important;
-    overflow:visible!important;
-    border-radius:16px!important;
-  }
-
-  .monitoring-map-wrap,
-  .monitoring-map{
-    min-height:0!important;
-    height:340px!important;
-  }
-
-  .monitoring-map-wrap{
-    overflow:hidden!important;
-    border-radius:16px!important;
-  }
-
-  .monitoring-map{
-    border-radius:16px!important;
-  }
-
-  .monitoring-map .leaflet-control-zoom{
-    margin-top:12px!important;
-    margin-left:12px!important;
-  }
-
-  .monitoring-map .leaflet-control-zoom a{
-    width:36px!important;
-    height:36px!important;
-    line-height:36px!important;
-    font-size:20px!important;
-  }
-
-  .monitoring-map .leaflet-control-attribution{
-    max-width:78%!important;
-    font-size:9px!important;
-    line-height:1.25!important;
-  }
-
-  /* Detail becomes a fixed bottom sheet instead of a long block below map */
-  .monitoring-place-detail{
-    display:flex!important;
-    flex-direction:column!important;
-    position:fixed!important;
-    left:10px!important;
-    right:10px!important;
-    bottom:10px!important;
-    top:auto!important;
-    z-index:5002!important;
-    width:auto!important;
-    min-width:0!important;
-    height:min(78dvh,680px)!important;
-    max-height:calc(100dvh - 28px)!important;
-    overflow:hidden!important;
-    opacity:0!important;
-    visibility:hidden!important;
-    pointer-events:none!important;
-    transform:translate3d(0,110%,0)!important;
-    border:1px solid rgba(103,232,249,.18)!important;
-    border-radius:22px!important;
-    background:linear-gradient(180deg,#0d1b2d 0%,#07111f 100%)!important;
-    box-shadow:0 -18px 55px rgba(0,0,0,.46)!important;
-    transition:
-      transform .26s cubic-bezier(.22,.8,.26,1),
-      opacity .18s ease,
-      visibility .26s step-end!important;
-  }
-
-  .monitoring-map-layout.has-detail .monitoring-place-detail{
-    display:flex!important;
-    opacity:1!important;
-    visibility:visible!important;
-    pointer-events:auto!important;
-    transform:translate3d(0,0,0)!important;
-    transition:
-      transform .26s cubic-bezier(.22,.8,.26,1),
-      opacity .18s ease,
-      visibility 0s step-start!important;
-  }
-
-  /* Small visual handle like a native mobile drawer */
-  .monitoring-place-drag-handle{
-    display:block!important;
-    width:44px!important;
-    height:5px!important;
-    flex:0 0 5px!important;
-    margin:9px auto 0!important;
-    border-radius:999px!important;
-    background:rgba(148,163,184,.42)!important;
-  }
-
-  .monitoring-place-detail-head{
-    position:relative!important;
-    flex:0 0 auto!important;
-    padding:11px 16px 13px!important;
-    align-items:flex-start!important;
-  }
-
-  .monitoring-place-detail-head > div > span{
-    font-size:.61rem!important;
-  }
-
-  .monitoring-place-detail-head h3{
-    margin-top:4px!important;
-    padding-right:8px!important;
-    font-size:1.13rem!important;
-    line-height:1.25!important;
-  }
-
-  .monitoring-place-detail-head p{
-    font-size:.76rem!important;
-  }
-
-  .monitoring-place-detail-head button{
-    width:40px!important;
-    height:40px!important;
-    flex-basis:40px!important;
-    border-radius:12px!important;
-    font-size:1.55rem!important;
-  }
-
-  /* Scroll only inside the drawer */
-  .monitoring-place-detail-scroll{
-    flex:1 1 auto!important;
-    min-height:0!important;
-    max-height:none!important;
-    overflow-y:auto!important;
-    overscroll-behavior:contain;
-    padding:12px 16px 20px!important;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  .monitoring-place-block + .monitoring-place-block{
-    margin-top:14px!important;
-    padding-top:14px!important;
-  }
-
-  .monitoring-place-block h4{
-    margin-bottom:9px!important;
-    font-size:.76rem!important;
-  }
-
-  /* Main image: useful but not gigantic */
-  .monitoring-place-main-image{
-    height:210px!important;
-    aspect-ratio:auto!important;
-    border-radius:13px!important;
-  }
-
-  .monitoring-place-thumbs{
-    display:flex!important;
-    grid-template-columns:none!important;
-    gap:7px!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    padding:1px 1px 5px!important;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  .monitoring-place-thumbs::-webkit-scrollbar{
-    display:none;
-  }
-
-  .monitoring-place-thumb{
-    flex:0 0 72px!important;
-    width:72px!important;
-    height:58px!important;
-    aspect-ratio:auto!important;
-    border-radius:9px!important;
-  }
-
-  .monitoring-place-description{
-    font-size:.9rem!important;
-    line-height:1.7!important;
-  }
-
-  /* Backdrop only exists on phone and only while detail is open */
-  .monitoring-map-detail-backdrop{
-    display:block;
-    position:fixed;
-    inset:0;
-    z-index:5001;
-    background:rgba(2,8,23,.52);
-    backdrop-filter:blur(2px);
-    opacity:1;
-  }
-
-  .monitoring-map-detail-backdrop.hidden{
-    display:none!important;
-  }
-
-  /* Avoid page content shifting/scrolling behind open drawer */
-  body.mobile-map-detail-open{
-    overflow:hidden!important;
-    touch-action:none;
-  }
-
-  body.mobile-map-detail-open .monitoring-place-detail,
-  body.mobile-map-detail-open .monitoring-place-detail-scroll{
-    touch-action:pan-y;
-  }
-}
-
-/* Very small phones */
-@media(max-width:420px){
-  .monitoring-location-section{
-    padding:12px!important;
-  }
-
-  .monitoring-map-node-tab{
-    min-width:132px!important;
-  }
-
-  .monitoring-map-wrap,
-  .monitoring-map{
-    height:315px!important;
-  }
-
-  .monitoring-place-detail{
-    left:7px!important;
-    right:7px!important;
-    bottom:7px!important;
-    height:min(80dvh,650px)!important;
-    border-radius:20px!important;
-  }
-
-  .monitoring-place-main-image{
-    height:190px!important;
-  }
-
-  .monitoring-place-thumb{
-    flex-basis:66px!important;
-    width:66px!important;
-    height:54px!important;
-  }
-}
-
-@media(prefers-reduced-motion:reduce){
-  .monitoring-place-detail{
-    transition:none!important;
-  }
-}
-
-
-/* ============================================================
-   V8.10 — MOBILE MAP SIMPLIFICATION + MARKER CLICK FIX UI
-   Overrides V8.9 only on phones.
-   ============================================================ */
-
-@media(max-width:700px){
-
-  /* Make node selector easier: compact horizontal chips */
-  .monitoring-map-node-tabs{
-    display:flex!important;
-    gap:7px!important;
-    overflow-x:auto!important;
-    padding:2px 1px 8px!important;
-    margin:0 0 10px!important;
-  }
-
-  .monitoring-map-node-tab{
-    min-width:0!important;
-    width:auto!important;
-    flex:0 0 auto!important;
-    padding:8px 11px!important;
-    border-radius:12px!important;
-  }
-
-  .monitoring-map-node-tab > span{
-    width:28px!important;
-    height:28px!important;
-    flex-basis:28px!important;
-    font-size:.84rem!important;
-  }
-
-  .monitoring-map-node-tab b{
-    font-size:.78rem!important;
-  }
-
-  .monitoring-map-node-tab small{
-    display:none!important;
-  }
-
-  /* Slightly shorter map so user sees the whole map context faster */
-  .monitoring-map-wrap,
-  .monitoring-map{
-    height:300px!important;
-  }
-
-  /* Full-screen detail instead of a drawer.
-     Easier to understand and easier to scroll on a phone. */
-  .monitoring-place-detail{
-    display:flex!important;
-    flex-direction:column!important;
-    position:fixed!important;
-    inset:0!important;
-    z-index:5002!important;
-    width:100%!important;
-    height:100dvh!important;
-    max-height:none!important;
-    min-width:0!important;
-    margin:0!important;
-    overflow:hidden!important;
-    border:0!important;
-    border-radius:0!important;
-    background:#07111f!important;
-    box-shadow:none!important;
-
-    opacity:0!important;
-    visibility:hidden!important;
-    pointer-events:none!important;
-    transform:translate3d(0,24px,0)!important;
-
-    transition:
-      transform .20s ease,
-      opacity .16s ease,
-      visibility .20s step-end!important;
-  }
-
-  .monitoring-map-layout.has-detail .monitoring-place-detail{
-    opacity:1!important;
-    visibility:visible!important;
-    pointer-events:auto!important;
-    transform:translate3d(0,0,0)!important;
-    transition:
-      transform .20s ease,
-      opacity .16s ease,
-      visibility 0s step-start!important;
-  }
-
-  .monitoring-place-drag-handle{
-    display:none!important;
-  }
-
-  /* App-like sticky header */
-  .monitoring-place-detail-head{
-    position:sticky!important;
-    top:0!important;
-    z-index:5!important;
-    display:flex!important;
-    align-items:center!important;
-    gap:10px!important;
-    padding:
-      calc(10px + env(safe-area-inset-top))
-      14px
-      11px!important;
-    min-height:70px!important;
-    border-bottom:1px solid rgba(148,163,184,.12)!important;
-    background:rgba(7,17,31,.96)!important;
-    backdrop-filter:blur(10px);
-  }
-
-  .monitoring-place-detail-head > div{
-    flex:1 1 auto!important;
-    min-width:0!important;
-  }
-
-  .monitoring-place-detail-head > div > span{
-    font-size:.58rem!important;
-    letter-spacing:.13em!important;
-  }
-
-  .monitoring-place-detail-head h3{
-    margin-top:3px!important;
-    padding-right:0!important;
-    font-size:1.04rem!important;
-    line-height:1.25!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-  }
-
-  .monitoring-place-detail-head p{
-    margin-top:3px!important;
-    font-size:.70rem!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-  }
-
-  .monitoring-place-detail-head button{
-    width:42px!important;
-    height:42px!important;
-    min-width:42px!important;
-    flex:0 0 42px!important;
-    border-radius:13px!important;
-  }
-
-  /* Only this area scrolls */
-  .monitoring-place-detail-scroll{
-    flex:1 1 auto!important;
-    min-height:0!important;
-    max-height:none!important;
-    overflow-y:auto!important;
-    overscroll-behavior:contain!important;
-    -webkit-overflow-scrolling:touch;
-    padding:
-      14px
-      14px
-      calc(24px + env(safe-area-inset-bottom))!important;
-  }
-
-  .monitoring-place-block{
-    padding-left:0!important;
-    padding-right:0!important;
-  }
-
-  .monitoring-place-block + .monitoring-place-block{
-    margin-top:17px!important;
-    padding-top:17px!important;
-  }
-
-  .monitoring-place-block h4{
-    font-size:.82rem!important;
-    margin-bottom:10px!important;
-  }
-
-  /* Hero image: large enough, but no longer consumes half the phone */
-  .monitoring-place-main-image{
-    width:100%!important;
-    height:190px!important;
-    object-fit:cover!important;
-    border-radius:14px!important;
-  }
-
-  .monitoring-place-thumbs{
-    display:flex!important;
-    gap:7px!important;
-    overflow-x:auto!important;
-    padding:8px 0 4px!important;
-  }
-
-  .monitoring-place-thumb{
-    flex:0 0 68px!important;
-    width:68px!important;
-    height:54px!important;
-    border-radius:9px!important;
-  }
-
-  .monitoring-place-description{
-    font-size:.91rem!important;
-    line-height:1.75!important;
-  }
-
-  /* Backdrop no longer needed visually because detail is full-screen.
-     Keep element only as a state hook. */
-  .monitoring-map-detail-backdrop{
-    display:none!important;
-  }
-
-  /* V8.10 uses position:fixed + stored scrollY in JS.
-     Do not use overflow:hidden/touch-action from V8.9 here. */
-  body.mobile-map-detail-open{
-    overflow:visible!important;
-    touch-action:auto!important;
-  }
-
-  body.mobile-map-detail-open .monitoring-place-detail,
-  body.mobile-map-detail-open .monitoring-place-detail-scroll{
-    touch-action:pan-y!important;
-  }
-}
-
-@media(max-width:420px){
-  .monitoring-map-wrap,
-  .monitoring-map{
-    height:285px!important;
-  }
-
-  .monitoring-place-main-image{
-    height:175px!important;
-  }
-}
-
-@media(prefers-reduced-motion:reduce){
-  .monitoring-place-detail{
-    transition:none!important;
-  }
-}
-
-
-/* ============================================================
-   V8.11 — MOBILE 3-POINT SELECTOR
-   All three fixed monitoring points are visible at once.
-   No horizontal swipe/scroll is required.
-   Desktop remains unchanged.
-   ============================================================ */
-@media(max-width:700px){
-
+  /* ---------- three fixed choices, always visible ---------- */
   .monitoring-map-node-tabs{
     display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -25453,157 +24910,320 @@ html body .site-header.is-authenticated #accountRoleBadge{
     margin:0 0 11px!important;
     padding:0!important;
     overflow:visible!important;
-    scroll-snap-type:none!important;
   }
 
   .monitoring-map-node-tab{
     display:flex!important;
+    flex-direction:column!important;
     align-items:center!important;
     justify-content:center!important;
-    gap:7px!important;
+    gap:4px!important;
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
-    min-height:48px!important;
-    padding:8px 7px!important;
-    overflow:hidden!important;
+    min-height:64px!important;
+    padding:8px 5px!important;
     border-radius:13px!important;
     text-align:center!important;
-    scroll-snap-align:none!important;
   }
 
   .monitoring-map-node-tab > span{
-    width:28px!important;
-    height:28px!important;
-    min-width:28px!important;
-    flex:0 0 28px!important;
-    display:inline-flex!important;
+    display:flex!important;
     align-items:center!important;
     justify-content:center!important;
-    font-size:.82rem!important;
+    width:30px!important;
+    height:30px!important;
+    min-width:30px!important;
+    flex:0 0 30px!important;
+    font-size:.86rem!important;
   }
 
   .monitoring-map-node-tab > div{
     min-width:0!important;
+    width:100%!important;
   }
 
   .monitoring-map-node-tab b{
     display:block!important;
-    max-width:100%!important;
-    font-size:.78rem!important;
+    width:100%!important;
+    font-size:.76rem!important;
     line-height:1.15!important;
     white-space:nowrap!important;
     overflow:hidden!important;
     text-overflow:ellipsis!important;
   }
 
-  /* Location name belongs in the opened detail page, not in the selector. */
   .monitoring-map-node-tab small{
     display:none!important;
   }
 
   .monitoring-map-node-tab.active{
     border-color:rgba(34,211,238,.62)!important;
-    background:rgba(8,145,178,.17)!important;
-    box-shadow:
-      inset 0 0 0 1px rgba(34,211,238,.12),
-      0 7px 18px rgba(6,182,212,.08)!important;
-  }
-}
-
-/* On very narrow phones keep the same 3-button layout. */
-@media(max-width:390px){
-  .monitoring-map-node-tabs{
-    gap:5px!important;
+    background:rgba(8,145,178,.18)!important;
+    box-shadow:inset 0 0 0 1px rgba(34,211,238,.10)!important;
   }
 
-  .monitoring-map-node-tab{
-    gap:5px!important;
-    min-height:46px!important;
-    padding:7px 4px!important;
-  }
-
-  .monitoring-map-node-tab > span{
-    width:26px!important;
-    height:26px!important;
-    min-width:26px!important;
-    flex-basis:26px!important;
-    font-size:.76rem!important;
-  }
-
-  .monitoring-map-node-tab b{
-    font-size:.72rem!important;
-  }
-}
-
-
-/* ============================================================
-   V8.12 — MOBILE MAP RECOVERY
-   Fixes:
-   1) detail panel clipped by .monitoring-map-layout overflow
-   2) invisible detail + frozen page
-   3) mobile refresh at #monitoring startup TDZ is fixed in app.js
-   ============================================================ */
-
-@media(max-width:700px){
-
-  /* A fixed mobile detail must not be clipped by the desktop map card. */
+  /* ---------- map ---------- */
   .monitoring-map-layout,
   .monitoring-map-layout.has-detail{
+    display:block!important;
+    min-height:0!important;
     overflow:visible!important;
-    contain:none!important;
-    transform:none!important;
-    filter:none!important;
+    border-radius:16px!important;
   }
 
-  /* Default hidden state. */
-  #mapDetailPanel.monitoring-place-detail{
+  .monitoring-map-wrap{
+    height:300px!important;
+    min-height:300px!important;
+    overflow:hidden!important;
+    border-radius:16px!important;
+  }
+
+  .monitoring-map{
+    width:100%!important;
+    height:300px!important;
+    min-height:300px!important;
+    border-radius:16px!important;
+  }
+
+  .monitoring-map .leaflet-control-zoom{
+    margin:10px 0 0 10px!important;
+  }
+
+  .monitoring-map .leaflet-control-zoom a{
+    width:36px!important;
+    height:36px!important;
+    line-height:36px!important;
+  }
+
+  .monitoring-map .leaflet-control-attribution{
+    max-width:80%!important;
+    font-size:9px!important;
+  }
+
+  /* ---------- full-screen mobile detail ----------
+     JS portals this panel to <body> on mobile, so no parent can clip it.
+  */
+  body > #mapDetailPanel.monitoring-place-detail{
+    display:flex!important;
+    flex-direction:column!important;
+    position:fixed!important;
+    inset:0!important;
+    z-index:10000!important;
+    width:100%!important;
+    height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    overflow:hidden!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#07111f!important;
+    box-shadow:none!important;
     opacity:0!important;
     visibility:hidden!important;
     pointer-events:none!important;
-    transform:translate3d(0,18px,0)!important;
+    transform:translateY(12px)!important;
+    transition:opacity .16s ease,transform .18s ease,visibility .18s step-end!important;
   }
 
-  /* Open state is direct and independent from the parent grid state. */
-  body.mobile-map-detail-open #mapDetailPanel.monitoring-place-detail,
-  #mapDetailPanel.monitoring-place-detail.mobile-detail-open{
-    display:flex!important;
+  body > #mapDetailPanel.monitoring-place-detail.mobile-detail-open{
     opacity:1!important;
     visibility:visible!important;
     pointer-events:auto!important;
-    transform:translate3d(0,0,0)!important;
+    transform:none!important;
+    transition:opacity .16s ease,transform .18s ease,visibility 0s step-start!important;
   }
 
-  /* Never freeze the page itself. The fixed detail captures its own scroll. */
-  body.mobile-map-detail-open{
-    position:static!important;
-    top:auto!important;
-    left:auto!important;
-    right:auto!important;
-    width:auto!important;
-    overflow:auto!important;
-    touch-action:auto!important;
+  body > #mapDetailPanel .monitoring-place-detail-head{
+    position:relative!important;
+    z-index:2!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    flex:0 0 auto!important;
+    min-height:72px!important;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 11px!important;
+    border-bottom:1px solid rgba(148,163,184,.13)!important;
+    background:#0a192a!important;
   }
 
-  #mapDetailPanel .monitoring-place-detail-scroll{
+  body > #mapDetailPanel .monitoring-place-detail-head > div{
+    flex:1 1 auto!important;
+    min-width:0!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-detail-head > div > span{
+    font-size:.63rem!important;
+    letter-spacing:.13em!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-detail-head h3{
+    margin:3px 0 0!important;
+    padding:0!important;
+    font-size:1.08rem!important;
+    line-height:1.3!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-detail-head p{
+    margin:3px 0 0!important;
+    font-size:.76rem!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  body > #mapDetailPanel #mapDetailClose{
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    flex:0 0 44px!important;
+    border-radius:13px!important;
+    font-size:1.55rem!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-detail-scroll{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    max-height:none!important;
     overflow-y:auto!important;
     overscroll-behavior:contain!important;
     touch-action:pan-y!important;
+    -webkit-overflow-scrolling:touch;
+    padding:15px 14px calc(28px + env(safe-area-inset-bottom))!important;
   }
 
-  /* Selector: always show all 3 choices, no horizontal swipe. */
-  .monitoring-map-node-tabs{
-    display:grid!important;
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    overflow:visible!important;
-    width:100%!important;
-    gap:6px!important;
+  body > #mapDetailPanel .monitoring-place-block + .monitoring-place-block{
+    margin-top:18px!important;
+    padding-top:18px!important;
   }
 
-  .monitoring-map-node-tab{
+  body > #mapDetailPanel .monitoring-place-block h4{
+    margin-bottom:10px!important;
+    font-size:.88rem!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-main-image{
     width:100%!important;
-    min-width:0!important;
-    max-width:none!important;
-    min-height:48px!important;
+    height:190px!important;
+    aspect-ratio:auto!important;
+    overflow:hidden!important;
+    border-radius:14px!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-main-image img{
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-thumbs{
+    display:flex!important;
+    gap:7px!important;
+    margin-top:8px!important;
+    padding:0 0 4px!important;
+    overflow-x:auto!important;
+    scrollbar-width:none;
+  }
+
+  body > #mapDetailPanel .monitoring-place-thumbs::-webkit-scrollbar{
+    display:none;
+  }
+
+  body > #mapDetailPanel .monitoring-place-thumb{
+    flex:0 0 70px!important;
+    width:70px!important;
+    height:56px!important;
+    aspect-ratio:auto!important;
+    border-radius:9px!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-description{
+    font-size:.96rem!important;
+    line-height:1.75!important;
+  }
+
+  body > #mapDetailPanel .monitoring-place-empty{
+    font-size:.88rem!important;
+  }
+
+  /* No body lock. If detail ever fails, the page remains usable. */
+  body.mobile-map-detail-open{
+    overflow:auto!important;
+    position:static!important;
+    touch-action:auto!important;
+  }
+
+  /* ---------- comparison typography on phones ---------- */
+  .current-summary-board .current-summary-header p{
+    font-size:14px!important;
+  }
+
+  .current-summary-board .current-metric-card-head span{
+    font-size:11px!important;
+  }
+
+  .current-summary-board .current-metric-card-head h3{
+    font-size:18px!important;
+  }
+
+  .current-summary-board .current-metric-average>b{
+    font-size:29px!important;
+  }
+
+  .current-summary-board .current-metric-average>small{
+    font-size:12px!important;
+  }
+
+  .current-summary-board .current-metric-extremes span,
+  .current-summary-board .current-metric-extremes small{
+    font-size:11px!important;
+  }
+
+  .current-summary-board .current-metric-extremes b{
+    font-size:13px!important;
+  }
+
+  .current-support-head span{
+    font-size:15px!important;
+  }
+
+  .current-support-head small{
+    font-size:12px!important;
+  }
+
+  .current-support-title small{
+    font-size:10px!important;
+  }
+
+  .current-support-title b{
+    font-size:14px!important;
+  }
+
+  .current-support-card-simple .current-support-average-simple b{
+    font-size:21px!important;
+  }
+
+  .current-support-card-simple .current-support-average-simple span,
+  .current-support-card-simple > p{
+    font-size:12px!important;
+  }
+}
+
+@media(max-width:390px){
+  .monitoring-map-node-tabs{gap:5px!important}
+  .monitoring-map-node-tab{min-height:60px!important;padding:7px 3px!important}
+  .monitoring-map-node-tab > span{width:28px!important;height:28px!important;min-width:28px!important;flex-basis:28px!important}
+  .monitoring-map-node-tab b{font-size:.70rem!important}
+  .monitoring-map-wrap,.monitoring-map{height:285px!important;min-height:285px!important}
+  body > #mapDetailPanel .monitoring-place-main-image{height:175px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body > #mapDetailPanel.monitoring-place-detail{
+    transition:none!important;
   }
 }
