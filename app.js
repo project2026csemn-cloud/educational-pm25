@@ -969,12 +969,32 @@ MOTHER_OFFLINE_MS
 // NODE STATUS RULE
 // =====================================================
 
-function nodeStatusTime(node){if(!node)return null;return parseDate(node.last_seen||node.status_recorded_at||node.timestamp||node.reading_recorded_at||null);}
-function nodeIsFresh(node){const t=nodeStatusTime(node);return Boolean(t)&&Date.now()-t.getTime()<=8*60*1000;}
+function nodeStatusTime(node){
+  if(!node)return null;
+  return parseDate(
+    node.last_seen||
+    node.status_recorded_at||
+    node.timestamp||
+    node.reading_recorded_at||
+    null
+  );
+}
+
+function nodeIsFresh(node){
+  const t=nodeStatusTime(node);
+  if(!t)return false;
+  return Date.now()-t.getTime()<=8*60*1000;
+}
+
 function getNodeStatus(node){
   if(!node)return "offline";
-  const s=String(node.connection_status==="disconnected"?"offline":(node.status||"offline")).toLowerCase();
+
+  const connection=String(node.connection_status||"").toLowerCase();
+  if(connection==="disconnected")return "offline";
+
+  const s=String(node.status||node.command_status||"offline").toLowerCase();
   if(!["online","sleep"].includes(s))return "offline";
+
   return nodeIsFresh(node)?s:"offline";
 }
 
@@ -1009,9 +1029,6 @@ return st==="offline"?"offline":"online";
 // =====================================================
 
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
-const AUTH_USER_CACHE_KEY="localAirAuthUserV6";
-function readCachedAuthUser(){try{const x=localStorage.getItem(AUTH_USER_CACHE_KEY);return x?JSON.parse(x):null;}catch(_){return null;}}
-function saveCachedAuthUser(user){try{if(user)localStorage.setItem(AUTH_USER_CACHE_KEY,JSON.stringify(user));else localStorage.removeItem(AUTH_USER_CACHE_KEY);}catch(_){}}
 
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
@@ -1023,7 +1040,7 @@ if(authToken){
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
-let authUser=authToken?readCachedAuthUser():null;
+let authUser=null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
 
@@ -1497,10 +1514,43 @@ if(
 return;
 }
 
-if(!apiConnectionOnline){
-  dot.className="text-red-400";st.textContent="ไม่พร้อมใช้งาน";ac.textContent="ตรวจสอบจำนวนจุดไม่ได้";
+if(
+!apiConnectionOnline
+){
+
+dot.className=
+"text-red-400";
+
+st.textContent=
+"ไม่พร้อมใช้งาน";
+
+ac.textContent=
+"ตรวจสอบจำนวนจุดไม่ได้";
+
+}else if(
+motherOnline()
+){
+
+dot.className=
+"text-emerald-400";
+
+st.textContent=
+"ONLINE";
+
+ac.textContent=
+`${activeCount()} / ${TOTAL_NODES} จุด`;
+
 }else{
-  dot.className="text-emerald-400";st.textContent="ONLINE";ac.textContent=`${activeCount()} / ${TOTAL_NODES} จุด`;
+
+dot.className=
+"text-red-400";
+
+st.textContent=
+"OFFLINE";
+
+ac.textContent=
+`0 / ${TOTAL_NODES} จุด`;
+
 }
 
 }
@@ -2440,16 +2490,6 @@ return resetCurrent(
 
 }
 
-if(
-!motherOnline()
-){
-
-return resetCurrent(
-"ระบบข้อมูลขาดการเชื่อมต่อ • ไม่สามารถยืนยันข้อมูลปัจจุบันได้"
-);
-
-}
-
 const usable=
 latestNodes
 .filter(
@@ -2601,7 +2641,7 @@ function updateSmart(){
     </div>`;
   };
 
-  if(!apiConnectionOnline||!latestNodes.length){
+  if(!apiConnectionOnline||!motherOnline()){
     renderAdvice({
       cls:"is-offline",
       icon:"📡",
@@ -9751,63 +9791,47 @@ async function loadRealtime(){
 
 try{
 
-const[
-latest,
-mother,
-alerts
-]=
-await Promise.all([
+const latest=await loadLatest();
 
-loadLatest(),
-
-loadMother(),
-
-loadAlerts()
-.catch(
-()=>alertStates
-)
-
-]);
-
-apiConnectionOnline=
-true;
-
-latestNodes=
-latest;
+apiConnectionOnline=true;
+latestNodes=latest;
+latestRecord=latestNodes.at(-1)||null;
 saveLatestSnapshot(latestNodes);
 
-motherStatus=
-mother;
-
-alertStates=
-alerts;
-
 renderMonitoring();
-
 updateCurrent();
-
 updateSmart();
+updateNavigationDashboard();
 
-updateAlertUI();
-checkSituationNotifications();
+// งานรองไม่สามารถลากข้อมูลหลักให้ OFFLINE ได้
+Promise.allSettled([
+  loadMother(),
+  loadAlerts()
+]).then(results=>{
+  if(results[0].status==="fulfilled") motherStatus=results[0].value;
+  if(results[1].status==="fulfilled"&&Array.isArray(results[1].value)) alertStates=results[1].value;
+
+  renderMonitoring();
+  updateCurrent();
+  updateSmart();
+  updateAlertUI();
+  updateNavigationDashboard();
+  checkSituationNotifications();
+});
 
 }catch(e){
 
-console.error(
-"Realtime error:",
-e
-);
+console.error("Realtime latest error:",e);
 
-apiConnectionOnline=
-false;
+// ถ้ามี snapshot เดิมอยู่ ให้คงข้อมูลนั้นไว้
+// แต่สถานะ API แสดงตามความจริงว่าการ request ล่าสุดล้มเหลว
+apiConnectionOnline=false;
 
 renderMonitoring();
-
 updateCurrent();
-
 updateSmart();
-
 updateAlertUI();
+updateNavigationDashboard();
 
 }
 
@@ -10729,11 +10753,6 @@ function updateNavigationDashboard(){
     const label=$("overviewNodeStatus"+i);
     const readingTime=nodeReadingTime(node);
     const t=readingTime?thaiNodeReadingDateTime(readingTime):"--";
-    if(!motherIsOnline){
-      if(dot) dot.className="overview-node-dot unknown";
-      if(label) label.textContent="ไม่สามารถยืนยันสถานะ";
-      continue;
-    }
     const overviewStatus = raw==="sleep" ? "online" : raw;
     if(dot) dot.className=`overview-node-dot ${overviewStatus}`;
     if(label){
@@ -10751,18 +10770,15 @@ function updateNavigationDashboard(){
   if(!apiConnectionOnline){
     navState="is-offline";
     navLabel="ระบบข้อมูล OFFLINE";
-  }else if(!motherOnline()){
-    navState="is-offline";
-    navLabel="ระบบข้อมูล OFFLINE";
   }else if(active===TOTAL_NODES){
     navState="is-online";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+    navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
   }else if(active>0){
     navState="is-warning";
-    navLabel=`จุดตรวจวัด ONLINE ${active}/${TOTAL_NODES}`;
+    navLabel=`ระบบข้อมูล ONLINE • ${active}/${TOTAL_NODES} จุด`;
   }else{
-    navState="is-offline";
-    navLabel=`จุดตรวจวัด ONLINE 0/${TOTAL_NODES}`;
+    navState="is-warning";
+    navLabel="ระบบข้อมูล ONLINE • รอข้อมูลจุดตรวจวัด";
   }
 
   if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
@@ -10882,11 +10898,13 @@ function deviceDisplayName(deviceId){
 // =====================================================
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
-const ADMIN_DEVICE_MAX_IMAGES=8;
-const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
-let monitoringMap=null;let monitoringMarkers=new Map();let selectedMonitoringDeviceId=null;
-let monitoringBaseLayers={street:null,satellite:null};let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
-let adminDeviceMap=null;let adminDeviceMarker=null;let adminBaseLayers={street:null,satellite:null};let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";let activeAdminDeviceId="Number 1";let adminMediaDragIndex=null;
+let monitoringMap=null;
+let monitoringMarkers=new Map();
+let selectedMonitoringDeviceId=null;
+let monitoringBaseLayers={street:null,satellite:null};
+let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
+let adminDeviceMap=null;
+let adminDeviceMarker=null;
 
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
@@ -10917,16 +10935,79 @@ function mapDeviceNumber(deviceId){
 
 function monitoringMarkerIcon(number,selected=false){
   if(typeof L==="undefined")return null;
-  return L.divIcon({className:"monitoring-map-marker-wrap",html:`<div class="monitoring-map-marker-shell${selected?" selected":""}"><span class="monitoring-map-marker-pulse"></span><div class="monitoring-map-marker-pin"><span>${esc(number)}</span></div></div>`,iconSize:[46,52],iconAnchor:[23,49]});
+  return L.divIcon({
+    className:"monitoring-map-marker-wrap",
+    html:`<div class="monitoring-map-marker${selected?" selected":""}"><span>${esc(number)}</span></div>`,
+    iconSize:[40,40],
+    iconAnchor:[20,39]
+  });
 }
 
-function createStreetTileLayer(){return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{minZoom:1,maxNativeZoom:19,maxZoom:22,noWrap:true,bounds:MONITORING_WORLD_BOUNDS,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});}
-function createSatelliteTileLayer(){return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{minZoom:1,maxNativeZoom:17,maxZoom:22,noWrap:true,bounds:MONITORING_WORLD_BOUNDS,attribution:'Tiles &copy; Esri'});}
-function setMapBasemap(scope,mode){const x=mode==="satellite"?"satellite":"street",map=scope==="admin"?adminDeviceMap:monitoringMap,layers=scope==="admin"?adminBaseLayers:monitoringBaseLayers;if(!map)return;Object.values(layers).forEach(l=>{if(l&&map.hasLayer(l))map.removeLayer(l)});layers[x]?.addTo(map);if(scope==="admin"){adminBasemapMode=x;localStorage.setItem("admin-basemap-mode",x);document.querySelectorAll("[data-admin-basemap]").forEach(b=>b.classList.toggle("active",b.dataset.adminBasemap===x));}else{monitoringBasemapMode=x;localStorage.setItem("monitoring-basemap-mode",x);document.querySelectorAll("[data-public-basemap]").forEach(b=>b.classList.toggle("active",b.dataset.publicBasemap===x));}}
+function createMonitoringStreetLayer(){
+  return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    minZoom:1,
+    maxNativeZoom:19,
+    maxZoom:22,
+    noWrap:true,
+    bounds:MONITORING_WORLD_BOUNDS,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  });
+}
+
+function createMonitoringSatelliteLayer(){
+  return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
+    minZoom:1,
+    maxNativeZoom:17,
+    maxZoom:22,
+    noWrap:true,
+    bounds:MONITORING_WORLD_BOUNDS,
+    attribution:'Tiles &copy; Esri'
+  });
+}
+
+function setMonitoringBasemap(mode){
+  if(!monitoringMap)return;
+  monitoringBasemapMode=mode==="satellite"?"satellite":"street";
+
+  Object.values(monitoringBaseLayers).forEach(layer=>{
+    if(layer&&monitoringMap.hasLayer(layer))monitoringMap.removeLayer(layer);
+  });
+
+  monitoringBaseLayers[monitoringBasemapMode]?.addTo(monitoringMap);
+  localStorage.setItem("monitoring-basemap-mode",monitoringBasemapMode);
+
+  document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.publicBasemap===monitoringBasemapMode);
+  });
+}
+
 function ensureMonitoringMap(){
-  const root=$("monitoringMap");if(!root||typeof L==="undefined")return null;if(monitoringMap){setTimeout(()=>monitoringMap.invalidateSize(),0);return monitoringMap;}
-  monitoringMap=L.map(root,{zoomControl:true,scrollWheelZoom:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-  monitoringBaseLayers={street:createStreetTileLayer(),satellite:createSatelliteTileLayer()};setMapBasemap("public",monitoringBasemapMode);renderMonitoringMap({fit:true});return monitoringMap;
+  const root=$("monitoringMap");
+  if(!root||typeof L==="undefined")return null;
+
+  if(monitoringMap){
+    setTimeout(()=>monitoringMap.invalidateSize(),0);
+    return monitoringMap;
+  }
+
+  monitoringMap=L.map(root,{
+    zoomControl:true,
+    scrollWheelZoom:true,
+    minZoom:1,
+    maxZoom:22,
+    worldCopyJump:false,
+    maxBounds:MONITORING_WORLD_BOUNDS,
+    maxBoundsViscosity:1
+  }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+
+  monitoringBaseLayers={
+    street:createMonitoringStreetLayer(),
+    satellite:createMonitoringSatelliteLayer()
+  };
+
+  setMonitoringBasemap(monitoringBasemapMode);
+  renderMonitoringMap({fit:true});
+  return monitoringMap;
 }
 
 function renderMonitoringMapNodeTabs(){
@@ -10966,7 +11047,7 @@ function renderMonitoringMap({fit=false}={}){
 
   if(fit||!selectedMonitoringDeviceId){
     if(bounds.length===1)map.setView(bounds[0],18);
-    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:17});
+    else if(bounds.length>1)map.fitBounds(bounds,{padding:[50,50],maxZoom:18});
     else map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
   }
   setTimeout(()=>map.invalidateSize(),80);
@@ -10995,7 +11076,7 @@ function renderMonitoringLocationDetail(device){
   if(!device)return;
   const title=String(device.display_name||device.device_id||"จุดตรวจวัด").trim();
   const loc=String(device.location_name||"").trim();
-  const desc=String(device.map_description||device.description||"").trim();
+  const desc=String(device.description||"").trim();
   const images=deviceImageList(device);
   const video=String(device.video_url||"").trim();
 
@@ -11082,14 +11163,116 @@ function closeMonitoringLocationDetail({fit=true}={}){
   setTimeout(()=>monitoringMap?.invalidateSize(),250);
 }
 
-function setupMonitoringMapUi(){document.querySelectorAll("[data-map-device]").forEach(btn=>btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice)));$("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));document.querySelectorAll("[data-public-basemap]").forEach(btn=>btn.addEventListener("click",()=>{if(!monitoringMap)ensureMonitoringMap();setMapBasemap("public",btn.dataset.publicBasemap);}));renderMonitoringMapNodeTabs();}
+function setupMonitoringMapUi(){
+  document.querySelectorAll("[data-map-device]").forEach(btn=>{
+    btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
+  });
 
-function adminMapSelectedDeviceId(){return activeAdminDeviceId||"Number 1";}
-function adminMapSelectedCard(){const id=adminMapSelectedDeviceId();return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;}
-function ensureAdminDeviceMap(){const root=$("adminDeviceMap");if(!root||typeof L==="undefined")return null;if(adminDeviceMap){setTimeout(()=>adminDeviceMap.invalidateSize(),0);return adminDeviceMap;}adminDeviceMap=L.map(root,{zoomControl:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);adminBaseLayers={street:createStreetTileLayer(),satellite:createSatelliteTileLayer()};setMapBasemap("admin",adminBasemapMode);adminDeviceMap.on("click",e=>setAdminMapCoordinates(e.latlng.lat,e.latlng.lng));document.querySelectorAll("[data-admin-basemap]").forEach(btn=>btn.onclick=()=>setMapBasemap("admin",btn.dataset.adminBasemap));return adminDeviceMap;}
-function setAdminMapCoordinates(lat,lng){const card=adminMapSelectedCard();if(!card)return;const a=card.querySelector(".admin-device-latitude"),b=card.querySelector(".admin-device-longitude");if(a)a.value=Number(lat).toFixed(7);if(b)b.value=Number(lng).toFixed(7);refreshAdminMapEditor({keepZoom:true});}
-function refreshAdminMapEditor({keepZoom=false}={}){const map=ensureAdminDeviceMap(),card=adminMapSelectedCard();if(!map||!card)return;const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90),lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180),valid=lat!==null&&lng!==null;if(adminDeviceMarker){adminDeviceMarker.remove();adminDeviceMarker=null;}if(valid){adminDeviceMarker=L.marker([lat,lng],{draggable:true,icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)}).addTo(map);adminDeviceMarker.on("dragend",()=>{const p=adminDeviceMarker.getLatLng();setAdminMapCoordinates(p.lat,p.lng)});if(!keepZoom)map.setView([lat,lng],19);else map.panTo([lat,lng],{animate:true});}else if(!keepZoom)map.setView(MONITORING_MAP_FALLBACK_CENTER,15);if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";const title=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;setTimeout(()=>map.invalidateSize(),80);}
-function syncAdminMapSelectOptions(){}
+  $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+
+  document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      ensureMonitoringMap();
+      setMonitoringBasemap(btn.dataset.publicBasemap);
+    });
+  });
+
+  renderMonitoringMapNodeTabs();
+}
+
+function adminMapSelectedDeviceId(){
+  return $("adminMapDeviceSelect")?.value||$("adminDevicePreviewSelect")?.value||"Number 1";
+}
+
+function adminMapSelectedCard(){
+  const id=adminMapSelectedDeviceId();
+  return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;
+}
+
+function ensureAdminDeviceMap(){
+  const root=$("adminDeviceMap");
+  if(!root||typeof L==="undefined")return null;
+  if(adminDeviceMap){
+    setTimeout(()=>adminDeviceMap.invalidateSize(),0);
+    return adminDeviceMap;
+  }
+  adminDeviceMap=L.map(root,{zoomControl:true}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(adminDeviceMap);
+  adminDeviceMap.on("click",e=>{
+    setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);
+  });
+  return adminDeviceMap;
+}
+
+function setAdminMapCoordinates(lat,lng){
+  const card=adminMapSelectedCard();
+  if(!card)return;
+  const latInput=card.querySelector(".admin-device-latitude");
+  const lngInput=card.querySelector(".admin-device-longitude");
+  if(latInput)latInput.value=Number(lat).toFixed(7);
+  if(lngInput)lngInput.value=Number(lng).toFixed(7);
+  refreshAdminMapEditor();
+}
+
+function refreshAdminMapEditor(){
+  const map=ensureAdminDeviceMap();
+  const card=adminMapSelectedCard();
+  if(!map||!card)return;
+
+  const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
+  const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
+  const valid=lat!==null&&lng!==null;
+
+  if(adminDeviceMarker){
+    adminDeviceMarker.remove();
+    adminDeviceMarker=null;
+  }
+
+  if(valid){
+    adminDeviceMarker=L.marker([lat,lng],{
+      draggable:true,
+      icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)
+    }).addTo(map);
+    adminDeviceMarker.on("dragend",()=>{
+      const p=adminDeviceMarker.getLatLng();
+      setAdminMapCoordinates(p.lat,p.lng);
+    });
+    map.setView([lat,lng],18);
+  }else{
+    map.setView(MONITORING_MAP_FALLBACK_CENTER,15);
+  }
+
+  if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
+  if($("adminDeviceLngPreview"))$("adminDeviceLngPreview").textContent=valid?lng.toFixed(7):"ยังไม่ปักหมุด";
+
+  const images=(card.querySelector(".admin-device-images")?.value||"")
+    .split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,12);
+  const video=(card.querySelector(".admin-device-video")?.value||"").trim();
+  const media=$("adminDeviceMediaPreview");
+  if(media){
+    media.innerHTML=images.length
+      ?`<div class="admin-device-media-preview-grid">${images.slice(0,8).map(src=>`<img src="${esc(src)}" alt="" loading="lazy">`).join("")}</div>
+        <div class="admin-device-media-preview-note">${images.length} รูป${video?" • มีวิดีโอ":""}</div>`
+      :`<div class="admin-device-media-preview-note">ยังไม่มีภาพ${video?" • มีวิดีโอแล้ว":""}</div>`;
+  }
+  setTimeout(()=>map.invalidateSize(),80);
+}
+
+function syncAdminMapSelectOptions(){
+  const select=$("adminMapDeviceSelect");
+  if(!select)return;
+  const cards=[...document.querySelectorAll(".admin-device-card")];
+  const prev=select.value;
+  select.innerHTML=cards.map((card,i)=>{
+    const name=(card.querySelector(".admin-device-display")?.value||`จุดตรวจวัด ${i+1}`).trim();
+    return `<option value="${esc(card.dataset.deviceId)}">${esc(name)}</option>`;
+  }).join("");
+  if([...select.options].some(o=>o.value===prev))select.value=prev;
+}
+
 
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
@@ -11357,10 +11540,16 @@ async function apiJson(url,options={}){
   const headers={Accept:"application/json",...(options.headers||{})};
   if(options.body && !headers["Content-Type"]) headers["Content-Type"]="application/json";
   if(authToken) headers.Authorization=`Bearer ${authToken}`;
+
   const r=await fetch(url,{...options,headers,cache:"no-store"});
   let j=null;
   try{j=await r.json();}catch(_){j={success:false,message:`HTTP ${r.status}`};}
-  if(!r.ok){const err=new Error(j?.message||`HTTP ${r.status}`);err.status=r.status;throw err;}
+
+  if(!r.ok){
+    const err=new Error(j?.message||`HTTP ${r.status}`);
+    err.status=r.status;
+    throw err;
+  }
   return j;
 }
 
@@ -11766,9 +11955,13 @@ async function loadAuthStatus(){
 // V34.5 — REFRESH ACCOUNT AFTER LOGIN
 // =====================================================
 async function refreshAuthUserAfterLogin(){
-  if(!authToken)return authUser;
-  const j=await apiJson(API.authMe);
-  if(j?.user){authUser=j.user;saveCachedAuthUser(authUser);updateAccountUI();}
+  if(!authToken)return null;
+  try{
+    const j=await apiJson(API.authMe);
+    if(j?.user)authUser=j.user;
+  }catch(_){
+  }
+  updateAccountUI();
   return authUser;
 }
 
@@ -11894,18 +12087,36 @@ async function handleGoogleCredential(response){
 }
 
 async function restoreAuthSession(){
-  if(!authToken){authUser=null;saveCachedAuthUser(null);updateAccountUI();return;}
-  if(authUser){try{updateAccountUI();}catch(_){}}
-  try{const j=await apiJson(API.authMe);if(j?.user){authUser=j.user;saveCachedAuthUser(authUser);updateAccountUI();}}
-  catch(err){if(err?.status===401||err?.status===403){authToken="";authUser=null;localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(null);updateAccountUI();}else console.warn("Auth verification delayed; keeping saved session.",err);}
+  if(!authToken){
+    authUser=null;
+    updateAccountUI();
+    return;
+  }
+
+  try{
+    const j=await apiJson(API.authMe);
+    authUser=j.user||authUser||null;
+    updateAccountUI();
+  }catch(err){
+    // ล้าง session เฉพาะเมื่อ server ยืนยันว่า token ใช้ไม่ได้จริง
+    if(err?.status===401||err?.status===403){
+      authToken="";
+      authUser=null;
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      updateAccountUI();
+    }else{
+      console.warn("Auth verify delayed; keep saved token.",err);
+    }
+  }
 }
 
 async function doLogin(email,password){
   const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
-  authToken=String(j.token||"");authUser=j.user||null;
-  if(!authToken||!authUser)throw new Error("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์");
-  localStorage.setItem(AUTH_TOKEN_KEY,authToken);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(authUser);updateAccountUI();
-  refreshAuthUserAfterLogin().catch(err=>console.warn("Account refresh delayed:",err));
+  authToken=String(j.token||"");
+  authUser=j.user||null;
+  localStorage.setItem(AUTH_TOKEN_KEY,authToken);
+  await refreshAuthUserAfterLogin();
   return j;
 }
 
@@ -11999,20 +12210,89 @@ async function saveHelpEditor(){
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 
-function adminDeviceImagesFromCard(card){return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES);}
-function setAdminDeviceImagesToCard(card,images){const f=card?.querySelector(".admin-device-images");if(f)f.value=(images||[]).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");}
-function switchAdminDevice(id){activeAdminDeviceId=id;document.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.classList.toggle("active",b.dataset.adminDeviceTab===id));document.querySelectorAll(".admin-device-card").forEach(c=>c.classList.toggle("active",c.dataset.deviceId===id));syncAdminActiveMediaFields();renderAdminMediaManager();refreshAdminMapEditor();}
-function syncAdminActiveMediaFields(){const c=adminMapSelectedCard();if(!c)return;const title=(c.querySelector(".admin-device-display")?.value||c.dataset.deviceId).trim();if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;const v=$("adminActiveVideoInput");if(v){v.value=c.querySelector(".admin-device-video")?.value||"";v.oninput=()=>{const t=adminMapSelectedCard()?.querySelector(".admin-device-video");if(t)t.value=v.value;};}}
-function renderAdminDevices(){const root=$("adminDeviceList"),tabs=$("adminDeviceTabs");if(!root||!tabs)return;const ds=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];if(!ds.some(d=>d.device_id===activeAdminDeviceId))activeAdminDeviceId=ds[0]?.device_id||"Number 1";tabs.innerHTML=ds.map((d,i)=>`<button type="button" class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}" data-admin-device-tab="${esc(d.device_id)}"><span>${i+1}</span><b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b></button>`).join("");root.innerHTML=ds.map((d,i)=>`<div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}"><div class="admin-device-card-head"><h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} • เปลี่ยนไม่ได้</div></div><label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label><label class="admin-field">ชื่อตำแหน่ง<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label><label class="admin-field">คำอธิบายจุดตรวจวัด<textarea class="admin-device-description" maxlength="900" rows="4">${esc(d.description||"")}</textarea><small>ใช้กับข้อมูลจุดตรวจวัดบน Dashboard</small></label><label class="admin-field">รายละเอียดในแถบด้านข้างแผนที่<textarea class="admin-device-map-description" maxlength="2000" rows="6">${esc(d.map_description||"")}</textarea><small>แสดงเฉพาะเมื่อกดจุดบนแผนที่</small></label><div class="admin-device-map-fields"><label class="admin-field">Latitude<input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}"></label><label class="admin-field">Longitude<input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}"></label></div><textarea class="admin-device-images hidden">${esc(deviceImageList(d).join("\n"))}</textarea><input class="admin-device-video hidden" value="${esc(d.video_url||"")}"></div>`).join("");tabs.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.onclick=()=>switchAdminDevice(b.dataset.adminDeviceTab));root.querySelectorAll(".admin-device-display").forEach(el=>el.oninput=()=>{const c=el.closest(".admin-device-card"),b=tabs.querySelector(`[data-admin-device-tab="${CSS.escape(c.dataset.deviceId)}"] b`);if(b)b.textContent=el.value.trim()||c.dataset.deviceId;syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});});root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>el.onchange=()=>refreshAdminMapEditor());setupAdminMediaManager();switchAdminDevice(activeAdminDeviceId);}
-function renderAdminDevicePreview(){syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});}
-function adminMediaSetMessage(text,type=""){const e=$("adminMediaMessage");if(!e)return;e.textContent=text||"";e.classList.toggle("is-error",type==="error");e.classList.toggle("is-success",type==="success");}
-function renderAdminMediaManager(){const g=$("adminMediaGallery"),c=adminMapSelectedCard();if(!g||!c)return;const imgs=adminDeviceImagesFromCard(c);if(!imgs.length){g.innerHTML='<div class="admin-media-empty"><b>ยังไม่มีรูปของจุดนี้</b><span>เลือกไฟล์ ลากวาง หรือ Ctrl+V ได้</span></div>';return;}g.innerHTML=imgs.map((src,i)=>`<article class="admin-media-item${i===0?" is-cover":""}" draggable="true" data-media-index="${i}"><div class="admin-media-thumb"><img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}</div><div class="admin-media-item-actions"><button type="button" data-media-cover="${i}" ${i===0?"disabled":""}>★ หลัก</button><button type="button" data-media-left="${i}" ${i===0?"disabled":""}>←</button><button type="button" data-media-right="${i}" ${i===imgs.length-1?"disabled":""}>→</button><button type="button" class="danger" data-media-delete="${i}">ลบ</button></div></article>`).join("");const move=(a,b)=>{const n=adminDeviceImagesFromCard(c);if(a<0||b<0||a>=n.length||b>=n.length||a===b)return;const[p]=n.splice(a,1);n.splice(b,0,p);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();};g.querySelectorAll("[data-media-cover]").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.mediaCover),n=adminDeviceImagesFromCard(c);if(i>0){const[p]=n.splice(i,1);n.unshift(p);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();}});g.querySelectorAll("[data-media-delete]").forEach(b=>b.onclick=()=>{const n=adminDeviceImagesFromCard(c);n.splice(Number(b.dataset.mediaDelete),1);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();});g.querySelectorAll("[data-media-left]").forEach(b=>b.onclick=()=>move(Number(b.dataset.mediaLeft),Number(b.dataset.mediaLeft)-1));g.querySelectorAll("[data-media-right]").forEach(b=>b.onclick=()=>move(Number(b.dataset.mediaRight),Number(b.dataset.mediaRight)+1));g.querySelectorAll(".admin-media-item").forEach(x=>{x.ondragstart=()=>adminMediaDragIndex=Number(x.dataset.mediaIndex);x.ondragover=e=>e.preventDefault();x.ondrop=e=>{e.preventDefault();move(adminMediaDragIndex,Number(x.dataset.mediaIndex));adminMediaDragIndex=null;};});}
-function loadImageElementFromFile(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),img=new Image();img.onload=()=>{URL.revokeObjectURL(u);ok(img)};img.onerror=()=>{URL.revokeObjectURL(u);no(new Error("อ่านรูปภาพไม่สำเร็จ"))};img.src=u;});}
-async function optimizeAdminLocationImage(file){if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||""))throw new Error("รองรับ JPG, PNG และ WEBP");if(file.size>10*1024*1024)throw new Error("รูปใหญ่เกิน 10 MB");const img=await loadImageElementFromFile(file);let max=1200,q=.76;for(let pass=0;pass<7;pass++){const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(img.naturalWidth*scale));cv.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(img,0,0,cv.width,cv.height);const data=cv.toDataURL("image/jpeg",q);if(data.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return data;max=Math.round(max*.82);q=Math.max(.55,q-.05);}throw new Error("รูปยังใหญ่เกินไปหลังย่อ");}
-async function addAdminImageFiles(list){const c=adminMapSelectedCard();if(!c)return;const imgs=adminDeviceImagesFromCard(c),files=[...(list||[])].filter(f=>String(f.type||"").startsWith("image/"));let added=0;adminMediaSetMessage("กำลังเตรียมรูป...");for(const f of files){if(imgs.length>=ADMIN_DEVICE_MAX_IMAGES)break;try{imgs.push(await optimizeAdminLocationImage(f));added++;}catch(e){adminMediaSetMessage(e.message,"error");}}setAdminDeviceImagesToCard(c,imgs);renderAdminMediaManager();if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึก`,"success");}
-function addAdminImageUrl(raw){const c=adminMapSelectedCard(),u=String(raw||"").trim();if(!c)return;if(!/^https?:\/\//i.test(u)){adminMediaSetMessage("URL ต้องขึ้นต้นด้วย http:// หรือ https://","error");return;}const imgs=adminDeviceImagesFromCard(c);if(imgs.length>=ADMIN_DEVICE_MAX_IMAGES){adminMediaSetMessage("รูปครบ 8 รูปแล้ว","error");return;}imgs.push(u);setAdminDeviceImagesToCard(c,imgs);renderAdminMediaManager();}
-function setupAdminMediaManager(){const input=$("adminImageFileInput"),choose=$("adminChooseImagesButton"),drop=$("adminMediaDropzone"),url=$("adminImageUrlInput"),add=$("adminAddImageUrlButton");if(choose)choose.onclick=()=>input?.click();if(input)input.onchange=async()=>{await addAdminImageFiles(input.files);input.value="";};if(drop&&!drop.dataset.ready){drop.dataset.ready="1";["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("is-dragover")}));["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("is-dragover")}));drop.addEventListener("drop",async e=>{const fs=[...(e.dataTransfer?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));if(fs.length)await addAdminImageFiles(fs);});drop.onclick=()=>input?.click();}if(add)add.onclick=()=>{addAdminImageUrl(url?.value);if(url)url.value="";};if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if($("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const fs=[...(e.clipboardData?.files||[])].filter(f=>String(f.type||"").startsWith("image/"));if(fs.length){e.preventDefault();await addAdminImageFiles(fs);}});}}
-async function saveAdminDevices(){const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d),video_url:d.querySelector(".admin-device-video")?.value||""}));const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดแล้ว","success");}catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}}
+function renderAdminDevices(){
+  const root=$("adminDeviceList");if(!root)return;
+  const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
+  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card" data-device-id="${esc(d.device_id)}">
+    <h4>📍 จุดตรวจวัด ${i+1}</h4>
+    <div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)}</div>
+    <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}"></label>
+    <label class="admin-field">ชื่อตำแหน่ง (ไม่บังคับ)<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}"></label>
+    <label class="admin-field">คำอธิบาย (ไม่บังคับ)<textarea class="admin-device-description admin-device-description-map" maxlength="2000" rows="4">${esc(d.description||"")}</textarea></label>
+
+    <div class="admin-device-map-fields">
+      <label class="admin-field">Latitude
+        <input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+      </label>
+      <label class="admin-field">Longitude
+        <input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" placeholder="ปักจากแผนที่ด้านล่าง">
+      </label>
+    </div>
+
+    <label class="admin-field">รูปภาพของสถานที่
+      <textarea class="admin-device-images" rows="4" placeholder="1 บรรทัดต่อ 1 รูป เช่น&#10;img/node1-1.jpg&#10;img/node1-2.jpg">${esc(deviceImageList(d).join("\n"))}</textarea>
+      <small>ใช้ path รูปใน GitHub หรือ URL รูปภาพได้</small>
+    </label>
+
+    <label class="admin-field">วิดีโอ
+      <input class="admin-device-video" maxlength="600" value="${esc(d.video_url||"")}" placeholder="YouTube URL หรือ media/node1.mp4">
+    </label>
+  </div>`).join("");
+  root.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",renderAdminDevicePreview));
+  const sel=$("adminDevicePreviewSelect");
+  if(sel){
+    sel.innerHTML=devices.map((d,i)=>`<option value="${esc(d.device_id)}">${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</option>`).join("");
+    sel.onchange=renderAdminDevicePreview;
+  }
+  const mapSelect=$("adminMapDeviceSelect");
+  if(mapSelect){
+    mapSelect.onchange=refreshAdminMapEditor;
+  }
+  renderAdminDevicePreview();
+  setTimeout(()=>refreshAdminMapEditor(),120);
+}
+
+function renderAdminDevicePreview(){
+  const cards=[...document.querySelectorAll(".admin-device-card")];
+  if(!cards.length)return;
+  const sel=$("adminDevicePreviewSelect");
+  let card=cards.find(x=>x.dataset.deviceId===sel?.value)||cards[0];
+  const name=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId||"จุดตรวจวัด").trim();
+  const location=(card.querySelector(".admin-device-location")?.value||"").trim();
+  const description=(card.querySelector(".admin-device-description")?.value||"").trim();
+  if($("adminDevicePreviewName"))$("adminDevicePreviewName").textContent=name;
+  if($("adminDevicePreviewLocation")){
+    $("adminDevicePreviewLocation").textContent=location;
+    $("adminDevicePreviewLocation").classList.toggle("hidden",!location);
+  }
+  if($("adminDevicePreviewDescription")){
+    $("adminDevicePreviewDescription").textContent=description;
+    $("adminDevicePreviewDescription").classList.toggle("hidden",!description);
+  }
+  if(sel){
+    [...sel.options].forEach(opt=>{
+      const c=cards.find(x=>x.dataset.deviceId===opt.value);
+      if(c)opt.textContent=(c.querySelector(".admin-device-display")?.value||opt.value).trim();
+    });
+  }
+  syncAdminMapSelectOptions();
+  refreshAdminMapEditor();
+}
+async function saveAdminDevices(){
+  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({
+    device_id:d.dataset.deviceId,
+    display_name:d.querySelector(".admin-device-display")?.value||"",
+    location_name:d.querySelector(".admin-device-location")?.value||"",
+    description:d.querySelector(".admin-device-description")?.value||"",
+    latitude:d.querySelector(".admin-device-latitude")?.value||null,
+    longitude:d.querySelector(".admin-device-longitude")?.value||null,
+    images:(d.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean),
+    video_url:d.querySelector(".admin-device-video")?.value||""
+  }));
+  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");
+  try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดและแผนที่แล้ว","success");}
+  catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+}
 
 function renderAnnouncementPreview(){
   const root=$("announcementPreview");if(!root)return;const enabled=$("announcementEnabled")?.checked;const sev=$("announcementSeverity")?.value||"info";const title=$("announcementTitle")?.value.trim()||"ประกาศจากระบบ";const msg=$("announcementMessage")?.value.trim()||"ตัวอย่างข้อความประกาศ";
@@ -12938,7 +13218,7 @@ function setupRemoteWiFiManagement(){
 
 (function setupAuthCmsV31(){
   const run=async()=>{
-    try{setupRemoteWiFiManagement();}catch(err){console.error("Wi-Fi setup error:",err);}
+    setupRemoteWiFiManagement();
 
     // V36.61 — do not let /auth/me compete with the critical Overview request.
     // All account controls are bound immediately; a saved session is verified
@@ -13023,7 +13303,7 @@ function setupRemoteWiFiManagement(){
       if(target==="system")document.querySelector('[data-go-page="overview"]')?.click();
       else if(target==="monitoring")document.querySelector('[data-go-page="monitoring"]')?.click();
     });
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);saveCachedAuthUser(null);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
     $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
     $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
@@ -13085,7 +13365,8 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 (function startMapV2(){
   const run=()=>{
     setupMonitoringMapUi();
-
+    const mapSelect=$("adminMapDeviceSelect");
+    if(mapSelect)mapSelect.addEventListener("change",refreshAdminMapEditor);
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
