@@ -25227,3 +25227,36 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
+
+/* ============================================================
+   V8.14 — COMPARISON READABILITY
+   ============================================================ */
+.current-summary-board .current-summary-header h2{font-size:clamp(1.35rem,1.7vw,1.7rem)!important}
+.current-summary-board .current-summary-header p{font-size:clamp(.90rem,1vw,1rem)!important;line-height:1.65!important}
+.current-summary-board .current-metric-card-head h3{font-size:clamp(1.12rem,1.3vw,1.32rem)!important}
+.current-summary-board .current-metric-card-head span{font-size:.78rem!important}
+.current-summary-board .current-metric-average>b{font-size:clamp(2rem,2.5vw,2.55rem)!important}
+.current-summary-board .current-metric-average>small{font-size:.82rem!important}
+.current-summary-board .current-metric-extremes span{font-size:.78rem!important}
+.current-summary-board .current-metric-extremes small{font-size:.76rem!important}
+.current-summary-board .current-metric-extremes b{font-size:.88rem!important}
+.current-support-head span{font-size:1rem!important}
+.current-support-head small{font-size:.80rem!important}
+.current-support-title b{font-size:.96rem!important}
+.current-support-title small{font-size:.72rem!important}
+.current-support-card-simple .current-support-average-simple b{font-size:1.45rem!important}
+.current-support-card-simple .current-support-average-simple span,
+.current-support-card-simple>p{font-size:.80rem!important;line-height:1.55!important}
+
+@media(max-width:700px){
+  .current-summary-board .current-summary-header h2{font-size:1.28rem!important}
+  .current-summary-board .current-summary-header p{font-size:.88rem!important}
+  .current-summary-board .current-metric-card-head h3{font-size:1.08rem!important}
+  .current-summary-board .current-metric-card-head span{font-size:.74rem!important}
+  .current-summary-board .current-metric-average>b{font-size:1.95rem!important}
+  .current-summary-board .current-metric-average>small{font-size:.78rem!important}
+  .current-summary-board .current-metric-extremes span,
+  .current-summary-board .current-metric-extremes small{font-size:.74rem!important}
+  .current-summary-board .current-metric-extremes b{font-size:.84rem!important}
+  .current-support-card-simple .current-support-average-simple b{font-size:1.30rem!important}
+}
