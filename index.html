@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260912-v8-2-brightcompare" rel="stylesheet"/>
+<link href="style.css?v=20260912-v8-3-simplefx" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -515,20 +515,41 @@
       </div>
 
       <div class="current-support-head">
-        <div><span>ข้อมูลประกอบ</span><small>ใช้ช่วยอธิบายสภาพแวดล้อม ไม่ใช้เป็นตัวชี้วัดสุขภาพหลัก</small></div>
+        <div>
+          <span>ข้อมูลประกอบ</span>
+          <small>ใช้ช่วยอธิบายสภาพแวดล้อม ไม่ใช่ตัวชี้วัดสุขภาพหลัก</small>
+        </div>
       </div>
 
-      <div class="current-support-grid">
-        <article class="current-support-card metric-pm1">
-          <div class="current-support-title"><span class="current-support-icon">◌</span><div><small>ฝุ่นขนาดเล็ก</small><b>PM1.0</b></div></div>
-          <div class="current-support-average"><b id="summary-pm1-avg">--</b><span>เฉลี่ย</span></div>
-          <div class="current-support-range"><span>↓ <b id="summary-pm1-min">--</b> <small id="summary-pm1-min-node">--</small></span><span>↑ <b id="summary-pm1-max">--</b> <small id="summary-pm1-max-node">--</small></span></div>
+      <div class="current-support-grid current-support-grid-simple">
+        <article class="current-support-card current-support-card-simple metric-pm1">
+          <div class="current-support-title">
+            <span class="current-support-icon">◌</span>
+            <div>
+              <small>ข้อมูลประกอบ</small>
+              <b>PM1.0</b>
+            </div>
+          </div>
+          <div class="current-support-average current-support-average-simple">
+            <b id="summary-pm1-avg">--</b>
+            <span>ค่าเฉลี่ยปัจจุบัน</span>
+          </div>
+          <p>ใช้ประกอบการดูแนวโน้มของฝุ่นขนาดเล็ก</p>
         </article>
 
-        <article class="current-support-card metric-light">
-          <div class="current-support-title"><span class="current-support-icon">☀️</span><div><small>สภาพแวดล้อม</small><b>ความเข้มแสง</b></div></div>
-          <div class="current-support-average"><b id="summary-light-avg">--</b><span>เฉลี่ย</span></div>
-          <div class="current-support-range"><span>↓ <b id="summary-light-min">--</b> <small id="summary-light-min-node">--</small></span><span>↑ <b id="summary-light-max">--</b> <small id="summary-light-max-node">--</small></span></div>
+        <article class="current-support-card current-support-card-simple metric-light">
+          <div class="current-support-title">
+            <span class="current-support-icon">☀️</span>
+            <div>
+              <small>ข้อมูลประกอบ</small>
+              <b>ความเข้มแสง</b>
+            </div>
+          </div>
+          <div class="current-support-average current-support-average-simple">
+            <b id="summary-light-avg">--</b>
+            <span>ค่าเฉลี่ยปัจจุบัน</span>
+          </div>
+          <p>ใช้ประกอบการดูสภาพแวดล้อมของแต่ละพื้นที่</p>
         </article>
       </div>
 
@@ -2127,7 +2148,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260912-v8-2-brightcompare"></script>
+<script defer src="app.js?v=20260912-v8-3-simplefx"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
