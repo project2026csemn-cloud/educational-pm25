@@ -1291,6 +1291,22 @@ Boolean
 // MONITORING NODES
 // =====================================================
 
+function setMonitoringValueText(el,text){
+  if(!el)return;
+
+  const next=String(text??"--");
+  const prev=String(el.textContent??"").trim();
+
+  if(prev && prev!=="--" && next!=="--" && prev!==next){
+    el.classList.remove("node-value-updated");
+    void el.offsetWidth;
+    el.classList.add("node-value-updated");
+    window.setTimeout(()=>el.classList.remove("node-value-updated"),720);
+  }
+
+  el.textContent=next;
+}
+
 function setNodeValues(
 prefix,
 n
@@ -1309,10 +1325,12 @@ $(prefix+k);
 
 if(e){
 
-e.textContent=
+setMonitoringValueText(
+e,
 n
 ?fmt(n[k])
-:"--";
+:"--"
+);
 
 }
 
@@ -1353,11 +1371,17 @@ $(prefix+k);
 
 if(e){
 
-e.textContent=
+setMonitoringValueText(
+e,
 n&&
 n[field]!=null
-?fmt(n[field])+unit
-:"--";
+?(
+field==="light"
+?Number(n[field]).toLocaleString("th-TH",{maximumFractionDigits:0})+unit
+:fmt(n[field])+unit
+)
+:"--"
+);
 
 }
 
@@ -1416,6 +1440,16 @@ s.innerHTML=
 
 card.classList.toggle(
 "offline",
+st==="offline"
+);
+
+card.classList.toggle(
+"node-online",
+st==="online"
+);
+
+card.classList.toggle(
+"node-offline",
 st==="offline"
 );
 
@@ -7148,7 +7182,7 @@ title:"📊 เปรียบเทียบข้อมูลปัจจุ�
 html:`<div class="help-intro-card"><b>แสดงทุกค่าพร้อมกันเพื่อเปรียบเทียบได้ทันที</b><span>ค่าหลักประกอบด้วย PM2.5, PM10, อุณหภูมิ และความชื้น ส่วน PM1.0 และแสงแสดงเป็นข้อมูลประกอบ</span></div>
 <section class="help-section"><h4>ค่าเฉลี่ยปัจจุบัน</h4><p>เป็นค่าเฉลี่ยของจุดตรวจวัดที่มีข้อมูลปัจจุบันสำหรับตัวแปรนั้น ใช้ดูภาพรวมของพื้นที่ ไม่ใช่ค่าของตำแหน่งจริงจุดใดจุดหนึ่ง</p></section>
 <section class="help-section"><h4>ต่ำสุดและสูงสุด</h4><p>แสดงทั้งค่าและชื่อจุดที่ต่ำสุดหรือสูงสุด เพื่อให้เห็นความแตกต่างระหว่างตำแหน่งได้ทันที โดยคำว่า “สูงสุด” ไม่ได้หมายความว่าอันตรายเสมอไป</p></section>
-<section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงยังคงแสดงครบทั้งค่าเฉลี่ย ต่ำสุด และสูงสุด แต่จัดไว้เป็นข้อมูลประกอบเพื่อลดความสับสนกับตัวชี้วัดหลัก</p></section>`
+<section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงแสดงเฉพาะค่าเฉลี่ยเพื่อให้คนทั่วไปอ่านง่าย โดยใช้เป็นข้อมูลประกอบ ไม่ใช่ตัวชี้วัดสุขภาพหลัก</p></section>`
 },
 
 alerts:{
