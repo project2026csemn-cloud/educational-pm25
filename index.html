@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260912-v8-6-recoveryui" rel="stylesheet"/>
+<link href="style.css?v=20260912-v8-7-recovery" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -310,20 +310,18 @@
 <p>ดูข้อมูลล่าสุดจากทั้ง 3 จุดและเปรียบเทียบสถานการณ์ปัจจุบัน</p>
 </div>
 <div class="monitoring-status-cluster">
-<div class="monitoring-status-card monitoring-primary-status" id="motherStatusCardTop">
-<div class="monitoring-status-label">สถานีหลัก</div>
+<div class="monitoring-status-card monitoring-primary-status">
+<div class="monitoring-status-label">ความพร้อมของระบบ</div>
 <div class="monitoring-status-value">
-<span class="monitoring-live-dot text-slate-500" id="dataStateDotTop">●</span>
+<span class="text-slate-500" id="dataStateDotTop">●</span>
 <span id="dataStateStatusTop">กำลังตรวจสอบ</span>
 </div>
+<div class="monitoring-status-hint">แสดงความพร้อมของข้อมูลปัจจุบัน</div>
 </div>
-
-<div class="monitoring-status-card monitoring-node-count" id="nodeCountCardTop">
-<div class="monitoring-status-label">จุดตรวจวัด</div>
-<div class="monitoring-node-count-main">
-<span class="monitoring-node-count-value" id="nodesActiveTop">0 / 3</span>
-<span class="monitoring-node-count-unit">จุดออนไลน์</span>
-</div>
+<div class="monitoring-status-card monitoring-node-count">
+<div class="monitoring-status-label">จุดตรวจวัด ONLINE</div>
+<div class="monitoring-node-count-value" id="nodesActiveTop">0 / 3 จุด</div>
+<div class="monitoring-status-hint">จำนวนจุดที่ระบบแสดงเป็น ONLINE ขณะนี้</div>
 </div>
 </div>
 </div>
@@ -480,7 +478,7 @@
 
       <div class="current-primary-grid" id="currentPrimaryGrid">
         <article class="current-metric-card metric-pm25" data-current-field="pm25">
-          <div class="current-metric-card-head"><div class="current-metric-icon particle-icon particle-fine" aria-hidden="true">🌫️</div><div><span>ฝุ่นละอองขนาดเล็ก</span><h3>PM2.5</h3></div></div>
+          <div class="current-metric-card-head"><div class="current-metric-icon dust-emoji dust-emoji-fine" aria-hidden="true">🫧</div><div><span>ฝุ่นละอองขนาดเล็ก</span><h3>PM2.5</h3></div></div>
           <div class="current-metric-average"><b id="summary-pm25-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
           <div class="current-metric-extremes">
             <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-pm25-min">--</b><small id="summary-pm25-min-node">--</small></div>
@@ -489,7 +487,7 @@
         </article>
 
         <article class="current-metric-card metric-pm10" data-current-field="pm10">
-          <div class="current-metric-card-head"><div class="current-metric-icon particle-icon particle-coarse" aria-hidden="true">💨</div><div><span>ฝุ่นละอองขนาดใหญ่กว่า</span><h3>PM10</h3></div></div>
+          <div class="current-metric-card-head"><div class="current-metric-icon dust-emoji dust-emoji-coarse" aria-hidden="true">💨</div><div><span>ฝุ่นละอองขนาดใหญ่กว่า</span><h3>PM10</h3></div></div>
           <div class="current-metric-average"><b id="summary-pm10-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
           <div class="current-metric-extremes">
             <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-pm10-min">--</b><small id="summary-pm10-min-node">--</small></div>
@@ -498,7 +496,7 @@
         </article>
 
         <article class="current-metric-card metric-temperature" data-current-field="temperature">
-          <div class="current-metric-card-head"><div class="current-metric-icon" aria-hidden="true">🌡️</div><div><span>สภาพอากาศ</span><h3>อุณหภูมิ</h3></div></div>
+          <div class="current-metric-card-head"><div class="current-metric-icon">🌡️</div><div><span>สภาพอากาศ</span><h3>อุณหภูมิ</h3></div></div>
           <div class="current-metric-average"><b id="summary-temperature-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
           <div class="current-metric-extremes">
             <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-temperature-min">--</b><small id="summary-temperature-min-node">--</small></div>
@@ -507,7 +505,7 @@
         </article>
 
         <article class="current-metric-card metric-humidity" data-current-field="humidity">
-          <div class="current-metric-card-head"><div class="current-metric-icon" aria-hidden="true">💧</div><div><span>สภาพอากาศ</span><h3>ความชื้น</h3></div></div>
+          <div class="current-metric-card-head"><div class="current-metric-icon">💧</div><div><span>สภาพอากาศ</span><h3>ความชื้น</h3></div></div>
           <div class="current-metric-average"><b id="summary-humidity-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
           <div class="current-metric-extremes">
             <div><span class="extreme-low">↓ ต่ำสุด</span><b id="summary-humidity-min">--</b><small id="summary-humidity-min-node">--</small></div>
@@ -2150,7 +2148,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260912-v8-6-recoveryui"></script>
+<script defer src="app.js?v=20260912-v8-3-simplefx"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
