@@ -25260,3 +25260,440 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-summary-board .current-metric-extremes b{font-size:.84rem!important}
   .current-support-card-simple .current-support-average-simple b{font-size:1.30rem!important}
 }
+
+
+/* ============================================================
+   V8.16 — ADMIN MOBILE UX
+   Scope: Admin > ข้อมูลจุดตรวจวัด only.
+   Desktop and all public dashboard pages remain unchanged.
+   ============================================================ */
+
+@media (max-width:700px){
+
+  /* ---------- Admin devices page: comfortable single-column flow ---------- */
+  .admin-panel.admin-devices-v8{
+    min-width:0!important;
+    overflow:visible!important;
+  }
+
+  .admin-devices-v8 .admin-panel-head{
+    display:block!important;
+    margin-bottom:14px!important;
+  }
+
+  .admin-devices-v8 .admin-panel-head h3{
+    margin:0 0 6px!important;
+    font-size:1.25rem!important;
+    line-height:1.3!important;
+  }
+
+  .admin-devices-v8 .admin-panel-head p{
+    margin:0!important;
+    max-width:none!important;
+    font-size:.84rem!important;
+    line-height:1.6!important;
+  }
+
+  /* ---------- จุด 1 / 2 / 3: all visible, no horizontal swipe ---------- */
+  .admin-devices-v8 .admin-device-tabs{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+    width:100%!important;
+    margin:0 0 12px!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+
+  .admin-devices-v8 .admin-device-tab{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:5px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:68px!important;
+    padding:8px 4px!important;
+    border-radius:13px!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+
+  .admin-devices-v8 .admin-device-tab span{
+    width:31px!important;
+    height:31px!important;
+    min-width:31px!important;
+    flex:0 0 31px!important;
+    font-size:.86rem!important;
+  }
+
+  .admin-devices-v8 .admin-device-tab b{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    font-size:.74rem!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  .admin-devices-v8 .admin-device-tab.active{
+    border-color:rgba(34,211,238,.62)!important;
+    background:linear-gradient(180deg,rgba(8,145,178,.20),rgba(8,145,178,.10))!important;
+    box-shadow:inset 0 0 0 1px rgba(34,211,238,.08),0 7px 20px rgba(6,182,212,.06)!important;
+  }
+
+  /* ---------- Editor + map: true one-column mobile layout ---------- */
+  .admin-devices-v8 .admin-device-workspace{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:12px!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  .admin-devices-v8 .admin-device-editor-main,
+  .admin-devices-v8 .admin-map-workspace-card,
+  .admin-devices-v8 .admin-media-manager-card{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+    padding:14px!important;
+    border-radius:15px!important;
+  }
+
+  .admin-devices-v8 .admin-device-list,
+  .admin-devices-v8 .admin-device-card,
+  .admin-devices-v8 .admin-device-card.active{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+
+  /* Fix the title breaking vertically on narrow phones */
+  .admin-devices-v8 .admin-device-card-head{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    margin-bottom:12px!important;
+  }
+
+  .admin-devices-v8 .admin-device-card-head h4{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin:0 0 5px!important;
+    font-size:1.08rem!important;
+    line-height:1.4!important;
+    white-space:normal!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+  }
+
+  .admin-devices-v8 .admin-device-id{
+    display:block!important;
+    width:100%!important;
+    margin:0 0 12px!important;
+    font-size:.76rem!important;
+    line-height:1.4!important;
+    white-space:normal!important;
+  }
+
+  /* ---------- Forms: large touch targets ---------- */
+  .admin-devices-v8 .admin-field{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0 0 13px!important;
+    font-size:.82rem!important;
+    line-height:1.45!important;
+  }
+
+  .admin-devices-v8 .admin-field input,
+  .admin-devices-v8 .admin-field textarea,
+  .admin-devices-v8 .admin-field select{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:46px!important;
+    margin-top:6px!important;
+    padding:11px 12px!important;
+    font-size:16px!important; /* avoids mobile browser input zoom */
+    line-height:1.45!important;
+    box-sizing:border-box!important;
+    border-radius:11px!important;
+  }
+
+  .admin-devices-v8 .admin-field textarea{
+    min-height:112px!important;
+    resize:vertical!important;
+  }
+
+  .admin-devices-v8 .admin-field small{
+    margin-top:6px!important;
+    font-size:.72rem!important;
+    line-height:1.5!important;
+  }
+
+  /* Coordinates stay side-by-side when there is enough width */
+  .admin-devices-v8 .admin-device-map-fields{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+
+  /* ---------- Map editor ---------- */
+  .admin-devices-v8 .admin-map-workspace-head{
+    display:block!important;
+    margin-bottom:11px!important;
+  }
+
+  .admin-devices-v8 .admin-map-workspace-head h4{
+    margin:3px 0 5px!important;
+    font-size:1.02rem!important;
+    line-height:1.35!important;
+  }
+
+  .admin-devices-v8 .admin-map-workspace-head p{
+    font-size:.77rem!important;
+    line-height:1.55!important;
+  }
+
+  .admin-devices-v8 .map-basemap-switch-admin{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+    width:100%!important;
+    margin-top:10px!important;
+  }
+
+  .admin-devices-v8 .map-basemap-switch-admin .map-basemap-button{
+    width:100%!important;
+    min-height:42px!important;
+    padding:8px!important;
+    font-size:.82rem!important;
+  }
+
+  .admin-devices-v8 .admin-device-map{
+    width:100%!important;
+    height:285px!important;
+    min-height:285px!important;
+    border-radius:13px!important;
+    overflow:hidden!important;
+  }
+
+  .admin-devices-v8 .admin-coordinate-readout{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+    margin-top:9px!important;
+  }
+
+  .admin-devices-v8 .admin-coordinate-readout span{
+    min-width:0!important;
+    padding:9px 8px!important;
+    font-size:.67rem!important;
+    overflow:hidden!important;
+  }
+
+  .admin-devices-v8 .admin-coordinate-readout b{
+    display:block!important;
+    margin-top:3px!important;
+    font-size:.72rem!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /* ---------- Media manager: simpler on touch ---------- */
+  .admin-devices-v8 .admin-media-manager-card{
+    margin-top:12px!important;
+  }
+
+  .admin-devices-v8 .admin-media-manager-head{
+    display:block!important;
+    margin-bottom:11px!important;
+  }
+
+  .admin-devices-v8 .admin-media-manager-head h4{
+    margin:3px 0 5px!important;
+    font-size:1.02rem!important;
+    line-height:1.35!important;
+  }
+
+  .admin-devices-v8 .admin-media-manager-head p{
+    font-size:.76rem!important;
+    line-height:1.55!important;
+  }
+
+  .admin-devices-v8 #adminChooseImagesButton{
+    width:100%!important;
+    min-height:46px!important;
+    margin-top:11px!important;
+    padding:10px 12px!important;
+    font-size:.84rem!important;
+    border-radius:11px!important;
+  }
+
+  .admin-devices-v8 .admin-media-dropzone{
+    min-height:88px!important;
+    padding:13px 10px!important;
+    border-radius:12px!important;
+  }
+
+  .admin-devices-v8 .admin-media-dropzone b{
+    font-size:.84rem!important;
+  }
+
+  .admin-devices-v8 .admin-media-dropzone span{
+    margin-top:4px!important;
+    font-size:.72rem!important;
+    line-height:1.45!important;
+  }
+
+  .admin-devices-v8 .admin-media-url-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    margin-top:8px!important;
+  }
+
+  .admin-devices-v8 .admin-media-url-row input,
+  .admin-devices-v8 .admin-media-url-row button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    font-size:16px!important;
+    box-sizing:border-box!important;
+  }
+
+  .admin-devices-v8 .admin-media-counter{
+    justify-content:flex-start!important;
+    margin-top:9px!important;
+    font-size:.76rem!important;
+  }
+
+  .admin-devices-v8 .admin-media-gallery{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    width:100%!important;
+    margin-top:9px!important;
+  }
+
+  .admin-devices-v8 .admin-media-item{
+    min-width:0!important;
+    padding:5px!important;
+    border-radius:11px!important;
+  }
+
+  .admin-devices-v8 .admin-media-item-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:5px!important;
+    margin-top:6px!important;
+  }
+
+  .admin-devices-v8 .admin-media-item-actions button{
+    min-width:0!important;
+    min-height:38px!important;
+    padding:5px 4px!important;
+    font-size:.68rem!important;
+    line-height:1.2!important;
+    touch-action:manipulation!important;
+  }
+
+  /* ---------- Sticky save: always reachable, no need to scroll to find it ---------- */
+  .admin-devices-v8 .admin-device-savebar{
+    position:sticky!important;
+    bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    z-index:35!important;
+    display:grid!important;
+    grid-template-columns:1fr auto!important;
+    align-items:center!important;
+    gap:9px!important;
+    width:100%!important;
+    margin:14px 0 4px!important;
+    padding:10px!important;
+    border:1px solid rgba(34,211,238,.28)!important;
+    border-radius:14px!important;
+    background:rgba(7,17,31,.94)!important;
+    box-shadow:0 12px 30px rgba(0,0,0,.28),0 0 22px rgba(6,182,212,.05)!important;
+    backdrop-filter:blur(12px)!important;
+    -webkit-backdrop-filter:blur(12px)!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar b{
+    display:block!important;
+    font-size:.78rem!important;
+    line-height:1.25!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar span{
+    display:none!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar .admin-save-button{
+    width:auto!important;
+    min-width:132px!important;
+    min-height:44px!important;
+    margin:0!important;
+    padding:9px 12px!important;
+    font-size:.80rem!important;
+    white-space:nowrap!important;
+    border-radius:10px!important;
+  }
+
+  .admin-devices-v8 #deviceSaveMessage{
+    margin-bottom:10px!important;
+  }
+}
+
+@media (max-width:430px){
+  .admin-devices-v8 .admin-device-tab{
+    min-height:64px!important;
+    padding:7px 3px!important;
+  }
+
+  .admin-devices-v8 .admin-device-tab b{
+    font-size:.69rem!important;
+  }
+
+  .admin-devices-v8 .admin-device-map-fields{
+    grid-template-columns:1fr!important;
+  }
+
+  .admin-devices-v8 .admin-device-map{
+    height:260px!important;
+    min-height:260px!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar{
+    grid-template-columns:1fr!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar > div{
+    display:none!important;
+  }
+
+  .admin-devices-v8 .admin-device-savebar .admin-save-button{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
+
+@media (max-width:360px){
+  .admin-devices-v8 .admin-media-gallery{
+    grid-template-columns:1fr!important;
+  }
+
+  .admin-devices-v8 .admin-coordinate-readout{
+    grid-template-columns:1fr!important;
+  }
+}
