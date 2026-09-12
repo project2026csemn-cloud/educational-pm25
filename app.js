@@ -9578,7 +9578,25 @@ function restoreLatestSnapshot(){
 // original declarations later in this file.
 // =====================================================
 // V8.8: monitoringMap declared earlier to avoid startup TDZ
+
+
+// =====================================================
+// V8.12 — EARLY MAP STATE
+// Must exist before bindDashboardNavigation() can open #monitoring.
+// =====================================================
 let monitoringMap=null;
+let monitoringMarkers=new Map();
+let selectedMonitoringDeviceId=null;
+let monitoringBaseLayers={street:null,satellite:null};
+let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
+
+let adminDeviceMap=null;
+let adminDeviceMarker=null;
+let adminBaseLayers={street:null,satellite:null};
+let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
+let activeAdminDeviceId="Number 1";
+let adminMediaDragIndex=null;
+
 let notificationCheckBusy=false;
 
 // =====================================================
@@ -10766,16 +10784,16 @@ const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
 // V8.8: monitoringMap declared earlier to avoid startup TDZ
 
-let monitoringMarkers=new Map();
-let selectedMonitoringDeviceId=null;
-let monitoringBaseLayers={street:null,satellite:null};
-let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
-let adminDeviceMap=null;
-let adminDeviceMarker=null;
-let adminBaseLayers={street:null,satellite:null};
-let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
-let activeAdminDeviceId="Number 1";
-let adminMediaDragIndex=null;
+
+
+
+
+
+
+
+
+
+
 const ADMIN_DEVICE_MAX_IMAGES=5;
 const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
 
@@ -11031,10 +11049,6 @@ function setMobileMonitoringDetailOpen(open){
   const mobile=monitoringMapMobileMode();
   const show=Boolean(open)&&mobile;
 
-  if(show){
-    lockMobileMapPage();
-  }
-
   document.body.classList.toggle(
     "mobile-map-detail-open",
     show
@@ -11045,14 +11059,13 @@ function setMobileMonitoringDetailOpen(open){
     backdrop.setAttribute("aria-hidden",show?"false":"true");
   }
 
-  if(panel&&show){
-    panel.scrollTop=0;
-    const scroller=panel.querySelector(".monitoring-place-detail-scroll");
-    if(scroller)scroller.scrollTop=0;
-  }
-
-  if(!show){
-    unlockMobileMapPage();
+  if(panel){
+    panel.classList.toggle("mobile-detail-open",show);
+    if(show){
+      panel.scrollTop=0;
+      const scroller=panel.querySelector(".monitoring-place-detail-scroll");
+      if(scroller)scroller.scrollTop=0;
+    }
   }
 }
 
@@ -11070,36 +11083,18 @@ function updateMonitoringMarkerSelection(){
 
 let mobileMapDetailSavedScrollY=0;
 
+// V8.12: intentionally no body position:fixed lock.
+// The detail panel itself is fixed/full-screen on mobile.
+// This prevents a failed detail-open from freezing page scrolling.
 function lockMobileMapPage(){
-  if(!monitoringMapMobileMode())return;
-  if(document.body.classList.contains("mobile-map-detail-open"))return;
-
   mobileMapDetailSavedScrollY=
     window.scrollY||
     document.documentElement.scrollTop||
     0;
-
-  document.body.style.position="fixed";
-  document.body.style.top=`-${mobileMapDetailSavedScrollY}px`;
-  document.body.style.left="0";
-  document.body.style.right="0";
-  document.body.style.width="100%";
 }
 
 function unlockMobileMapPage(){
-  const wasLocked=
-    document.body.classList.contains("mobile-map-detail-open")||
-    document.body.style.position==="fixed";
-
-  document.body.style.position="";
-  document.body.style.top="";
-  document.body.style.left="";
-  document.body.style.right="";
-  document.body.style.width="";
-
-  if(wasLocked){
-    window.scrollTo(0,mobileMapDetailSavedScrollY);
-  }
+  // no-op by design
 }
 
 function selectMonitoringLocation(deviceId,{source="tab"}={}){
