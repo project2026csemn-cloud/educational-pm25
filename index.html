@@ -21,7 +21,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260912-v8-8-tdzfix" rel="stylesheet"/>
+<link href="style.css?v=20260912-v8-9-mobilemap" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -604,7 +604,10 @@
         </div>
       </div>
 
+      <div class="monitoring-map-detail-backdrop hidden" id="mapDetailBackdrop" aria-hidden="true"></div>
+
       <aside class="monitoring-place-detail" id="mapDetailPanel" aria-hidden="true">
+        <div class="monitoring-place-drag-handle" aria-hidden="true"></div>
         <div class="monitoring-place-detail-head">
           <div>
             <span>MONITORING LOCATION</span>
@@ -2149,7 +2152,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260912-v8-8-tdzfix"></script>
+<script defer src="app.js?v=20260912-v8-9-mobilemap"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
