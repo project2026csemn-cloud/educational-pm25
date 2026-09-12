@@ -12248,8 +12248,17 @@ function setupAdminMediaManager(){
   if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if(!hasPermission("manage_device_media")||$("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const f=[...(e.clipboardData?.files||[])].filter(x=>String(x.type||"").startsWith("image/"));if(f.length){e.preventDefault();await addAdminImageFiles(f);}});}
 }
 async function saveAdminDevices(){
-  const devices=[...document.querySelectorAll(".admin-device-card")].map(d=>({device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d)}));
-  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage","กำลังบันทึก...");try{await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices})});await loadPublicDisplayConfig();renderAdminDevices();setAuthMessage("deviceSaveMessage","บันทึกข้อมูลจุดตรวจวัดเรียบร้อย","success");}catch(e){setAuthMessage("deviceSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
+  const d=adminMapSelectedCard();
+  if(!d){setAuthMessage("deviceSaveMessage","ไม่พบจุดตรวจวัดที่กำลังแก้ไข","error");return;}
+  const device={device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d)};
+  const b=$("saveDevicesButton");if(b)b.disabled=true;setAuthMessage("deviceSaveMessage",`กำลังบันทึก ${device.display_name||device.device_id}...`);
+  try{
+    const j=await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices:[device]})});
+    const saved=Array.isArray(j?.data)?j.data.find(x=>x.device_id===device.device_id):null;
+    if(saved){const idx=(publicDisplayConfig?.devices||[]).findIndex(x=>x.device_id===device.device_id);if(idx>=0)publicDisplayConfig.devices[idx]={...publicDisplayConfig.devices[idx],...saved};}
+    await loadPublicDisplayConfig();activeAdminDeviceId=device.device_id;renderAdminDevices();setAuthMessage("deviceSaveMessage",`บันทึก ${device.display_name||device.device_id} เรียบร้อย • รูป ${device.images.length}/5 ภาพ`,"success");
+  }catch(e){setAuthMessage("deviceSaveMessage",e.message||"บันทึกไม่สำเร็จ","error");}
+  finally{if(b)b.disabled=false;}
 }
 
 function renderAnnouncementPreview(){
