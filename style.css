@@ -24789,35 +24789,40 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .monitoring-status-card.status-is-unknown{--status-accent:148,163,184}
 
 .monitoring-status-label{
-  color:#9aaabd!important;
-  font-size:11px!important;
+  color:#d7e3ef!important;
+  font-size:14px!important;
   font-weight:800!important;
+  line-height:1.25!important;
+  letter-spacing:.01em!important;
+  margin-bottom:9px!important;
 }
 .monitoring-status-value{
   display:flex!important;
   align-items:center!important;
   gap:6px!important;
-  margin-top:7px!important;
+  margin-top:0!important;
   color:#f8fbff!important;
-  font-size:17px!important;
+  font-size:18px!important;
   font-weight:900!important;
+  line-height:1.15!important;
 }
 .monitoring-node-count-main{
   display:flex!important;
   align-items:baseline!important;
-  gap:7px!important;
-  margin-top:7px!important;
+  gap:8px!important;
+  margin-top:0!important;
 }
 .monitoring-node-count-value{
   margin:0!important;
   color:rgb(var(--status-accent))!important;
-  font-size:21px!important;
-  font-weight:950!important;
+  font-size:23px!important;
+  font-weight:900!important;
+  line-height:1.1!important;
 }
 .monitoring-node-count-unit{
-  color:#a0aec0!important;
-  font-size:10px!important;
-  font-weight:800!important;
+  color:#aebdca!important;
+  font-size:11px!important;
+  font-weight:700!important;
 }
 .monitoring-status-hint{display:none!important}
 
@@ -24829,6 +24834,20 @@ html body .site-header.is-authenticated #accountRoleBadge{
   display:inline-block!important;
   animation:v88StatusPulse 2.2s ease-in-out infinite;
 }
+
+@media(max-width:760px){
+  .monitoring-status-label{
+    font-size:13px!important;
+    margin-bottom:7px!important;
+  }
+  .monitoring-status-value{
+    font-size:17px!important;
+  }
+  .monitoring-node-count-value{
+    font-size:21px!important;
+  }
+}
+
 @media(prefers-reduced-motion:reduce){
   .status-is-online .monitoring-live-dot{animation:none!important}
 }
