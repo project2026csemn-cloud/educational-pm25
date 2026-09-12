@@ -10911,7 +10911,17 @@ function renderMonitoringMap({fit=false}={}){
       icon:monitoringMarkerIcon(number,d.device_id===selectedMonitoringDeviceId),
       title:String(d.display_name||`จุดตรวจวัด ${number}`)
     }).addTo(map);
-    marker.on("click",()=>selectMonitoringLocation(d.device_id));
+    marker.on("click",(event)=>{
+      if(event?.originalEvent){
+        L.DomEvent.stopPropagation(event.originalEvent);
+        L.DomEvent.preventDefault(event.originalEvent);
+      }
+
+      // Do not rebuild/remove this marker while Leaflet is handling its click.
+      window.setTimeout(()=>{
+        selectMonitoringLocation(d.device_id,{source:"marker"});
+      },0);
+    });
     monitoringMarkers.set(d.device_id,marker);
     bounds.push(coords);
   });
@@ -11018,28 +11028,84 @@ function monitoringMapMobileMode(){
 function setMobileMonitoringDetailOpen(open){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
+  const mobile=monitoringMapMobileMode();
+  const show=Boolean(open)&&mobile;
+
+  if(show){
+    lockMobileMapPage();
+  }
 
   document.body.classList.toggle(
     "mobile-map-detail-open",
-    Boolean(open)&&monitoringMapMobileMode()
+    show
   );
 
   if(backdrop){
-    const show=Boolean(open)&&monitoringMapMobileMode();
     backdrop.classList.toggle("hidden",!show);
     backdrop.setAttribute("aria-hidden",show?"false":"true");
   }
 
-  if(panel&&open&&monitoringMapMobileMode()){
+  if(panel&&show){
     panel.scrollTop=0;
     const scroller=panel.querySelector(".monitoring-place-detail-scroll");
     if(scroller)scroller.scrollTop=0;
   }
+
+  if(!show){
+    unlockMobileMapPage();
+  }
 }
 
-function selectMonitoringLocation(deviceId){
+function updateMonitoringMarkerSelection(){
+  monitoringMarkers.forEach((marker,deviceId)=>{
+    const number=mapDeviceNumber(deviceId);
+    marker.setIcon(
+      monitoringMarkerIcon(
+        number,
+        deviceId===selectedMonitoringDeviceId
+      )
+    );
+  });
+}
+
+let mobileMapDetailSavedScrollY=0;
+
+function lockMobileMapPage(){
+  if(!monitoringMapMobileMode())return;
+  if(document.body.classList.contains("mobile-map-detail-open"))return;
+
+  mobileMapDetailSavedScrollY=
+    window.scrollY||
+    document.documentElement.scrollTop||
+    0;
+
+  document.body.style.position="fixed";
+  document.body.style.top=`-${mobileMapDetailSavedScrollY}px`;
+  document.body.style.left="0";
+  document.body.style.right="0";
+  document.body.style.width="100%";
+}
+
+function unlockMobileMapPage(){
+  const wasLocked=
+    document.body.classList.contains("mobile-map-detail-open")||
+    document.body.style.position==="fixed";
+
+  document.body.style.position="";
+  document.body.style.top="";
+  document.body.style.left="";
+  document.body.style.right="";
+  document.body.style.width="";
+
+  if(wasLocked){
+    window.scrollTo(0,mobileMapDetailSavedScrollY);
+  }
+}
+
+function selectMonitoringLocation(deviceId,{source="tab"}={}){
   const d=configDevice(deviceId);
   if(!d)return;
+
   selectedMonitoringDeviceId=deviceId;
 
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
@@ -11050,36 +11116,73 @@ function selectMonitoringLocation(deviceId){
   $("mapDetailPanel")?.setAttribute("aria-hidden","false");
 
   renderMonitoringLocationDetail(d);
-  renderMonitoringMap();
+
+  // Important:
+  // only change existing marker icons.
+  // Do NOT call renderMonitoringMap() here, because a marker click
+  // would delete/recreate the marker while Leaflet is handling it.
+  updateMonitoringMarkerSelection();
 
   const coords=deviceCoordinates(d);
   const map=ensureMonitoringMap();
 
   if(map&&coords){
-    map.flyTo(
-      coords,
-      monitoringMapMobileMode()?18:19,
-      {animate:true,duration:.72}
-    );
+    if(source==="marker"){
+      // Marker was already tapped. A gentle pan is enough and avoids
+      // fighting the mobile gesture that opened the detail panel.
+      map.panTo(coords,{animate:true,duration:.35});
+    }else{
+      map.flyTo(
+        coords,
+        monitoringMapMobileMode()?18:19,
+        {animate:true,duration:.65}
+      );
+    }
   }
 
   setMobileMonitoringDetailOpen(true);
-  setTimeout(()=>map?.invalidateSize(),220);
+  setTimeout(()=>map?.invalidateSize(),180);
 }
 
 function closeMonitoringLocationDetail({fit=true}={}){
   selectedMonitoringDeviceId=null;
-  document.querySelectorAll("[data-map-device]").forEach(btn=>btn.classList.remove("active"));
+
+  document.querySelectorAll("[data-map-device]").forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
   $("monitoringMapLayout")?.classList.remove("has-detail");
   $("mapDetailPanel")?.setAttribute("aria-hidden","true");
+
   setMobileMonitoringDetailOpen(false);
-  renderMonitoringMap({fit});
-  setTimeout(()=>monitoringMap?.invalidateSize(),220);
+  updateMonitoringMarkerSelection();
+
+  const map=ensureMonitoringMap();
+
+  if(fit&&map){
+    const bounds=[];
+    const devices=Array.isArray(publicDisplayConfig?.devices)
+      ?publicDisplayConfig.devices
+      :[];
+
+    devices.forEach(d=>{
+      const coords=deviceCoordinates(d);
+      if(coords)bounds.push(coords);
+    });
+
+    if(bounds.length===1){
+      map.setView(bounds[0],18);
+    }else if(bounds.length>1){
+      map.fitBounds(bounds,{padding:[36,36],maxZoom:18});
+    }
+  }
+
+  setTimeout(()=>map?.invalidateSize(),180);
 }
 
 function setupMonitoringMapUi(){
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
-    btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice));
+    btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice,{source:"tab"}));
   });
 
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
