@@ -9914,6 +9914,15 @@ function clearTransientUiMessages(ids=null){
   list.forEach(id=>setAuthMessage(id,""));
 }
 
+// =====================================================
+// V8.15 — STARTUP-SAFE MAP STATE
+// IMPORTANT: these must exist before dashboard navigation can call map code.
+// =====================================================
+let monitoringMapRefreshTimer=null;
+let monitoringMapCreating=false;
+let monitoringMapUiBound=false;
+let monitoringResponsiveTimer=null;
+
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
   clearTransientUiMessages();
@@ -10870,8 +10879,6 @@ function setMonitoringBasemap(mode){
   });
 }
 
-let monitoringMapRefreshTimer=null;
-let monitoringMapCreating=false;
 
 function monitoringMapContainerReady(){
   const root=$("monitoringMap");
@@ -11205,7 +11212,6 @@ function closeMonitoringLocationDetail({fit=true}={}){
   }
 }
 
-let monitoringMapUiBound=false;
 
 function setupMonitoringMapUi(){
   syncMonitoringDetailHost();
@@ -13400,7 +13406,6 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
 // =====================================================
 // V8.14 — SAFE MAP / DETAIL RESPONSIVE SYNC
 // =====================================================
-let monitoringResponsiveTimer=null;
 window.addEventListener("resize",()=>{
   clearTimeout(monitoringResponsiveTimer);
   monitoringResponsiveTimer=setTimeout(()=>{
