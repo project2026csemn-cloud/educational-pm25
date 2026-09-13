@@ -26252,3 +26252,34 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .node{min-width:0!important}
   .node .status,.node [class*="status"],.node-status,.status-online,.status-offline{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
 }
+
+/* ============================================================
+   V8.22 — OVERVIEW TABLET GAP FIX (901–1100px)
+   The startup optimization reserves a 680px intrinsic block for
+   .overview-recommendation-section while content-visibility:auto
+   is active. On tablet widths this can leave a large empty area
+   after the recommendation content. Let the active Overview page
+   use its real content height in this range.
+   ============================================================ */
+@media (min-width:901px) and (max-width:1100px){
+  #page-overview{
+    height:auto!important;
+    min-height:0!important;
+  }
+
+  #page-overview .overview-recommendation-section{
+    content-visibility:visible!important;
+    contain-intrinsic-size:auto!important;
+    contain:none!important;
+    height:auto!important;
+    min-height:0!important;
+  }
+
+  #page-overview .overview-recommendation-card,
+  #page-overview .dashboard-summary-section,
+  #page-overview .smart-summary-card{
+    height:auto!important;
+    min-height:0!important;
+  }
+}
+
