@@ -25895,3 +25895,326 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 }
 
+
+/* ============================================================
+   V8.20 — TABLET LAYOUT FINAL
+   Canonical tablet tier: 701–1100px
+   - Repairs the 701–760px collision with legacy mobile rules.
+   - Gives monitoring cards real breathing room on tablets.
+   - Preserves V8.18 modal map + V8.19 map/status fixes.
+   ============================================================ */
+
+/* ---------- ALL TABLETS ---------- */
+@media (min-width:701px) and (max-width:1100px){
+  /* Header: one intentional tablet row; never the legacy mobile stack. */
+  .site-header{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    min-height:0!important;
+    padding:16px 18px!important;
+    gap:16px!important;
+    margin-bottom:14px!important;
+    border-radius:20px!important;
+  }
+  .site-brand{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:center!important;
+    width:auto!important;
+    min-width:0!important;
+    gap:13px!important;
+  }
+  .site-brand-logos{
+    display:flex!important;
+    align-items:center!important;
+    gap:7px!important;
+    flex:0 0 auto!important;
+  }
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:58px!important;
+    height:58px!important;
+    min-width:58px!important;
+    max-width:58px!important;
+    object-fit:contain!important;
+  }
+  .site-brand-copy{min-width:0!important;width:auto!important}
+  .site-brand-title{
+    margin:0!important;
+    font-size:clamp(1.28rem,2.45vw,1.72rem)!important;
+    line-height:1.08!important;
+    font-weight:900!important;
+    letter-spacing:-.03em!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  .site-brand-subtitle{
+    display:block!important;
+    margin-top:5px!important;
+    font-size:clamp(.72rem,1.15vw,.82rem)!important;
+    line-height:1.4!important;
+  }
+  .header-account-zone{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    width:auto!important;
+    min-width:0!important;
+    gap:9px!important;
+  }
+  .header-profile-stack{
+    display:grid!important;
+    grid-template-columns:auto auto!important;
+    justify-content:end!important;
+    justify-items:end!important;
+    align-items:center!important;
+    min-width:0!important;
+    gap:2px 8px!important;
+  }
+  .header-account-button{
+    grid-column:1/-1!important;
+    width:auto!important;
+    max-width:205px!important;
+    min-height:40px!important;
+    padding:3px 4px 3px 7px!important;
+  }
+  .header-notification-button{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    flex:0 0 40px!important;
+  }
+  .header-account-avatar{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+    flex:0 0 38px!important;
+  }
+  #accountButtonText{max-width:128px!important;font-size:12.5px!important}
+  .header-account-role{font-size:9px!important}
+  .header-clock{font-size:10px!important;white-space:nowrap!important}
+
+  /* Navigation: five tabs stay horizontal on the entire tablet tier. */
+  .dashboard-nav{top:7px!important;margin:-2px 0 14px!important;min-height:0!important}
+  .dashboard-nav-inner{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+    min-height:58px!important;
+    padding:7px 8px!important;
+    gap:6px!important;
+  }
+  .dashboard-mobile-toggle{display:none!important}
+  .dashboard-nav-links,
+  .dashboard-nav-links.open{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    order:initial!important;
+    flex:1 1 auto!important;
+    flex-basis:auto!important;
+    width:auto!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    gap:4px!important;
+    overflow:visible!important;
+  }
+  .dashboard-nav-link{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:1 1 0!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:42px!important;
+    padding:8px 5px!important;
+    border-radius:10px!important;
+    font-size:clamp(.68rem,1.16vw,.82rem)!important;
+    line-height:1.18!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+  }
+  .dashboard-system-pill{
+    display:inline-flex!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    max-width:190px!important;
+    min-width:0!important;
+    min-height:38px!important;
+    margin:0 0 0 3px!important;
+    padding:6px 9px!important;
+    justify-content:center!important;
+    font-size:clamp(.66rem,1.05vw,.75rem)!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+  }
+
+  /* Monitoring section spacing. */
+  .monitoring-card{padding:18px!important}
+  .dashboard-card-page-head{
+    gap:16px!important;
+    margin-bottom:16px!important;
+  }
+  .dashboard-card-page-copy p{line-height:1.55!important}
+  .monitoring-status-cluster{gap:10px!important;flex:0 0 auto!important}
+  .monitoring-status-card{min-width:132px!important;padding:11px 13px!important}
+  .monitoring-status-value{white-space:nowrap!important}
+  .monitoring-node-count-main{white-space:nowrap!important}
+
+  /* Every node gets comfortable typography and metrics. */
+  .monitoring-card .node{
+    padding:16px!important;
+    min-width:0!important;
+  }
+  .monitoring-card .node > .flex.justify-between{
+    display:flex!important;
+    align-items:flex-start!important;
+    gap:12px!important;
+  }
+  .monitoring-card .node > .flex.justify-between > b{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    font-size:clamp(1rem,1.7vw,1.12rem)!important;
+    line-height:1.32!important;
+  }
+  #n1status,#n2status,#n3status{
+    flex:0 0 auto!important;
+    min-width:max-content!important;
+    white-space:nowrap!important;
+    word-break:keep-all!important;
+    overflow-wrap:normal!important;
+    font-size:.72rem!important;
+    line-height:1.25!important;
+  }
+  .monitoring-card .node [id^="lastUpdate"]{font-size:.75rem!important}
+  .monitoring-card .node > .grid{
+    column-gap:18px!important;
+    row-gap:9px!important;
+    margin-top:15px!important;
+    font-size:.82rem!important;
+  }
+  .monitoring-card .node > .grid > span{min-width:0!important;white-space:nowrap!important}
+  .monitoring-card .node > .grid b{font-size:.9rem!important}
+
+  /* Keep the V8.19 map height correction authoritative. */
+  #monitoringMapLayout,
+  #monitoringMapLayout.has-detail,
+  .monitoring-map-layout,
+  .monitoring-map-layout.has-detail{
+    min-height:0!important;
+    height:auto!important;
+  }
+}
+
+/* ---------- COMPACT / MID TABLET: 701–960 ----------
+   Two columns are much more readable than squeezing three desktop cards.
+   Node 3 spans the row, so all three remain visible without tiny text. */
+@media (min-width:701px) and (max-width:960px){
+  .monitoring-card > .grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  .monitoring-card > .grid > .node:nth-child(3){
+    grid-column:1/-1!important;
+  }
+  .monitoring-card > .grid > .node:nth-child(3) > .grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    column-gap:20px!important;
+  }
+}
+
+/* ---------- 701–760 LEGACY-MOBILE COLLISION REPAIR ---------- */
+@media (min-width:701px) and (max-width:760px){
+  .site-header{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    padding:14px!important;
+    gap:12px!important;
+  }
+  .site-brand-logo,
+  .site-brand-logos img{
+    width:52px!important;
+    height:52px!important;
+    min-width:52px!important;
+    max-width:52px!important;
+  }
+  .site-brand-title{font-size:clamp(1.16rem,2.8vw,1.34rem)!important}
+  .site-brand-subtitle{font-size:.7rem!important;margin-top:4px!important}
+  .header-account-zone{align-self:center!important;gap:7px!important}
+  .header-notification-button{width:38px!important;height:38px!important;min-width:38px!important;flex-basis:38px!important}
+  .header-account-avatar{width:36px!important;height:36px!important;min-width:36px!important;flex-basis:36px!important}
+  .header-account-button{min-height:38px!important;max-width:180px!important}
+  #accountButtonText{max-width:108px!important;font-size:12px!important}
+
+  .dashboard-nav-inner{
+    display:flex!important;
+    grid-template-columns:none!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    min-height:56px!important;
+    padding:7px!important;
+    gap:4px!important;
+  }
+  .dashboard-nav-links,
+  .dashboard-nav-links.open{
+    display:flex!important;
+    grid-column:auto!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    width:auto!important;
+    gap:3px!important;
+  }
+  .dashboard-nav-link{
+    width:auto!important;
+    min-height:40px!important;
+    padding:7px 3px!important;
+    font-size:clamp(.62rem,1.38vw,.72rem)!important;
+  }
+  .dashboard-system-pill{
+    grid-column:auto!important;
+    justify-self:auto!important;
+    align-self:center!important;
+    width:auto!important;
+    max-width:155px!important;
+    min-height:36px!important;
+    padding:5px 7px!important;
+    font-size:.63rem!important;
+    white-space:nowrap!important;
+  }
+  #navSystemStatus{white-space:nowrap!important;overflow-wrap:normal!important}
+
+  .dashboard-card-page-head,
+  .dashboard-card-page-head-split{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:end!important;
+    gap:12px!important;
+  }
+  .monitoring-status-cluster{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .monitoring-status-card{min-width:118px!important;padding:10px 11px!important}
+
+  .monitoring-card > .grid{gap:10px!important}
+  .monitoring-card .node{padding:14px!important}
+  .monitoring-card .node > .grid{column-gap:12px!important;row-gap:8px!important}
+}
+
+/* ---------- LARGE TABLET: 961–1100 ---------- */
+@media (min-width:961px) and (max-width:1100px){
+  .monitoring-card > .grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+  .monitoring-card > .grid > .node:nth-child(3){grid-column:auto!important}
+}
+
+/* Height-aware tablet polish. */
+@media (min-width:701px) and (max-width:1100px) and (max-height:700px){
+  .site-header{padding-top:11px!important;padding-bottom:11px!important}
+  .site-brand-logo,.site-brand-logos img{width:50px!important;height:50px!important;min-width:50px!important;max-width:50px!important}
+  .dashboard-nav-inner{min-height:52px!important}
+}
