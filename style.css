@@ -26218,3 +26218,37 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .site-brand-logo,.site-brand-logos img{width:50px!important;height:50px!important;min-width:50px!important;max-width:50px!important}
   .dashboard-nav-inner{min-height:52px!important}
 }
+
+/* ============================================================
+   V8.21 — COMPACT TABLET 701–760px
+   Fix horizontal overflow at the mobile/tablet boundary
+   ============================================================ */
+@media (min-width:701px) and (max-width:760px){
+  html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  .max-w-\[1800px\]{width:100%!important;max-width:100%!important;min-width:0!important}
+  .site-header{width:100%!important;max-width:100%!important;min-width:0!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;padding:15px 16px!important;gap:12px!important}
+  .site-brand{width:100%!important;min-width:0!important}
+  .site-brand-logos{flex:0 0 auto!important}
+  .site-brand-logo,.site-brand-logos img{width:58px!important;height:58px!important;min-width:58px!important}
+  .site-brand-copy{min-width:0!important}
+  .site-brand-title{font-size:1.35rem!important;line-height:1.1!important;overflow-wrap:normal!important}
+  .site-brand-subtitle{font-size:.77rem!important;line-height:1.4!important}
+  .header-account-zone{width:100%!important;max-width:100%!important;min-width:0!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+  .header-profile-stack{width:auto!important;min-width:0!important;display:flex!important;flex:1 1 auto!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important}
+  .header-account-button{width:auto!important;max-width:190px!important;min-width:0!important;min-height:42px!important}
+  #accountButtonText{max-width:105px!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .header-account-avatar{width:38px!important;height:38px!important;min-width:38px!important;flex:0 0 38px!important}
+  .header-notification-button{width:42px!important;height:42px!important;min-width:42px!important;flex:0 0 42px!important}
+  .header-clock{flex:0 0 auto!important;white-space:nowrap!important}
+  .dashboard-nav{width:100%!important;max-width:100%!important;min-width:0!important}
+  .dashboard-nav-inner{width:100%!important;max-width:100%!important;min-width:0!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;padding:8px!important;gap:7px!important}
+  .dashboard-mobile-toggle{display:none!important}
+  .dashboard-nav-links{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:100%!important;min-width:0!important;order:initial!important;flex-basis:auto!important;gap:4px!important;padding:0!important;margin:0!important;overflow:visible!important}
+  .dashboard-nav-link{width:100%!important;min-width:0!important;max-width:100%!important;min-height:43px!important;padding:7px 3px!important;font-size:.68rem!important;line-height:1.15!important;text-align:center!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important}
+  .dashboard-system-pill{width:100%!important;max-width:100%!important;min-width:0!important;min-height:42px!important;margin:0!important;padding:7px 12px!important;justify-content:center!important;font-size:.75rem!important;line-height:1.25!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #navSystemStatus{min-width:0!important;max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .monitoring-location-section,.current-summary-board,.monitoring-overview,.monitoring-map-layout,.monitoring-map-wrap{width:100%!important;max-width:100%!important;min-width:0!important}
+  .nodes{width:100%!important;max-width:100%!important;min-width:0!important}
+  .node{min-width:0!important}
+  .node .status,.node [class*="status"],.node-status,.status-online,.status-offline{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+}
