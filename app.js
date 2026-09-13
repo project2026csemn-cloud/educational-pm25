@@ -11102,13 +11102,17 @@ function monitoringMapMobileMode(){
   return window.matchMedia("(max-width: 700px)").matches;
 }
 
+function monitoringMapTabletMode(){
+  return window.matchMedia("(min-width: 701px) and (max-width: 1100px)").matches;
+}
+
 function syncMonitoringDetailHost(){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
   const layout=$("monitoringMapLayout");
   if(!panel||!layout)return;
 
-  if(monitoringMapMobileMode()){
+  if(monitoringMapMobileMode()||monitoringMapTabletMode()){
     if(panel.parentElement!==document.body){
       document.body.appendChild(panel);
     }
@@ -11129,22 +11133,26 @@ function setMobileMonitoringDetailOpen(open){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
   const show=Boolean(open)&&monitoringMapMobileMode();
+  const tabletShow=Boolean(open)&&monitoringMapTabletMode();
 
   syncMonitoringDetailHost();
 
   document.body.classList.toggle("mobile-map-detail-open",show);
+  document.body.classList.toggle("tablet-map-detail-open",tabletShow);
 
   if(panel){
     panel.classList.toggle("mobile-detail-open",show);
-    if(show){
+    panel.classList.toggle("tablet-detail-open",tabletShow);
+    if(show||tabletShow){
       const scroller=panel.querySelector(".monitoring-place-detail-scroll");
       if(scroller)scroller.scrollTop=0;
     }
   }
 
   if(backdrop){
-    backdrop.classList.add("hidden");
-    backdrop.setAttribute("aria-hidden","true");
+    backdrop.classList.toggle("hidden",!tabletShow);
+    backdrop.classList.toggle("tablet-detail-backdrop-open",tabletShow);
+    backdrop.setAttribute("aria-hidden",tabletShow?"false":"true");
   }
 }
 
@@ -13412,12 +13420,17 @@ window.addEventListener("resize",()=>{
     syncMonitoringDetailHost();
 
     const panel=$("mapDetailPanel");
-    if(selectedMonitoringDeviceId&&monitoringMapMobileMode()){
-      panel?.classList.add("mobile-detail-open");
-      document.body.classList.add("mobile-map-detail-open");
-    }else{
-      panel?.classList.remove("mobile-detail-open");
-      document.body.classList.remove("mobile-map-detail-open");
+    const backdrop=$("mapDetailBackdrop");
+    const mobileOpen=Boolean(selectedMonitoringDeviceId)&&monitoringMapMobileMode();
+    const tabletOpen=Boolean(selectedMonitoringDeviceId)&&monitoringMapTabletMode();
+    panel?.classList.toggle("mobile-detail-open",mobileOpen);
+    panel?.classList.toggle("tablet-detail-open",tabletOpen);
+    document.body.classList.toggle("mobile-map-detail-open",mobileOpen);
+    document.body.classList.toggle("tablet-map-detail-open",tabletOpen);
+    if(backdrop){
+      backdrop.classList.toggle("hidden",!tabletOpen);
+      backdrop.classList.toggle("tablet-detail-backdrop-open",tabletOpen);
+      backdrop.setAttribute("aria-hidden",tabletOpen?"false":"true");
     }
 
     if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:false});
