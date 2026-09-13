@@ -11237,6 +11237,7 @@ function setupMonitoringMapUi(){
   });
 
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
+  $("mapDetailBackdrop")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
 
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&selectedMonitoringDeviceId)closeMonitoringLocationDetail({fit:false});
@@ -13328,6 +13329,7 @@ function setupRemoteWiFiManagement(){
     $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
     $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
     $("notificationInboxSettings")?.addEventListener("click",()=>{closeNotificationInbox();openNotificationSettings();});
+    $("notificationInboxClose")?.addEventListener("click",closeNotificationInbox);
     $("notificationMarkAllRead")?.addEventListener("click",()=>markNotificationRead(null,true));
 
     document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
