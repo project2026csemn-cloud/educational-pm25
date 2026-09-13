@@ -26888,3 +26888,138 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding-bottom:5px!important;
   }
 }
+
+
+/* ============================================================
+   V8.28 — MOBILE CLOSE UX (<=760px)
+   Notification inbox:
+   - smaller footprint
+   - explicit X close button
+   - keeps existing tap-outside-to-close behavior
+   Map detail:
+   - backdrop can be tapped to close (JS)
+   ============================================================ */
+
+.notification-inbox-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex:0 0 auto;
+}
+
+.notification-inbox-close{
+  display:none;
+  width:32px;
+  height:32px;
+  padding:0;
+  border:1px solid rgba(100,116,139,.45);
+  border-radius:10px;
+  background:rgba(15,30,51,.78);
+  color:#cbd5e1;
+  font-size:21px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.notification-inbox-close:hover{
+  border-color:rgba(56,189,248,.55);
+  color:#f8fafc;
+  background:rgba(14,116,144,.16);
+}
+
+@media(max-width:760px){
+  .notification-inbox{
+    top:68px!important;
+    right:10px!important;
+    left:10px!important;
+    width:auto!important;
+    max-height:min(72vh,560px)!important;
+    border-radius:16px!important;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .notification-inbox-head{
+    padding:12px 12px 10px!important;
+    gap:8px!important;
+  }
+
+  .notification-inbox-head h3{
+    font-size:16px!important;
+  }
+
+  .notification-inbox-head p{
+    font-size:9px!important;
+  }
+
+  .notification-inbox-head-actions{
+    gap:4px;
+  }
+
+  .notification-mark-read{
+    padding:6px 5px!important;
+    white-space:nowrap;
+  }
+
+  .notification-inbox-close{
+    display:grid;
+    place-items:center;
+    flex:0 0 32px;
+  }
+
+  .notification-inbox-list{
+    flex:1 1 auto;
+    min-height:0;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+  }
+
+  .notification-inbox-item{
+    grid-template-columns:34px minmax(0,1fr) 7px!important;
+    gap:8px!important;
+    padding:10px 12px!important;
+  }
+
+  .notification-inbox-item-icon{
+    width:32px!important;
+    height:32px!important;
+    border-radius:10px!important;
+    font-size:15px!important;
+  }
+
+  .notification-inbox-item-copy b{
+    font-size:11px!important;
+  }
+
+  .notification-inbox-item-copy>span{
+    font-size:9px!important;
+    -webkit-line-clamp:1!important;
+  }
+
+  .notification-inbox-item-copy small{
+    font-size:8px!important;
+  }
+
+  .notification-inbox-footer{
+    flex:0 0 auto;
+    padding:9px 12px!important;
+  }
+}
+
+@media(max-width:430px){
+  .notification-inbox{
+    top:62px!important;
+    max-height:min(68vh,500px)!important;
+  }
+
+  .notification-inbox-head{
+    padding:10px 10px 9px!important;
+  }
+
+  .notification-inbox-item{
+    padding:9px 10px!important;
+  }
+}
+
