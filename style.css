@@ -26841,3 +26841,50 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 }
 
+
+
+/* ============================================================
+   V8.27 — TABLET STATUS BALANCE (901–1100px)
+   ============================================================ */
+@media (min-width:901px) and (max-width:1100px){
+  .dashboard-nav-inner{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"tabs" "status"!important;
+    gap:7px!important;
+  }
+
+  .dashboard-system-pill{
+    grid-area:status!important;
+    justify-self:stretch!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:38px!important;
+    margin:0!important;
+    padding:7px 14px!important;
+    justify-content:center!important;
+    text-align:center!important;
+    border-radius:14px!important;
+  }
+
+  #navSystemStatus{
+    width:auto!important;
+    max-width:100%!important;
+    min-width:0!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1100px) and (max-height:700px){
+  .dashboard-nav-inner{gap:5px!important;}
+  .dashboard-system-pill{
+    min-height:34px!important;
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+  }
+}
