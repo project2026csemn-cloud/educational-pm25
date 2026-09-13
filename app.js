@@ -9887,6 +9887,69 @@ loadStandardsOnly,
 );
 
 // =====================================================
+// =====================================================
+// V8.24 — TABLET 901–1100 PAGE TAIL TRIM
+// CSS-only height overrides could not remove the reserved scroll tail
+// consistently across all five pages. This measures the last meaningful
+// rendered leaf in the active page and trims only the empty tail.
+// =====================================================
+let tabletPageTailTrimTimer=null;
+
+function trimTabletDashboardPageTail(){
+  const w=window.innerWidth||document.documentElement.clientWidth||0;
+  const panels=[...document.querySelectorAll("[data-dashboard-page-panel]")];
+
+  // Always clear an old inline trim before measuring or leaving this tier.
+  panels.forEach(panel=>{
+    panel.style.removeProperty("height");
+    panel.style.removeProperty("overflow");
+  });
+
+  if(w<901 || w>1100) return;
+
+  const panel=document.querySelector("[data-dashboard-page-panel].active");
+  if(!panel) return;
+
+  // Force real layout for the active page before measuring below-the-fold content.
+  panel.style.setProperty("content-visibility","visible","important");
+
+  requestAnimationFrame(()=>{
+    const panelRect=panel.getBoundingClientRect();
+    let maxBottom=0;
+
+    const meaningful=[...panel.querySelectorAll("*")].filter(el=>{
+      const cs=getComputedStyle(el);
+      if(cs.display==="none" || cs.visibility==="hidden" || Number(cs.opacity)===0) return false;
+      if(cs.position==="fixed") return false;
+      const tag=el.tagName;
+      const special=/^(IMG|CANVAS|SVG|VIDEO|IFRAME|BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(tag);
+      const leaf=el.children.length===0;
+      if(!special && !leaf) return false;
+      if(!special && !String(el.textContent||"").trim()) return false;
+      const r=el.getBoundingClientRect();
+      return r.width>0 && r.height>0;
+    });
+
+    meaningful.forEach(el=>{
+      const r=el.getBoundingClientRect();
+      maxBottom=Math.max(maxBottom,r.bottom-panelRect.top);
+    });
+
+    // Safety: never collapse a page whose meaningful content was not measurable.
+    if(maxBottom>120){
+      panel.style.setProperty("height",Math.ceil(maxBottom+28)+"px","important");
+      panel.style.setProperty("overflow","hidden","important");
+    }
+  });
+}
+
+function scheduleTabletDashboardPageTailTrim(delay=80){
+  clearTimeout(tabletPageTailTrimTimer);
+  tabletPageTailTrimTimer=setTimeout(trimTabletDashboardPageTail,delay);
+}
+
+window.addEventListener("resize",()=>scheduleTabletDashboardPageTailTrim(120),{passive:true});
+
 // NAVIGATION REDESIGN 2026-08-28
 // =====================================================
 const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
@@ -9957,6 +10020,9 @@ function openDashboardPage(page,{updateHash=true}={}){
   if(page==="monitoring"){
     scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
   }
+
+  scheduleTabletDashboardPageTailTrim(90);
+  setTimeout(()=>scheduleTabletDashboardPageTailTrim(0),700);
 
   // V36.60 — About contains many SVG characters. Render them only when
   // the user actually opens About, so they do not compete with Overview startup.
