@@ -26614,3 +26614,77 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 }
 
+/* ============================================================
+   V8.25 — TABLET PAGE END / NO HEIGHT CLIPPING
+   901–1100px only.
+   Important: page height is NEVER measured or clipped by JavaScript.
+   Short pages end with a compact visual terminator instead of looking
+   like a broken empty black canvas. Long pages continue naturally.
+   ============================================================ */
+.tablet-page-end{display:none}
+
+@media (min-width:901px) and (max-width:1100px){
+  html{
+    background:#111c2c!important;
+  }
+
+  body{
+    min-height:0!important;
+    background:
+      radial-gradient(circle at 10% 0%,rgba(14,165,233,.13),transparent 30%),
+      radial-gradient(circle at 95% 8%,rgba(16,185,129,.10),transparent 28%),
+      #07111f!important;
+  }
+
+  body > .max-w-\\[1800px\\]{
+    min-height:0!important;
+    height:auto!important;
+    padding-bottom:12px!important;
+  }
+
+  #dashboardPages,
+  .dashboard-pages,
+  [data-dashboard-page-panel].active{
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+
+  /* No reserved rendering height on the active page. */
+  [data-dashboard-page-panel].active,
+  [data-dashboard-page-panel].active > *{
+    contain-intrinsic-size:auto!important;
+  }
+
+  .tablet-page-end{
+    display:flex!important;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    margin:14px 0 0;
+    padding:11px 14px 10px;
+    color:#52657a;
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:.15em;
+    line-height:1.2;
+    text-align:center;
+  }
+  .tablet-page-end span{
+    display:block;
+    width:44px;
+    height:1px;
+    flex:0 0 44px;
+    background:linear-gradient(90deg,transparent,rgba(34,211,238,.32));
+  }
+  .tablet-page-end span:last-child{
+    transform:scaleX(-1);
+  }
+  .tablet-page-end small{
+    font:inherit;
+    white-space:nowrap;
+  }
+}
+
