@@ -26475,3 +26475,142 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 }
 
+/* ============================================================
+   V8.24 — TABLET FINAL COMBINED FIX
+   A) 901–1100: page tail is trimmed by JS to the last rendered
+      meaningful element. CSS here removes reserved-size hints.
+   B) 1101–1450: Project Credit stays 5 columns without overflow.
+   ============================================================ */
+
+@media (min-width:901px) and (max-width:1100px){
+  [data-dashboard-page-panel].active,
+  [data-dashboard-page-panel].active *{
+    contain-intrinsic-size:auto!important;
+  }
+
+  [data-dashboard-page-panel].active{
+    content-visibility:visible!important;
+    min-height:0!important;
+    max-height:none;
+    align-self:start!important;
+  }
+
+  #page-overview .overview-recommendation-section,
+  #page-about .about-character-guide-section,
+  #page-about .about-hero-guide-section,
+  #page-about .about-standards-section{
+    content-visibility:visible!important;
+    contain-intrinsic-size:auto!important;
+  }
+}
+
+@media (min-width:1101px) and (max-width:1450px){
+  #page-about .about-credit-section,
+  #page-about .credit-bar,
+  #page-about .credit-inner{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  #page-about .credit-bar{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+
+  #page-about .credit-inner{
+    display:grid!important;
+    grid-template-columns:
+      minmax(0,1.18fr)
+      minmax(0,1.22fr)
+      minmax(0,.92fr)
+      minmax(0,.92fr)
+      minmax(0,.92fr)!important;
+    gap:8px!important;
+    overflow:visible!important;
+  }
+
+  #page-about .credit-box{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:132px!important;
+    padding:12px 10px!important;
+    gap:8px!important;
+    overflow:hidden!important;
+  }
+
+  #page-about .credit-icon,
+  #page-about .credit-developer .credit-icon,
+  #page-about .credit-advisor .credit-icon{
+    flex:0 0 44px!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+    max-width:44px!important;
+    max-height:44px!important;
+    border-radius:12px!important;
+  }
+
+  #page-about .credit-content{
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+
+  #page-about .credit-label{
+    margin-bottom:4px!important;
+    font-size:8px!important;
+    letter-spacing:1.15px!important;
+  }
+
+  #page-about .credit-title,
+  #page-about .credit-college .credit-title,
+  #page-about .credit-department .credit-title,
+  #page-about .credit-developer .credit-title,
+  #page-about .credit-advisor .credit-title{
+    max-width:100%!important;
+    font-size:11px!important;
+    line-height:1.35!important;
+    white-space:normal!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:3!important;
+  }
+
+  #page-about .credit-role{
+    margin-top:6px!important;
+    padding:3px 6px!important;
+    max-width:100%!important;
+    font-size:7.5px!important;
+    letter-spacing:.55px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #page-about .credit-links{
+    gap:4px!important;
+    margin-top:6px!important;
+  }
+
+  #page-about .credit-link{
+    max-width:100%!important;
+    padding:4px 6px!important;
+    font-size:8px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #page-about .credit-bottom{
+    min-width:0!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    font-size:8px!important;
+  }
+}
+
