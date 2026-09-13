@@ -26688,3 +26688,156 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
 }
 
+
+/* ============================================================
+   V8.26 — TABLET 901–1100 STATUS NAV FIX
+   Supports all status text lengths without overlapping the 5 tabs:
+   - Mother ONLINE + 3/3 nodes
+   - Mother ONLINE + one/more child nodes offline / waiting
+   - System / Mother OFFLINE
+   Only presentation changes. Status logic is untouched.
+   ============================================================ */
+@media (min-width:901px) and (max-width:1100px){
+
+  .dashboard-nav{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  .dashboard-nav-inner{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:
+      "tabs tabs"
+      ". status"!important;
+
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+
+    min-height:0!important;
+    padding:8px 10px!important;
+    gap:7px 8px!important;
+
+    align-items:center!important;
+    overflow:hidden!important;
+  }
+
+  .dashboard-mobile-toggle{
+    display:none!important;
+  }
+
+  .dashboard-nav-links,
+  .dashboard-nav-links.open{
+    grid-area:tabs!important;
+
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+
+    flex:none!important;
+    flex-basis:auto!important;
+    order:initial!important;
+
+    gap:6px!important;
+    margin:0!important;
+    padding:0!important;
+
+    overflow:visible!important;
+  }
+
+  .dashboard-nav-link{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+
+    min-height:42px!important;
+    padding:8px 6px!important;
+
+    font-size:clamp(.72rem,1.22vw,.84rem)!important;
+    line-height:1.18!important;
+
+    text-align:center!important;
+    white-space:nowrap!important;
+
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /*
+   * Give the status its own safe row.
+   * It remains compact/right aligned for short ONLINE text,
+   * but can grow leftward for OFFLINE / waiting-node messages.
+   */
+  .dashboard-system-pill{
+    grid-area:status!important;
+    justify-self:end!important;
+
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+
+    width:max-content!important;
+    max-width:100%!important;
+    min-width:0!important;
+
+    min-height:38px!important;
+    margin:0!important;
+    padding:7px 12px!important;
+
+    flex:none!important;
+
+    font-size:.74rem!important;
+    line-height:1.25!important;
+    text-align:center!important;
+
+    white-space:normal!important;
+    overflow:visible!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+
+  #navSystemStatus{
+    display:block!important;
+
+    width:auto!important;
+    max-width:min(100%,520px)!important;
+    min-width:0!important;
+
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+
+  .dashboard-system-pill > .dashboard-alert-badge{
+    flex:0 0 auto!important;
+  }
+}
+
+/* Short-height tablets: keep the second status row compact. */
+@media (min-width:901px) and (max-width:1100px) and (max-height:700px){
+  .dashboard-nav-inner{
+    padding-top:7px!important;
+    padding-bottom:7px!important;
+    gap:5px 7px!important;
+  }
+
+  .dashboard-nav-link{
+    min-height:38px!important;
+    padding-top:6px!important;
+    padding-bottom:6px!important;
+  }
+
+  .dashboard-system-pill{
+    min-height:34px!important;
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+  }
+}
+
