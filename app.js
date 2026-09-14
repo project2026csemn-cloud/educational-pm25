@@ -54,6 +54,18 @@ let forecastVisible=true;
 
 let historyActivated=false;
 let historyLoading=false;
+
+// D1 OPT V1 — History auto refresh is page-aware and range-aware.
+// Opening History or changing the range still loads immediately.
+// The timer only refreshes while the History page is actually visible.
+let historyLastAutoRefreshAt=0;
+
+function historyAutoRefreshIntervalMs(){
+  if(averageRange==="30d") return 60*60*1000; // 30 วัน: ชั่วโมงละครั้ง
+  if(averageRange==="7d") return 15*60*1000;  // 7 วัน: ทุก 15 นาที
+  return 60*1000;                              // วันนี้–24 ชม.: ทุก 1 นาที
+}
+
 let chartLibraryPromise=null;
 let chartLibraryReady=false;
 let aiSectionActivated=false;
@@ -9447,6 +9459,7 @@ renderAverages();
 await ensureChartLibrary();
 
 drawCharts();
+historyLastAutoRefreshAt=Date.now();
 
 }catch(e){
 
@@ -9727,9 +9740,11 @@ updateNavigationDashboard();
 
 async function loadHistorical(){
 
-if(!historyActivated){
+if(!historyActivated||historyLoading){
 return;
 }
+
+historyLoading=true;
 
 try{
 
@@ -9741,6 +9756,8 @@ renderAverages();
 if(typeof Chart!=="undefined"){
 drawCharts();
 }
+
+historyLastAutoRefreshAt=Date.now();
 
 }catch(e){
 
@@ -9754,6 +9771,10 @@ setHistoryChartMessage(
 "กรุณาลองใหม่อีกครั้ง",
 true
 );
+
+}finally{
+
+historyLoading=false;
 
 }
 
@@ -9874,7 +9895,21 @@ setInterval(()=>{
 // =====================================================
 
 setInterval(()=>{
-  if(document.visibilityState==="visible"&&historyActivated) loadHistorical();
+  if(
+    document.visibilityState!=="visible"||
+    currentDashboardPage!=="history"||
+    !historyActivated||
+    historyLoading
+  ){
+    return;
+  }
+
+  const now=Date.now();
+  if(now-historyLastAutoRefreshAt<historyAutoRefreshIntervalMs()){
+    return;
+  }
+
+  loadHistorical();
 },60000);
 
 // =====================================================
@@ -12887,7 +12922,11 @@ function startNotificationInboxPolling(){
   if(notificationInboxTimer)clearInterval(notificationInboxTimer);
   if(!authUser)return;
   loadNotificationInbox({silent:true});
-  notificationInboxTimer=setInterval(()=>{if(authUser)loadNotificationInbox({silent:true});},60000);
+  notificationInboxTimer=setInterval(()=>{
+    if(authUser&&document.visibilityState==="visible"){
+      loadNotificationInbox({silent:true});
+    }
+  },60000);
 }
 
 function notificationStorageKey(){return `pm25-notification-state-${authUser?.id||"guest"}`;}
