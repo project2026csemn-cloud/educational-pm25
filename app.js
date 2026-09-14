@@ -841,6 +841,29 @@ cleanSensorNumber(
 d.light
 ),
 
+// HISTORY SUMMARY V1 — metadata สำหรับสถิติ 7d/30d
+reading_count:
+Number.isFinite(Number(d.reading_count))
+?Math.max(0,Number(d.reading_count))
+:1,
+
+summary_level:
+d.summary_level||
+null,
+
+pm1_min:cleanSensorNumber("pm1",d.pm1_min),
+pm1_max:cleanSensorNumber("pm1",d.pm1_max),
+pm25_min:cleanSensorNumber("pm25",d.pm25_min),
+pm25_max:cleanSensorNumber("pm25",d.pm25_max),
+pm10_min:cleanSensorNumber("pm10",d.pm10_min),
+pm10_max:cleanSensorNumber("pm10",d.pm10_max),
+temperature_min:cleanSensorNumber("temperature",d.temperature_min),
+temperature_max:cleanSensorNumber("temperature",d.temperature_max),
+humidity_min:cleanSensorNumber("humidity",d.humidity_min),
+humidity_max:cleanSensorNumber("humidity",d.humidity_max),
+light_min:cleanSensorNumber("light",d.light_min),
+light_max:cleanSensorNumber("light",d.light_max),
+
 timestamp:
 d.recorded_at||
 d.timestamp||
@@ -3197,48 +3220,55 @@ data,
 field
 ){
 
-const values=
-data
-.map(
-x=>finiteNumberOrNull(x[field])
-)
-.filter(v=>v!==null);
+const rows=(data||[])
+.filter(row=>finiteNumberOrNull(row?.[field])!==null);
 
-return values.length
-?{
-
-avg:
-values.reduce(
-(
-a,
-b
-)=>
-a+b,
-0
-)/
-values.length,
-
-max:
-Math.max(
-...values
-),
-
-min:
-Math.min(
-...values
-),
-
-last:
-values.at(-1)
-
-}
-:{
-
+if(!rows.length){
+return{
 avg:null,
 max:null,
 min:null,
 last:null
+};
+}
 
+// HISTORY SUMMARY V1
+// Raw Data: น้ำหนัก 1 เหมือนเดิม
+// Summary: ใช้ reading_count เป็นน้ำหนัก เพื่อให้ค่าเฉลี่ยใกล้ Raw Data เดิม
+let weightedSum=0;
+let totalWeight=0;
+let min=null;
+let max=null;
+
+for(const row of rows){
+const value=finiteNumberOrNull(row?.[field]);
+if(value===null)continue;
+
+const isSummary=Boolean(row?.summary_level);
+const rawWeight=Number(row?.reading_count);
+const weight=isSummary&&Number.isFinite(rawWeight)&&rawWeight>0
+?rawWeight
+:1;
+
+weightedSum+=value*weight;
+totalWeight+=weight;
+
+const rowMin=finiteNumberOrNull(row?.[`${field}_min`]);
+const rowMax=finiteNumberOrNull(row?.[`${field}_max`]);
+const minValue=rowMin!==null?rowMin:value;
+const maxValue=rowMax!==null?rowMax:value;
+
+min=min===null?minValue:Math.min(min,minValue);
+max=max===null?maxValue:Math.max(max,maxValue);
+}
+
+const last=finiteNumberOrNull(rows.at(-1)?.[field]);
+
+return{
+avg:totalWeight>0?weightedSum/totalWeight:null,
+max,
+min,
+last
 };
 
 }
