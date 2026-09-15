@@ -1,5 +1,4 @@
 const BASE="https://educational-pm25-api.project2026csemn.workers.dev";
-
 const API={
 latest:`${BASE}/api/get_latest.php`,
 history:`${BASE}/api/get_history.php`,
@@ -32,14 +31,11 @@ notifications:`${BASE}/api/auth/notifications`,
 notificationRead:`${BASE}/api/auth/notifications/read`,
 wifiManage:`${BASE}/api/manage/wifi`
 };
-
 const TOTAL_NODES=3;
 const MOTHER_OFFLINE_MS=90*1000;
-
 const $=
 id=>
 document.getElementById(id);
-
 let latestNodes=[];
 let records=[];
 let motherStatus=null;
@@ -51,51 +47,39 @@ let forecastChart=null;
 let historyGroupCharts=[];
 let forecastGroupCharts=[];
 let forecastVisible=true;
-
 let historyActivated=false;
 let historyLoading=false;
-
 // D1 OPT V1 — History auto refresh is page-aware and range-aware.
 // Opening History or changing the range still loads immediately.
 // The timer only refreshes while the History page is actually visible.
 let historyLastAutoRefreshAt=0;
-
 function historyAutoRefreshIntervalMs(){
   if(averageRange==="30d") return 60*60*1000; // 30 วัน: ชั่วโมงละครั้ง
   if(averageRange==="7d") return 15*60*1000;  // 7 วัน: ทุก 15 นาที
   return 60*1000;                              // วันนี้–24 ชม.: ทุก 1 นาที
 }
-
 let chartLibraryPromise=null;
 let chartLibraryReady=false;
 let aiSectionActivated=false;
-
 let metric="all";
 let historyNode="compare";
 let currentMetric="pm25";
-
 let averageRange="today";
-
 let customRangeStart=null;
 let customRangeEnd=null;
-
 let calendarDisplayDate=
 new Date();
-
 let calendarSelectionStep=
 "start";
-
 let apiConnectionOnline=false;
 let exportRows=[];
 let activeHelpButton=null;
-
 let aiPayload=null;
 let aiLoading=false;
 let aiLastLoadedAt=null;
 let aiForecastPayload=null;
 let aiForecastLoading=false;
 let aiForecastLastLoadedAt=null;
-
 let publicDisplayConfig={
 devices:[
 {device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
@@ -104,62 +88,46 @@ devices:[
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
-
-// =====================================================
 // RANGE
-// =====================================================
-
 const RANGE_CONFIG={
 "today":{label:"วันนี้",minutes:null,apiRange:"today"},
-
 "30m":{
 label:"30 นาที",
 minutes:30,
 apiRange:"24h"
 },
-
 "1h":{
 label:"1 ชั่วโมง",
 minutes:60,
 apiRange:"24h"
 },
-
 "6h":{
 label:"6 ชั่วโมง",
 minutes:360,
 apiRange:"24h"
 },
-
 "12h":{
 label:"12 ชั่วโมง",
 minutes:720,
 apiRange:"24h"
 },
-
 "24h":{
 label:"24 ชั่วโมง",
 minutes:1440,
 apiRange:"24h"
 },
-
 "7d":{
 label:"7 วัน",
 minutes:10080,
 apiRange:"7d"
 },
-
 "30d":{
 label:"30 วัน",
 minutes:43200,
 apiRange:"30d"
 }
-
 };
-
-// =====================================================
 // METRIC
-// =====================================================
-
 const CURRENT_METRIC_CONFIG={
 all:{label:"ALL",unit:"",color:"#e2e8f0"},
 pm1:{label:"PM1.0",unit:"µg/m³",color:"#60a5fa"},
@@ -169,13 +137,8 @@ temperature:{label:"อุณหภูมิ",unit:"°C",color:"#fb923c"},
 humidity:{label:"ความชื้น",unit:"%",color:"#34d399"},
 light:{label:"แสง",unit:"lux",color:"#c084fc"}
 };
-
-// =====================================================
 // FORMAT
-// =====================================================
-
 function fmt(v){
-
 return(
 v==null||
 v===""||
@@ -185,24 +148,17 @@ Number(v)
 )
 ?"--"
 :Number(v).toFixed(1);
-
 }
-
-// =====================================================
 // SAFE SENSOR NUMBER
-// =====================================================
 function finiteNumberOrNull(value){
 if(value===null||value===undefined||value==="") return null;
 const n=Number(value);
 return Number.isFinite(n)?n:null;
 }
-
 function hasFiniteSensorValue(value){
 return finiteNumberOrNull(value)!==null;
 }
-
 function esc(v){
-
 return String(
 v??""
 )
@@ -227,64 +183,42 @@ v??""
 /'/g,
 "&#039;"
 );
-
 }
-
-// =====================================================
 // DATE
-// =====================================================
-
 function parseDate(v){
-
 if(!v){
 return null;
 }
-
 if(
 v instanceof Date
 ){
-
 return isNaN(v)
 ?null
 :v;
-
 }
-
 const t=
 String(v)
 .trim();
-
 const d=
 new Date(
-
 /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
 .test(t)
-
 ?t.replace(
 " ",
 "T"
 )+"Z"
-
 :/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/
 .test(t)
-
 ?t+"Z"
-
 :t
-
 );
-
 return isNaN(d)
 ?null
 :d;
-
 }
-
 function thaiTime(v){
-
 const d=
 parseDate(v);
-
 return d
 ?d.toLocaleTimeString(
 "th-TH",
@@ -302,24 +236,17 @@ false
 }
 )
 :"--";
-
 }
-
-// =====================================================
 // NODE READING DATE / TIME
-// =====================================================
 function thaiNodeReadingDateTime(v){
   const d=parseDate(v);
   if(!d) return "--";
-
   const now=new Date();
   const dayKey=x=>x.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
   const todayKey=dayKey(now);
   const valueKey=dayKey(d);
-
   const yesterday=new Date(now.getTime()-24*60*60*1000);
   const yesterdayKey=dayKey(yesterday);
-
   const time=d.toLocaleTimeString("th-TH",{
     timeZone:"Asia/Bangkok",
     hour:"2-digit",
@@ -327,30 +254,22 @@ function thaiNodeReadingDateTime(v){
     second:"2-digit",
     hour12:false
   });
-
   if(valueKey===todayKey) return `วันนี้ ${time}`;
   if(valueKey===yesterdayKey) return `เมื่อวาน ${time}`;
-
   const date=d.toLocaleDateString("th-TH",{
     timeZone:"Asia/Bangkok",
     day:"numeric",
     month:"short",
     year:"numeric"
   });
-
   return `${date} ${time}`;
 }
-
-// =====================================================
 // CHART DATE / TIME LABELS
-// =====================================================
-
 function thaiChartDateTime(value, compact=false){
 const d=parseDate(value);
 if(!d){
 return String(value??"");
 }
-
 const opts=compact
 ?{
 timeZone:"Asia/Bangkok",
@@ -370,34 +289,26 @@ minute:"2-digit",
 second:"2-digit",
 hour12:false
 };
-
 return d.toLocaleString("th-TH",opts);
 }
-
-// =====================================================
 // ADAPTIVE TIME AXIS
-// =====================================================
 function chartDayKey(value){
 const d=parseDate(value);
 if(!d)return"";
 return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
 }
-
 function chartVisibleSpanMs(scale){
 const labels=scale?.chart?.data?.labels||[];
 if(!labels.length)return null;
-
 const rawMin=Number.isFinite(Number(scale?.min))?Number(scale.min):0;
 const rawMax=Number.isFinite(Number(scale?.max))?Number(scale.max):labels.length-1;
 const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(rawMin)));
 const maxIndex=Math.max(0,Math.min(labels.length-1,Math.ceil(rawMax)));
-
 const start=parseDate(labels[minIndex]);
 const end=parseDate(labels[maxIndex]);
 if(!start||!end)return null;
 return Math.abs(end.getTime()-start.getTime());
 }
-
 function chartAxisStepMs(spanMs){
 const MINUTE=60*1000;
 const HOUR=60*MINUTE;
@@ -410,7 +321,6 @@ if(spanMs>=30*MINUTE)return 15*MINUTE;
 if(spanMs>=10*MINUTE)return 5*MINUTE;
 return MINUTE;
 }
-
 function formatAxisInterval(value,spanMs=null){
 const d=parseDate(value);
 if(!d)return String(value??"");
@@ -418,7 +328,6 @@ const DAY=24*60*60*1000;
 if(Number.isFinite(spanMs)&&spanMs>=3*DAY){
 return d.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
 }
-
 const step=chartAxisStepMs(spanMs);
 const BKK_OFFSET=7*60*60*1000;
 const localMs=d.getTime()+BKK_OFFSET;
@@ -429,7 +338,6 @@ const x=new Date(ms);
 return `${String(x.getUTCHours()).padStart(2,"0")}:${String(x.getUTCMinutes()).padStart(2,"0")}`;
 };
 const timeRange=`${fmtHM(startLocal)}–${fmtHM(endLocal)}`;
-
 if(Number.isFinite(spanMs)&&spanMs>=24*60*60*1000){
 const startUtc=new Date(startLocal-BKK_OFFSET);
 const day=startUtc.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"2-digit",month:"short"});
@@ -437,44 +345,34 @@ return `${day} ${timeRange}`;
 }
 return timeRange;
 }
-
 function chartTickText(value,spanMs=null){
 return formatAxisInterval(value,spanMs);
 }
-
-// =====================================================
 // ADAPTIVE INTERVAL TICKS
-// =====================================================
 function chartBucketKey(date,stepMs){
 const d=parseDate(date);
 if(!d)return"";
 return String(Math.floor(d.getTime()/stepMs));
 }
-
 function chartDayBucketKey(date){
 const d=parseDate(date);
 if(!d)return"";
 return d.toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"});
 }
-
 function buildAdaptiveTimeTicks(scale){
 const labels=scale?.chart?.data?.labels||[];
 if(!Array.isArray(labels)||labels.length<2)return;
-
 const minRaw=Number.isFinite(Number(scale.min))?Number(scale.min):0;
 const maxRaw=Number.isFinite(Number(scale.max))?Number(scale.max):labels.length-1;
 const minIndex=Math.max(0,Math.min(labels.length-1,Math.floor(minRaw)));
 const maxIndex=Math.max(minIndex,Math.min(labels.length-1,Math.ceil(maxRaw)));
-
 const start=parseDate(labels[minIndex]);
 const end=parseDate(labels[maxIndex]);
 if(!start||!end)return;
-
 const span=Math.max(0,end.getTime()-start.getTime());
 const DAY=24*60*60*1000;
 const stepMs=chartAxisStepMs(span);
 const mode=span>=3*DAY?"day":"bucket";
-
 const chosen=[];
 let lastKey=null;
 for(let i=minIndex;i<=maxIndex;i++){
@@ -485,19 +383,16 @@ if(!key||key===lastKey)continue;
 chosen.push({value:i});
 lastKey=key;
 }
-
 const scaleWidth=Math.max(1,Number(scale?.width||scale?.chart?.width||0));
 const minGapPx=mode==="day"?82:(span>=24*60*60*1000?112:92);
 const maxTicksByWidth=Math.max(2,Math.floor(scaleWidth/minGapPx));
 const hardMax=window.innerWidth<=640?5:mode==="day"?10:12;
 const maxTicks=Math.max(2,Math.min(hardMax,maxTicksByWidth));
-
 let reduced=chosen;
 if(chosen.length>maxTicks){
 const stride=Math.ceil(chosen.length/maxTicks);
 reduced=chosen.filter((_,i)=>i%stride===0);
 }
-
 const pixelSafe=[];
 let lastPx=-Infinity;
 const axisSpan=Math.max(1,maxIndex-minIndex);
@@ -510,41 +405,33 @@ lastPx=px;
 }
 scale.ticks=pixelSafe;
 }
-
 function adaptiveChartTickText(scale,value,index,ticks){
 const raw=scale.getLabelForValue(value);
 const span=chartVisibleSpanMs(scale);
 const text=chartTickText(raw,span);
-
 const DAY=24*60*60*1000;
 if(span!==null&&span>=3*DAY&&index>0&&Array.isArray(ticks)){
 const prevValue=ticks[index-1]?.value;
 const prevRaw=prevValue==null?null:scale.getLabelForValue(prevValue);
 if(prevRaw&&chartDayKey(prevRaw)===chartDayKey(raw))return"";
 }
-
 return text;
 }
-
 function graphTooltipTitle(items){
 const first=items?.[0];
-
 if(!first){
 return"";
 }
-
 const parsedX=
 finiteNumberOrNull(
 first?.parsed?.x
 );
-
 if(
 parsedX!==null&&
 parsedX>100000000000
 ){
 const d=
 new Date(parsedX);
-
 return Number.isFinite(
 d.getTime()
 )
@@ -554,14 +441,11 @@ false
 )
 :"";
 }
-
 const raw=
 first?.label;
-
 if(raw==null){
 return"";
 }
-
 if(
 /^\+\d+\s*นาที/
 .test(
@@ -570,10 +454,8 @@ String(raw)
 ){
 return String(raw);
 }
-
 const d=
 parseDate(raw);
-
 return d
 ?thaiChartDateTime(
 d,
@@ -581,42 +463,32 @@ false
 )
 :String(raw);
 }
-
 function historyRangeCaption(baseRows=[]){
 const el=$("historyRangeCaption");
 if(!el){
 return;
 }
-
 const w=rangeWindow();
-
 if(!w){
 el.innerHTML="";
 return;
 }
-
 const sorted=(baseRows||[])
 .filter(r=>parseDate(r?.timestamp))
 .sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
-
 const firstData=sorted.length
 ?parseDate(sorted[0].timestamp)
 :null;
-
 const lastData=sorted.length
 ?parseDate(sorted.at(-1).timestamp)
 :null;
-
 const displayStart=
 firstData&&firstData>w.start
 ?firstData
 :w.start;
-
 const displayEnd=w.end;
-
 const spanMs=Math.max(0,displayEnd.getTime()-displayStart.getTime());
 const DAY=24*60*60*1000;
-
 const edgeText=(d)=>{
 if(spanMs>=3*DAY){
 return d.toLocaleDateString("th-TH",{
@@ -635,7 +507,6 @@ minute:"2-digit",
 hour12:false
 });
 };
-
 const latestText=lastData
 ?lastData.toLocaleString("th-TH",{
 timeZone:"Asia/Bangkok",
@@ -646,7 +517,6 @@ minute:"2-digit",
 hour12:false
 })
 :null;
-
 el.innerHTML=
 `<div class="history-range-edge history-range-edge-start">
 <span>เริ่ม</span>
@@ -664,26 +534,20 @@ ${latestText
 <b>${esc(edgeText(displayEnd))}</b>
 </div>`;
 }
-
 function historyLabelsToRangeEnd(rows=[]){
 const labels=(rows||[]).map(r=>r?.timestamp).filter(Boolean);
 const w=rangeWindow();
-
 if(!w){
 return labels;
 }
-
 const last=labels.length
 ?parseDate(labels.at(-1))
 :null;
-
 if(!last||w.end.getTime()-last.getTime()>1000){
 labels.push(w.end.toISOString());
 }
-
 return labels;
 }
-
 function padChartValuesToLabels(values=[],labels=[]){
 const out=[...values];
 while(out.length<labels.length){
@@ -691,13 +555,8 @@ out.push(null);
 }
 return out;
 }
-
-// =====================================================
 // SENSOR SANITIZER
-// =====================================================
-
 function cleanSensorNumber(field,value){
-
 if(
 value===null||
 value===undefined||
@@ -705,16 +564,13 @@ value===""
 ){
 return null;
 }
-
 const n=
 Number(value);
-
 if(
 !Number.isFinite(n)
 ){
 return null;
 }
-
 if(
 [
 "pm1",
@@ -723,134 +579,103 @@ if(
 ]
 .includes(field)
 ){
-
 return(
 n>=0&&
 n<=5000
 )
 ?n
 :null;
-
 }
-
 if(
 field==="temperature"
 ){
-
 return(
 n>=-40&&
 n<=85
 )
 ?n
 :null;
-
 }
-
 if(
 field==="humidity"
 ){
-
 return(
 n>=0&&
 n<=100
 )
 ?n
 :null;
-
 }
-
 if(
 field==="light"
 ){
-
 return(
 n>=0&&
 n<=200000
 )
 ?n
 :null;
-
 }
-
 return n;
-
 }
-
-// =====================================================
 // NORMALIZE API
-// =====================================================
-
 function normalize(d){
-
 if(!d){
 return null;
 }
-
 const out={
-
 id:
 d.id==null
 ?null
 :Number(d.id),
-
 device_id:
 String(
 d.device_id??""
 )
 .trim(),
-
 status:
 String(
 d.status??"offline"
 )
 .toLowerCase(),
-
 pm1:
 cleanSensorNumber(
 "pm1",
 d.pm1
 ),
-
 pm25:
 cleanSensorNumber(
 "pm25",
 d.pm25
 ),
-
 pm10:
 cleanSensorNumber(
 "pm10",
 d.pm10
 ),
-
 temperature:
 cleanSensorNumber(
 "temperature",
 d.temperature
 ),
-
 humidity:
 cleanSensorNumber(
 "humidity",
 d.humidity
 ),
-
 light:
 cleanSensorNumber(
 "light",
 d.light
 ),
-
 // HISTORY SUMMARY V1 — metadata สำหรับสถิติ 7d/30d
 reading_count:
 Number.isFinite(Number(d.reading_count))
 ?Math.max(0,Number(d.reading_count))
 :1,
-
 summary_level:
 d.summary_level||
 null,
-
 pm1_min:cleanSensorNumber("pm1",d.pm1_min),
 pm1_max:cleanSensorNumber("pm1",d.pm1_max),
 pm25_min:cleanSensorNumber("pm25",d.pm25_min),
@@ -863,37 +688,28 @@ humidity_min:cleanSensorNumber("humidity",d.humidity_min),
 humidity_max:cleanSensorNumber("humidity",d.humidity_max),
 light_min:cleanSensorNumber("light",d.light_min),
 light_max:cleanSensorNumber("light",d.light_max),
-
 timestamp:
 d.recorded_at||
 d.timestamp||
 null,
-
 status_recorded_at:
 d.status_recorded_at||
 d.recorded_at||
 null,
-
 reading_recorded_at:
 d.reading_recorded_at||
 null,
-
 last_seen:
 d.last_seen||
 null,
-
 connection_status:
 d.connection_status||
 null,
-
 command_status:
 d.command_status||
 null,
-
 sensor_invalid:false
-
 };
-
 const values=[
 "pm1",
 "pm25",
@@ -905,13 +721,11 @@ const values=[
 .map(
 k=>out[k]
 );
-
 if(
 values.every(
 v=>v===0
 )
 ){
-
 for(
 const k of[
 "pm1",
@@ -922,25 +736,14 @@ const k of[
 "light"
 ]
 ){
-
 out[k]=null;
-
 }
-
 out.sensor_invalid=true;
-
 }
-
 return out;
-
 }
-
-// =====================================================
 // NODE
-// =====================================================
-
 function nodeNo(id){
-
 const m=
 String(
 id||""
@@ -948,15 +751,11 @@ id||""
 .match(
 /(\d+)/
 );
-
 return m
 ?Number(m[1])
 :null;
-
 }
-
 function getNode(n){
-
 return latestNodes
 .find(
 x=>
@@ -965,11 +764,8 @@ x.device_id
 )===n
 )||
 null;
-
 }
-
 function motherOnline(){
-
 if(
 !apiConnectionOnline||
 !motherStatus||
@@ -980,30 +776,22 @@ motherStatus.status
 ){
 return false;
 }
-
 const d=
 parseDate(
 motherStatus.last_seen||
 motherStatus.updated_at
 );
-
 if(!d){
 return false;
 }
-
 return(
 Date.now()-
 d.getTime()
 <=
 MOTHER_OFFLINE_MS
 );
-
 }
-
-// =====================================================
 // NODE STATUS RULE
-// =====================================================
-
 function nodeStatusTime(node){
   if(!node)return null;
   return parseDate(
@@ -1014,27 +802,20 @@ function nodeStatusTime(node){
     null
   );
 }
-
 function nodeIsFresh(node){
   const t=nodeStatusTime(node);
   if(!t)return false;
   return Date.now()-t.getTime()<=8*60*1000;
 }
-
 function getNodeStatus(node){
   if(!node)return "offline";
-
   const connection=String(node.connection_status||"").toLowerCase();
   if(connection==="disconnected")return "offline";
-
   const s=String(node.status||node.command_status||"offline").toLowerCase();
   if(!["online","sleep"].includes(s))return "offline";
-
   return nodeIsFresh(node)?s:"offline";
 }
-
 function activeCount(){
-
 return latestNodes
 .filter(
 n=>
@@ -1047,60 +828,38 @@ getNodeStatus(n)
 )
 )
 .length;
-
 }
-
-// =====================================================
 // DASHBOARD DISPLAY STATUS
-// =====================================================
-
 function getNodeDisplayStatus(node){
 const st=getNodeStatus(node);
 return st==="offline"?"offline":"online";
 }
-
-// =====================================================
 // AUTH STATE
-// =====================================================
-
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
-
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
   sessionStorage.getItem(AUTH_TOKEN_KEY)||
   "";
-
 if(authToken){
   localStorage.setItem(AUTH_TOKEN_KEY,authToken);
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
-
 let authUser=null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
-
-// =====================================================
 // FETCH
-// =====================================================
-
 async function fetchJson(url,timeoutMs=15000){
-
 const controller=
 new AbortController();
-
 const timer=
 setTimeout(
 ()=>controller.abort(),
 timeoutMs
 );
-
 let r;
-
 try{
-
 r=
 await fetch(
-
 url+
 (
 url.includes("?")
@@ -1109,7 +868,6 @@ url.includes("?")
 )+
 "t="+
 Date.now(),
-
 {
 cache:"no-store",
 headers:{
@@ -1118,50 +876,31 @@ Accept:"application/json",
 },
 signal:controller.signal
 }
-
 );
-
 }finally{
-
 clearTimeout(timer);
-
 }
-
 if(!r.ok){
-
 throw new Error(
 `HTTP ${r.status}`
 );
-
 }
-
 const j=
 await r.json();
-
 if(!j?.success){
-
 throw new Error(
 j?.message||
 "API error"
 );
-
 }
-
 return j;
-
 }
-
-// =====================================================
 // LOAD API
-// =====================================================
-
 async function loadLatest(){
-
 const j=
 await fetchJson(
 API.latest
 );
-
 return(
 Array.isArray(
 j.data
@@ -1177,135 +916,97 @@ normalize
 .filter(
 Boolean
 );
-
 }
-
 async function loadMother(){
-
 const j=
 await fetchJson(
 API.mother
 );
-
 return j.data
 ?{
-
 status:
 String(
 j.data.status||
 "offline"
 )
 .toLowerCase(),
-
 last_seen:
 j.data.last_seen||
 null,
-
 updated_at:
 j.data.updated_at||
 null
-
 }
 :null;
-
 }
-
 async function loadAlerts(){
-
 const j=
 await fetchJson(
 API.alerts
 );
-
 return Array.isArray(
 j.data
 )
 ?j.data
 :[];
-
 }
-
 async function loadStandards(){
-
 return fetchJson(
 API.standards
 );
-
 }
-
 function apiRange(){
-
 if(
 averageRange==="custom"
 ){
-
 if(!customRangeStart){
 return"30d";
 }
-
 const ageMs=
 Math.max(
 0,
 Date.now()-
 customRangeStart.getTime()
 );
-
 if(ageMs<=24*60*60*1000){
 return"24h";
 }
-
 if(ageMs<=7*24*60*60*1000){
 return"7d";
 }
-
 return"30d";
-
 }
-
 return RANGE_CONFIG[
 averageRange
 ]?.apiRange||
 "today";
-
 }
-
 async function loadHistory(){
-
 const range=
 apiRange();
-
 const url=
 `${API.history}?range=${encodeURIComponent(range)}`;
-
 let j;
-
 try{
-
 j=
 await fetchJson(
 url,
 25000
 );
-
 }catch(firstError){
-
 console.warn(
 "History first attempt failed:",
 firstError
 );
-
 await new Promise(
 resolve=>setTimeout(resolve,650)
 );
-
 j=
 await fetchJson(
 url,
 25000
 );
-
 }
-
 return(
 Array.isArray(
 j.data
@@ -1319,34 +1020,24 @@ normalize
 .filter(
 Boolean
 );
-
 }
-
-// =====================================================
 // MONITORING NODES
-// =====================================================
-
 function setMonitoringValueText(el,text){
   if(!el)return;
-
   const next=String(text??"--");
   const prev=String(el.textContent??"").trim();
-
   if(prev && prev!=="--" && next!=="--" && prev!==next){
     el.classList.remove("node-value-updated");
     void el.offsetWidth;
     el.classList.add("node-value-updated");
     window.setTimeout(()=>el.classList.remove("node-value-updated"),720);
   }
-
   el.textContent=next;
 }
-
 function setNodeValues(
 prefix,
 n
 ){
-
 for(
 const k of[
 "pm1",
@@ -1354,42 +1045,31 @@ const k of[
 "pm10"
 ]
 ){
-
 const e=
 $(prefix+k);
-
 if(e){
-
 setMonitoringValueText(
 e,
 n
 ?fmt(n[k])
 :"--"
 );
-
 }
-
 }
-
 const map={
-
 temp:[
 "temperature",
 "°C"
 ],
-
 hum:[
 "humidity",
 "%"
 ],
-
 light:[
 "light",
 " lux"
 ]
-
 };
-
 for(
 const[
 k,
@@ -1400,12 +1080,9 @@ unit
 ]
 of Object.entries(map)
 ){
-
 const e=
 $(prefix+k);
-
 if(e){
-
 setMonitoringValueText(
 e,
 n&&
@@ -1417,89 +1094,66 @@ field==="light"
 )
 :"--"
 );
-
 }
-
 }
-
 }
-
 function renderNodeStatus(
 i,
 n
 ){
-
 const s=
 $("n"+i+"status");
-
 const card=
 $("nodeCard"+i);
-
 if(
 !s||
 !card
 ){
 return;
 }
-
 const st=
 getNodeDisplayStatus(n);
-
 const map={
-
 online:[
 "status-online",
 "status-online-dot",
 "ONLINE"
 ],
-
 offline:[
 "status-offline",
 "status-offline-dot",
 "OFFLINE"
 ]
-
 };
-
 const[
 cls,
 dot,
 label
 ]=map[st];
-
 s.className=
 `${cls} text-xs font-bold`;
-
 s.innerHTML=
 `<span class="${dot}">●</span> ${label}`;
-
 card.classList.toggle(
 "offline",
 st==="offline"
 );
-
 card.classList.toggle(
 "node-online",
 st==="online"
 );
-
 card.classList.toggle(
 "node-offline",
 st==="offline"
 );
-
 }
-
 function nodeReadingTime(node){
-
 if(!node){
 return null;
 }
-
 if(node.reading_recorded_at){
 return node.reading_recorded_at;
 }
-
 const hasReading=
 [
 "pm1",
@@ -1515,7 +1169,6 @@ hasFiniteSensorValue(
 node?.[field]
 )
 );
-
 return(
 hasReading&&
 node.timestamp
@@ -1523,64 +1176,47 @@ node.timestamp
 ?node.timestamp
 :null;
 }
-
 function renderMonitoring(){
-
 for(
 let i=1;
 i<=3;
 i++
 ){
-
 const n=
 getNode(i);
-
 setNodeValues(
 "n"+i,
 n
 );
-
 const t=
 $("lastUpdate"+i);
-
 if(t){
-
 const valueTime=
 nodeReadingTime(
 n
 );
-
 t.textContent=
 valueTime
 ?thaiNodeReadingDateTime(
 valueTime
 )
 :"--";
-
 }
-
 renderNodeStatus(
 i,
 n
 );
-
 }
-
 const dot=
 $("dataStateDotTop");
-
 const st=
 $("dataStateStatusTop");
-
 const ac=
 $("nodesActiveTop");
-
 const motherCard=
 $("motherStatusCardTop");
-
 const nodeCountCard=
 $("nodeCountCardTop");
-
 if(
 !dot||
 !st||
@@ -1588,7 +1224,6 @@ if(
 ){
 return;
 }
-
 const setTopStatusCardState=(el,state)=>{
 if(!el)return;
 el.classList.remove(
@@ -1599,49 +1234,36 @@ el.classList.remove(
 );
 el.classList.add(state);
 };
-
 if(
 !apiConnectionOnline
 ){
-
 dot.className=
 "monitoring-live-dot text-red-400";
-
 st.textContent=
 "ไม่พร้อมใช้งาน";
-
 ac.textContent=
 `-- / ${TOTAL_NODES}`;
-
 setTopStatusCardState(motherCard,"status-is-unknown");
 setTopStatusCardState(nodeCountCard,"status-is-unknown");
-
 }else{
-
 const motherIsOnline=
 motherOnline();
-
 const onlineNodes=
 activeCount();
-
 dot.className=
 motherIsOnline
 ?"monitoring-live-dot text-emerald-400"
 :"monitoring-live-dot text-red-400";
-
 st.textContent=
 motherIsOnline
 ?"ONLINE"
 :"OFFLINE";
-
 ac.textContent=
 `${onlineNodes} / ${TOTAL_NODES}`;
-
 setTopStatusCardState(
 motherCard,
 motherIsOnline?"status-is-online":"status-is-offline"
 );
-
 setTopStatusCardState(
 nodeCountCard,
 onlineNodes===TOTAL_NODES
@@ -1650,112 +1272,74 @@ onlineNodes===TOTAL_NODES
 ?"status-is-partial"
 :"status-is-offline"
 );
-
 }
-
 }
-
-// =====================================================
 // THRESHOLD
-// =====================================================
-
 function threshold(field,value){
-
 const n=
 finiteNumberOrNull(value);
-
 if(
 n===null
 ){
 return"no_data";
 }
-
 if(
 field==="pm25"
 ){
-
 if(
 n>75
 ){
 return"critical";
 }
-
 if(
 n>37.5
 ){
 return"warning";
 }
-
 return"normal";
-
 }
-
 if(
 field==="pm10"
 ){
-
 return n>120
 ?"warning"
 :"info";
-
 }
-
 if(field==="temperature") return temperatureLevel(n).severity;
 if(field==="humidity") return humidityLevel(n).severity;
-
 return"info";
-
 }
-
 function levelText(level){
-
 return{
-
 normal:
 "ปกติ",
-
 warning:
 "เฝ้าระวัง",
-
 critical:
 "มีผลกระทบต่อสุขภาพ",
-
 info:
 "ข้อมูลประกอบ",
-
 no_data:
 "รอข้อมูล"
-
 }[
 level
 ]||
 "รอข้อมูล";
-
 }
-
-// =====================================================
 // PM2.5 GUIDANCE
-// =====================================================
-
 function pm25Guidance(value){
-
 const n=
 finiteNumberOrNull(value);
-
 if(
 n===null
 ){
-
 return{
 level:"no_data",
 label:"ไม่มีข้อมูล"
 };
-
 }
-
 const apiLevels=
 standardsData?.realtime_guidance?.levels;
-
 if(Array.isArray(apiLevels)&&apiLevels.length){
 const row=apiLevels.find(x=>{
 const max=x?.max;
@@ -1774,31 +1358,21 @@ label:String(row.label||"")
 };
 }
 }
-
 if(n<=15){
 return{level:"normal",label:"ดีมาก"};
 }
-
 if(n<=25){
 return{level:"normal",label:"ดี"};
 }
-
 if(n<=37.5){
 return{level:"normal",label:"ปานกลาง"};
 }
-
 if(n<=75){
 return{level:"warning",label:"เริ่มมีผลกระทบต่อสุขภาพ"};
 }
-
 return{level:"critical",label:"มีผลกระทบต่อสุขภาพ"};
-
 }
-
-// =====================================================
 // TEMPERATURE / HUMIDITY INTERPRETATION
-// =====================================================
-
 function temperatureLevel(value){
 const n=finiteNumberOrNull(value);
 if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
@@ -1814,7 +1388,6 @@ if(n<35)return{level:"normal",label:"ปกติ",severity:"normal"};
 if(n<40)return{level:"hot",label:"ร้อน",severity:"warning"};
 return{level:"very_hot",label:"ร้อนจัด",severity:"critical"};
 }
-
 function humidityLevel(value){
 const n=finiteNumberOrNull(value);
 if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
@@ -1828,7 +1401,6 @@ if(n<85)return{level:"normal",label:"ปกติ",severity:"normal"};
 if(n<95)return{level:"high",label:"สูง",severity:"warning"};
 return{level:"very_high",label:"สูงมาก",severity:"critical"};
 }
-
 function metricStatus(field,value){
 if(field==="pm25"){const g=pm25Guidance(value);return{severity:g.level,label:g.label};}
 if(field==="pm10"){const n=finiteNumberOrNull(value);return n===null?{severity:"no_data",label:"ไม่มีข้อมูล"}:n>120?{severity:"warning",label:"เฝ้าระวัง"}:{severity:"info",label:"ข้อมูลประกอบ"};}
@@ -1836,80 +1408,52 @@ if(field==="temperature"){const x=temperatureLevel(value);return{severity:x.seve
 if(field==="humidity"){const x=humidityLevel(value);return{severity:x.severity,label:x.label};}
 return{severity:finiteNumberOrNull(value)===null?"no_data":"info",label:finiteNumberOrNull(value)===null?"ไม่มีข้อมูล":"ข้อมูลประกอบ"};
 }
-
-// =====================================================
 // HEAT INDEX
-// =====================================================
-
 function heatIndexC(
 tempC,
 rh
 ){
-
 tempC=
 finiteNumberOrNull(tempC);
-
 rh=
 finiteNumberOrNull(rh);
-
 if(
 tempC===null||
 rh===null
 ){
-
 return null;
-
 }
-
 const f=
 tempC*
 9/
 5+
 32;
-
 if(
 f<80||
 rh<40
 ){
-
 return tempC;
-
 }
-
 let hi=
-
 -42.379+
-
 2.04901523*f+
-
 10.14333127*rh-
-
 0.22475541*f*rh-
-
 0.00683783*f*f-
-
 0.05481717*rh*rh+
-
 0.00122874*f*f*rh+
-
 0.00085282*f*rh*rh-
-
 0.00000199*f*f*rh*rh;
-
 if(
 rh<13&&
 f>=80&&
 f<=112
 ){
-
 hi-=
-
 (
 (13-rh)/4
 )*
-
 Math.sqrt(
-
 (
 17-
 Math.abs(
@@ -1917,51 +1461,35 @@ f-95
 )
 )/
 17
-
 );
-
 }else if(
 rh>85&&
 f>=80&&
 f<=87
 ){
-
 hi+=
-
 (
 (rh-85)/10
 )*
-
 (
 (87-f)/5
 );
-
 }
-
 return(
 hi-32
 )*
 5/
 9;
-
 }
-
-// =====================================================
 // HEAT LEVEL
-// =====================================================
-
 function heatLevel(value){
-
 const n=
 finiteNumberOrNull(value);
-
 if(n===null){
 return{level:"no_data",label:"ไม่มีข้อมูล"};
 }
-
 const apiLevels=
 standardsData?.heat_index?.levels;
-
 if(Array.isArray(apiLevels)&&apiLevels.length){
 const row=apiLevels.find(x=>{
 const max=x?.max;
@@ -1974,41 +1502,27 @@ label:String(row.label||"")
 };
 }
 }
-
 if(n<27){
 return{level:"normal",label:"ต่ำกว่าเกณฑ์เฝ้าระวัง"};
 }
-
 if(n<33){
 return{level:"watch",label:"เฝ้าระวัง"};
 }
-
 if(n<42){
 return{level:"warning",label:"เตือนภัย"};
 }
-
 if(n<52){
 return{level:"critical",label:"อันตราย"};
 }
-
 return{level:"critical",label:"อันตรายมาก"};
-
 }
-
-// =====================================================
 // ACTIVE NODE DATA
-// =====================================================
-
 function activeNodes(){
-
 if(
 !motherOnline()
 ){
-
 return[];
-
 }
-
 return latestNodes
 .filter(
 n=>
@@ -2020,23 +1534,18 @@ n=>
 getNodeStatus(n)
 )
 );
-
 }
-
 function averageOf(
 nodes,
 field
 ){
-
 const a=
 nodes
 .map(
 n=>finiteNumberOrNull(n[field])
 )
 .filter(v=>v!==null);
-
 return a.length
-
 ?a.reduce(
 (
 x,
@@ -2046,81 +1555,58 @@ x+y,
 0
 )/
 a.length
-
 :null;
-
 }
-
 function currentEnvironmentSnapshot(){
-
 const nodes=
 activeNodes();
-
 const temperature=
 averageOf(
 nodes,
 "temperature"
 );
-
 const humidity=
 averageOf(
 nodes,
 "humidity"
 );
-
 return{
-
 nodes,
-
 pm1:
 averageOf(
 nodes,
 "pm1"
 ),
-
 pm25:
 averageOf(
 nodes,
 "pm25"
 ),
-
 pm10:
 averageOf(
 nodes,
 "pm10"
 ),
-
 temperature,
-
 humidity,
-
 light:
 averageOf(
 nodes,
 "light"
 ),
-
 heatIndex:
 heatIndexC(
 temperature,
 humidity
 )
-
 };
-
 }
-
-// =====================================================
 // สภาพแวดล้อมในพื้นที่ ANALYSIS
-// =====================================================
-
 function pearsonCorrelation(rows, xField, yField){
 const pairs=rows
 .map(r=>[finiteNumberOrNull(r[xField]),finiteNumberOrNull(r[yField])])
 .filter(([x,y])=>x!==null&&y!==null);
-
 if(pairs.length<6) return {r:null,n:pairs.length};
-
 const xs=pairs.map(p=>p[0]);
 const ys=pairs.map(p=>p[1]);
 const mx=xs.reduce((a,b)=>a+b,0)/xs.length;
@@ -2136,7 +1622,6 @@ dy+=b*b;
 const den=Math.sqrt(dx*dy);
 return {r:den>0?num/den:null,n:pairs.length};
 }
-
 function correlationText(result,label){
 if(result.r===null) return `${label}: ข้อมูลคู่ยังไม่เพียงพอ (${result.n} จุด)`;
 const a=Math.abs(result.r);
@@ -2144,12 +1629,10 @@ const strength=a>=.7?"ค่อนข้างสูง":a>=.4?"ปานกล�
 const direction=result.r>0?"ทิศทางเดียวกัน":result.r<0?"ทิศทางตรงข้าม":"ไม่พบแนวโน้ม";
 return `${label}: ${strength} • ${direction} (r=${result.r.toFixed(2)}, n=${result.n})`;
 }
-
 function localEnvironmentAnalysis(){
 const data=selectedRecords();
 const lightRows=data.filter(r=>hasFiniteSensorValue(r.light));
 const currentLight=lightRows.length?finiteNumberOrNull(lightRows.at(-1).light):null;
-
 let trend="ข้อมูลยังไม่พอ";
 let level="no_data";
 if(lightRows.length>=4){
@@ -2162,17 +1645,14 @@ trend=pct>20?"ความเข้มแสงเพิ่มขึ้น":pct<
 level="normal";
 }
 }
-
 const lightTemp=pearsonCorrelation(data,"light","temperature");
 const lightHumidity=pearsonCorrelation(data,"light","humidity");
 const lightPM25=pearsonCorrelation(data,"light","pm25");
-
 const relationships=[
 correlationText(lightTemp,"แสง ↔ อุณหภูมิ"),
 correlationText(lightHumidity,"แสง ↔ ความชื้น"),
 correlationText(lightPM25,"แสง ↔ PM2.5")
 ];
-
 return {
 level,
 currentLight,
@@ -2185,54 +1665,38 @@ label: currentLight==null?"รอข้อมูลแสง":`${fmt(currentLigh
 detail:`${trend} • วิเคราะห์ความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง`
 };
 }
-
-// =====================================================
 // COMBINED AIR QUALITY + DUST PROFILE
-// =====================================================
-
 function pm10Guidance(value){
-
 const n=
 finiteNumberOrNull(value);
-
 if(n===null){
 return{
 level:"no_data",
 label:"ไม่มีข้อมูล"
 };
 }
-
 if(n>120){
 return{
 level:"warning",
 label:"สูงกว่าค่าอ้างอิง 24 ชั่วโมง"
 };
 }
-
 return{
 level:"normal",
 label:"ยังไม่สูงกว่าค่าอ้างอิง"
 };
-
 }
-
 function combinedAirQualitySummary(snap){
-
 const pm1=
 finiteNumberOrNull(snap?.pm1);
-
 const pm25=
 finiteNumberOrNull(snap?.pm25);
-
 const pm10=
 finiteNumberOrNull(snap?.pm10);
-
 const p25=
 pm25Guidance(pm25);
-
 const p10=
 pm10Guidance(pm10);
-
 if(
 pm1===null&&
 pm25===null&&
@@ -2244,10 +1708,8 @@ label:"รอข้อมูล",
 detail:"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
 };
 }
-
 let level="normal";
 let label="อากาศโดยรวมดี";
-
 if(
 ["warning","critical"].includes(p25.level)&&
 p10.level==="warning"
@@ -2273,21 +1735,16 @@ p25.label==="ปานกลาง"
 ){
 label="อากาศโดยรวมปานกลาง";
 }
-
 const values=[];
-
 if(pm1!==null){
 values.push(`PM1 ${fmt(pm1)}`);
 }
-
 if(pm25!==null){
 values.push(`PM2.5 ${fmt(pm25)}`);
 }
-
 if(pm10!==null){
 values.push(`PM10 ${fmt(pm10)}`);
 }
-
 return{
 level,
 label,
@@ -2296,20 +1753,14 @@ values.length
 ?`${values.join(" • ")} µg/m³`
 :"ยังไม่มีข้อมูลฝุ่นที่ใช้ได้"
 };
-
 }
-
 function dustProfileSummary(snap){
-
 const pm1=
 finiteNumberOrNull(snap?.pm1);
-
 const pm25=
 finiteNumberOrNull(snap?.pm25);
-
 const pm10=
 finiteNumberOrNull(snap?.pm10);
-
 if(
 pm25===null||
 pm10===null||
@@ -2320,7 +1771,6 @@ label:"รอข้อมูล",
 detail:"ต้องมี PM2.5 และ PM10 เพื่อดูลักษณะฝุ่น"
 };
 }
-
 const fineShare=
 Math.max(
 0,
@@ -2329,9 +1779,7 @@ Math.min(
 pm25/pm10
 )
 );
-
 let label;
-
 if(fineShare>=0.70){
 label="ฝุ่นขนาดเล็กเป็นสัดส่วนหลัก";
 }else if(fineShare>=0.40){
@@ -2339,11 +1787,9 @@ label="พบฝุ่นหลายขนาดผสมกัน";
 }else{
 label="ฝุ่นขนาดใหญ่มีสัดส่วนมากขึ้น";
 }
-
 const details=[
 `PM2.5 คิดเป็น ${Math.round(fineShare*100)}% ของ PM10`
 ];
-
 if(
 pm1!==null&&
 pm25>0
@@ -2356,56 +1802,43 @@ Math.min(
 pm1/pm25
 )
 );
-
 details.push(
 `PM1 คิดเป็น ${Math.round(pm1Share*100)}% ของ PM2.5`
 );
 }
-
 return{
 label,
 detail:details.join(" • ")
 };
-
 }
-
-// =====================================================
 // ACTIVITY RECOMMENDATION
-// =====================================================
-
 function activityRecommendation(
 pm25,
 pm10,
 heatIndex
 ){
-
 const p=
 pm25Guidance(
 pm25
 );
-
 const p10=
 pm10Guidance(
 pm10
 );
-
 const h=
 heatLevel(
 heatIndex
 );
-
 if(
 p.level==="critical"
 ){
 return"ควรลดหรือหลีกเลี่ยงกิจกรรมกลางแจ้งที่ใช้แรงมาก และติดตามค่าฝุ่นอย่างใกล้ชิด";
 }
-
 if(
 h.level==="critical"
 ){
 return"ควรลดกิจกรรมกลางแจ้งที่ใช้แรงมาก หลีกเลี่ยงช่วงร้อนจัด และพักในบริเวณที่เหมาะสม";
 }
-
 if(
 p.level==="warning"||
 p10.level==="warning"||
@@ -2414,15 +1847,9 @@ h.level==="watch"
 ){
 return"ทำกิจกรรมได้โดยเพิ่มความระมัดระวัง ลดกิจกรรมที่ใช้แรงมาก และติดตามค่าฝุ่นกับสภาพความร้อนต่อเนื่อง";
 }
-
 return"ยังไม่พบข้อจำกัดเด่นจากฝุ่นและสภาพความร้อนสำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
-
 }
-
-// =====================================================
 // CURRENT ENVIRONMENT
-// =====================================================
-
 const CURRENT_SUMMARY_FIELDS={
   pm25:{unit:"µg/m³"},
   pm10:{unit:"µg/m³"},
@@ -2431,14 +1858,12 @@ const CURRENT_SUMMARY_FIELDS={
   pm1:{unit:"µg/m³"},
   light:{unit:"lux"}
 };
-
 function currentSummaryUsable(field){
   return latestNodes.filter(n=>
     ["online","sleep"].includes(getNodeStatus(n)) &&
     hasFiniteSensorValue(n?.[field])
   );
 }
-
 function currentSummaryValue(field,value){
   if(!hasFiniteSensorValue(value))return"--";
   const unit=CURRENT_SUMMARY_FIELDS[field]?.unit||"";
@@ -2448,14 +1873,12 @@ function currentSummaryValue(field,value){
     :n.toFixed(1);
   return `${formatted} ${unit}`;
 }
-
 function currentSummaryNodeLabel(node){
   if(!node)return"--";
   const no=nodeNo(node.device_id);
   const cfg=(publicDisplayConfig?.devices||[]).find(d=>d.device_id===node.device_id);
   return String(cfg?.display_name||`จุดตรวจวัด ${no}`);
 }
-
 function resetCurrent(reason){
   for(const field of Object.keys(CURRENT_SUMMARY_FIELDS)){
     for(const suffix of["avg","min","max"]){
@@ -2469,20 +1892,16 @@ function resetCurrent(reason){
   }
   if($("currentEnvironmentFooter"))$("currentEnvironmentFooter").textContent=reason;
 }
-
 function updateCurrent(){
   if(!apiConnectionOnline){
     resetCurrent("ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้");
     return;
   }
-
   const fields=Object.keys(CURRENT_SUMMARY_FIELDS);
   const participating=new Set();
-
   for(const field of fields){
     const usable=currentSummaryUsable(field);
     usable.forEach(n=>participating.add(n.device_id));
-
     if(!usable.length){
       for(const suffix of["avg","min","max"]){
         const el=$(`summary-${field}-${suffix}`);
@@ -2494,38 +1913,29 @@ function updateCurrent(){
       }
       continue;
     }
-
     const avg=usable.reduce((sum,n)=>sum+Number(n[field]),0)/usable.length;
     const low=usable.reduce((a,b)=>Number(b[field])<Number(a[field])?b:a);
     const high=usable.reduce((a,b)=>Number(b[field])>Number(a[field])?b:a);
-
     const avgEl=$(`summary-${field}-avg`);
     const minEl=$(`summary-${field}-min`);
     const maxEl=$(`summary-${field}-max`);
     const minNode=$(`summary-${field}-min-node`);
     const maxNode=$(`summary-${field}-max-node`);
-
     if(avgEl)avgEl.textContent=currentSummaryValue(field,avg);
     if(minEl)minEl.textContent=currentSummaryValue(field,low[field]);
     if(maxEl)maxEl.textContent=currentSummaryValue(field,high[field]);
     if(minNode)minNode.textContent=currentSummaryNodeLabel(low);
     if(maxNode)maxNode.textContent=currentSummaryNodeLabel(high);
   }
-
   if($("currentEnvironmentFooter")){
     $("currentEnvironmentFooter").textContent=
       `ใช้ข้อมูลล่าสุดจาก ${participating.size} / ${TOTAL_NODES} จุดตรวจวัด`;
   }
 }
-
-// =====================================================
 // SMART SUMMARY
-// =====================================================
-
 function updateSmart(){
   const e=$("aiSummary");
   if(!e)return;
-
   const renderAdvice=(data)=>{
     const {
       cls="is-good",
@@ -2535,7 +1945,6 @@ function updateSmart(){
       actions=[],
       active=0
     }=data||{};
-
     e.innerHTML=`<div class="overview-advice-panel ${cls}">
       <div class="overview-advice-summary">
         <div class="overview-advice-summary-icon" aria-hidden="true">${icon}</div>
@@ -2554,7 +1963,6 @@ function updateSmart(){
       </div>
     </div>`;
   };
-
   if(!apiConnectionOnline||!motherOnline()){
     renderAdvice({
       cls:"is-offline",
@@ -2569,14 +1977,12 @@ function updateSmart(){
     });
     return;
   }
-
   const snap=currentEnvironmentSnapshot();
   const air=pm25Guidance(snap.pm25);
   const heat=heatLevel(snap.heatIndex);
   const hum=humidityLevel(snap.humidity);
   const temp=temperatureLevel(snap.temperature);
   const active=activeCount();
-
   let data={
     cls:"is-good",
     icon:"✅",
@@ -2590,7 +1996,6 @@ function updateSmart(){
     ],
     active
   };
-
   if(air.level==="critical"){
     data={
       cls:"is-critical",
@@ -2698,79 +2103,52 @@ function updateSmart(){
       active
     };
   }
-
   renderAdvice(data);
 }
-// =====================================================
 // ALERT
-// =====================================================
-
 function updateAlertUI(){
-
 const e=
 $("alerts");
-
 if(!e){
 return;
 }
-
 if(
 !apiConnectionOnline
 ){
-
 e.innerHTML=
 '<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 ยังไม่สามารถเข้าถึงข้อมูลปัจจุบันได้</b></div>';
-
 return;
-
 }
-
 if(
 !motherOnline()
 ){
-
 e.innerHTML=
 '<div class="soft rounded-xl p-3"><b class="text-red-300">🔴 สถานีหลักขาดการเชื่อมต่อ</b><div class="text-xs text-slate-400 mt-1">ยังไม่สามารถยืนยันสถานะของจุดตรวจวัดได้</div></div>';
-
 return;
-
 }
-
 const list=[];
-
 for(
 let i=1;
 i<=TOTAL_NODES;
 i++
 ){
-
 const n=
 getNode(i);
-
 const st=
 getNodeStatus(n);
-
 if(
 st==="offline"
 ){
-
 list.push({
-
 icon:
 "🔴",
-
 title:
 `จุดตรวจวัด ${i} ขาดการเชื่อมต่อ`,
-
 detail:
 "ระบบไม่ได้รับข้อมูลจากจุดตรวจวัดภายในเวลาที่กำหนด"
-
 });
-
 continue;
-
 }
-
 const state=
 alertStates.find(
 a=>
@@ -2778,100 +2156,75 @@ nodeNo(
 a.device_id
 )===i
 );
-
 if(!state){
 continue;
 }
-
 const pmLevel=
 String(
 state.pm25_level||
 "normal"
 );
-
 if(
 pmLevel!=="normal"
 ){
-
 const g=
 pm25Guidance(
 n?.pm25
 );
-
 list.push({
-
 icon:
 pmLevel==="critical"
 ?"🔴"
 :"🟡",
-
 title:
 `จุดตรวจวัด ${i} • PM2.5`,
-
 detail:
 `${fmt(n?.pm25)} µg/m³ • ${g.label}`
-
 });
-
 }
-
 const tempState=String(state.temperature_level||"normal");
 const humState=String(state.humidity_level||"normal");
 const heatState=String(state.heat_index_level??state.temperature_level??"normal");
-
 if(tempState!=="normal"){
 const t=temperatureLevel(n?.temperature);
 list.push({icon:t.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • อุณหภูมิ ${t.label}`,detail:`${fmt(n?.temperature)} °C • เทียบเกณฑ์ลักษณะอากาศเพื่อเฝ้าระวังเบื้องต้น`});
 }
-
 if(humState!=="normal"){
 const hu=humidityLevel(n?.humidity);
 list.push({icon:hu.severity==="critical"?"🔴":"🟡",title:`จุดตรวจวัด ${i} • ความชื้น ${hu.label}`,detail:`ความชื้นสัมพัทธ์ ${fmt(n?.humidity)} % • ควรดูร่วมกับอุณหภูมิอากาศและดัชนีความร้อน`});
 }
-
 if(
 heatState!=="normal"
 ){
-
 const hi=
 heatIndexC(
 n?.temperature,
 n?.humidity
 );
-
 const h=
 heatLevel(
 hi
 );
-
 list.push({
-
 icon:
 heatState==="critical"
 ?"🔴"
 :"🟡",
-
 title:
 `จุดตรวจวัด ${i} • ดัชนีความร้อน ${h.label}`,
-
 detail:
 `ดัชนีความร้อน ${fmt(hi)} °C • ${h.label}`
-
 });
-
 }else{
-
 const hi=
 heatIndexC(
 n?.temperature,
 n?.humidity
 );
-
 const h=
 heatLevel(
 hi
 );
-
 if(h.level==="watch"){
 list.push({
 icon:"🟢",
@@ -2879,14 +2232,11 @@ title:`จุดตรวจวัด ${i} • ดัชนีความร้
 detail:`ดัชนีความร้อน ${fmt(hi)} °C • ${h.label}`
 });
 }
-
 }
-
 const pm10=
 finiteNumberOrNull(
 n?.pm10
 );
-
 if(pm10!==null&&pm10>120){
 list.push({
 icon:"🟡",
@@ -2894,12 +2244,9 @@ title:`จุดตรวจวัด ${i} • PM10 ควรเฝ้าระ�
 detail:`PM10 รอบล่าสุด ${fmt(pm10)} µg/m³ • ค่านี้เป็นสัญญาณให้ติดตามเพิ่มเติม ไม่ใช่ผลตัดสินมาตรฐาน 24 ชั่วโมง`
 });
 }
-
 }
-
 e.innerHTML=
 list.length
-
 ?list
 .map(
 x=>
@@ -2913,57 +2260,38 @@ ${esc(x.detail)}
 </div>`
 )
 .join("")
-
 :'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ยังไม่มีสิ่งที่ต้องเฝ้าระวัง</b></div>';
-
 }
-
-// =====================================================
 // HISTORY
-// =====================================================
-
 function rangeLabel(){
-
 if(
 averageRange==="custom"&&
 customRangeStart&&
 customRangeEnd
 ){
-
 return`${customRangeStart.toLocaleString("th-TH")} – ${customRangeEnd.toLocaleString("th-TH")}`;
-
 }
-
 return RANGE_CONFIG[
 averageRange
 ]?.label||
 "ช่วงเวลาที่เลือก";
-
 }
-
 function historyRangeButtonText(){
-
 if(
 averageRange!=="custom"||
 !customRangeStart||
 !customRangeEnd
 ){
-
 return rangeLabel();
-
 }
-
 const start=
 customRangeStart;
-
 const end=
 customRangeEnd;
-
 const sameDay=
 start.getFullYear()===end.getFullYear()&&
 start.getMonth()===end.getMonth()&&
 start.getDate()===end.getDate();
-
 const dayFmt=
 new Intl.DateTimeFormat(
 "th-TH",
@@ -2973,7 +2301,6 @@ day:"numeric",
 month:"short"
 }
 );
-
 const yearFmt=
 new Intl.DateTimeFormat(
 "th-TH",
@@ -2982,7 +2309,6 @@ timeZone:"Asia/Bangkok",
 year:"2-digit"
 }
 );
-
 const timeFmt=
 new Intl.DateTimeFormat(
 "th-TH",
@@ -2993,55 +2319,36 @@ minute:"2-digit",
 hour12:false
 }
 );
-
 if(sameDay){
-
 return`${dayFmt.format(start)} • ${timeFmt.format(start)}–${timeFmt.format(end)}`;
-
 }
-
 const sameMonth=
 start.getFullYear()===end.getFullYear()&&
 start.getMonth()===end.getMonth();
-
 if(sameMonth){
-
 return`${start.getDate()}–${end.getDate()} ${new Intl.DateTimeFormat("th-TH",{timeZone:"Asia/Bangkok",month:"short"}).format(end)} ${yearFmt.format(end)}`;
-
 }
-
 return`${dayFmt.format(start)}–${dayFmt.format(end)} ${yearFmt.format(end)}`;
-
 }
-
 function updateHistoryRangeButtonLabel(){
-
 const label=
 $("historyRangeButtonLabel");
-
 if(!label){
 return;
 }
-
 const text=
 historyRangeButtonText();
-
 label.textContent=
 text;
-
 label.title=
 averageRange==="custom"
 ?rangeLabel()
 :text;
-
 }
-
 function rangeWindow(){
-
 if(
 averageRange==="custom"
 ){
-
 return(
 customRangeStart&&
 customRangeEnd
@@ -3049,21 +2356,16 @@ customRangeEnd
 ?{
 start:
 customRangeStart,
-
 end:
 customRangeEnd
 }
 :null;
-
 }
-
 const end=
 new Date();
-
 if(
 averageRange==="today"
 ){
-
 const parts=
 new Intl.DateTimeFormat(
 "en-CA",
@@ -3081,63 +2383,47 @@ day:
 .formatToParts(
 end
 );
-
 const get=
 t=>
 parts.find(
 p=>
 p.type===t
 )?.value;
-
 const start=
 new Date(
 `${get("year")}-${get("month")}-${get("day")}T00:00:00+07:00`
 );
-
 return{
 start,
 end
 };
-
 }
-
 const c=
 RANGE_CONFIG[
 averageRange
 ];
-
 if(
 !c||
 !Number.isFinite(
 c.minutes
 )
 ){
-
 return null;
-
 }
-
 return{
-
 start:
 new Date(
 end.getTime()-
 c.minutes*
 60000
 ),
-
 end
-
 };
-
 }
-
 function hasAnySensorData(row){
-
 if(!row){
 return false;
 }
-
 return [
 "pm1",
 "pm25",
@@ -3151,78 +2437,55 @@ hasFiniteSensorValue(
 row[field]
 )
 );
-
 }
-
 function isRealHistoryReading(row,field=null){
-
 if(!row)return false;
-
 if(String(row.status||"").toLowerCase()!=="online"){
 return false;
 }
-
 if(field){
 return hasFiniteSensorValue(row[field]);
 }
-
 return hasAnySensorData(row);
-
 }
-
 function selectedRecords(){
-
 const w=
 rangeWindow();
-
 return w
 ?records.filter(
 r=>{
-
 const d=
 parseDate(
 r.timestamp
 );
-
 return(
 d&&
 d>=w.start&&
 d<=w.end&&
 isRealHistoryReading(r)
 );
-
 }
 )
 :[];
-
 }
-
 function metricLabel(){
-
 return CURRENT_METRIC_CONFIG[
 metric
 ]?.label||
 metric;
-
 }
-
 function metricUnit(){
-
 return CURRENT_METRIC_CONFIG[
 metric
 ]?.unit||
 "";
-
 }
-
 function stats(
 data,
 field
 ){
-
 const rows=(data||[])
 .filter(row=>finiteNumberOrNull(row?.[field])!==null);
-
 if(!rows.length){
 return{
 avg:null,
@@ -3231,7 +2494,6 @@ min:null,
 last:null
 };
 }
-
 // HISTORY SUMMARY V1
 // Raw Data: น้ำหนัก 1 เหมือนเดิม
 // Summary: ใช้ reading_count เป็นน้ำหนัก เพื่อให้ค่าเฉลี่ยใกล้ Raw Data เดิม
@@ -3239,94 +2501,72 @@ let weightedSum=0;
 let totalWeight=0;
 let min=null;
 let max=null;
-
 for(const row of rows){
 const value=finiteNumberOrNull(row?.[field]);
 if(value===null)continue;
-
 const isSummary=Boolean(row?.summary_level);
 const rawWeight=Number(row?.reading_count);
 const weight=isSummary&&Number.isFinite(rawWeight)&&rawWeight>0
 ?rawWeight
 :1;
-
 weightedSum+=value*weight;
 totalWeight+=weight;
-
 const rowMin=finiteNumberOrNull(row?.[`${field}_min`]);
 const rowMax=finiteNumberOrNull(row?.[`${field}_max`]);
 const minValue=rowMin!==null?rowMin:value;
 const maxValue=rowMax!==null?rowMax:value;
-
 min=min===null?minValue:Math.min(min,minValue);
 max=max===null?maxValue:Math.max(max,maxValue);
 }
-
 const last=finiteNumberOrNull(rows.at(-1)?.[field]);
-
 return{
 avg:totalWeight>0?weightedSum/totalWeight:null,
 max,
 min,
 last
 };
-
 }
-
 function renderAverages(){
-
 const d=
 selectedRecords();
-
 if(
 $("selectedRangeLabel")
 ){
-
 $("selectedRangeLabel").textContent=
 rangeLabel();
-
 }
-
 const defs=[
-
 [
 "pm1",
 "averagePM1",
 "averagePM1Status"
 ],
-
 [
 "pm25",
 "averagePM25",
 "averagePM25Status"
 ],
-
 [
 "pm10",
 "averagePM10",
 "averagePM10Status"
 ],
-
 [
 "temperature",
 "averageTemp",
 "averageTempStatus"
 ],
-
 [
 "humidity",
 "averageHum",
 "averageHumStatus"
 ],
-
 [
 "light",
 "averageLight",
 "averageLightStatus"
 ]
-
 ];
-
 for(
 const[
 field,
@@ -3335,98 +2575,73 @@ statusId
 ]
 of defs
 ){
-
 const s=
 stats(
 d,
 field
 );
-
 if($(id)){
-
 $(id).textContent=
 s.avg==null
 ?"--"
 :fmt(s.avg);
-
 }
-
 if($(statusId)){
-
 $(statusId).textContent=
 s.avg==null
 ?"● ไม่มีข้อมูล"
 :`● เฉลี่ย ${rangeLabel()}`;
-
 }
-
 }
-
 }
-
 const GRAPH_FIELDS=["pm1","pm25","pm10","temperature","humidity","light"];
-
 function metricColor(field){
 return CURRENT_METRIC_CONFIG[field]?.color||"#22d3ee";
 }
-
 function metricLabelFor(field){
 return CURRENT_METRIC_CONFIG[field]?.label||field;
 }
-
 function metricUnitFor(field){
 return CURRENT_METRIC_CONFIG[field]?.unit||"";
 }
-
 function normalizeSeries(values, extra=[]){
 const nums=[...values,...extra]
 .map(finiteNumberOrNull)
 .filter(v=>v!==null);
-
 if(!nums.length)return values.map(()=>null);
-
 const min=Math.min(...nums);
 const max=Math.max(...nums);
-
 if(Math.abs(max-min)<1e-9){
 return values.map(v=>hasFiniteSensorValue(v)?50:null);
 }
-
 return values.map(v=>{
 const n=finiteNumberOrNull(v);
 return n!==null?((n-min)/(max-min))*100:null;
 });
 }
-
 function graphTooltipLabel(ctx){
 const ds=ctx.dataset||{};
 const field=ds.metricField;
-
 const plotted=
 finiteNumberOrNull(
 ctx?.parsed?.y
 );
-
 if(
 field&&
 plotted!==null
 ){
 return `${ds.label}: ${fmt(plotted)} ${metricUnitFor(field)}`.trim();
 }
-
 if(
 plotted!==null
 ){
 return `${ds.label}: ${fmt(plotted)}`;
 }
-
 return `${ds.label}: --`;
 }
-
 function isMobileChart(){
 return window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
 }
-
 function graphLegendOptions(){
 return{
 display:true,
@@ -3448,7 +2663,6 @@ return Number(a?.datasetIndex||0)-Number(b?.datasetIndex||0);
 }
 };
 }
-
 function graphXAxisOptions(){
 const mobile=isMobileChart();
 return{
@@ -3465,12 +2679,10 @@ return adaptiveChartTickText(this,value,index,ticks);
 }
 };
 }
-
 function graphYAxisTicks(){
 const mobile=isMobileChart();
 return{maxTicksLimit:mobile?5:8,font:{size:mobile?12:12}};
 }
-
 function destroyChartSafe(chart){
 try{chart?.destroy();}catch{}
 }
@@ -3550,7 +2762,6 @@ function forecastTickText(scale,value,index,ticks){
 const raw=scale.getLabelForValue(value);
 const text=String(raw??"");
 const labels=scale?.chart?.data?.labels||[];
-
 const forecastStart=
 labels.findIndex(
 v=>
@@ -3558,21 +2769,17 @@ v=>
 String(v??"")
 )
 );
-
 const actualCount=
 forecastStart>=0
 ?forecastStart
 :labels.length;
-
 if(
 /^\+\d+\s*นาที/.test(text)
 ){
 return"";
 }
-
 const d=parseDate(raw);
 if(!d)return"";
-
 const width=
 Number(
 scale?.width||
@@ -3580,27 +2787,20 @@ scale?.chart?.width||
 window.innerWidth||
 0
 );
-
 const labelCount=
 width<520
 ?2
 :3;
-
 const wanted=
 new Set();
-
 if(actualCount>0){
-
 wanted.add(0);
-
 const lastIndex=
 Math.max(
 0,
 actualCount-1
 );
-
 wanted.add(lastIndex);
-
 if(
 labelCount>2&&
 lastIndex>1
@@ -3612,7 +2812,6 @@ lastIndex/2
 );
 }
 }
-
 if(
 !wanted.has(
 Number(value)
@@ -3620,7 +2819,6 @@ Number(value)
 ){
 return"";
 }
-
 return d.toLocaleTimeString(
 "th-TH",
 {
@@ -3631,10 +2829,8 @@ hour12:false
 }
 );
 }
-
 function forecastChartOptions(yTitle){
 const base=groupedChartOptions(yTitle);
-
 base.layout={
 padding:{
 right:
@@ -3643,7 +2839,6 @@ window.innerWidth<=640
 :22
 }
 };
-
 base.scales.x={
 offset:true,
 grid:{display:false},
@@ -3674,17 +2869,14 @@ ticks
 }
 }
 };
-
 return base;
 }
-
 const HISTORY_NODES=["Number 1","Number 2","Number 3"];
 const HISTORY_NODE_COLORS={
 "Number 1":"#22d3ee",
 "Number 2":"#a78bfa",
 "Number 3":"#f59e0b"
 };
-
 function historyNodeLabel(id){
 const key=String(id??"").trim();
 const configured=(publicDisplayConfig?.devices||[]).find(x=>x.device_id===key);
@@ -3695,16 +2887,13 @@ return location?`${configured.display_name} • ${location}`:configured.display_
 const m=key.match(/(\d+)/);
 return m?`จุดตรวจวัด ${m[1]}`:key;
 }
-
 function historyRowsForNode(rows,nodeId){
 return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
 }
-
 function historyDisplayRows(rows){
 if(historyNode==="compare"||historyNode==="average")return rows||[];
 return historyRowsForNode(rows,historyNode);
 }
-
 function makeNodeDataset(nodeId,field,values){
 return{
 label:historyNodeLabel(nodeId),
@@ -3720,7 +2909,6 @@ spanGaps:true,
 cubicInterpolationMode:"monotone"
 };
 }
-
 function buildNodeComparisonData(rows,field){
 const byNode={};
 const labelSet=new Set();
@@ -3750,7 +2938,6 @@ return makeNodeDataset(nodeId,field,vals);
 });
 return{labels,datasets};
 }
-
 function distinctMonitoringPoints(rows){
 return new Set(
 (rows||[])
@@ -3758,24 +2945,20 @@ return new Set(
 .filter(id=>DEVICE_IDS.includes(id))
 ).size;
 }
-
 function spatialAverageRows(rows,fields=GRAPH_FIELDS,bucketMs=5*60*1000){
 const buckets=new Map();
 const validNodes=new Set(HISTORY_NODES);
-
 for(const r of rows||[]){
 if(!isRealHistoryReading(r))continue;
 const d=parseDate(r?.timestamp);
 const nodeId=String(r?.device_id??"").trim();
 if(!d||!validNodes.has(nodeId))continue;
-
 const key=Math.floor(d.getTime()/bucketMs)*bucketMs;
 if(!buckets.has(key)){
 buckets.set(key,{timestamp:new Date(key).toISOString(),nodes:{}});
 }
 const bucket=buckets.get(key);
 if(!bucket.nodes[nodeId])bucket.nodes[nodeId]={};
-
 for(const field of fields){
 const v=finiteNumberOrNull(r?.[field]);
 if(v===null)continue;
@@ -3783,13 +2966,11 @@ if(!bucket.nodes[nodeId][field])bucket.nodes[nodeId][field]=[];
 bucket.nodes[nodeId][field].push(v);
 }
 }
-
 return [...buckets.entries()]
 .sort((a,b)=>a[0]-b[0])
 .map(([,bucket])=>{
 const out={timestamp:bucket.timestamp,device_id:"AREA_AVG",status:"online",active_nodes:0};
 const nodesWithAny=new Set();
-
 for(const field of fields){
 const nodeMeans=[];
 for(const nodeId of HISTORY_NODES){
@@ -3803,7 +2984,6 @@ out[field]=nodeMeans.length
 ?nodeMeans.reduce((sum,v)=>sum+v,0)/nodeMeans.length
 :null;
 }
-
 out.active_nodes=nodesWithAny.size;
 return out;
 })
@@ -3842,9 +3022,7 @@ hidden:!forecastVisible,
 cubicInterpolationMode:"monotone"
 };
 }
-
 function drawCharts(){
-
 if(typeof Chart==="undefined"){
 const area=$("historyChartArea");
 if(area)area.innerHTML='<div class="chart-empty chart-loading-state"><b>กำลังโหลดข้อมูลย้อนหลัง</b><span>กราฟจะพร้อมแสดงอัตโนมัติเมื่อข้อมูลโหลดเสร็จ</span></div>';
@@ -3853,7 +3031,6 @@ ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load e
 }
 return;
 }
-
 const allBase=selectedRecords()
 .filter(r=>parseDate(r.timestamp))
 .sort((a,b)=>parseDate(a.timestamp)-parseDate(b.timestamp));
@@ -3861,7 +3038,6 @@ const base=historyDisplayRows(allBase);
 const compareMode=historyNode==="compare";
 const averageMode=historyNode==="average";
 const areaAverageBase=averageMode?spatialAverageRows(allBase):[];
-
 if($("selectedMetricLabel")){
 const nodeText=compareMode
 ?"แยก 3 จุด"
@@ -3870,15 +3046,12 @@ const nodeText=compareMode
 :historyNodeLabel(historyNode);
 $("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
 }
-
 historyGroupCharts=destroyChartList(historyGroupCharts);
 destroyChartSafe(historyChart);
 historyChart=null;
 const area=$("historyChartArea");
 if(!area)return;
-
 historyRangeCaption(averageMode?(areaAverageBase.length?areaAverageBase:allBase):(base.length?base:allBase));
-
 if(!base.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
 ["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
@@ -3886,7 +3059,6 @@ if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช
 drawForecast([]);
 return;
 }
-
 if(metric==="all"&&averageMode){
 const avgBase=areaAverageBase;
 if(!avgBase.length){
@@ -3896,13 +3068,11 @@ if($("trend"))$("trend").textContent="ไม่มีข้อมูล";
 drawForecast([]);
 return;
 }
-
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
 if($("trendMin"))$("trendMin").textContent="—";
 if($("trendLast"))$("trendLast").textContent="—";
 if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
-
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
 groupedChartShell("PM2.5","ค่าเฉลี่ยพื้นที่","historyPm25",miniLegend(["pm25"]))+
@@ -3910,7 +3080,6 @@ groupedChartShell("PM10","ค่าเฉลี่ยพื้นที่","his
 groupedChartShell("อุณหภูมิ","ค่าเฉลี่ยพื้นที่ • °C","historyTemp",miniLegend(["temperature"]))+
 groupedChartShell("ความชื้น","ค่าเฉลี่ยพื้นที่ • %","historyHumidity",miniLegend(["humidity"]))+
 groupedChartShell("แสง","ค่าเฉลี่ยพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
-
 const createAverage=(canvasId,field,yTitle)=>{
 const arr=avgBase.filter(r=>isRealHistoryReading(r,field));
 const labels=historyLabelsToRangeEnd(arr);
@@ -3928,18 +3097,15 @@ createAverage("historyPm10","pm10","µg/m³");
 createAverage("historyTemp","temperature","°C");
 createAverage("historyHumidity","humidity","%");
 createAverage("historyLight","light","lux");
-
 drawForecast(avgBase);
 return;
 }
-
 if(metric==="all"&&compareMode){
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
 if($("trendMin"))$("trendMin").textContent="—";
 if($("trendLast"))$("trendLast").textContent="—";
 if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
-
 area.innerHTML=`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
 groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด","historyPm25",miniLegend([]))+
@@ -3947,7 +3113,6 @@ groupedChartShell("PM10","เปรียบเทียบ 3 จุด","histor
 groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","historyTemp",miniLegend([]))+
 groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","historyHumidity",miniLegend([]))+
 groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","historyLight",miniLegend([]))+`</div>`;
-
 const createCompare=(canvasId,field,yTitle)=>{
 const data=buildNodeComparisonData(base,field);
 const c=new Chart($(canvasId),{
@@ -3962,18 +3127,15 @@ createCompare("historyPm10","pm10","µg/m³");
 createCompare("historyTemp","temperature","°C");
 createCompare("historyHumidity","humidity","%");
 createCompare("historyLight","light","lux");
-
 drawForecast(spatialAverageRows(base));
 return;
 }
-
 if(metric==="all"){
 if($("trendAvg"))$("trendAvg").textContent="—";
 if($("trendMax"))$("trendMax").textContent="—";
 if($("trendMin"))$("trendMin").textContent="—";
 if($("trendLast"))$("trendLast").textContent="—";
 if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
-
 area.innerHTML=
 groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
 `<div class="metric-chart-grid-3">`+
@@ -3981,7 +3143,6 @@ groupedChartShell("อุณหภูมิ",`${historyNodeLabel(historyNode)} �
 groupedChartShell("ความชื้น",`${historyNodeLabel(historyNode)} • %`,"historyHumidity",miniLegend(["humidity"]))+
 groupedChartShell("แสง",`${historyNodeLabel(historyNode)} • lux`,"historyLight",miniLegend(["light"]))+
 `</div>`;
-
 const labels=historyLabelsToRangeEnd(base);
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
@@ -3998,15 +3159,12 @@ create("historyLight",["light"],"lux");
 drawForecast(spatialAverageRows(allBase));
 return;
 }
-
 area.innerHTML='<canvas id="historyChart"></canvas>';
-
 const sourceRows=averageMode?areaAverageBase:base;
 const chartRows=sourceRows.filter(r=>isRealHistoryReading(r,metric));
 const summaryRows=compareMode?spatialAverageRows(base,[metric]):chartRows;
 const summaryValues=summaryRows.map(r=>finiteNumberOrNull(r[metric])).filter(v=>v!==null);
 const s=stats(summaryRows,metric);
-
 if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
 if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
 if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
@@ -4017,7 +3175,6 @@ const pct=summaryValues[0]?diff/Math.abs(summaryValues[0])*100:0;
 const trendText=!summaryValues.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
 $("trend").textContent=averageMode&&trendText!=="ไม่มีข้อมูล"?`${trendText} • ค่าเฉลี่ยพื้นที่`:trendText;
 }
-
 if(compareMode){
 const data=buildNodeComparisonData(base.filter(r=>isRealHistoryReading(r,metric)),metric);
 historyChart=new Chart($("historyChart"),{
@@ -4036,185 +3193,137 @@ options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugi
 drawForecast(spatialAverageRows(allBase,[metric]));
 }
 }
-
-// =====================================================
 // FORECAST
-// =====================================================
-
 function linear(points){
-
 const n=
 points.length;
-
 if(
 n<2
 ){
 return null;
 }
-
 let sx=0;
 let sy=0;
 let sxy=0;
 let sxx=0;
-
 for(
 const p of
 points
 ){
-
 sx+=p.x;
 sy+=p.y;
 sxy+=p.x*p.y;
 sxx+=p.x*p.x;
-
 }
-
 const den=
 n*sxx-
 sx*sx;
-
 if(!den){
 return null;
 }
-
 const slope=
 (
 n*sxy-
 sx*sy
 )/
 den;
-
 return{
-
 slope,
-
 intercept:
 (
 sy-
 slope*sx
 )/
 n
-
 };
-
 }
-
 function hideForecastTechnicalMessage(){
 const el=$("forecastMessage");
 if(!el)return;
 el.innerHTML="";
 el.style.display="none";
 }
-
 function updateForecastToggle(){
-
 hideForecastTechnicalMessage();
-
 const b=
 $("forecastToggle");
-
 const l=
 $("forecastToggleLabel");
-
 const s=
 $("forecastToggleState");
-
 if(
 !b||
 !l
 ){
 return;
 }
-
 b.classList.toggle(
 "is-on",
 forecastVisible
 );
-
 b.classList.toggle(
 "is-off",
 !forecastVisible
 );
-
 b.setAttribute(
 "aria-checked",
 forecastVisible
 ?"true"
 :"false"
 );
-
 b.setAttribute(
 "aria-pressed",
 forecastVisible
 ?"true"
 :"false"
 );
-
 b.title=
 forecastVisible
 ?"กดเพื่อซ่อน Forecast"
 :"กดเพื่อแสดง Forecast";
-
 l.textContent=
 forecastVisible
 ?"กำลังแสดงการคาดการณ์"
 :"ซ่อนการคาดการณ์";
-
 if(s){
-
 s.textContent=
 forecastVisible
 ?"ON"
 :"OFF";
-
 }
-
 const charts=[
 forecastChart,
 ...forecastGroupCharts
 ]
 .filter(Boolean);
-
 charts.forEach(chart=>{
-
 if(
 !chart?.data?.datasets
 ){
 return;
 }
-
 chart.data.datasets.forEach((ds,i)=>{
-
 const label=
 String(
 ds?.label||
 ""
 );
-
 const isForecast=
 ds?.isForecast===true||
 label.includes("Forecast")||
 label.includes("คาดการณ์");
-
 if(isForecast){
-
 chart.setDatasetVisibility(
 i,
 forecastVisible
 );
-
 }
-
 });
-
 chart.update(
 "none"
 );
-
 });
-
 }
-
 function aiTrendFor(field){
 const list=aiForecastPayload?.data?.trend_analysis;
 if(!Array.isArray(list))return null;
@@ -4224,24 +3333,20 @@ function aiDirectionText(direction){
 return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
 }
 function forecastScopeData(scope){
-
 const list=
 Array.isArray(
 aiForecastPayload?.data?.scope_forecasts
 )
 ?aiForecastPayload.data.scope_forecasts
 :[];
-
 const found=
 list.find(
 x=>
 String(x?.scope||"").trim()===scope
 );
-
 if(found){
 return found;
 }
-
 if(scope==="AREA"&&aiForecastPayload?.data){
 return{
 scope:"AREA",
@@ -4256,15 +3361,11 @@ aiForecastPayload.data.forecast_points||
 []
 };
 }
-
 return null;
 }
-
 function forecastPointsForScope(scope,field){
-
 const s=
 forecastScopeData(scope);
-
 const fp=
 Array.isArray(
 s?.forecast_points
@@ -4273,49 +3374,39 @@ s?.forecast_points
 x=>x?.field===field
 )
 :null;
-
 if(!fp){
 return null;
 }
-
 const pts=[
 finiteNumberOrNull(fp.p10),
 finiteNumberOrNull(fp.p20),
 finiteNumberOrNull(fp.p30)
 ];
-
 return pts.every(
 v=>v!==null
 )
 ?pts
 :null;
 }
-
 function selectedForecastScope(){
-
 if(historyNode==="average"){
 return"AREA";
 }
-
 if(
 ["Number 1","Number 2","Number 3"]
 .includes(historyNode)
 ){
 return historyNode;
 }
-
 return"AREA";
 }
-
 function recentRowsForScope(
 allRows,
 scope,
 field=null,
 limit=12
 ){
-
 let rows;
-
 if(scope==="AREA"){
 rows=
 spatialAverageRows(
@@ -4329,7 +3420,6 @@ allRows,
 scope
 );
 }
-
 return rows
 .filter(r=>
 parseDate(r?.timestamp)&&
@@ -4346,17 +3436,13 @@ parseDate(b.timestamp)
 )
 .slice(-limit);
 }
-
 function buildForecastCompareData(
 allRows,
 field
 ){
-
 const actualByNode={};
 const labelSet=new Set();
-
 for(const nodeId of HISTORY_NODES){
-
 const rows=
 recentRowsForScope(
 allRows,
@@ -4364,14 +3450,11 @@ nodeId,
 field,
 12
 );
-
 actualByNode[nodeId]=rows;
-
 for(const r of rows){
 labelSet.add(r.timestamp);
 }
 }
-
 const actualLabels=
 [...labelSet]
 .sort(
@@ -4379,22 +3462,17 @@ const actualLabels=
 parseDate(a)-
 parseDate(b)
 );
-
 const labels=[
 ...actualLabels,
 "+10 นาที",
 "+20 นาที",
 "+30 นาที"
 ];
-
 const actualDatasets=[];
 const forecastDatasets=[];
-
 for(const nodeId of HISTORY_NODES){
-
 const rows=
 actualByNode[nodeId];
-
 const map=
 new Map(
 rows.map(
@@ -4404,7 +3482,6 @@ finiteNumberOrNull(r[field])
 ]
 )
 );
-
 const actualValues=
 actualLabels.map(
 label=>
@@ -4412,7 +3489,6 @@ map.has(label)
 ?map.get(label)
 :null
 );
-
 actualDatasets.push(
 makeNodeDataset(
 nodeId,
@@ -4425,15 +3501,12 @@ null
 ]
 )
 );
-
 const pts=
 forecastPointsForScope(
 nodeId,
 field
 );
-
 if(pts){
-
 const latestRow=
 [...rows]
 .reverse()
@@ -4443,73 +3516,58 @@ hasFiniteSensorValue(
 r[field]
 )
 );
-
 const current=
 latestRow
 ?finiteNumberOrNull(
 latestRow[field]
 )
 :null;
-
 const forecastValues=
 new Array(
 actualLabels.length+3
 )
 .fill(null);
-
 if(
 latestRow&&
 current!==null
 ){
-
 const idx=
 actualLabels.indexOf(
 latestRow.timestamp
 );
-
 if(idx>=0){
 forecastValues[idx]=current;
 }
 }
-
 forecastValues[
 actualLabels.length
 ]=pts[0];
-
 forecastValues[
 actualLabels.length+1
 ]=pts[1];
-
 forecastValues[
 actualLabels.length+2
 ]=pts[2];
-
 const fd=
 makeNodeDataset(
 nodeId,
 field,
 forecastValues
 );
-
 fd.label=
 `${historyNodeLabel(nodeId)} • คาดการณ์`;
-
 fd.isForecast=true;
-
 fd.borderDash=[
 6,
 5
 ];
-
 fd.pointRadius=2;
 fd.tension=.08;
 fd.hidden=
 !forecastVisible;
-
 forecastDatasets.push(fd);
 }
 }
-
 return{
 labels,
 datasets:[
@@ -4518,29 +3576,21 @@ datasets:[
 ]
 };
 }
-
 function drawForecast(arr){
-
 hideForecastTechnicalMessage();
-
 forecastGroupCharts=
 destroyChartList(
 forecastGroupCharts
 );
-
 destroyChartSafe(
 forecastChart
 );
-
 forecastChart=null;
-
 const area=
 $("forecastChartArea");
-
 if(!area){
 return;
 }
-
 const allRows=
 selectedRecords()
 .filter(
@@ -4551,13 +3601,10 @@ r=>parseDate(r?.timestamp)
 parseDate(a.timestamp)-
 parseDate(b.timestamp)
 );
-
 const compareMode=
 historyNode==="compare";
-
 const scope=
 selectedForecastScope();
-
 const resultReady=
 aiForecastPayload?.data&&
 (
@@ -4570,16 +3617,12 @@ aiForecastPayload.ai===true||
 aiForecastPayload?.reason
 )
 );
-
 const providerText=
 aiForecastPayload?.ai===true
 ?"ระบบวิเคราะห์"
 :"ระบบคาดการณ์";
-
 if(metric==="all"){
-
 if(compareMode){
-
 area.innerHTML=
 `<div style="
 display:flex;
@@ -4605,16 +3648,13 @@ groupedChartShell("อุณหภูมิ","เปรียบเทียบ 
 groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","forecastHumidity",miniLegend([]))+
 groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","forecastLight",miniLegend([]))+
 `</div>`;
-
 const createCompare=
 (canvasId,field,yTitle)=>{
-
 const data=
 buildForecastCompareData(
 allRows,
 field
 );
-
 const c=
 new Chart(
 $(canvasId),
@@ -4642,55 +3682,45 @@ graphTooltipLabel
 }
 }
 );
-
 forecastGroupCharts.push(c);
 };
-
 createCompare(
 "forecastPm1",
 "pm1",
 "µg/m³"
 );
-
 createCompare(
 "forecastPm25",
 "pm25",
 "µg/m³"
 );
-
 createCompare(
 "forecastPm10",
 "pm10",
 "µg/m³"
 );
-
 createCompare(
 "forecastTemp",
 "temperature",
 "°C"
 );
-
 createCompare(
 "forecastHumidity",
 "humidity",
 "%"
 );
-
 createCompare(
 "forecastLight",
 "light",
 "lux"
 );
-
 if($("forecastMessage")){
 $("forecastMessage").innerHTML="";
 $("forecastMessage").style.display="none";
 }
-
 updateForecastToggle();
 return;
 }
-
 const rows=
 recentRowsForScope(
 allRows,
@@ -4698,18 +3728,15 @@ scope,
 null,
 12
 );
-
 if(!rows.length){
 area.innerHTML=
 '<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
 return;
 }
-
 const scopeLabel=
 scope==="AREA"
 ?"ค่าเฉลี่ยพื้นที่"
 :historyNodeLabel(scope);
-
 area.innerHTML=
 groupedChartShell(
 "ฝุ่นละออง",
@@ -4745,26 +3772,20 @@ miniLegend(
 )
 )+
 `</div>`;
-
 const actualLabels=
 rows.map(
 r=>r.timestamp
 );
-
 const labels=[
 ...actualLabels,
 "+10 นาที",
 "+20 นาที",
 "+30 นาที"
 ];
-
 const create=
 (canvasId,fields,yTitle)=>{
-
 const datasets=[];
-
 for(const field of fields){
-
 const raw=
 rows.map(
 r=>
@@ -4772,7 +3793,6 @@ finiteNumberOrNull(
 r[field]
 )
 );
-
 datasets.push({
 ...makeActualDataset(
 field,
@@ -4791,22 +3811,18 @@ null,
 null
 ]
 });
-
 const pts=
 forecastPointsForScope(
 scope,
 field
 );
-
 if(pts){
-
 const current=
 [...raw]
 .reverse()
 .find(
 v=>v!==null
 );
-
 const forecastDs=
 makeForecastDataset(
 field,
@@ -4814,16 +3830,13 @@ raw.length,
 current,
 pts
 );
-
 forecastDs.hidden=
 !forecastVisible;
-
 datasets.push(
 forecastDs
 );
 }
 }
-
 const c=
 new Chart(
 $(canvasId),
@@ -4839,34 +3852,28 @@ yTitle
 )
 }
 );
-
 forecastGroupCharts.push(c);
 };
-
 create(
 "forecastDust",
 ["pm1","pm25","pm10"],
 "µg/m³"
 );
-
 create(
 "forecastTemp",
 ["temperature"],
 "°C"
 );
-
 create(
 "forecastHumidity",
 ["humidity"],
 "%"
 );
-
 create(
 "forecastLight",
 ["light"],
 "lux"
 );
-
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
@@ -4875,21 +3882,16 @@ resultReady
 <div class="text-[12px] text-slate-500 mt-2">ผลคาดการณ์ใช้ข้อมูลของ ${esc(scopeLabel)} โดยตรง • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
 }
-
 updateForecastToggle();
 return;
 }
-
 let rows;
-
 if(compareMode){
-
 const data=
 buildForecastCompareData(
 allRows,
 metric
 );
-
 if(
 !data.labels.length
 ){
@@ -4897,10 +3899,8 @@ area.innerHTML=
 '<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
 return;
 }
-
 area.innerHTML=
 '<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
-
 forecastChart=
 new Chart(
 $("forecastChart"),
@@ -4928,7 +3928,6 @@ graphTooltipLabel
 }
 }
 );
-
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
@@ -4937,11 +3936,9 @@ resultReady
 <div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
 }
-
 updateForecastToggle();
 return;
 }
-
 rows=
 recentRowsForScope(
 allRows,
@@ -4949,18 +3946,15 @@ scope,
 metric,
 12
 );
-
 if(!rows.length){
 area.innerHTML=
 '<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
 return;
 }
-
 const scopeLabel=
 scope==="AREA"
 ?"ค่าเฉลี่ยพื้นที่"
 :historyNodeLabel(scope);
-
 const values=
 rows.map(
 r=>
@@ -4968,50 +3962,41 @@ finiteNumberOrNull(
 r[metric]
 )
 );
-
 const labels=
 rows.map(
 r=>r.timestamp
 );
-
 const datasets=[
 makeActualDataset(
 metric,
 values
 )
 ];
-
 const pts=
 forecastPointsForScope(
 scope,
 metric
 );
-
 if(pts){
-
 labels.push(
 "+10 นาที",
 "+20 นาที",
 "+30 นาที"
 );
-
 datasets[0].data=[
 ...values,
 null,
 null,
 null
 ];
-
 datasets[0].rawValues=[
 ...values,
 null,
 null,
 null
 ];
-
 const current=
 values.at(-1);
-
 const fd=
 makeForecastDataset(
 metric,
@@ -5019,18 +4004,14 @@ values.length,
 current,
 pts
 );
-
 fd.hidden=
 !forecastVisible;
-
 datasets.push(
 fd
 );
 }
-
 area.innerHTML=
 '<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
-
 forecastChart=
 new Chart(
 $("forecastChart"),
@@ -5061,25 +4042,17 @@ graphTooltipLabel
 }
 }
 );
-
 if($("forecastMessage")){
 $("forecastMessage").innerHTML="";
 $("forecastMessage").style.display="none";
 }
-
 updateForecastToggle();
 }
-
-// =====================================================
 // DATE RANGE PICKER
-// =====================================================
-
 function toDateTimeLocalValue(d){
-
 if(!d){
 return"";
 }
-
 const p=
 v=>
 String(v)
@@ -5087,36 +4060,26 @@ String(v)
 2,
 "0"
 );
-
 return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-
 }
-
 function dateFromRangeInput(id){
-
 const v=
 $(id)?.value;
-
 if(!v){
 return null;
 }
-
 const d=
 new Date(v);
-
 return Number.isFinite(
 d.getTime()
 )
 ?d
 :null;
-
 }
-
 function sameCalendarDay(
 a,
 b
 ){
-
 return!!(
 a&&
 b&&
@@ -5127,38 +4090,28 @@ b.getMonth()&&
 a.getDate()===
 b.getDate()
 );
-
 }
-
 function setPickerInputs(
 start,
 end
 ){
-
 if(
 $("customRangeStart")
 ){
-
 $("customRangeStart").value=
 toDateTimeLocalValue(
 start
 );
-
 }
-
 if(
 $("customRangeEnd")
 ){
-
 $("customRangeEnd").value=
 toDateTimeLocalValue(
 end
 );
-
 }
-
 }
-
 function formatRangePickerPreview(value){
 const d=value?dateFromRangeInput(value):null;
 if(!d)return"--";
@@ -5171,14 +4124,12 @@ hour:"2-digit",
 minute:"2-digit"
 });
 }
-
 function updateRangePickerPreviews(){
 const s=$("historyRangeStartPreview");
 const e=$("historyRangeEndPreview");
 if(s)s.textContent=formatRangePickerPreview("customRangeStart");
 if(e)e.textContent=formatRangePickerPreview("customRangeEnd");
 }
-
 function setHistoryRangeMode(mode){
 const next=mode==="custom"?"custom":"quick";
 document.querySelectorAll("[data-history-range-mode]").forEach(btn=>{
@@ -5190,130 +4141,93 @@ document.querySelectorAll("[data-history-range-panel]").forEach(panel=>{
 panel.classList.toggle("active",panel.dataset.historyRangePanel===next);
 });
 }
-
 function updateHistoryRangeMobileSelection(){
 const label=$("historyRangeMobileSelection");
 if(!label)return;
 const active=document.querySelector(".quick-range-option.active");
 label.textContent=active?active.textContent.trim():(averageRange==="custom"?"กำหนดช่วงเอง":"เลือกช่วงเวลา");
 }
-
 function updateQuickRangeUI(key){
-
 document
 .querySelectorAll(
 ".quick-range-option"
 )
 .forEach(
 button=>{
-
 const active=
 !!key&&
 button.dataset.range===
 key;
-
 button.classList.toggle(
 "active",
 active
 );
-
 if(active){
-
 button.setAttribute(
 "aria-current",
 "true"
 );
-
 }else{
-
 button.removeAttribute(
 "aria-current"
 );
-
 }
-
 }
 );
-
 updateHistoryRangeMobileSelection();
-
 }
-
 function closeHistoryRangePicker(){
-
 document.body.classList.remove(
 "history-range-modal-open"
 );
-
 const panel=
 $("historyRangeModal");
-
 const button=
 $("historyRangeButton");
-
 if(panel){
-
 panel.classList.remove(
 "active"
 );
-
 panel.setAttribute(
 "aria-hidden",
 "true"
 );
-
 }
-
 if(button){
-
 button.setAttribute(
 "aria-expanded",
 "false"
 );
-
 }
-
 if(
 $("customRangeError")
 ){
-
 $("customRangeError").textContent=
 "";
-
 $("customRangeError")
 .classList
 .add(
 "hidden"
 );
-
 }
-
 }
-
 function openHistoryRangePicker(){
-
 const panel=
 $("historyRangeModal");
-
 if(panel && panel.parentElement !== document.body){
     document.body.appendChild(panel);
 }
-
 const button=
 $("historyRangeButton");
-
 if(!panel){
 return;
 }
-
 const w=
 rangeWindow();
-
 const end=
 w?.end
 ?new Date(w.end)
 :new Date();
-
 const start=
 w?.start
 ?new Date(w.start)
@@ -5321,82 +4235,63 @@ w?.start
 end.getTime()-
 86400000
 );
-
 setPickerInputs(
 start,
 end
 );
-
 calendarDisplayDate=
 new Date(
 end.getFullYear(),
 end.getMonth(),
 1
 );
-
 calendarSelectionStep=
 "start";
-
 updateQuickRangeUI(
 averageRange==="custom"
 ?null
 :averageRange
 );
-
 setHistoryRangeMode(averageRange==="custom"?"custom":"quick");
 updateRangePickerPreviews();
 renderRangeCalendar();
-
 panel.classList.add(
 "active"
 );
-
 panel.setAttribute(
 "aria-hidden",
 "false"
 );
-
 const modalBody=
 panel.querySelector(
 ".history-range-modal-body"
 );
-
 if(modalBody){
 modalBody.scrollTop=0;
 }
-
 document.body.classList.add(
 "history-range-modal-open"
 );
-
 button?.setAttribute(
 "aria-expanded",
 "true"
 );
-
 }
-
 function renderRangeCalendar(){
-
 const grid=
 $("rangeCalendarGrid");
-
 const title=
 $("rangeCalendarTitle");
-
 if(
 !grid||
 !title
 ){
 return;
 }
-
 const year=
 calendarDisplayDate.getFullYear();
-
 const month=
 calendarDisplayDate.getMonth();
-
 const firstDay=
 new Date(
 year,
@@ -5404,7 +4299,6 @@ month,
 1
 )
 .getDay();
-
 const daysInMonth=
 new Date(
 year,
@@ -5412,7 +4306,6 @@ month+1,
 0
 )
 .getDate();
-
 const daysInPrevMonth=
 new Date(
 year,
@@ -5420,7 +4313,6 @@ month,
 0
 )
 .getDate();
-
 title.textContent=
 new Date(
 year,
@@ -5438,19 +4330,15 @@ year:
 "numeric"
 }
 );
-
 grid.innerHTML="";
-
 const selectedStart=
 dateFromRangeInput(
 "customRangeStart"
 );
-
 const selectedEnd=
 dateFromRangeInput(
 "customRangeEnd"
 );
-
 const startDay=
 selectedStart
 ?new Date(
@@ -5459,7 +4347,6 @@ selectedStart.getMonth(),
 selectedStart.getDate()
 )
 :null;
-
 const endDay=
 selectedEnd
 ?new Date(
@@ -5468,43 +4355,33 @@ selectedEnd.getMonth(),
 selectedEnd.getDate()
 )
 :null;
-
 for(
 let i=0;
 i<42;
 i++
 ){
-
 let day;
-
 let displayMonth=
 month;
-
 let muted=
 false;
-
 if(
 i<
 firstDay
 ){
-
 day=
 daysInPrevMonth-
 firstDay+
 i+
 1;
-
 displayMonth=
 month-1;
-
 muted=true;
-
 }else if(
 i>=
 firstDay+
 daysInMonth
 ){
-
 day=
 i-
 (
@@ -5512,118 +4389,89 @@ firstDay+
 daysInMonth
 )+
 1;
-
 displayMonth=
 month+1;
-
 muted=true;
-
 }else{
-
 day=
 i-
 firstDay+
 1;
-
 }
-
 const date=
 new Date(
 year,
 displayMonth,
 day
 );
-
 const dateOnly=
 new Date(
 date.getFullYear(),
 date.getMonth(),
 date.getDate()
 );
-
 const button=
 document.createElement(
 "button"
 );
-
 button.type=
 "button";
-
 button.textContent=
 String(day);
-
 button.className=
 "range-calendar-day";
-
 if(muted){
-
 button.classList.add(
 "is-muted"
 );
-
 }
-
 if(
 sameCalendarDay(
 dateOnly,
 startDay
 )
 ){
-
 button.classList.add(
 "is-start"
 );
-
 }
-
 if(
 sameCalendarDay(
 dateOnly,
 endDay
 )
 ){
-
 button.classList.add(
 "is-end"
 );
-
 }
-
 if(
 startDay&&
 endDay&&
 dateOnly>=startDay&&
 dateOnly<=endDay
 ){
-
 button.classList.add(
 "is-in-range"
 );
-
 }
-
 button.addEventListener(
 "click",
 ()=>{
-
 const oldStart=
 dateFromRangeInput(
 "customRangeStart"
 );
-
 const oldEnd=
 dateFromRangeInput(
 "customRangeEnd"
 );
-
 if(
 calendarSelectionStep===
 "start"
 ){
-
 const start=
 new Date(date);
-
 start.setHours(
 oldStart?.getHours()??
 0,
@@ -5632,42 +4480,32 @@ oldStart?.getMinutes()??
 0,
 0
 );
-
 let end=
 oldEnd
 ?new Date(oldEnd)
 :new Date(date);
-
 if(
 !oldEnd||
 end<start
 ){
-
 end=
 new Date(date);
-
 end.setHours(
 23,
 59,
 0,
 0
 );
-
 }
-
 setPickerInputs(
 start,
 end
 );
-
 calendarSelectionStep=
 "end";
-
 }else{
-
 const end=
 new Date(date);
-
 end.setHours(
 oldEnd?.getHours()??
 23,
@@ -5676,233 +4514,161 @@ oldEnd?.getMinutes()??
 0,
 0
 );
-
 let start=
 oldStart
 ?new Date(oldStart)
 :new Date(date);
-
 if(
 end<start
 ){
-
 const temp=
 new Date(start);
-
 start=end;
-
 end.setTime(
 temp.getTime()
 );
-
 }
-
 setPickerInputs(
 start,
 end
 );
-
 calendarSelectionStep=
 "start";
-
 }
-
 averageRange="custom";
 updateQuickRangeUI(
 null
 );
 setHistoryRangeMode("custom");
 updateRangePickerPreviews();
-
 renderRangeCalendar();
-
 }
 );
-
 grid.appendChild(
 button
 );
-
 }
-
 }
-
 function setRange(key){
-
 const c=
 RANGE_CONFIG[key];
-
 if(!c){
 return;
 }
-
 averageRange=
 key;
-
 customRangeStart=
 null;
-
 customRangeEnd=
 null;
-
 const w=
 rangeWindow();
-
 if(w){
-
 setPickerInputs(
 w.start,
 w.end
 );
-
 }
-
 const end=
 w?.end||
 new Date();
-
 calendarDisplayDate=
 new Date(
 end.getFullYear(),
 end.getMonth(),
 1
 );
-
 calendarSelectionStep=
 "start";
-
 updateQuickRangeUI(
 key
 );
-
 updateHistoryRangeButtonLabel();
-
 closeHistoryRangePicker();
-
 loadHistorical();
-
 }
-
 function applyCustomRange(){
-
 const start=
 dateFromRangeInput(
 "customRangeStart"
 );
-
 const end=
 dateFromRangeInput(
 "customRangeEnd"
 );
-
 const err=
 $("customRangeError");
-
 const showError=
 message=>{
-
 if(!err){
 return;
 }
-
 err.textContent=
 message;
-
 err.classList.remove(
 "hidden"
 );
-
 };
-
 if(
 !start||
 !end
 ){
-
 showError(
 "กรุณาเลือกวันและเวลาเริ่มต้นกับสิ้นสุด"
 );
-
 return;
-
 }
-
 if(
 start>=end
 ){
-
 showError(
 "เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น"
 );
-
 return;
-
 }
-
 if(
 end-start>
 30*
 86400000
 ){
-
 showError(
 "เลือกช่วงเวลาได้สูงสุด 30 วัน"
 );
-
 return;
-
 }
-
 averageRange=
 "custom";
-
 customRangeStart=
 start;
-
 customRangeEnd=
 end;
-
 updateQuickRangeUI(
 null
 );
-
 updateHistoryRangeButtonLabel();
-
 closeHistoryRangePicker();
-
 loadHistorical();
-
 }
-
-// =====================================================
 // EXPORT
-// =====================================================
-
 function exportBounds(){
-
 const s=
 $("exportStartDate")
 ?.value;
-
 const e=
 $("exportEndDate")
 ?.value;
-
 if(
 !s||
 !e
 ){
 return null;
 }
-
 return{
-
 start:
 new Date(
 s+
 "T00:00:00+07:00"
 ),
-
 end:
 new Date(
 new Date(
@@ -5912,73 +4678,53 @@ e+
 .getTime()+
 86400000
 )
-
 };
-
 }
-
 async function refreshExport(){
-
 const body=
 $("exportPreviewBody");
-
 const b=
 exportBounds();
-
 if(
 !body||
 !b
 ){
 return;
 }
-
 exportRows=[];
-
 let offset=0;
-
 while(true){
-
 const j=
 await apiJson(
 `${API.export}?start=${encodeURIComponent(b.start.toISOString())}&end=${encodeURIComponent(b.end.toISOString())}&limit=1000&offset=${offset}`
 );
-
 const rows=
 (j.data||[])
 .map(
 normalize
 );
-
 exportRows.push(
 ...rows
 );
-
 if(
 !j.has_more||
 !rows.length
 ){
 break;
 }
-
 offset+=
 rows.length;
-
 }
-
 if(
 $("exportDataCount")
 ){
-
 $("exportDataCount").textContent=
 String(
 exportRows.length
 );
-
 }
-
 body.innerHTML=
 exportRows.length
-
 ?exportRows
 .slice(
 0,
@@ -5998,33 +4744,21 @@ r=>
 </tr>`
 )
 .join("")
-
 :'<tr><td colspan="8" class="export-empty-cell">ไม่พบข้อมูล</td></tr>';
-
 if(
 $("exportExcelButton")
 ){
-
 $("exportExcelButton").disabled=
 !exportRows.length;
-
 }
-
 }
-
 function openExport(){
-
-if(!requirePermission("export_data","การส่งออกข้อมูล Excel"))return;
-
 const w=
 rangeWindow();
-
 const formatDate=
 d=>{
-
 const x=
 new Date(d);
-
 const p=
 n=>
 String(n)
@@ -6032,52 +4766,38 @@ String(n)
 2,
 "0"
 );
-
 return`${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}`;
-
 };
-
 if(
 $("exportStartDate")
 ){
-
 $("exportStartDate").value=
 formatDate(
 w?.start||
 Date.now()-
 86400000
 );
-
 }
-
 if(
 $("exportEndDate")
 ){
-
 $("exportEndDate").value=
 formatDate(
 w?.end||
 Date.now()
 );
-
 }
-
 const modal=
 $("exportModal");
-
 if(modal){
-
 modal.classList.add(
 "active"
 );
-
 modal.setAttribute(
 "aria-hidden",
 "false"
 );
-
 }
-
 refreshExport().catch(err=>{
   console.error("Export preview error:",err);
   if($("exportError")){
@@ -6085,36 +4805,24 @@ refreshExport().catch(err=>{
     $("exportError").classList.remove("hidden");
   }
 });
-
 }
-
 function closeExport(){
-
 const modal=
 $("exportModal");
-
 if(modal){
-
 modal.classList.remove(
 "active"
 );
-
 modal.setAttribute(
 "aria-hidden",
 "true"
 );
-
 }
-
 }
-
 let xlsxLoadingPromise=null;
-
 function ensureXLSX(){
 if(typeof XLSX!=="undefined")return Promise.resolve();
-
 if(xlsxLoadingPromise)return xlsxLoadingPromise;
-
 xlsxLoadingPromise=new Promise((resolve,reject)=>{
 const script=document.createElement("script");
 script.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
@@ -6123,24 +4831,18 @@ script.onload=()=>resolve();
 script.onerror=()=>reject(new Error("โหลดระบบ Excel ไม่สำเร็จ"));
 document.head.appendChild(script);
 });
-
 return xlsxLoadingPromise;
 }
-
 async function downloadExcel(){
 if(!exportRows.length)return;
-
 const button=$("exportExcelButton");
 const oldText=button?.textContent;
-
 try{
 if(button){
 button.disabled=true;
 button.textContent="กำลังเตรียม Excel...";
 }
-
 await ensureXLSX();
-
 const data=exportRows.map(r=>({
 "วันที่ / เวลา":parseDate(r.timestamp)?.toLocaleString("th-TH")||"",
 "อุปกรณ์":r.device_id,
@@ -6151,7 +4853,6 @@ const data=exportRows.map(r=>({
 "ความชื้น (%)":r.humidity??"",
 "แสง (lux)":r.light??""
 }));
-
 const ws=XLSX.utils.json_to_sheet(data);
 const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"PM2.5 Data");
@@ -6169,117 +4870,89 @@ button.textContent=oldText||"📊 ดาวน์โหลด Excel";
 }
 }
 }
-
-// =====================================================
 // AI ANALYSIS
-// =====================================================
-
 function aiStatusClass(payload){
-
 if(
 aiLoading
 ){
 return"is-loading";
 }
-
 if(!payload){
 return"is-unavailable";
 }
-
 if(
 payload.ai===true&&
 payload.cached===true
 ){
 return"is-ready";
 }
-
 if(
 payload.ai===true
 ){
 return"is-connected";
 }
-
 if(
 payload.reason===
 "data_unavailable"
 ){
 return"is-unavailable";
 }
-
 return"is-fallback";
-
 }
-
 function aiStatusText(payload){
-
 if(
 aiLoading
 ){
 return"LOADING";
 }
-
 if(!payload){
 return"UNAVAILABLE";
 }
-
 if(
 payload.ai===true&&
 payload.cached===true
 ){
 return"ข้อมูลพร้อมใช้งาน";
 }
-
 if(
 payload.ai===true
 ){
 return"AI CONNECTED";
 }
-
 if(
 payload.reason===
 "data_unavailable"
 ){
 return"ระบบข้อมูล OFFLINE";
 }
-
 if(
 payload.reason===
 "gemini_secret_not_configured"
 ){
 return"ยังไม่พร้อมใช้งาน";
 }
-
 if(
 payload.reason===
 "gemini_quota_exhausted"
 ){
 return"AI QUOTA LIMIT";
 }
-
 if(
 payload.reason===
 "gemini_unavailable"
 ){
 return"ใช้ข้อมูลย้อนหลัง";
 }
-
 return"ระบบสำรอง";
-
 }
-
 function confidenceText(v){
-
 return{
-
 high:
 "สูง",
-
 medium:
 "ปานกลาง",
-
 low:
 "ต่ำ"
-
 }[
 String(
 v||""
@@ -6287,30 +4960,23 @@ v||""
 .toLowerCase()
 ]||
 "--";
-
 }
-
 function cleanAIObservationList(items){
-
 const source=
 Array.isArray(items)
 ?items
 :[];
-
 const seen=
 new Set();
-
 return source
 .map(x=>normalizeProjectWording(x))
 .map(x=>String(x||"").trim())
 .filter(Boolean)
-
 .filter(x=>
 !/\b(?:Node|Number)\s*[123]\b/i.test(x)&&
 !/Gateway/i.test(x)&&
 !/ออนไลน์|ออฟไลน์|Sleep|OFFLINE|ONLINE/i.test(x)
 )
-
 .filter(x=>{
 const key=x
 .toLowerCase()
@@ -6319,111 +4985,80 @@ if(seen.has(key))return false;
 seen.add(key);
 return true;
 })
-
 .slice(0,3);
-
 }
-
 function aiSituationHeadline(data){
-
 const headline=
 normalizeProjectWording(
 data?.headline
 );
-
 if(
 headline&&
 String(headline).trim()
 ){
 return String(headline).trim();
 }
-
 return"กำลังประเมินสถานการณ์จากข้อมูลล่าสุด";
-
 }
-
 function aiSituationSummary(data){
-
 const summary=
 normalizeProjectWording(
 data?.summary
 );
-
 if(
 summary&&
 String(summary).trim()
 ){
 return String(summary).trim();
 }
-
 return"ยังไม่มีข้อสรุปเพิ่มเติมในขณะนี้";
-
 }
-
 function renderAI(payload){
-
 const badge=
 $("aiStatusBadge");
-
 const details=
 $("aiDetails");
-
 const generated=
 $("aiGeneratedAt");
-
 if(
 !badge||
 !details
 ){
 return;
 }
-
 badge.className=
 `ai-status-badge ${aiStatusClass(payload)}`;
-
 badge.textContent=
 aiStatusText(
 payload
 );
-
 if(aiLoading){
-
 details.innerHTML=
 '<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังตีความสถานการณ์จากข้อมูลล่าสุด...</div>';
-
 return;
 }
-
 if(!payload){
-
 details.innerHTML=
 `<div class="ai-result-headline">ยังไม่มีบทวิเคราะห์ในขณะนี้</div>
 <div class="ai-result-summary">ดูค่าตรวจวัดล่าสุดได้จากหน้า “ภาพรวม” และ “จุดตรวจวัด”</div>`;
-
 if(generated){
 generated.textContent=
 "อัปเดตการวิเคราะห์: --";
 }
-
 return;
 }
-
 const data=
 payload.data||
 {};
-
 const observations=
 cleanAIObservationList(
 data.observations
 );
-
 const generatedDate=
 parseDate(
 payload.generated_at
 );
-
 if(generated){
-
 generated.textContent=
 generatedDate
 ?`อัปเดตการวิเคราะห์: ${generatedDate.toLocaleString(
@@ -6434,13 +5069,11 @@ timeZone:"Asia/Bangkok"
 )}`
 :"อัปเดตการวิเคราะห์: --";
 }
-
 const recommendation=
 normalizeProjectWording(
 data.recommendation
 )||
 "ติดตามการเปลี่ยนแปลงของข้อมูลในรอบถัดไป";
-
 details.innerHTML=
 `
 <div class="ai-result-section">
@@ -6462,13 +5095,10 @@ ${esc(aiSituationSummary(data))}
 ${observations.length
 ?`
 <div class="ai-result-section">
-
 <div class="ai-result-label">
 สิ่งที่ควรสนใจ
 </div>
-
 <div class="ai-observation-list">
-
 ${observations
 .map(
 x=>
@@ -6477,22 +5107,17 @@ x=>
 </div>`
 )
 .join("")}
-
 </div>
-
 </div>
 `
 :`
 <div class="ai-result-section">
-
 <div class="ai-result-label">
 สิ่งที่ควรสนใจ
 </div>
-
 <div class="ai-result-summary">
 ยังไม่พบประเด็นเพิ่มเติมที่จำเป็นต้องเน้นจากข้อมูลชุดนี้
 </div>
-
 </div>
 `
 }
@@ -6512,44 +5137,27 @@ ${esc(recommendation)}
 <div class="ai-meta-row">
 <span>AI ทำหน้าที่ตีความข้อมูล ไม่ได้แสดงรายการค่าตรวจวัดซ้ำจากหน้าอื่น</span>
 </div>`;
-
 }
-
 async function loadAI(
 force=false
 ){
-
-if(force&&(!authUser||!authToken)){
-  openAuthModal("login");
-  setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อวิเคราะห์ใหม่","error");
-  return;
-}
-
 if(
 aiLoading
 ){
 return;
 }
-
 aiLoading=
 true;
-
 renderAI(
 aiPayload
 );
-
 const button=
 $("aiRefreshButton");
-
 if(button){
-
 button.disabled=
 true;
-
 }
-
 try{
-
 const url=
 API.ai+
 (
@@ -6557,57 +5165,38 @@ force
 ?"?refresh=1"
 :""
 );
-
 aiPayload=
 await fetchJson(
 url
 );
-
 aiLastLoadedAt=
 new Date();
-
 }catch(e){
-
 console.error(
 "AI analysis error:",
 e
 );
-
 aiPayload=
 null;
-
 }finally{
-
 aiLoading=
 false;
-
 if(button){
-
 button.disabled=
 false;
-
 }
-
 renderAI(
 aiPayload
 );
-
 }
-
 }
-
-// =====================================================
 // AI FORECAST
-// =====================================================
-
 function dustTrendSummary(trends){
-
 const fields=[
 "pm1",
 "pm25",
 "pm10"
 ];
-
 const items=
 fields.map(
 field=>
@@ -6615,17 +5204,14 @@ trends.find(
 x=>x?.field===field
 )
 );
-
 const valid=
 items.filter(Boolean);
-
 if(!valid.length){
 return{
 items,
 summary:"ยังไม่มีข้อมูลแนวโน้มฝุ่นเพียงพอ"
 };
 }
-
 const codes=
 valid.map(
 x=>
@@ -6635,26 +5221,21 @@ x.direction||
 )
 .toLowerCase()
 );
-
 const up=
 codes.filter(
 x=>
 ["up","increase","increasing"].includes(x)
 ).length;
-
 const down=
 codes.filter(
 x=>
 ["down","decrease","decreasing"].includes(x)
 ).length;
-
 const stable=
 valid.length-
 up-
 down;
-
 let summary;
-
 if(
 down===valid.length
 ){
@@ -6680,36 +5261,28 @@ summary="ฝุ่นโดยรวมมีแนวโน้มเพิ่�
 }else{
 summary="แนวโน้มฝุ่นแต่ละขนาดแตกต่างกัน ควรติดตามต่อเนื่อง";
 }
-
 return{
 items,
 summary
 };
-
 }
-
 function renderDustTrendCard(trends){
-
 const dust=
 dustTrendSummary(
 trends
 );
-
 const fields=[
 ["pm1","PM1.0"],
 ["pm25","PM2.5"],
 ["pm10","PM10"]
 ];
-
 const rows=
 fields.map(
 ([field,label])=>{
-
 const item=
 trends.find(
 x=>x?.field===field
 );
-
 if(!item){
 return`
 <div class="ai-dust-mini is-missing">
@@ -6717,17 +5290,14 @@ return`
 <div class="ai-dust-mini-direction">ยังไม่มีข้อมูล</div>
 </div>`;
 }
-
 return`
 <div class="ai-dust-mini">
 <div class="ai-dust-mini-label">${label}</div>
 <div class="ai-dust-mini-direction">${esc(aiDirectionText(item.direction))}</div>
 <div class="ai-dust-mini-note">${esc(item.explanation||"")}</div>
 </div>`;
-
 })
 .join("");
-
 return`
 <div class="ai-trend-item ai-trend-dust">
 <div class="ai-trend-variable">🌫 ฝุ่นละออง</div>
@@ -6740,17 +5310,12 @@ ${rows}
 ${esc(dust.summary)}
 </div>
 </div>`;
-
 }
-
 function normalizeProjectWording(value){
-
 if(value===null||value===undefined){
 return value;
 }
-
 let s=String(value);
-
 /* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก ผลวิเคราะห์เวอร์ชันก่อนหน้า */
 s=s
 .replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
@@ -6759,12 +5324,10 @@ s=s
 .replaceAll("สภาพแวดล้อมของสถานศึกษา","สภาพแวดล้อมในพื้นที่")
 .replaceAll("ในสถานศึกษา","ในพื้นที่")
 .replaceAll("ของสถานศึกษา","ในพื้นที่");
-
 /* หลีกเลี่ยงคำแนะนำที่สมมติว่าพื้นที่มีระบบระบายอากาศ */
 if(/ระบบระบายอากาศ/.test(s)){
 s="ควรติดตามสภาพอากาศและคุณภาพอากาศในพื้นที่อย่างต่อเนื่อง เพื่อสังเกตการเปลี่ยนแปลง";
 }
-
 /* ปรับประโยคความสัมพันธ์ให้ไม่ฟันธงเกินข้อมูล */
 s=s
 .replace(
@@ -6775,30 +5338,20 @@ s=s
 /ไม่มีความสัมพันธ์กับข้อมูลอื่น/g,
 "ยังไม่พบความสัมพันธ์ที่ชัดเจนกับข้อมูลอื่น"
 );
-
 return s;
-
 }
-
 function renderAIForecast(payload){
-
 const box=
 $("aiForecastDetails");
-
 const badge=
 $("aiForecastStatusBadge");
-
 const generated=
 $("aiForecastGeneratedAt");
-
 const providerLabel=
 $("aiTrendDecisionProvider");
-
 if(providerLabel){
-
 const provider=
 payload?.provider;
-
 providerLabel.textContent=
 provider==="gemini"
 ?"ระบบวิเคราะห์"
@@ -6807,58 +5360,43 @@ provider==="gemini"
 :payload?.ai===false
 ?"ระบบคาดการณ์"
 :"กำลังรอการวิเคราะห์...";
-
 }
-
 if(aiForecastLoading){
-
 if(providerLabel){
 providerLabel.textContent=
 "กำลังวิเคราะห์...";
 }
-
 if(box){
 box.innerHTML=
 '<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
 }
-
 if(badge){
 badge.textContent=
 "กำลังวิเคราะห์";
 }
-
 return;
 }
-
 if(!payload){
-
 if(box){
 box.innerHTML=
 '<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
 }
-
 if(badge){
 badge.textContent=
 "รอข้อมูล";
 }
-
 return;
 }
-
 const d=
 payload.data||
 {};
-
 const isAI=
 payload.ai===true;
-
 if(generated){
-
 const dt=
 parseDate(
 payload.generated_at
 );
-
 generated.textContent=
 dt
 ?`อัปเดตการวิเคราะห์: ${dt.toLocaleString(
@@ -6868,14 +5406,10 @@ timeZone:"Asia/Bangkok"
 }
 )}`
 :"อัปเดตการวิเคราะห์: --";
-
 }
-
 if(badge){
-
 badge.className=
 `ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;
-
 const p=
 payload?.provider==="gemini"
 ?"ระบบวิเคราะห์"
@@ -6884,67 +5418,53 @@ payload?.provider==="gemini"
 :payload?.provider==="rule"
 ?"ระบบคาดการณ์"
 :"AI";
-
 badge.textContent=
 isAI
 ?p
 :"ระบบคาดการณ์";
-
 }
-
 if(!box){
 return;
 }
-
 if(!isAI){
-
 if(
 payload?.reason==="fast_forecast" ||
 payload?.reason==="all_ai_unavailable"
 ){
-
 const d=
 payload.data||
 {};
-
 box.innerHTML=
 `<div class="ai-ready-summary">
 <b>${esc(d.headline||"แนวโน้มระยะสั้นพร้อมใช้งาน")}</b>
 <div class="mt-1">${esc(d.air_forecast||"ระบบกำลังประเมินแนวโน้มจากข้อมูลที่มีอยู่")}</div>
 ${d.heat_forecast?`<div class="mt-1">${esc(d.heat_forecast)}</div>`:""}
 </div>`;
-
 return;
 }
-
 box.innerHTML=
 `<div class="ai-unavailable">
 <b>ยังไม่สามารถสร้างแนวโน้มได้</b>
 <div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div>
 </div>`;
-
 return;
 }
-
 const trends=
 Array.isArray(
 d.trend_analysis
 )
 ?d.trend_analysis
 :[];
-
 /*
   ฝุ่น 3 ขนาดอยู่ในการ์ดเดียว
   ส่วน Temperature / Humidity / Light
   ยังคงเป็นการ์ดแยกเหมือนเดิม
 */
-
 const environmentFields=[
 "temperature",
 "humidity",
 "light"
 ];
-
 const environmentCards=
 environmentFields
 .map(
@@ -6954,12 +5474,10 @@ x=>x?.field===field
 )
 )
 .filter(Boolean);
-
 const dustCard=
 renderDustTrendCard(
 trends
 );
-
 const otherCards=
 environmentCards
 .map(
@@ -6991,7 +5509,6 @@ x.explanation||
 </div>`
 )
 .join("");
-
 box.innerHTML=
 `
 <div class="ai-forecast-headline">
@@ -7084,52 +5601,33 @@ d.confidence||
 <small>ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</small>
 </span>
 </div>`;
-
 }
-
 async function loadAIForecast(
 force=false
 ){
-
-if(force&&(!authUser||!authToken)){
-  openAuthModal("login");
-  setAuthMessage("loginMessage","เข้าสู่ระบบเพื่อวิเคราะห์ใหม่","error");
-  return;
-}
-
 if(
 aiForecastLoading
 ){
 return;
 }
-
 aiForecastLoading=
 true;
-
 const forecastMessageEl=
 $("forecastMessage");
-
 if(forecastMessageEl){
 forecastMessageEl.innerHTML=
 '<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
 }
-
 renderAIForecast(
 aiForecastPayload
 );
-
 const button=
 $("aiForecastRefreshButton");
-
 if(button){
-
 button.disabled=
 true;
-
 }
-
 try{
-
 const url=
 API.forecast+
 (
@@ -7137,53 +5635,34 @@ force
 ?"?refresh=1"
 :""
 );
-
 aiForecastPayload=
 await fetchJson(
 url
 );
-
 aiForecastLastLoadedAt=
 new Date();
-
 }catch(e){
-
 console.error(
 "AI forecast error:",
 e
 );
-
 aiForecastPayload=
 null;
-
 }finally{
-
 aiForecastLoading=
 false;
-
 if(button){
-
 button.disabled=
 false;
-
 }
-
 renderAIForecast(
 aiForecastPayload
 );
-
 drawCharts();
-
 }
-
 }
-
-// =====================================================
 // HELP
-// =====================================================
-
 const HELP_CONTENT={
-
 systemGuide:{
 title:"📘 วิธีอ่าน Dashboard",
 html:`<div class="help-intro-card"><b>คู่มือรวมสำหรับการอ่านข้อมูล</b><span>ช่วยแยกความหมายของข้อมูลปัจจุบัน ข้อมูลย้อนหลัง และค่าคาดการณ์</span></div>
@@ -7192,12 +5671,10 @@ html:`<div class="help-intro-card"><b>คู่มือรวมสำหรั
 <section class="help-section"><h4>ค่าคาดการณ์</h4><p>เป็นค่าประมาณของช่วงเวลาข้างหน้าเพื่อช่วยดูแนวโน้ม ไม่ใช่ค่าที่วัดได้ล่วงหน้าและไม่รับประกันว่าจะเกิดขึ้นจริง</p></section>
 <div class="help-tip"><b>อ่านให้ง่าย</b><span>เริ่มจากภาพรวมปัจจุบัน → ดูจุดตรวจวัด → ดูย้อนหลัง → ใช้การคาดการณ์เป็นข้อมูลประกอบ</span></div>`
 },
-
 overviewQuality:{
 title:'🌿 คุณภาพอากาศโดยรวมในพื้นที่',
 html:`<div class="help-natural-copy">สรุปสถานการณ์คุณภาพอากาศของพื้นที่จากค่า PM2.5 ล่าสุดของจุดตรวจวัดที่ระบบยังยืนยันข้อมูลได้ โดยแสดงค่าเฉลี่ย ระดับคุณภาพอากาศ จำนวนจุดที่นำมาคำนวณ และเวลาของข้อมูลล่าสุด เพื่อให้มองเห็นภาพรวมได้ทันที หากต้องการดูว่าแต่ละตำแหน่งมีค่าเท่าใด สามารถกดไปยังหน้าจุดตรวจวัดเพื่อดูรายละเอียดรายจุดได้</div>`
 },
-
 overviewDustNow:{
 title:'🌿 คุณภาพฝุ่นในอากาศตอนนี้',
 html:`<div class="help-intro-card"><b>สรุปให้รู้ทันทีว่าฝุ่นในอากาศตอนนี้เป็นอย่างไร</b><span>ส่วนนี้เน้นสถานะและความหมายที่อ่านง่าย ไม่แสดงตัวเลขซ้ำกับการ์ดค่าปัจจุบันด้านล่าง</span></div>
@@ -7205,7 +5682,6 @@ html:`<div class="help-intro-card"><b>สรุปให้รู้ทันท
 <section class="help-section"><h4>ทำไมไม่มีตัวเลขในกล่องนี้?</h4><p>ค่าตัวเลขจริงแสดงอยู่ในการ์ดค่าปัจจุบันและหน้าจุดตรวจวัดอยู่แล้ว กล่องนี้จึงทำหน้าที่สรุปความหมาย ไม่แสดงข้อมูลซ้ำ</p></section>
 <div class="help-warning">สถานะส่วนนี้ใช้บอกสถานการณ์ปัจจุบัน ไม่ใช่การตัดสินว่าเกินหรือผ่านมาตรฐานค่าเฉลี่ย 24 ชั่วโมง</div>`
 },
-
 overviewWeatherNow:{
 title:'🌤️ สภาพอากาศโดยรวมตอนนี้',
 html:`<div class="help-intro-card"><b>สรุปว่าสภาพอากาศตอนนี้ให้ความรู้สึกอย่างไร</b><span>ระบบพิจารณาอุณหภูมิ ความชื้นสัมพัทธ์ และดัชนีความร้อนร่วมกัน แล้วแปลเป็นข้อความที่เข้าใจง่าย</span></div>
@@ -7213,7 +5689,6 @@ html:`<div class="help-intro-card"><b>สรุปว่าสภาพอาก
 <section class="help-section"><h4>ตัวอย่างสถานะ</h4><p>เช่น <b>อากาศกำลังสบาย</b>, <b>อากาศค่อนข้างชื้น</b>, <b>อากาศร้อนและชื้น</b> หรือ <b>อากาศร้อนมาก</b> พร้อมป้ายสถานะช่วยบอกว่าควรสังเกต เฝ้าระวัง หรือควรระวังมากขึ้น</p></section>
 <div class="help-tip"><b>อยากดูค่าจริง?</b><span>ดูได้จาก 4 การ์ดค่าปัจจุบันด้านล่าง โดยส่วนนี้ตั้งใจให้เป็นสรุปภาพรวมเท่านั้น</span></div>`
 },
-
 currentConditions:{
 title:'🌤️ สภาพแวดล้อมขณะนี้',
 html:`<div class="help-intro-card"><b>เป็นภาพรวมจากจุดตรวจวัดทั้ง 3 จุดของโครงการ</b><span>ค่าบนการ์ด PM2.5 อุณหภูมิ และความชื้นคำนวณจากข้อมูลล่าสุดของจุดตรวจวัดที่ระบบยังมีข้อมูลพร้อมใช้งานในขณะนั้น</span></div>
@@ -7222,26 +5697,22 @@ html:`<div class="help-intro-card"><b>เป็นภาพรวมจากจ
 <section class="help-section"><h4>ดัชนีความร้อน</h4><p>คำนวณต่อจากค่าเฉลี่ยอุณหภูมิและความชื้นของพื้นที่ เพื่อช่วยอธิบายความร้อนที่ร่างกายอาจรู้สึก</p></section>
 <div class="help-tip"><b>เมื่อต้องการรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</b><span>ให้เปิดหน้า “จุดตรวจวัด” เพราะค่าภาพรวมนี้ไม่ใช่ค่าจริงของจุดใดจุดหนึ่งโดยเฉพาะ</span></div>`
 },
-
 overviewNodes:{
 title:"📍 สถานะจุดตรวจวัด",
 html:`<div class="help-intro-card"><b>ดูว่าจุดใดพร้อมแสดงข้อมูลปัจจุบัน</b><span>แต่ละจุดอาจมีสถานะแตกต่างกัน จึงควรดูร่วมกับเวลาของข้อมูลล่าสุด</span></div>
 <section class="help-section"><h4>ONLINE</h4><p>หมายถึงขณะนี้ระบบยังยืนยันความพร้อมของจุดนั้นได้</p></section>
 <section class="help-section"><h4>OFFLINE</h4><p>หมายถึงขณะนี้ยังไม่สามารถยืนยันความพร้อมของจุดนั้นได้ จึงไม่ควรตีความค่าที่เก่ากว่าเป็นสถานการณ์ปัจจุบัน</p></section>`
 },
-
 smartSummary:{
 title:'💡 คำแนะนำขณะนี้',
 html:`<div class="help-natural-copy">นำค่า PM2.5 อุณหภูมิ ความชื้น และดัชนีความร้อนในขณะนั้นมาสรุปเป็นสิ่งที่ควรทำ เช่น ทำกิจกรรมกลางแจ้งได้ ดื่มน้ำ พักในที่ร่ม ลดกิจกรรมหนัก หรือสวมหน้ากาก หากมีหลายค่าที่ผิดปกติพร้อมกัน ระบบจะเลือกความเสี่ยงที่สำคัญที่สุดขึ้นมาเป็นคำแนะนำหลักก่อน เพื่อให้ผู้ใช้งานตัดสินใจได้ง่ายและไม่สับสน คำแนะนำนี้เป็นข้อมูลเบื้องต้นจากระบบและไม่ใช่คำวินิจฉัยทางการแพทย์</div>`
 },
-
 monitoringPage:{
 title:"📍 หน้าจุดตรวจวัด",
 html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูแต่ละจุดแยกกัน</b><span>เหมาะเมื่ออยากรู้ว่าตำแหน่งใดมีค่าแตกต่างจากภาพรวม</span></div>
 <section class="help-section"><h4>ควรดูอะไรบ้าง?</h4><p>ดูสถานะของจุด เวลาของข้อมูลล่าสุด และค่าของตัวแปรแต่ละชนิด โดยไม่ควรนำค่าจากอีกจุดมาแทนกัน</p></section>
 <section class="help-section"><h4>ทำไมแต่ละจุดไม่เท่ากัน?</h4><p>สภาพแวดล้อมในแต่ละตำแหน่งอาจต่างกัน จึงเป็นเรื่องปกติที่ค่าบางช่วงจะไม่เท่ากัน</p></section>`
 },
-
 monitoring:{
 title:"📍 รายละเอียดจุดตรวจวัด",
 html:`<div class="help-intro-card"><b>การ์ดแต่ละใบเป็นข้อมูลของจุดนั้น</b><span>ใช้ดูค่าปัจจุบันและเวลาของข้อมูลล่าสุดแบบแยกจุด</span></div>
@@ -7249,7 +5720,6 @@ html:`<div class="help-intro-card"><b>การ์ดแต่ละใบเป
 <section class="help-section"><h4>เวลาของข้อมูลล่าสุด</h4><p>บอกว่าค่าที่เห็นมาจากเมื่อใด หากเป็นข้อมูลของเมื่อวานหรือวันก่อน ระบบจะแสดงวันให้ชัดเจน</p></section>
 <section class="help-section"><h4>สถานะกับเวลาเป็นคนละเรื่อง</h4><p>สถานะบอกความพร้อมในขณะนี้ ส่วนเวลาของข้อมูลบอกว่าค่าตรวจวัดล่าสุดเกิดขึ้นเมื่อใด จึงไม่ควรตีความว่าเป็นเวลาเดียวกันเสมอ</p></section>`
 },
-
 currentAir:{
 title:"📊 เปรียบเทียบข้อมูลปัจจุบัน",
 html:`<div class="help-intro-card"><b>แสดงทุกค่าพร้อมกันเพื่อเปรียบเทียบได้ทันที</b><span>ค่าหลักประกอบด้วย PM2.5, PM10, อุณหภูมิ และความชื้น ส่วน PM1.0 และแสงแสดงเป็นข้อมูลประกอบ</span></div>
@@ -7257,7 +5727,6 @@ html:`<div class="help-intro-card"><b>แสดงทุกค่าพร้อ
 <section class="help-section"><h4>ต่ำสุดและสูงสุด</h4><p>แสดงทั้งค่าและชื่อจุดที่ต่ำสุดหรือสูงสุด เพื่อให้เห็นความแตกต่างระหว่างตำแหน่งได้ทันที โดยคำว่า “สูงสุด” ไม่ได้หมายความว่าอันตรายเสมอไป</p></section>
 <section class="help-section"><h4>ข้อมูลประกอบ</h4><p>PM1.0 และความเข้มแสงแสดงเฉพาะค่าเฉลี่ยเพื่อให้คนทั่วไปอ่านง่าย โดยใช้เป็นข้อมูลประกอบ ไม่ใช่ตัวชี้วัดสุขภาพหลัก</p></section>`
 },
-
 alerts:{
 title:"⚠ สิ่งที่ควรระวัง",
 html:`<div class="help-intro-card"><b>รวมเฉพาะเรื่องที่ควรให้ความสนใจในข้อมูลปัจจุบัน</b><span>ช่วยให้เห็นประเด็นสำคัญโดยไม่ต้องไล่อ่านทุกช่อง</span></div>
@@ -7268,14 +5737,12 @@ html:`<div class="help-intro-card"><b>รวมเฉพาะเรื่อง
 <section class="help-section"><h4>สถานะจุดตรวจวัด</h4><p>หากมีจุดที่ยังไม่พร้อม ระบบจะแจ้งให้ทราบเพื่อไม่ให้เข้าใจว่าภาพรวมมาจากครบทุกจุด</p></section>
 <div class="help-warning">การเตือนจากค่าปัจจุบันเป็นการเฝ้าระวังเบื้องต้น ไม่ใช่ผลตัดสินมาตรฐานเฉลี่ยตามช่วงเวลาหรือคำวินิจฉัยทางสุขภาพ</div>`
 },
-
 historyPage:{
 title:"📈 หน้าสถิติและกราฟ",
 html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูสิ่งที่เกิดขึ้นแล้วตามเวลา</b><span>เลือกจุด ตัวแปร และช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม</span></div>
 <section class="help-section"><h4>อย่าเทียบคนละช่วงเวลา</h4><p>ก่อนเปรียบเทียบตัวเลข ควรตรวจว่ากำลังดูช่วงเวลาเดียวกัน เพราะช่วงเวลาที่ต่างกันอาจให้ภาพรวมต่างกัน</p></section>
 <section class="help-section"><h4>กราฟย้อนหลังกับคาดการณ์ต่างกันอย่างไร?</h4><p>กราฟย้อนหลังแสดงสิ่งที่เกิดขึ้นแล้ว ส่วนกราฟคาดการณ์เป็นค่าประมาณของช่วงเวลาข้างหน้า</p></section>`
 },
-
 historical:{
 title:"📊 ตัวเลือกสถิติย้อนหลัง",
 html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูลที่ต้องการดู</b><span>เลือกจุดตรวจวัด ตัวแปร และช่วงเวลาให้ตรงกับคำถามที่ต้องการตอบ</span></div>
@@ -7283,7 +5750,6 @@ html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูล
 <section class="help-section"><h4>เลือกตัวแปร</h4><p>แต่ละตัวแปรมีหน่วยและความหมายต่างกัน จึงควรอ่านเกณฑ์ของตัวแปรนั้นก่อนสรุปว่า “สูง” หรือ “ต่ำ” หมายถึงอะไร</p></section>
 <section class="help-section"><h4>เลือกช่วงเวลา</h4><p>ช่วงสั้นเหมาะกับการดูการเปลี่ยนแปลงล่าสุด ส่วนช่วงยาวเหมาะกับการดูแนวโน้มโดยรวม</p></section>`
 },
-
 historyChart:{
 title:"📈 กราฟข้อมูลย้อนหลัง",
 html:`<div class="help-intro-card"><b>กราฟนี้แสดงข้อมูลที่เกิดขึ้นแล้ว</b><span>ตำแหน่งตามแนวนอนคือเวลา ส่วนแนวตั้งคือค่าของตัวแปรที่เลือก</span></div>
@@ -7291,7 +5757,6 @@ html:`<div class="help-intro-card"><b>กราฟนี้แสดงข้อ
 <section class="help-section"><h4>ซูมกราฟ</h4><p>ใช้ดูช่วงเวลาที่สนใจให้ละเอียดขึ้น โดยรายละเอียดเมื่อชี้จุดจะแสดงวันและเวลาของค่านั้น</p></section>
 <section class="help-section"><h4>ช่วงที่ไม่มีจุดข้อมูล</h4><p>ไม่ควรตีความว่าเป็นค่า 0 เพราะอาจหมายถึงไม่มีข้อมูลสำหรับช่วงนั้น</p></section>`
 },
-
 forecastChart:{
 title:"🔮 กราฟคาดการณ์ 30 นาที",
 html:`<div class="help-intro-card"><b>ใช้ดูแนวโน้มที่อาจเกิดขึ้นในอีก 30 นาที</b><span>ข้อมูลจริงและค่าคาดการณ์ถูกแยกให้เห็นชัดเจน</span></div>
@@ -7299,28 +5764,24 @@ html:`<div class="help-intro-card"><b>ใช้ดูแนวโน้มที
 <section class="help-section"><h4>ค่าคาดการณ์ +10 / +20 / +30 นาที</h4><p>เป็นค่าประมาณของอนาคตเพื่อช่วยดูทิศทาง ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p></section>
 <section class="help-section"><h4>ควรใช้อย่างไร?</h4><p>ใช้ประกอบกับสถานการณ์ปัจจุบันและกราฟย้อนหลัง หากสถานการณ์เปลี่ยนเร็ว ผลคาดการณ์ก็อาจเปลี่ยนตามข้อมูลใหม่</p></section>`
 },
-
 currentSituation:{
 title:"🧭 สถานการณ์ปัจจุบัน",
 html:`<div class="help-intro-card"><b>อธิบายเฉพาะสิ่งที่เกิดขึ้นในข้อมูลปัจจุบัน</b><span>ช่วยสรุปว่าตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรระวังเรื่องใด</span></div>
 <section class="help-section"><h4>อ่านร่วมกับอะไร?</h4><p>ควรดูตัวเลขจริงในหน้าภาพรวมหรือหน้าจุดตรวจวัดร่วมด้วย โดยเฉพาะเมื่อจำเป็นต้องรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p></section>
 <div class="help-warning">ส่วนนี้ไม่ใช่การคาดการณ์อนาคต</div>`
 },
-
 forecast30:{
 title:"🔮 แนวโน้ม 30 นาที",
 html:`<div class="help-intro-card"><b>อธิบายสิ่งที่อาจเกิดขึ้นในช่วง 30 นาทีข้างหน้า</b><span>ใช้ดูทิศทางโดยประมาณ เช่น มีแนวโน้มเพิ่ม ลด หรือทรงตัว</span></div>
 <section class="help-section"><h4>ต่างจากสถานการณ์ปัจจุบันอย่างไร?</h4><p>สถานการณ์ปัจจุบันมาจากข้อมูลที่เกิดขึ้นแล้ว ส่วนแนวโน้ม 30 นาทีเป็นค่าประมาณของอนาคต จึงมีความไม่แน่นอน</p></section>
 <div class="help-warning">ใช้เป็นข้อมูลประกอบ ไม่ใช่คำยืนยันว่าจะเกิดค่าตามนั้นจริง</div>`
 },
-
 analysisPage:{
 title:"✦ หน้าวิเคราะห์และคาดการณ์",
 html:`<div class="help-intro-card"><b>หน้านี้แยก “ตอนนี้” ออกจาก “ข้างหน้า”</b><span>ฝั่งสถานการณ์ปัจจุบันช่วยสรุปสิ่งที่ควรสนใจ ส่วนฝั่งคาดการณ์ช่วยดูแนวโน้ม 30 นาที</span></div>
 <section class="help-section"><h4>สถานการณ์ปัจจุบัน</h4><p>อธิบายความหมายของข้อมูลล่าสุดโดยเน้นประเด็นสำคัญ ไม่ควรใช้แทนตัวเลขจริงเมื่อจำเป็นต้องดูค่ารายละเอียด</p></section>
 <section class="help-section"><h4>แนวโน้ม 30 นาที</h4><p>ใช้ดูทิศทางที่อาจเกิดขึ้นและควรอ่านเป็น “แนวโน้ม” ไม่ใช่คำยืนยันเหตุการณ์ในอนาคต</p></section>`
 },
-
 ai:{
 title:"✦ วิเคราะห์สถานการณ์",
 html:`<div class="help-intro-card"><b>ช่วยแปลข้อมูลให้เป็นภาษาที่อ่านง่าย</b><span>เน้นตอบว่า ตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรทำอะไรต่อ</span></div>
@@ -7328,20 +5789,17 @@ html:`<div class="help-intro-card"><b>ช่วยแปลข้อมูลใ
 <section class="help-section"><h4>เหตุใดอุณหภูมิ ความชื้น และดัชนีความร้อนจึงเชื่อมกัน?</h4><p>อุณหภูมิและความชื้นมีความหมายของตัวเอง แต่เมื่อประเมินความร้อนที่ร่างกายอาจรู้สึก จะต้องพิจารณาทั้งสองร่วมกันผ่านดัชนีความร้อน</p></section>
 <div class="help-warning">ข้อความวิเคราะห์เป็นข้อมูลประกอบการติดตาม ไม่ใช่คำวินิจฉัยทางการแพทย์หรือประกาศจากหน่วยงานทางการ</div>`
 },
-
 aboutPage:{
 title:"ℹ️ เกี่ยวกับโครงการ",
 html:`<div class="help-intro-card"><b>หน้านี้อธิบายสิ่งที่ผู้ใช้ควรรู้เพื่ออ่าน Dashboard ให้ถูกต้อง</b><span>เน้นความหมายของข้อมูล เกณฑ์อ้างอิง ข้อจำกัด และผู้เกี่ยวข้องกับโครงการ โดยไม่แสดงรายละเอียดการทำงานภายใน</span></div>
 <section class="help-section"><h4>ทำไมต้องมีหน้านี้?</h4><p>เพราะตัวเลขแต่ละชนิดมีความหมายและเกณฑ์ต่างกัน หน้านี้ช่วยป้องกันการตีความค่าปัจจุบันผิดจากค่าเฉลี่ยตามช่วงเวลา</p></section>`
 },
-
 aboutReadGuide:{
 title:"📖 อ่านข้อมูลบน Dashboard อย่างไร",
 html:`<div class="help-intro-card"><b>คำแนะนำสำหรับผู้ใช้ทั่วไป</b><span>เริ่มจากภาพรวม แล้วค่อยลงรายละเอียดรายจุดและข้อมูลย้อนหลัง</span></div>
 <section class="help-section"><h4>ข้อมูลรายจุด</h4><p>ใช้เมื่อต้องการรู้สถานการณ์ของตำแหน่งใดตำแหน่งหนึ่ง เพราะแต่ละจุดอาจมีสภาพแวดล้อมต่างกัน</p></section>
 <section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>ช่วยสรุปภาพรวมของจุดที่มีข้อมูลในช่วงนั้น แต่ไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
 },
-
 aboutCharacterGuide:{
 title:"🙂 ตัวละครบอกอะไรเรา?",
 html:`<div class="help-intro-card"><b>ตัวละครเป็นภาษาภาพสำหรับอ่านสถานะได้เร็วขึ้น</b><span>รูปเดียวกับที่ใช้บนการ์ดหน้า Overview ถูกนำมาแสดงเป็นลำดับ เพื่อให้รู้ว่าสีหน้าและองค์ประกอบเปลี่ยนไปอย่างไรเมื่อระดับข้อมูลเปลี่ยน</span></div>
@@ -7349,7 +5807,6 @@ html:`<div class="help-intro-card"><b>ตัวละครเป็นภาษ
 <section class="help-section"><h4>ทำไมบางระดับใช้ตัวละครหน้าตาคล้ายกัน?</h4><p>ตัวละครออกแบบเพื่อสื่อระดับความเร่งด่วนเป็นหลัก จึงมีบางช่วงค่าที่ใช้สีหน้าใกล้เคียงกัน แม้ข้อความสถานะจะต่างกัน</p></section>
 <div class="help-warning">ตัวละครเป็นองค์ประกอบช่วยสื่อสาร ไม่ใช่มาตรฐานหรือผลวินิจฉัยด้านสุขภาพ</div>`
 },
-
 aboutHeroGuide:{
 title:"🧭 ตัวละครสรุปภาพรวมด้านบน",
 html:`<div class="help-intro-card"><b>การ์ดสรุปด้านบนใช้ตัวละครช่วยตอบคำถาม 2 อย่าง</b><span>ฝุ่นตอนนี้เป็นอย่างไร และสภาพอากาศตอนนี้เป็นอย่างไร โดยตั้งใจให้มองแล้วเข้าใจได้ก่อนอ่านรายละเอียดตัวเลข</span></div>
@@ -7357,103 +5814,75 @@ html:`<div class="help-intro-card"><b>การ์ดสรุปด้านบ
 <section class="help-section"><h4>สภาพอากาศโดยรวมตอนนี้</h4><p>ไม่ได้ดูจากค่าใดค่าหนึ่ง แต่พิจารณา <b>อุณหภูมิ ความชื้นสัมพัทธ์ และดัชนีความร้อน</b> ร่วมกัน ดังนั้นบางครั้งอุณหภูมิอาจยังปกติ แต่ความชื้นหรือ Heat Index อาจทำให้ข้อความสรุปเปลี่ยนไปได้</p></section>
 <div class="help-tip"><b>ตัวอย่างในหน้านี้เป็นตัวอย่างการสื่อความหมาย</b><span>สถานะจริงบนหน้าภาพรวมจะเปลี่ยนตามข้อมูลที่ระบบได้รับในขณะนั้น</span></div>`
 },
-
 aboutStandards:{
 title:"📚 เกณฑ์อ้างอิงและความหมายของระดับต่าง ๆ",
 html:`<div class="help-intro-card"><b>ใช้ตรวจว่าคำว่า “ดี”, “ปกติ”, “ร้อน” หรือ “เฝ้าระวัง” มาจากอะไร</b><span>แต่ละตัวแปรอาจใช้เกณฑ์คนละประเภท จึงต้องอ่านหมายเหตุของตัวแปรนั้น</span></div>
 <section class="help-section"><h4>เกณฑ์จากแหล่งอ้างอิง</h4><p>จะแสดงชื่อแหล่งอ้างอิงและช่วงค่าที่เกี่ยวข้อง พร้อมบอกข้อจำกัดเมื่อเกณฑ์นั้นไม่ได้ออกแบบมาสำหรับค่าปัจจุบันแบบทันที</p></section>
 <section class="help-section"><h4>เกณฑ์ของโครงการ</h4><p>หากเป็นช่วงค่าที่โครงการกำหนดเพื่อช่วยเฝ้าระวัง จะระบุไว้ชัดเจนว่าไม่ใช่มาตรฐานสุขภาพหรือข้อกำหนดทางกฎหมาย</p></section>`
 },
-
 aboutPeople:{
 title:"👥 ผู้เกี่ยวข้องกับโครงการ",
 html:`<div class="help-intro-card"><b>แสดงหน่วยงาน ผู้จัดทำ และครูที่ปรึกษาที่เกี่ยวข้องกับโครงการ</b><span>ส่วนนี้เป็นข้อมูลเครดิตและการติดต่อสาธารณะเท่านั้น</span></div>`
 }
 };
-
 function closeHelp(){
-
 const p=$("helpPopover");
-
 if(p){
 p.classList.remove("active");
 p.setAttribute("aria-hidden","true");
 }
-
 if(activeHelpButton){
 activeHelpButton.classList.remove("is-active");
 activeHelpButton.setAttribute("aria-expanded","false");
 }
-
 activeHelpButton=null;
-
 }
-
 function bindHelp(){
-
 document
 .querySelectorAll(".help-button")
 .forEach(b=>{
-
 b.addEventListener("click",e=>{
-
 e.preventDefault();
 e.stopPropagation();
-
 const x=HELP_CONTENT[b.dataset.help];
-
 if(!x){
 return;
 }
-
 if(activeHelpButton&&activeHelpButton!==b){
 activeHelpButton.classList.remove("is-active");
 activeHelpButton.setAttribute("aria-expanded","false");
 }
-
 activeHelpButton=b;
 b.classList.add("is-active");
 b.setAttribute("aria-expanded","true");
-
 const title=$("helpPopoverTitle");
 const body=$("helpPopoverBody");
 const p=$("helpPopover");
-
 if(title){
 title.textContent=x.title;
 }
-
 if(body){
 body.innerHTML=x.html;
 }
-
 if(!p){
 return;
 }
-
 p.classList.add("active");
 p.setAttribute("aria-hidden","false");
 p.setAttribute("tabindex","-1");
-
 requestAnimationFrame(()=>{
 try{p.focus({preventScroll:true});}catch{}
 });
-
 });
-
 });
-
 $("helpPopoverClose")
 ?.addEventListener("click",e=>{
 e.preventDefault();
 e.stopPropagation();
 closeHelp();
 });
-
 document.addEventListener("click",e=>{
-
 const p=$("helpPopover");
-
 if(
 p?.classList.contains("active")&&
 !p.contains(e.target)&&
@@ -7461,84 +5890,59 @@ p?.classList.contains("active")&&
 ){
 closeHelp();
 }
-
 });
-
 }
-
-// =====================================================
 // CREDIT IMAGE VIEWER
-// =====================================================
-
 function openCreditImage(src,caption=""){
-
 const modal=
 $("creditImageModal");
-
 const img=
 $("creditFullImage");
-
 const text=
 $("creditImageCaption");
-
 if(
 !modal||
 !img
 ){
 return;
 }
-
 img.src=
 src||"";
-
 img.alt=
 caption||"รูปภาพเครดิต";
-
 if(text){
 text.textContent=
 caption||"";
 }
-
 modal.classList.add(
 "active"
 );
-
 modal.setAttribute(
 "aria-hidden",
 "false"
 );
-
 document.body.classList.add(
 "credit-modal-open"
 );
-
 }
-
 function closeCreditImage(){
-
 const modal=
 $("creditImageModal");
-
 const img=
 $("creditFullImage");
-
 if(!modal){
 return;
 }
-
 modal.classList.remove(
 "active"
 );
-
 modal.setAttribute(
 "aria-hidden",
 "true"
 );
-
 document.body.classList.remove(
 "credit-modal-open"
 );
-
 if(img){
 setTimeout(()=>{
 if(
@@ -7550,15 +5954,11 @@ img.src="";
 }
 },180);
 }
-
 }
-
 window.openCreditImage=
 openCreditImage;
-
 window.closeCreditImage=
 closeCreditImage;
-
 document.addEventListener(
 "keydown",
 e=>{
@@ -7573,11 +5973,7 @@ closeCreditImage();
 }
 }
 );
-
-// =====================================================
 // EVENTS
-// =====================================================
-
 let googleButtonResizeTimer=null;
 window.addEventListener("resize",()=>{
   clearTimeout(googleButtonResizeTimer);
@@ -7587,9 +5983,7 @@ window.addEventListener("resize",()=>{
     }
   },120);
 });
-
 function bindEvents(){
-
 document
 .querySelectorAll("[data-history-range-mode]")
 .forEach(button=>{
@@ -7598,10 +5992,8 @@ setHistoryRangeMode(button.dataset.historyRangeMode);
 updateRangePickerPreviews();
 });
 });
-
 const historyNodeSelect=
 $("historyNode");
-
 if(historyNodeSelect){
 historyNodeSelect.value=historyNode;
 historyNodeSelect.addEventListener(
@@ -7612,121 +6004,88 @@ drawCharts();
 }
 );
 }
-
 const metricSelect=
 $("metric");
-
 if(metricSelect){
-
 metricSelect.value=
 metric;
-
 metricSelect.addEventListener(
 "change",
 e=>{
-
 metric=
 e.target.value;
-
 drawCharts();
-
 }
 );
-
 }
-
 $("historyRangeButton")
 ?.addEventListener(
 "click",
 e=>{
-
 e.stopPropagation();
-
 const panel=
 $("historyRangeModal");
-
 if(!panel){
 return;
 }
-
 if(
 !panel.classList.contains(
 "active"
 )
 ){
-
 openHistoryRangePicker();
-
 }else{
-
 closeHistoryRangePicker();
-
 }
-
 }
 );
-
 document
 .querySelectorAll(
 ".quick-range-option"
 )
 .forEach(
 button=>{
-
 button.addEventListener(
 "click",
 ()=>{
-
 setHistoryRangeMode("quick");
 setRange(
 button.dataset.range
 );
-
 }
 );
-
 }
 );
-
 $("calendarPrev")
 ?.addEventListener(
 "click",
 ()=>{
-
 calendarDisplayDate=
 new Date(
 calendarDisplayDate.getFullYear(),
 calendarDisplayDate.getMonth()-1,
 1
 );
-
 renderRangeCalendar();
-
 }
 );
-
 $("calendarNext")
 ?.addEventListener(
 "click",
 ()=>{
-
 calendarDisplayDate=
 new Date(
 calendarDisplayDate.getFullYear(),
 calendarDisplayDate.getMonth()+1,
 1
 );
-
 renderRangeCalendar();
-
 }
 );
-
 $("customRangeStart")
 ?.addEventListener(
 "change",
 ()=>{
-
 averageRange="custom";
 updateQuickRangeUI(
 null
@@ -7734,33 +6093,25 @@ null
 updateHistoryRangeMobileSelection();
 setHistoryRangeMode("custom");
 updateRangePickerPreviews();
-
 const d=
 dateFromRangeInput(
 "customRangeStart"
 );
-
 if(d){
-
 calendarDisplayDate=
 new Date(
 d.getFullYear(),
 d.getMonth(),
 1
 );
-
 }
-
 renderRangeCalendar();
-
 }
 );
-
 $("customRangeEnd")
 ?.addEventListener(
 "change",
 ()=>{
-
 averageRange="custom";
 updateQuickRangeUI(
 null
@@ -7768,28 +6119,21 @@ null
 updateHistoryRangeMobileSelection();
 setHistoryRangeMode("custom");
 updateRangePickerPreviews();
-
 const d=
 dateFromRangeInput(
 "customRangeEnd"
 );
-
 if(d){
-
 calendarDisplayDate=
 new Date(
 d.getFullYear(),
 d.getMonth(),
 1
 );
-
 }
-
 renderRangeCalendar();
-
 }
 );
-
 ["customRangeStart","customRangeEnd"].forEach(id=>{
 $(id)?.addEventListener("input",()=>{
 averageRange="custom";
@@ -7799,33 +6143,27 @@ updateHistoryRangeMobileSelection();
 updateRangePickerPreviews();
 });
 });
-
 $("historyRangeApply")
 ?.addEventListener(
 "click",
 applyCustomRange
 );
-
 $("historyRangeCancel")
 ?.addEventListener(
 "click",
 closeHistoryRangePicker
 );
-
 $("historyRangeModalClose")
 ?.addEventListener(
 "click",
 closeHistoryRangePicker
 );
-
 $("historyRangeModal")
 ?.addEventListener(
 "click",
 e=>{
-
 const modal=
 $("historyRangeModal");
-
 if(
 e.target===modal||
 e.target?.dataset?.historyRangeClose==="true"||
@@ -7833,76 +6171,58 @@ e.target?.classList?.contains(
 "history-range-modal-backdrop"
 )
 ){
-
 closeHistoryRangePicker();
-
 }
-
 }
 );
-
 $("forecastToggle")
 ?.addEventListener(
 "click",
 ()=>{
-
 forecastVisible=
 !forecastVisible;
-
 updateForecastToggle();
-
 if(
 historyActivated&&
 typeof drawCharts==="function"
 ){
 drawCharts();
 }
-
 }
 );
-
 $("aiRefreshButton")
 ?.addEventListener(
 "click",
 ()=>{
-
 loadAI(
 true
 );
-
 }
 );
-
 $("aiForecastRefreshButton")
 ?.addEventListener(
 "click",
 ()=>{
-
 loadAIForecast(
 true
 );
-
 }
 );
-
 $("exportButton")
 ?.addEventListener(
 "click",
 openExport
 );
-
 $("exportModalClose")
 ?.addEventListener(
 "click",
 closeExport
 );
-
 $("exportCancelButton")
 ?.addEventListener(
 "click",
 closeExport
 );
-
 /*
   ปิดหน้าต่างส่งออกได้เหมือนตัวเลือกช่วงเวลา:
   - คลิกพื้นที่ว่าง / ฉากหลัง
@@ -7914,10 +6234,8 @@ $("exportModal")
 ?.addEventListener(
 "click",
 e=>{
-
 const modal=
 $("exportModal");
-
 if(
 e.target===modal||
 e.target?.dataset?.exportClose==="true"||
@@ -7925,67 +6243,45 @@ e.target?.classList?.contains(
 "export-modal-backdrop"
 )
 ){
-
 closeExport();
-
 }
-
 }
 );
-
 $("exportStartDate")
 ?.addEventListener(
 "change",
 refreshExport
 );
-
 $("exportEndDate")
 ?.addEventListener(
 "change",
 refreshExport
 );
-
 $("exportExcelButton")
 ?.addEventListener(
 "click",
 downloadExcel
 );
-
 document
 .addEventListener(
 "keydown",
 e=>{
-
 if(
 e.key==="Escape"
 ){
-
 closeExport();
-
 closeHelp();
-
 closeCreditImage();
-
 closeHistoryRangePicker();
-
 closeProfileEditor();
-
 }
-
 }
 );
-
 }
-
-// =====================================================
 // INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
-// =====================================================
-
 let chartInteractiveViewerReady=false;
 let chartInteractiveInstance=null;
-
 function cloneChartDatasetForViewer(ds){
-
 const copy={
 label:ds.label||"ข้อมูล",
 metricField:ds.metricField,
@@ -7994,7 +6290,6 @@ rawValues:Array.isArray(ds.rawValues)
 :Array.isArray(ds.data)
 ?ds.data.map(v=>v&&typeof v==="object"?finiteNumberOrNull(v.y):finiteNumberOrNull(v))
 :null,
-
 data:Array.isArray(ds.data)
 ?ds.data.map(
 v=>(
@@ -8004,99 +6299,71 @@ v&&typeof v==="object"
 )
 )
 :[],
-
 borderColor:ds.borderColor,
 backgroundColor:ds.backgroundColor,
-
 borderWidth:Math.max(
 Number(ds.borderWidth||2),
 2
 ),
-
 pointRadius:Math.max(
 Number(ds.pointRadius||0),
 3
 ),
-
 pointHoverRadius:Math.max(
 Number(ds.pointHoverRadius||4),
 6
 ),
-
 pointHitRadius:14,
 tension:ds.tension??0.25,
 fill:ds.fill??false,
 spanGaps:ds.spanGaps??true,
 hidden:ds.hidden===true
 };
-
 if(Array.isArray(ds.borderDash)){
 copy.borderDash=[...ds.borderDash];
 }
-
 if(ds.pointBackgroundColor){
 copy.pointBackgroundColor=ds.pointBackgroundColor;
 }
-
 if(ds.pointBorderColor){
 copy.pointBorderColor=ds.pointBorderColor;
 }
-
 return copy;
-
 }
-
 function chartViewerTitleForCanvas(canvas){
-
 const metricPanel=
 canvas.closest(".metric-chart-panel");
-
 if(metricPanel){
-
 return(
 metricPanel.querySelector(".metric-chart-title")
 ?.textContent?.trim()||
 "กราฟข้อมูล"
 );
-
 }
-
 const card=
 canvas.closest(".dashboard-chart-card");
-
 return(
 card?.querySelector(".chart-zone-title")
 ?.textContent?.trim()||
 "กราฟข้อมูล"
 );
-
 }
-
 function chartViewerUnitFromOriginal(original){
-
 const text=
 original?.options?.scales?.y?.title?.text;
-
 return typeof text==="string"
 ?text
 :"";
-
 }
-
 function setupChartZoomViewer(){
-
 if(chartInteractiveViewerReady){
 return;
 }
-
 chartInteractiveViewerReady=true;
-
 const viewer=document.createElement("div");
-
 viewer.id="chartZoomViewer";
 viewer.className="chart-zoom-viewer";
 viewer.setAttribute("aria-hidden","true");
-
 viewer.innerHTML=`
 <div class="chart-zoom-backdrop" data-chart-zoom-close="true"></div>
 
@@ -8144,33 +6411,25 @@ viewer.innerHTML=`
 
 </div>
 `;
-
 document.body.appendChild(viewer);
-
 const stage=$("chartZoomStage");
-
 let labels=[];
 let fullMin=0;
 let fullMax=0;
 let viewMin=0;
 let viewMax=0;
-
 let dragging=false;
 let dragStartX=0;
 let dragStartMin=0;
 let dragStartMax=0;
-
 let pinchStartDistance=0;
 let pinchStartSpan=0;
 let pinchCenterRatio=.5;
-
 function viewerNiceStepMs(span,width){
-
 const SECOND=1000;
 const MINUTE=60*SECOND;
 const HOUR=60*MINUTE;
 const DAY=24*HOUR;
-
 const mobile=window.innerWidth<=640;
 const targetTicks=Math.max(
 3,
@@ -8179,12 +6438,10 @@ mobile?6:10,
 Math.floor(Math.max(320,width||0)/(mobile?72:105))
 )
 );
-
 const desired=Math.max(
 SECOND,
 span/targetTicks
 );
-
 const steps=[
 1*SECOND,
 5*SECOND,
@@ -8207,23 +6464,15 @@ const steps=[
 3*DAY,
 7*DAY
 ];
-
 return steps.find(step=>step>=desired)||steps.at(-1);
-
 }
-
 function viewerBangkokAlignedStart(min,step){
-
 const BKK=7*60*60*1000;
 return Math.ceil((min+BKK)/step)*step-BKK;
-
 }
-
 function buildViewerPrettyTimeTicks(scale){
-
 const min=Number(scale?.min);
 const max=Number(scale?.max);
-
 if(
 !Number.isFinite(min)||
 !Number.isFinite(max)||
@@ -8231,18 +6480,14 @@ max<=min
 ){
 return;
 }
-
 const span=max-min;
 const width=Math.max(
 1,
 Number(scale?.width||scale?.chart?.width||0)
 );
-
 const step=viewerNiceStepMs(span,width);
 const first=viewerBangkokAlignedStart(min,step);
-
 const ticks=[];
-
 for(
 let t=first;
 t<=max+1;
@@ -8251,31 +6496,23 @@ t+=step
 ticks.push({value:t});
 if(ticks.length>40)break;
 }
-
 if(ticks.length){
 scale.ticks=ticks;
 }
-
 }
-
 function viewerTimeTickText(value,scale){
-
 const n=finiteNumberOrNull(value);
 if(n===null)return"";
-
 const d=new Date(n);
 if(!Number.isFinite(d.getTime()))return"";
-
 const span=Math.max(
 0,
 Number(scale?.max)-Number(scale?.min)
 );
-
 const SECOND=1000;
 const MINUTE=60*SECOND;
 const HOUR=60*MINUTE;
 const DAY=24*HOUR;
-
 if(span<=2*MINUTE){
 return d.toLocaleTimeString("th-TH",{
 timeZone:"Asia/Bangkok",
@@ -8285,7 +6522,6 @@ second:"2-digit",
 hour12:false
 });
 }
-
 if(span<=DAY){
 return d.toLocaleTimeString("th-TH",{
 timeZone:"Asia/Bangkok",
@@ -8294,7 +6530,6 @@ minute:"2-digit",
 hour12:false
 });
 }
-
 if(span<3*DAY){
 return d.toLocaleString("th-TH",{
 timeZone:"Asia/Bangkok",
@@ -8305,165 +6540,115 @@ minute:"2-digit",
 hour12:false
 });
 }
-
 return d.toLocaleDateString("th-TH",{
 timeZone:"Asia/Bangkok",
 day:"2-digit",
 month:"short"
 });
-
 }
-
 function updateViewerResolutionLabel(){
-
 const el=
 $("chartZoomResolution");
-
 if(!el){
 return;
 }
-
 const span=
 Math.max(
 0,
 viewMax-viewMin
 );
-
 const MINUTE=
 60*1000;
-
 const HOUR=
 60*MINUTE;
-
 if(span<=15*MINUTE){
-
 el.textContent=
 "แกนเวลา: ละเอียดถึงวินาที";
-
 return;
 }
-
 if(span<=6*HOUR){
-
 el.textContent=
 "แกนเวลา: ละเอียดระดับนาที";
-
 return;
 }
-
 if(span<=24*HOUR){
-
 el.textContent=
 "แกนเวลา: ชั่วโมง";
-
 return;
 }
-
 el.textContent=
 "แกนเวลา: ภาพรวม";
-
 }
-
 function destroyInteractiveChart(){
-
 if(chartInteractiveInstance){
-
 try{
 chartInteractiveInstance.destroy();
 }catch{}
-
 chartInteractiveInstance=null;
-
 }
-
 }
-
 function clampWindow(){
-
 const total=
 fullMax-fullMin;
-
 let span=
 viewMax-viewMin;
-
 const minSpan=
 Math.min(
 60*1000,
 total
 );
-
 if(span<minSpan){
 span=minSpan;
 }
-
 if(span>total){
 span=total;
 }
-
 if(viewMin<fullMin){
 viewMin=fullMin;
 viewMax=viewMin+span;
 }
-
 if(viewMax>fullMax){
 viewMax=fullMax;
 viewMin=viewMax-span;
 }
-
 }
-
 function applyWindow(){
-
 if(!chartInteractiveInstance){
 return;
 }
-
 clampWindow();
-
 chartInteractiveInstance.options.scales.x.min=
 viewMin;
-
 chartInteractiveInstance.options.scales.x.max=
 viewMax;
-
 chartInteractiveInstance.update("none");
-
 updateViewerResolutionLabel();
-
 const total=
 Math.max(
 1,
 fullMax-fullMin
 );
-
 const shown=
 Math.max(
 1,
 viewMax-viewMin
 );
-
 const percent=
 Math.round(
 (total/shown)*100
 );
-
 const reset=$("chartZoomReset");
-
 if(reset){
 reset.textContent=
 percent<=105
 ?"Reset"
 :`${percent}%`;
 }
-
 }
-
 function zoomAt(factor,ratio=.5){
-
 if(!chartInteractiveInstance){
 return;
 }
-
 ratio=
 Math.min(
 1,
@@ -8472,105 +6657,70 @@ Math.max(
 ratio
 )
 );
-
 const span=
 viewMax-viewMin;
-
 const newSpan=
 span/factor;
-
 const anchor=
 viewMin+
 span*ratio;
-
 viewMin=
 anchor-
 newSpan*ratio;
-
 viewMax=
 anchor+
 newSpan*(1-ratio);
-
 applyWindow();
-
 }
-
 function panBy(deltaIndex){
-
 viewMin+=deltaIndex;
 viewMax+=deltaIndex;
-
 applyWindow();
-
 }
-
 function resetZoom(){
-
 viewMin=fullMin;
 viewMax=fullMax;
-
 applyWindow();
-
 }
-
 function closeViewer(){
-
 destroyInteractiveChart();
-
 const seriesButtons=
 $("chartSeriesButtons");
-
 if(seriesButtons){
 seriesButtons.innerHTML="";
 }
-
 viewer.classList.remove("active");
 viewer.setAttribute("aria-hidden","true");
 document.body.classList.remove("chart-zoom-open");
-
 }
-
 function getOriginalChart(canvas){
-
 if(typeof Chart==="undefined"){
 return null;
 }
-
 if(typeof Chart.getChart==="function"){
-
 const c=
 Chart.getChart(canvas);
-
 if(c){
 return c;
 }
-
 }
-
 const all=[
 historyChart,
 forecastChart,
 ...historyGroupCharts,
 ...forecastGroupCharts
 ].filter(Boolean);
-
 return all.find(
 c=>c.canvas===canvas
 )||null;
-
 }
-
 function updateSeriesControlUI(){
-
 const wrap=
 $("chartSeriesControls");
-
 const buttons=
 $("chartSeriesButtons");
-
 const showAll=
 $("chartSeriesShowAll");
-
 if(
 !wrap||
 !buttons||
@@ -8579,112 +6729,83 @@ if(
 ){
 return;
 }
-
 const datasets=
 chartInteractiveInstance.data.datasets||[];
-
 if(datasets.length<=1){
-
 wrap.classList.add(
 "is-single"
 );
-
 buttons.innerHTML="";
-
 showAll.classList.add(
 "hidden"
 );
-
 const one=
 datasets[0];
-
 if(one){
-
 const label=
 document.createElement(
 "div"
 );
-
 label.className=
 "chart-series-single-label";
-
 label.textContent=
 one.label||
 "ข้อมูล";
-
 buttons.appendChild(
 label
 );
-
 }
-
 return;
 }
-
 wrap.classList.remove(
 "is-single"
 );
-
 showAll.classList.remove(
 "hidden"
 );
-
 buttons.innerHTML="";
-
 datasets.forEach(
 (ds,index)=>{
-
 const button=
 document.createElement(
 "button"
 );
-
 button.type="button";
 button.className=
 "chart-series-button";
-
 const visible=
 chartInteractiveInstance.isDatasetVisible(
 index
 );
-
 button.classList.toggle(
 "is-active",
 visible
 );
-
 button.classList.toggle(
 "is-hidden",
 !visible
 );
-
 button.setAttribute(
 "aria-pressed",
 visible
 ?"true"
 :"false"
 );
-
 button.dataset.index=
 String(
 index
 );
-
 const mark=
 visible
 ?"✓"
 :"";
-
 button.innerHTML=
 `<span class="chart-series-check">${mark}</span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
-
 buttons.appendChild(
 button
 );
-
 }
 );
-
 const allVisible=
 datasets.every(
 (_,index)=>
@@ -8692,46 +6813,35 @@ chartInteractiveInstance.isDatasetVisible(
 index
 )
 );
-
 showAll.disabled=
 allVisible;
-
 showAll.classList.toggle(
 "is-complete",
 allVisible
 );
-
 }
-
 function bindSeriesControlEvents(){
-
 const buttons=
 $("chartSeriesButtons");
-
 const showAll=
 $("chartSeriesShowAll");
-
 buttons?.addEventListener(
 "click",
 e=>{
-
 const button=
 e.target.closest(
 ".chart-series-button"
 );
-
 if(
 !button||
 !chartInteractiveInstance
 ){
 return;
 }
-
 const index=
 Number(
 button.dataset.index
 );
-
 if(
 !Number.isInteger(
 index
@@ -8739,7 +6849,6 @@ index
 ){
 return;
 }
-
 chartInteractiveInstance.data.datasets.forEach(
 (_,datasetIndex)=>{
 chartInteractiveInstance.setDatasetVisibility(
@@ -8748,102 +6857,72 @@ datasetIndex===index
 );
 }
 );
-
 chartInteractiveInstance.update(
 "none"
 );
-
 updateSeriesControlUI();
-
 }
 );
-
 showAll?.addEventListener(
 "click",
 ()=>{
-
 if(!chartInteractiveInstance){
 return;
 }
-
 chartInteractiveInstance.data.datasets.forEach(
 (_,index)=>{
-
 chartInteractiveInstance.setDatasetVisibility(
 index,
 true
 );
-
 }
 );
-
 chartInteractiveInstance.update(
 "none"
 );
-
 updateSeriesControlUI();
-
 }
 );
-
 }
-
 async function openInteractiveChart(canvas){
-
 if(typeof Chart==="undefined"){
-
 try{
 await ensureChartLibrary();
 }catch{
 return;
 }
-
 }
-
 const original=
 getOriginalChart(canvas);
-
 if(!original){
 return;
 }
-
 labels=
 Array.isArray(original.data.labels)
 ?[...original.data.labels]
 :[];
-
 const timeValues=
 labels.map(v=>{
 const d=parseDate(v);
 return d?d.getTime():null;
 });
-
 const validTimes=
 timeValues.filter(Number.isFinite);
-
 if(validTimes.length<2){
 return;
 }
-
 fullMin=Math.min(...validTimes);
 fullMax=Math.max(...validTimes);
-
 viewMin=fullMin;
 viewMax=fullMax;
-
 updateViewerResolutionLabel();
-
 $("chartZoomTitle").textContent=
 chartViewerTitleForCanvas(canvas);
-
 viewer.classList.add("active");
 viewer.setAttribute("aria-hidden","false");
 document.body.classList.add("chart-zoom-open");
-
 destroyInteractiveChart();
-
 const viewerCanvas=$("chartZoomCanvas");
-
 const datasets=
 original.data.datasets.map(ds=>{
 const copy=cloneChartDatasetForViewer(ds);
@@ -8855,13 +6934,11 @@ const y=
 raw&&typeof raw==="object"
 ?finiteNumberOrNull(raw.y)
 :finiteNumberOrNull(raw);
-
 if(
 !Number.isFinite(x)
 ){
 return null;
 }
-
 return{
 x,
 y
@@ -8869,37 +6946,28 @@ y
 });
 return copy;
 });
-
 const unit=
 chartViewerUnitFromOriginal(original);
-
 const isTouch=
 (navigator.maxTouchPoints||0)>0;
-
 chartInteractiveInstance=
 new Chart(
 viewerCanvas,
 {
-
 type:"line",
-
 data:{
 labels,
 datasets
 },
-
 options:{
-
 responsive:true,
 maintainAspectRatio:false,
 animation:false,
 normalized:true,
-
 interaction:{
 mode:"nearest",
 intersect:true
 },
-
 layout:{
 padding:{
 top:8,
@@ -8908,13 +6976,10 @@ bottom:8,
 left:8
 }
 },
-
 plugins:{
-
 legend:{
 display:false
 },
-
 tooltip:{
 enabled:true,
 mode:"nearest",
@@ -8938,24 +7003,18 @@ bodyFont:{
 size:12
 }
 }
-
 },
-
 scales:{
-
 x:{
 type:"linear",
 min:fullMin,
 max:fullMax,
-
 afterBuildTicks(scale){
 buildViewerPrettyTimeTicks(scale);
 },
-
 grid:{
 color:"rgba(148,163,184,.09)"
 },
-
 ticks:{
 color:"#94a3b8",
 maxRotation:0,
@@ -8971,20 +7030,15 @@ this
 );
 }
 },
-
 border:{
 color:"rgba(148,163,184,.16)"
 }
-
 },
-
 y:{
 beginAtZero:false,
-
 grid:{
 color:"rgba(148,163,184,.10)"
 },
-
 ticks:{
 color:"#94a3b8",
 font:{
@@ -8998,7 +7052,6 @@ return Math.abs(n)>=1000
 :new Intl.NumberFormat("th-TH",{maximumFractionDigits:1}).format(n);
 }
 },
-
 title:{
 display:Boolean(unit),
 text:unit,
@@ -9008,181 +7061,125 @@ size:12,
 weight:"700"
 }
 },
-
 border:{
 color:"rgba(148,163,184,.16)"
 }
-
 }
-
 }
-
 }
-
 }
 );
-
 updateSeriesControlUI();
-
 }
-
 document.addEventListener("click",e=>{
-
 const canvas=
 e.target?.closest?.(
 "#historyChartArea canvas, #forecastChartArea canvas"
 );
-
 if(!canvas){
 return;
 }
-
 openInteractiveChart(canvas);
-
 });
-
 viewer.addEventListener("click",e=>{
-
 if(e.target?.dataset?.chartZoomClose==="true"){
 closeViewer();
 }
-
 });
-
 $("chartZoomClose")
 ?.addEventListener("click",closeViewer);
-
 $("chartZoomReset")
 ?.addEventListener("click",resetZoom);
-
 $("chartZoomIn")
 ?.addEventListener("click",()=>{
 zoomAt(1.5,.5);
 });
-
 $("chartZoomOut")
 ?.addEventListener("click",()=>{
 zoomAt(1/1.5,.5);
 });
-
 bindSeriesControlEvents();
-
 stage.addEventListener("wheel",e=>{
-
 if(!chartInteractiveInstance){
 return;
 }
-
 e.preventDefault();
-
 const rect=
 stage.getBoundingClientRect();
-
 const ratio=
 (e.clientX-rect.left)/
 Math.max(
 1,
 rect.width
 );
-
 zoomAt(
 e.deltaY<0
 ?1.25
 :0.8,
 ratio
 );
-
 },{
 passive:false
 });
-
 stage.addEventListener("mousedown",e=>{
-
 if(!chartInteractiveInstance){
 return;
 }
-
 dragging=true;
 dragStartX=e.clientX;
 dragStartMin=viewMin;
 dragStartMax=viewMax;
-
 stage.classList.add("is-panning");
-
 });
-
 window.addEventListener("mousemove",e=>{
-
 if(!dragging||!chartInteractiveInstance){
 return;
 }
-
 const rect=
 stage.getBoundingClientRect();
-
 const dx=
 e.clientX-dragStartX;
-
 const span=
 dragStartMax-dragStartMin;
-
 const shift=
 -(dx/Math.max(1,rect.width))*span;
-
 viewMin=
 dragStartMin+
 shift;
-
 viewMax=
 dragStartMax+
 shift;
-
 applyWindow();
-
 });
-
 window.addEventListener("mouseup",()=>{
-
 dragging=false;
 stage.classList.remove("is-panning");
-
 });
-
 function touchDistance(a,b){
-
 return Math.hypot(
 b.clientX-a.clientX,
 b.clientY-a.clientY
 );
-
 }
-
 stage.addEventListener("touchstart",e=>{
-
 if(!chartInteractiveInstance){
 return;
 }
-
 if(e.touches.length===2){
-
 pinchStartDistance=
 touchDistance(
 e.touches[0],
 e.touches[1]
 );
-
 pinchStartSpan=
 viewMax-viewMin;
-
 const rect=
 stage.getBoundingClientRect();
-
 const centerX=
 (
 e.touches[0].clientX+
 e.touches[1].clientX
 )/2;
-
 pinchCenterRatio=
 Math.min(
 1,
@@ -9192,154 +7189,106 @@ Math.max(
 Math.max(1,rect.width)
 )
 );
-
 dragging=false;
 return;
-
 }
-
 if(e.touches.length===1){
-
 dragging=true;
 dragStartX=
 e.touches[0].clientX;
-
 dragStartMin=
 viewMin;
-
 dragStartMax=
 viewMax;
-
 }
-
 },{
 passive:true
 });
-
 stage.addEventListener("touchmove",e=>{
-
 if(!chartInteractiveInstance){
 return;
 }
-
 if(e.touches.length===2){
-
 e.preventDefault();
-
 const d=
 touchDistance(
 e.touches[0],
 e.touches[1]
 );
-
 if(
 pinchStartDistance>0&&
 d>0
 ){
-
 const factor=
 d/
 pinchStartDistance;
-
 const newSpan=
 pinchStartSpan/
 factor;
-
 const anchor=
 viewMin+
 (viewMax-viewMin)*
 pinchCenterRatio;
-
 viewMin=
 anchor-
 newSpan*
 pinchCenterRatio;
-
 viewMax=
 anchor+
 newSpan*
 (1-pinchCenterRatio);
-
 applyWindow();
-
 }
-
 return;
-
 }
-
 if(
 e.touches.length===1&&
 dragging
 ){
-
 e.preventDefault();
-
 const rect=
 stage.getBoundingClientRect();
-
 const dx=
 e.touches[0].clientX-
 dragStartX;
-
 const span=
 dragStartMax-
 dragStartMin;
-
 const shift=
 -(dx/Math.max(1,rect.width))*span;
-
 viewMin=
 dragStartMin+
 shift;
-
 viewMax=
 dragStartMax+
 shift;
-
 applyWindow();
-
 }
-
 },{
 passive:false
 });
-
 stage.addEventListener("touchend",e=>{
-
 if(e.touches.length<2){
 pinchStartDistance=0;
 }
-
 if(e.touches.length===0){
 dragging=false;
 }
-
 });
-
 document.addEventListener("keydown",e=>{
-
 if(
 e.key==="Escape"&&
 viewer.classList.contains("active")
 ){
 closeViewer();
 }
-
 });
-
 }
-
-// =====================================================
 // PERFORMANCE — DEFER BELOW-THE-FOLD WORK
-// =====================================================
-
 const lazyAssetPromises=new Map();
-
 function loadScriptOnce(src,key=src){
   if(window[key] && typeof window[key]!=="string") return Promise.resolve(window[key]);
   if(lazyAssetPromises.has("script:"+key)) return lazyAssetPromises.get("script:"+key);
-
   const promise=new Promise((resolve,reject)=>{
     const existing=[...document.scripts].find(s=>s.src===src);
     if(existing){
@@ -9359,10 +7308,8 @@ function loadScriptOnce(src,key=src){
   lazyAssetPromises.set("script:"+key,promise);
   return promise;
 }
-
 function loadStyleOnce(href,key=href){
   if(lazyAssetPromises.has("style:"+key)) return lazyAssetPromises.get("style:"+key);
-
   const promise=new Promise((resolve,reject)=>{
     const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(l=>l.href===href);
     if(existing) return resolve(existing);
@@ -9377,78 +7324,57 @@ function loadStyleOnce(href,key=href){
   lazyAssetPromises.set("style:"+key,promise);
   return promise;
 }
-
 // Future Map rule: call loadStyleOnce/loadScriptOnce only when Map page opens.
 // Nothing map-related is downloaded during Overview startup.
-
 function ensureChartLibrary(){
-
 if(
 chartLibraryReady&&
 typeof Chart!=="undefined"
 ){
 return Promise.resolve();
 }
-
 if(chartLibraryPromise){
 return chartLibraryPromise;
 }
-
 chartLibraryPromise=
 new Promise((resolve,reject)=>{
-
 if(typeof Chart!=="undefined"){
 chartLibraryReady=true;
 resolve();
 return;
 }
-
 const s=
 document.createElement("script");
-
 s.src=
 "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js";
-
 s.async=true;
-
 s.onload=()=>{
 chartLibraryReady=true;
 resolve();
 };
-
 s.onerror=()=>{
 chartLibraryPromise=null;
 reject(
 new Error("Chart.js load failed")
 );
 };
-
 document.head.appendChild(s);
-
 });
-
 return chartLibraryPromise;
-
 }
-
 function setHistoryChartMessage(title,detail="",isError=false){
-
 const area=
 $("historyChartArea");
-
 if(!area){
 return;
 }
-
 area.innerHTML=
 `<div class="chart-loading-state ${isError?"is-error":""}">
 <b>${esc(title)}</b>
 ${detail?`<span>${esc(detail)}</span>`:""}
 ${isError?`<button type="button" class="chart-state-retry" id="historyRetryButton">ลองใหม่</button>`:""}
 </div>`;
-
 if(isError){
-
 $("historyRetryButton")?.addEventListener(
 "click",
 ()=>{
@@ -9456,48 +7382,33 @@ activateHistorySection(true);
 },
 {once:true}
 );
-
 }
-
 }
-
 async function activateHistorySection(force=false){
-
 if(historyLoading&&!force){
 return;
 }
-
 historyActivated=true;
 historyLoading=true;
-
 if(!chartInteractiveViewerReady){
   setupChartZoomViewer();
 }
-
 setHistoryChartMessage(
 "กำลังโหลดข้อมูลย้อนหลัง",
 "กรุณารอสักครู่"
 );
-
 try{
-
 records=
 await loadHistory();
-
 renderAverages();
-
 await ensureChartLibrary();
-
 drawCharts();
 historyLastAutoRefreshAt=Date.now();
-
 }catch(e){
-
 console.error(
 "Deferred history/chart load error:",
 e
 );
-
 setHistoryChartMessage(
 "โหลดข้อมูลย้อนหลังไม่สำเร็จ",
 e?.name==="AbortError"
@@ -9505,97 +7416,65 @@ e?.name==="AbortError"
 :"ไม่สามารถโหลดข้อมูลได้ในขณะนี้ กรุณาลองใหม่",
 true
 );
-
 }finally{
-
 historyLoading=false;
-
 }
-
 }
-
 function activateAISection(){
-
-// =====================================================
-// V2.6 — AI AUTO LOAD + FORECAST CHART VIEWER
-// =====================================================
 // Forecast ต้องเปิด Chart Viewer ได้ แม้ผู้ใช้ยังไม่เคยเข้าหน้า History
 if(!chartInteractiveViewerReady){
   setupChartZoomViewer();
 }
-
 if(aiSectionActivated){
   if(!aiPayload&&!aiLoading)loadAI(false);
   if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
   return;
 }
-
 aiSectionActivated=true;
-
 // โหลดผลล่าสุด/Cache อัตโนมัติ ไม่ต้องกด “วิเคราะห์ใหม่”
 loadAI(false);
 loadAIForecast(false);
-
 }
-
 function setupDeferredSections(){
-
 const aiTarget=
 document.querySelector(".ai-intelligence-section");
-
 if(
 "IntersectionObserver" in window &&
 aiTarget
 ){
-
 const aiObserver=
 new IntersectionObserver(
 entries=>{
-
 if(
 entries.some(x=>x.isIntersecting)
 ){
 aiObserver.disconnect();
 activateAISection();
 }
-
 },
 {
 rootMargin:"500px 0px"
 }
 );
-
 aiObserver.observe(aiTarget);
-
 }else{
-
 setTimeout(
 ()=>{
 activateAISection();
 },
 1200
 );
-
 }
-
 }
-
-// =====================================================
-// V36.35 — FAST WARM START CACHE
-// =====================================================
 const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
 const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
-
-// V36.61 — true only after a usable cache or the first network request settles.
 // This prevents the initial skeleton from being removed by an early UI refresh.
 let overviewInitialSettled=false;
-
 function saveLatestSnapshot(nodes){
   try{
     localStorage.setItem(LATEST_CACHE_KEY,JSON.stringify({saved_at:Date.now(),nodes}));
   }catch(_){}
 }
-
 function restoreLatestSnapshot(){
   try{
     const raw=localStorage.getItem(LATEST_CACHE_KEY);
@@ -9614,59 +7493,36 @@ function restoreLatestSnapshot(){
     return true;
   }catch(_){return false;}
 }
-
-// =====================================================
-// V8.8 — EARLY GLOBAL DECLARATIONS
 // Fix TDZ: these variables are used during startup before their
 // original declarations later in this file.
-// =====================================================
-// V8.8: monitoringMap declared earlier to avoid startup TDZ
-
-
-// =====================================================
-// V8.12 — EARLY MAP STATE
 // Must exist before bindDashboardNavigation() can open #monitoring.
-// =====================================================
 let monitoringMap=null;
 let monitoringMarkers=new Map();
 let selectedMonitoringDeviceId=null;
 let monitoringBaseLayers={street:null,satellite:null};
 let monitoringBasemapMode=localStorage.getItem("monitoring-basemap-mode")==="satellite"?"satellite":"street";
-
 let adminDeviceMap=null;
 let adminDeviceMarker=null;
 let adminBaseLayers={street:null,satellite:null};
 let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
 let activeAdminDeviceId="Number 1";
 let adminMediaDragIndex=null;
-
 let notificationCheckBusy=false;
-
-// =====================================================
 // INITIAL LOAD
-// =====================================================
-
 async function loadInitial(){
-
 restoreLatestSnapshot();
-
 try{
-
-// V2.7 — CRITICAL FIRST
 // แสดงค่าจุดตรวจวัดทันทีที่ latest พร้อม โดยไม่รอ Mother/Alerts
 const latest=await loadLatest();
-
 apiConnectionOnline=true;
 latestNodes=latest;
 latestRecord=latestNodes.at(-1)||null;
 overviewInitialSettled=true;
 saveLatestSnapshot(latestNodes);
-
 renderMonitoring();
 updateCurrent();
 updateSmart();
 updateNavigationDashboard();
-
 // งานรองโหลดต่อเบื้องหลัง ไม่บล็อกค่าหลักของ Dashboard
 Promise.all([
   loadMother().catch(()=>motherStatus),
@@ -9680,56 +7536,37 @@ Promise.all([
   updateAlertUI();
   checkSituationNotifications();
 }).catch(e=>console.warn("Secondary initial load error:",e));
-
 }catch(e){
-
 console.error(
 "Initial load error:",
 e
 );
-
 apiConnectionOnline=
 false;
 overviewInitialSettled=true;
-
 renderMonitoring();
-
 updateCurrent();
-
 updateSmart();
-
 updateAlertUI();
-
 // Network request has settled. If there was no usable cache,
 // replace the skeleton with the real "no data" state instead of
 // leaving a loading indicator forever.
 setOverviewLoadingState(false);
 updateNavigationDashboard();
-
 }
-
 }
-
-// =====================================================
 // REALTIME
-// =====================================================
-
 async function loadRealtime(){
-
 try{
-
 const latest=await loadLatest();
-
 apiConnectionOnline=true;
 latestNodes=latest;
 latestRecord=latestNodes.at(-1)||null;
 saveLatestSnapshot(latestNodes);
-
 renderMonitoring();
 updateCurrent();
 updateSmart();
 updateNavigationDashboard();
-
 // งานรองไม่สามารถลากข้อมูลหลักให้ OFFLINE ได้
 Promise.allSettled([
   loadMother(),
@@ -9737,7 +7574,6 @@ Promise.allSettled([
 ]).then(results=>{
   if(results[0].status==="fulfilled") motherStatus=results[0].value;
   if(results[1].status==="fulfilled"&&Array.isArray(results[1].value)) alertStates=results[1].value;
-
   renderMonitoring();
   updateCurrent();
   updateSmart();
@@ -9745,110 +7581,67 @@ Promise.allSettled([
   updateNavigationDashboard();
   checkSituationNotifications();
 });
-
 }catch(e){
-
 console.error("Realtime latest error:",e);
-
 // ถ้ามี snapshot เดิมอยู่ ให้คงข้อมูลนั้นไว้
 // แต่สถานะ API แสดงตามความจริงว่าการ request ล่าสุดล้มเหลว
 apiConnectionOnline=false;
-
 renderMonitoring();
 updateCurrent();
 updateSmart();
 updateAlertUI();
 updateNavigationDashboard();
-
 }
-
 }
-
-// =====================================================
 // HISTORY
-// =====================================================
-
 async function loadHistorical(){
-
 if(!historyActivated||historyLoading){
 return;
 }
-
 historyLoading=true;
-
 try{
-
 records=
 await loadHistory();
-
 renderAverages();
-
 if(typeof Chart!=="undefined"){
 drawCharts();
 }
-
 historyLastAutoRefreshAt=Date.now();
-
 }catch(e){
-
 console.error(
 "History error:",
 e
 );
-
 setHistoryChartMessage(
 "โหลดกราฟข้อมูลย้อนหลังไม่สำเร็จ",
 "กรุณาลองใหม่อีกครั้ง",
 true
 );
-
 }finally{
-
 historyLoading=false;
-
 }
-
 }
-
-// =====================================================
 // STANDARDS
-// =====================================================
-
 async function loadStandardsOnly(){
-
 try{
-
 standardsData=
 await loadStandards();
-
 updateCurrent();
-
 updateSmart();
-
 updateAlertUI();
 checkSituationNotifications();
-
 }catch(e){
-
 console.error(
 "Standards error:",
 e
 );
-
 }
-
 }
-
-// =====================================================
 // CLOCK
-// =====================================================
-
 function updateClock(){
-
 if(
 $("clock")
 ){
-
 $("clock").textContent=
 new Date()
 .toLocaleString(
@@ -9862,68 +7655,41 @@ timeStyle:
 "medium"
 }
 );
-
 }
-
 }
-
-// =====================================================
 // START
-// =====================================================
-
 updateHistoryRangeButtonLabel();
-
 updateQuickRangeUI(
 averageRange
 );
-
 updateForecastToggle();
-
 renderAI(
 null
 );
-
 renderAIForecast(
 null
 );
-
 updateClock();
 loadInitial();
-
 const scheduleStartup=(fn,delay)=>{
   setTimeout(()=>{
     try{fn();}catch(e){console.error("Startup task error:",e);}
   },delay);
 };
-
 scheduleStartup(bindEvents,60);
 scheduleStartup(bindHelp,180);
-
-// V36.61 — AI/Forecast is intentionally NOT preloaded on Overview.
 // It is loaded only when History/Analysis is opened. This keeps future
 // heavy features (such as Map) from competing with the first screen.
-
-// =====================================================
 // CLOCK
-// =====================================================
-
 setInterval(
 updateClock,
 1000
 );
-
-// =====================================================
 // REALTIME
-// =====================================================
-
 setInterval(()=>{
   if(document.visibilityState==="visible") loadRealtime();
 },15000);
-
-// =====================================================
 // HISTORICAL
-// =====================================================
-
 setInterval(()=>{
   if(
     document.visibilityState!=="visible"||
@@ -9933,36 +7699,24 @@ setInterval(()=>{
   ){
     return;
   }
-
   const now=Date.now();
   if(now-historyLastAutoRefreshAt<historyAutoRefreshIntervalMs()){
     return;
   }
-
   loadHistorical();
 },60000);
-
-// =====================================================
 // STANDARDS
-// =====================================================
-
 setInterval(
 loadStandardsOnly,
 300000
 );
-
-
-
 // NAVIGATION REDESIGN 2026-08-28
-// =====================================================
 const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
 let currentDashboardPage="overview";
-
 function getDashboardPageFromHash(){
   const raw=String(location.hash||"").replace(/^#/,"").trim().toLowerCase();
   return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
 }
-
 function clearTransientUiMessages(ids=null){
   const list=ids||[
     "loginMessage",
@@ -9979,20 +7733,14 @@ function clearTransientUiMessages(ids=null){
   ];
   list.forEach(id=>setAuthMessage(id,""));
 }
-
-// =====================================================
-// V8.15 — STARTUP-SAFE MAP STATE
 // IMPORTANT: these must exist before dashboard navigation can call map code.
-// =====================================================
 let monitoringMapRefreshTimer=null;
 let monitoringMapCreating=false;
 let monitoringMapUiBound=false;
 let monitoringResponsiveTimer=null;
-
 function openDashboardPage(page,{updateHash=true}={}){
   page=DASHBOARD_PAGE_NAMES.has(page)?page:"overview";
   clearTransientUiMessages();
-
   currentDashboardPage=page;
   document.querySelectorAll("[data-dashboard-page-panel]").forEach(panel=>{
     panel.classList.toggle("active",panel.dataset.dashboardPagePanel===page);
@@ -10012,19 +7760,14 @@ function openDashboardPage(page,{updateHash=true}={}){
   }
   if(page==="history"){
     if(typeof activateHistorySection==="function") activateHistorySection();
-
     if(typeof loadAIForecast==="function"){
       loadAIForecast(false);
     }
   }
-
   if(page==="analysis" && typeof activateAISection==="function") activateAISection();
-
   if(page==="monitoring"){
     scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
   }
-
-  // V36.60 — About contains many SVG characters. Render them only when
   // the user actually opens About, so they do not compete with Overview startup.
   if(page==="about" && !window.__aboutCharacterGuideRendered){
     const renderGuides=()=>{
@@ -10051,19 +7794,15 @@ function openDashboardPage(page,{updateHash=true}={}){
   }
   window.scrollTo({top:0,behavior:"smooth"});
 }
-
 function latestActiveNodes(){
   return [1,2,3].map(getNode).filter(n=>n && ["online","sleep"].includes(getNodeStatus(n)));
 }
-
 function averageLatestField(field){
   const values=latestActiveNodes().map(n=>finiteNumberOrNull(n[field])).filter(v=>v!==null);
   if(!values.length) return null;
   return values.reduce((a,b)=>a+b,0)/values.length;
 }
-
 function newestNodeTime(){
-
 const dates=
 latestNodes
 .map(
@@ -10075,11 +7814,9 @@ n
 )
 )
 .filter(Boolean);
-
 if(!dates.length){
 return null;
 }
-
 return new Date(
 Math.max(
 ...dates.map(
@@ -10088,7 +7825,6 @@ d=>d.getTime()
 )
 );
 }
-
 function overviewAdvice(pm25){
   const g=pm25Guidance(pm25);
   if(g.level==="no_data") return "ยังไม่มีข้อมูลเพียงพอสำหรับสรุปปริมาณฝุ่นในอากาศ";
@@ -10097,7 +7833,6 @@ function overviewAdvice(pm25){
   if(g.label==="ปานกลาง") return "ปริมาณฝุ่นในอากาศอยู่ในระดับที่ควรเฝ้าระวังและติดตามสถานการณ์";
   return "ปริมาณฝุ่นในอากาศอยู่ในระดับต่ำ สามารถทำกิจกรรมได้ตามปกติ";
 }
-
 function overviewDustStatus(guide){
   if(!guide || guide.level==="no_data") return {label:"รอข้อมูล",state:"waiting"};
   if(guide.level==="critical") return {label:"อันตราย",state:"critical"};
@@ -10106,7 +7841,6 @@ function overviewDustStatus(guide){
   if(guide.label==="ดีมาก") return {label:"ดีมาก",state:"good"};
   return {label:"ดี",state:"good"};
 }
-
 function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
   if(temp===null || hum===null){
     return {
@@ -10117,7 +7851,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"no_data"
     };
   }
-
   if(heatInfo?.level==="critical"){
     return {
       label:"อากาศร้อนมาก",
@@ -10127,7 +7860,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"critical"
     };
   }
-
   if(heatInfo?.level==="warning"){
     return {
       label:"อากาศร้อนและชื้น",
@@ -10137,7 +7869,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"warning"
     };
   }
-
   if(heatInfo?.level==="watch"){
     return {
       label:hInfo?.level==="high"||hInfo?.level==="very_high"?"อากาศค่อนข้างร้อนและชื้น":"อากาศค่อนข้างร้อน",
@@ -10147,7 +7878,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"watch"
     };
   }
-
   if(tInfo?.level==="very_cold" || tInfo?.level==="cold"){
     return {
       label:"อากาศค่อนข้างเย็น",
@@ -10157,7 +7887,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"cold"
     };
   }
-
   if(hInfo?.level==="very_high" || hInfo?.level==="high"){
     return {
       label:"อากาศค่อนข้างชื้น",
@@ -10167,7 +7896,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"high"
     };
   }
-
   if(hInfo?.level==="low"){
     return {
       label:"อากาศค่อนข้างแห้ง",
@@ -10177,7 +7905,6 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
       characterState:"low"
     };
   }
-
   return {
     label:"อากาศกำลังสบาย",
     severity:"สบาย",
@@ -10186,27 +7913,22 @@ function overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo){
     characterState:"normal"
   };
 }
-
 let overviewParticleMetric="pm25";
 let overviewParticleRenderedMetric=null;
 let overviewParticleSwitchTimer=null;
-
 function updateOverviewParticleDisplay(animate=false){
   const field=overviewParticleMetric;
   const value=averageLatestField(field);
   const label=field==="pm10"?"PM10 เฉลี่ยในพื้นที่":"PM2.5 เฉลี่ยในพื้นที่";
   const box=document.querySelector(".overview-main-value");
-
   const applyValue=()=>{
     if($("overviewParticleLabel")) $("overviewParticleLabel").textContent=label;
     if($("overviewPM25")) $("overviewPM25").textContent=value===null?"--":fmt(value);
     overviewParticleRenderedMetric=field;
   };
-
   const metricReallyChanged=
     overviewParticleRenderedMetric!==null &&
     overviewParticleRenderedMetric!==field;
-
   if(!animate || !metricReallyChanged){
     if(overviewParticleSwitchTimer){
       clearTimeout(overviewParticleSwitchTimer);
@@ -10216,13 +7938,10 @@ function updateOverviewParticleDisplay(animate=false){
     applyValue();
     return;
   }
-
   if(overviewParticleSwitchTimer){
     clearTimeout(overviewParticleSwitchTimer);
   }
-
   if(box) box.classList.add("is-switching");
-
   overviewParticleSwitchTimer=window.setTimeout(()=>{
     applyValue();
     requestAnimationFrame(()=>{
@@ -10231,40 +7950,33 @@ function updateOverviewParticleDisplay(animate=false){
     overviewParticleSwitchTimer=null;
   },180);
 }
-
 function toggleOverviewParticleMetric(){
   overviewParticleMetric=overviewParticleMetric==="pm25"?"pm10":"pm25";
   updateOverviewParticleDisplay(true);
 }
-
 function overviewCharacterSvg(metric,state="normal"){
   const s=String(state||"normal");
   const noData=s==="no_data";
-
   const palette={
     pm25:{shirt:"#24b978",shirt2:"#0b9660"},
     temperature:{shirt:"#ff9e45",shirt2:"#f27b2f"},
     humidity:{shirt:"#2aa9e8",shirt2:"#137fc4"},
     heat:{shirt:"#ff8d62",shirt2:"#ed6348"}
   }[metric]||{shirt:"#36bca5",shirt2:"#238a7b"};
-
   const severe=["critical","very_hot","very_high"].includes(s);
   const caution=["warning","hot","high","watch"].includes(s);
   const skin=severe?"#ffc2a7":caution?"#ffd0b5":"#ffd8bd";
   const hair="#442d24";
   const hair2="#704939";
   const cheek=severe?"#f27676":caution?"#f79584":"#f7a58f";
-
   // Final face colors start from the base palette.
   // They must exist BEFORE accessory/arm rendering because some
   // Heat Index states use faceSkin while building the arm SVG.
   let faceSkin=skin;
   let faceCheek=cheek;
-
   // Default happy/normal face.
   let eyes=`<path d="M39 54c3.4 4 7.5 4 11 0M70 54c3.4 4 7.5 4 11 0" fill="none" stroke="#3c2925" stroke-width="3.5" stroke-linecap="round"/>`;
   let mouth=`<path d="M49 72c6 7 16 7 22 0" fill="none" stroke="#a33d49" stroke-width="3.7" stroke-linecap="round"/>`;
-
   if(noData){
     eyes=`<path d="M40 54h8M72 54h8" stroke="#68504a" stroke-width="3.2" stroke-linecap="round"/>`;
     mouth=`<path d="M54 72h12" stroke="#95685f" stroke-width="3.2" stroke-linecap="round"/>`;
@@ -10283,14 +7995,10 @@ function overviewCharacterSvg(metric,state="normal"){
     eyes=`<path d="M38 53c4 5 8.5 5 12 0M70 53c4 5 8.5 5 12 0" fill="none" stroke="#3c2925" stroke-width="3.6" stroke-linecap="round"/>`;
     mouth=`<path d="M48 71c7 9 17 9 24 0" fill="#fff0f0" stroke="#a33d49" stroke-width="3.5" stroke-linejoin="round"/>`;
   }
-
   let accessory="";
   let leftArm=`<path d="M34 98c-8 2-12 8-13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
   let rightArm=`<path d="M86 98c8 2 12 8 13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
-
-  // -----------------------------------------------------
   // PM2.5 — each About state has its own visual language.
-  // -----------------------------------------------------
   if(metric==="pm25"){
     if(s==="excellent"){
       accessory+=`
@@ -10319,10 +8027,7 @@ function overviewCharacterSvg(metric,state="normal"){
       accessory+=`<path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".55"/>`;
     }
   }
-
-  // -----------------------------------------------------
   // Temperature — progressively different accessories.
-  // -----------------------------------------------------
   if(metric==="temperature"){
     if(s==="very_cold"){
       accessory+=`
@@ -10344,10 +8049,7 @@ function overviewCharacterSvg(metric,state="normal"){
         <path d="M32 45c5 7 2 12-2 12-5 0-6-6-3-11l3-6z" fill="#66c8f4" opacity=".9"/>`;
     }
   }
-
-  // -----------------------------------------------------
   // Humidity — low/normal/high/very high are visually unique.
-  // -----------------------------------------------------
   if(metric==="humidity"){
     if(s==="low"){
       accessory+=`
@@ -10363,10 +8065,7 @@ function overviewCharacterSvg(metric,state="normal"){
         <path d="M17 70c4 6 2 11-2 11-5 0-6-6-3-10l3-6zM103 72c4 6 2 11-2 11-5 0-6-6-3-10l3-6z" fill="#6bc8ef" opacity=".88"/>`;
     }
   }
-
-  // -----------------------------------------------------
   // Heat Index — escalating sun/sweat cues.
-  // -----------------------------------------------------
   if(metric==="heat"){
     if(s==="normal"){
       accessory+=`<circle cx="99" cy="28" r="6" fill="#ffd866" opacity=".82"/>`;
@@ -10396,11 +8095,8 @@ function overviewCharacterSvg(metric,state="normal"){
       rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
     }
   }
-
-  // -----------------------------------------------------
   // FINAL FACE/EXPRESSION OVERRIDES
   // Make each severity readable even without the label.
-  // -----------------------------------------------------
   if(metric==="temperature"){
     if(s==="very_cold"){
       faceSkin="#dff3ff";
@@ -10429,7 +8125,6 @@ function overviewCharacterSvg(metric,state="normal"){
       mouth=`<path d="M50 75c6-6 15-6 21 0" fill="none" stroke="#a83b44" stroke-width="3.5" stroke-linecap="round"/>`;
     }
   }
-
   if(metric==="heat"){
     if(s==="watch"){
       faceSkin="#ffd1ba";
@@ -10445,7 +8140,6 @@ function overviewCharacterSvg(metric,state="normal"){
     }else if(s==="critical"){
       faceSkin="#ff9d8c";
       faceCheek="#df5555";
-
       // Distinguish "danger" from "extreme danger".
       // In the guide, the second critical entry is visually intensified via CSS class below.
       if(accessory.includes('M32 45c5 8 2 14')){
@@ -10454,7 +8148,6 @@ function overviewCharacterSvg(metric,state="normal"){
       }
     }
   }
-
   if(metric==="pm25" && s==="warning"){
     faceSkin="#ffd0b8";
     faceCheek="#ed8a7d";
@@ -10463,7 +8156,6 @@ function overviewCharacterSvg(metric,state="normal"){
       <circle cx="76" cy="57" r="2.3" fill="#3d2b28"/>`;
     mouth=`<path d="M53 74c4-3 10-3 14 0" fill="none" stroke="#9f4b52" stroke-width="3" stroke-linecap="round"/>`;
   }
-
   if(metric==="pm25" && s==="critical"){
     faceSkin="#ffc0ad";
     faceCheek="#e96f69";
@@ -10472,7 +8164,6 @@ function overviewCharacterSvg(metric,state="normal"){
       <circle cx="76" cy="58" r="2.5" fill="#3d2b28"/>`;
     mouth=`<path d="M52 75c5-5 11-5 16 0" fill="none" stroke="#9f3f49" stroke-width="3.4" stroke-linecap="round"/>`;
   }
-
   // Important: direct solid fills intentionally avoid duplicated inline-SVG
   // gradient IDs, which caused the shirt/body to flash and then disappear.
   return `<svg viewBox="0 0 120 126" role="img" aria-hidden="true" focusable="false">
@@ -10504,15 +8195,12 @@ function renderAboutCharacterGuide(){
     el.classList.add("is-rendered");
   });
 }
-
 function renderAboutHeroGuide(){
   document.querySelectorAll(".about-hero-character[data-hero-guide][data-hero-state]").forEach(el=>{
     const guide=String(el.dataset.heroGuide||"dust");
     const state=String(el.dataset.heroState||"comfortable");
-
     let metric="pm25";
     let characterState="normal";
-
     if(guide==="dust"){
       metric="pm25";
       const map={
@@ -10544,18 +8232,15 @@ function renderAboutHeroGuide(){
         characterState="extreme_heat";
       }
     }
-
     el.innerHTML=overviewCharacterSvg(metric,characterState);
     el.classList.add("is-rendered");
   });
 }
-
 function setOverviewLoadingState(isLoading){
   const characterIds=["overviewFace","overviewWeatherFace","overviewPM25Emoji","overviewTempEmoji","overviewHumidityEmoji","overviewHeatEmoji"];
   const valueIds=["overviewPM25Card","overviewTemp","overviewHumidity","overviewHeat"];
   const chipIds=["overviewQualityBadge","overviewWeatherStatus","overviewWeatherSeverity","overviewPM25Status","overviewTempStatus","overviewHumidityStatus","overviewHeatStatus"];
   const lineIds=["overviewGuidance","overviewWeatherGuidance","overviewPM25Hint","overviewTempHint","overviewHumidityHint","overviewHeatHint"];
-
   characterIds.forEach(id=>$(id)?.classList.toggle("overview-loading-character",!!isLoading));
   valueIds.forEach(id=>$(id)?.classList.toggle("overview-loading-value",!!isLoading));
   chipIds.forEach(id=>{
@@ -10567,7 +8252,6 @@ function setOverviewLoadingState(isLoading){
   lineIds.forEach(id=>$(id)?.classList.toggle("overview-loading-line",!!isLoading));
   document.documentElement.classList.toggle("overview-data-loading",!!isLoading);
 }
-
 function setOverviewCharacter(el,metric,state){
   if(!el)return;
   const nextMetric=String(metric||"pm25");
@@ -10577,7 +8261,6 @@ function setOverviewCharacter(el,metric,state){
   el.dataset.renderedMetric=nextMetric;
   el.dataset.renderedState=nextState;
 }
-
 function setOverviewMetricVisual(cardId,characterId,state,metric){
   const card=$(cardId);
   if(card){
@@ -10587,12 +8270,10 @@ function setOverviewMetricVisual(cardId,characterId,state,metric){
   const el=$(characterId);
   setOverviewCharacter(el,metric,state||"no_data");
 }
-
 function overviewFeelingText(metric, info){
   const level=String(info?.level||"no_data");
   const label=String(info?.label||"");
   if(level==="no_data") return "ยังไม่มีข้อมูลเพียงพอ";
-
   if(metric==="pm25"){
     if(level==="critical") return "ฝุ่นสูง ควรลดการสัมผัสอากาศภายนอก";
     if(level==="warning") return "ฝุ่นเริ่มสูง ควรเพิ่มความระมัดระวัง";
@@ -10621,7 +8302,6 @@ function overviewFeelingText(metric, info){
   }
   return "";
 }
-
 function updateNavigationDashboard(){
   if(overviewInitialSettled) setOverviewLoadingState(false);
   const pm25=averageLatestField("pm25");
@@ -10642,12 +8322,10 @@ function updateNavigationDashboard(){
     }
     sourceEl.classList.toggle("is-no-data",sourceNodes===0);
   }
-
   const heatValue=heatIndexC(temp,hum);
   const tInfo=temperatureLevel(temp);
   const hInfo=humidityLevel(hum);
   const heatInfo=heatLevel(heatValue);
-
   if($("overviewPM25Card")) $("overviewPM25Card").textContent=pm25===null?"--":fmt(pm25);
   if($("overviewTemp")) $("overviewTemp").textContent=temp===null?"--":fmt(temp);
   if($("overviewHumidity")) $("overviewHumidity").textContent=hum===null?"--":fmt(hum);
@@ -10662,10 +8340,8 @@ function updateNavigationDashboard(){
   if($("overviewHeatHint")) $("overviewHeatHint").textContent=overviewFeelingText("heat",heatInfo);
   const dustSummary=overviewDustStatus(guide);
   const weatherSummary=overviewWeatherSummary(temp,hum,heatValue,tInfo,hInfo,heatInfo);
-
   setOverviewCharacter($("overviewFace"),"pm25",guide.level||"no_data");
   setOverviewCharacter($("overviewWeatherFace"),"heat",weatherSummary.characterState||"no_data");
-
   if($("overviewWeatherStatus")){
     $("overviewWeatherStatus").textContent=weatherSummary.label;
     $("overviewWeatherStatus").className=`overview-summary-status is-${weatherSummary.state}`;
@@ -10680,18 +8356,15 @@ function updateNavigationDashboard(){
   setOverviewMetricVisual("overviewHumidityMetricCard","overviewHumidityEmoji",hInfo.level,"humidity");
   setOverviewMetricVisual("overviewHeatMetricCard","overviewHeatEmoji",heatInfo.level,"heat");
   if($("overviewGuidance")) $("overviewGuidance").textContent=overviewAdvice(pm25);
-
   const qb=$("overviewQualityBadge");
   if(qb){
     qb.textContent=dustSummary.label;
     qb.className=`overview-summary-status is-${dustSummary.state}`;
   }
-
   const newest=newestNodeTime();
   if($("overviewLastUpdated")){
     $("overviewLastUpdated").textContent=newest?`ข้อมูลล่าสุด ${thaiNodeReadingDateTime(newest)}`:"ข้อมูลล่าสุด: --";
   }
-
   const motherIsOnline=motherOnline();
   const motherDot=$("overviewMotherDot");
   const motherLabel=$("overviewMotherStatus");
@@ -10702,7 +8375,6 @@ function updateNavigationDashboard(){
     const mt=parseDate(motherStatus?.last_seen||motherStatus?.updated_at);
     motherUpdated.textContent=mt?`อัปเดตล่าสุด ${thaiNodeReadingDateTime(mt)}`:"อัปเดตล่าสุด --";
   }
-
   for(let i=1;i<=3;i++){
     const node=getNode(i);
     const raw=getNodeStatus(node);
@@ -10718,12 +8390,10 @@ function updateNavigationDashboard(){
         :"ออฟไลน์";
     }
   }
-
   const navDot=$("navSystemDot");
   const navText=$("navSystemStatus");
   let navState="is-offline";
   let navLabel="กำลังตรวจสอบสถานะ";
-
   if(!apiConnectionOnline){
     navState="is-offline";
     navLabel="ระบบข้อมูล OFFLINE";
@@ -10737,12 +8407,9 @@ function updateNavigationDashboard(){
     navState="is-warning";
     navLabel="ระบบข้อมูล ONLINE • รอข้อมูลจุดตรวจวัด";
   }
-
   if(navDot) navDot.className=`dashboard-system-dot ${navState}`;
   if(navText) navText.textContent=navLabel;
-
 }
-
 function bindDashboardNavigation(){
   document.querySelectorAll("[data-dashboard-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.dashboardPage)));
   document.querySelectorAll("[data-go-page]").forEach(btn=>btn.addEventListener("click",()=>openDashboardPage(btn.dataset.goPage)));
@@ -10768,20 +8435,16 @@ function bindDashboardNavigation(){
   window.addEventListener("hashchange",()=>openDashboardPage(getDashboardPageFromHash(),{updateHash:false}));
   openDashboardPage(getDashboardPageFromHash(),{updateHash:false});
 }
-
 bindDashboardNavigation();
 updateNavigationDashboard();
-
 const runWhenIdle=fn=>{
   if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:9000});
   else setTimeout(fn,5000);
 };
-
 // Standards are useful but not part of first-screen rendering.
 runWhenIdle(()=>{
   if(document.visibilityState==="visible") loadStandardsOnly();
 });
-
 // Avoid recurring DOM work during Lighthouse / the critical first seconds.
 setTimeout(()=>{
   setInterval(()=>{
@@ -10791,15 +8454,10 @@ setTimeout(()=>{
     if(document.visibilityState==="visible" && currentDashboardPage==="overview") toggleOverviewParticleMetric();
   },5000);
 },10000);
-
-// =====================================================
-// V15 — HELP MODAL VISIBILITY / MOBILE SAFETY
-// =====================================================
 (function(){
   function fitHelpToViewport(){
     const popover=document.getElementById("helpPopover");
     if(!popover || !popover.classList.contains("active")) return;
-
     if(window.matchMedia("(max-width: 1023px)").matches){
       popover.style.setProperty("position","fixed","important");
       popover.style.setProperty("top","max(8px, env(safe-area-inset-top))","important");
@@ -10816,25 +8474,19 @@ setTimeout(()=>{
         .forEach(function(prop){ popover.style.removeProperty(prop); });
     }
   }
-
   document.addEventListener("click",function(e){
     if(!e.target.closest(".help-button")) return;
     requestAnimationFrame(fitHelpToViewport);
   });
-
   window.addEventListener("resize",fitHelpToViewport,{passive:true});
   window.addEventListener("orientationchange",function(){
     setTimeout(fitHelpToViewport,80);
   });
 })();
-
-// =====================================================
 // PUBLIC DISPLAY CONFIG
-// =====================================================
 function configDevice(deviceId){
 return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
 }
-
 function deviceDisplayName(deviceId){
   const id=String(deviceId??"").trim();
   if(!id)return "ระบบ";
@@ -10847,41 +8499,22 @@ function deviceDisplayName(deviceId){
   const m=id.match(/(?:Number\s*)?(\d+)/i);
   return m?`จุดตรวจวัด ${m[1]}`:id;
 }
-
-
-// =====================================================
 // MAP V2 — ADDITIVE LOCATION MAP
 // หน้าข้อมูลตรวจวัดเดิมยังคงอยู่ทั้งหมด
-// =====================================================
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
-// V8.8: monitoringMap declared earlier to avoid startup TDZ
-
-
-
-
-
-
-
-
-
-
-
 const ADMIN_DEVICE_MAX_IMAGES=5;
 const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
-
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
   const n=Number(value);
   return Number.isFinite(n)&&n>=min&&n<=max?n:null;
 }
-
 function deviceCoordinates(device){
   const lat=finiteCoordinate(device?.latitude,-90,90);
   const lng=finiteCoordinate(device?.longitude,-180,180);
   return lat===null||lng===null?null:[lat,lng];
 }
-
 function deviceImageList(device){
   if(Array.isArray(device?.images)){
     return device.images.map(v=>String(v||"").trim()).filter(Boolean).slice(0,12);
@@ -10891,12 +8524,10 @@ function deviceImageList(device){
   }
   return [];
 }
-
 function mapDeviceNumber(deviceId){
   const m=String(deviceId||"").match(/(\d+)/);
   return m?Number(m[1]):1;
 }
-
 function monitoringMarkerIcon(number,selected=false){
   if(typeof L==="undefined")return null;
   return L.divIcon({
@@ -10906,7 +8537,6 @@ function monitoringMarkerIcon(number,selected=false){
     iconAnchor:[20,39]
   });
 }
-
 function createMonitoringStreetLayer(){
   return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
     minZoom:1,
@@ -10917,7 +8547,6 @@ function createMonitoringStreetLayer(){
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   });
 }
-
 function createMonitoringSatelliteLayer(){
   return L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
     minZoom:1,
@@ -10928,24 +8557,18 @@ function createMonitoringSatelliteLayer(){
     attribution:'Tiles &copy; Esri'
   });
 }
-
 function setMonitoringBasemap(mode){
   if(!monitoringMap)return;
   monitoringBasemapMode=mode==="satellite"?"satellite":"street";
-
   Object.values(monitoringBaseLayers).forEach(layer=>{
     if(layer&&monitoringMap.hasLayer(layer))monitoringMap.removeLayer(layer);
   });
-
   monitoringBaseLayers[monitoringBasemapMode]?.addTo(monitoringMap);
   localStorage.setItem("monitoring-basemap-mode",monitoringBasemapMode);
-
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.classList.toggle("active",btn.dataset.publicBasemap===monitoringBasemapMode);
   });
 }
-
-
 function monitoringMapContainerReady(){
   const root=$("monitoringMap");
   if(!root)return false;
@@ -10954,48 +8577,39 @@ function monitoringMapContainerReady(){
   const rect=root.getBoundingClientRect();
   return rect.width>80&&rect.height>80;
 }
-
 function scheduleMonitoringMapRefresh({fit=false,attempt=0}={}){
   clearTimeout(monitoringMapRefreshTimer);
   monitoringMapRefreshTimer=setTimeout(()=>{
     if(currentDashboardPage!=="monitoring")return;
-
     if(!monitoringMapContainerReady()){
       if(attempt<8)scheduleMonitoringMapRefresh({fit,attempt:attempt+1});
       return;
     }
-
     const map=ensureMonitoringMap();
     if(!map){
       if(attempt<8)scheduleMonitoringMapRefresh({fit,attempt:attempt+1});
       return;
     }
-
     renderMonitoringMap({fit});
     requestAnimationFrame(()=>{
       try{map.invalidateSize({pan:false});}catch(_){}
     });
   },attempt===0?50:140);
 }
-
 function ensureMonitoringMap(){
   const root=$("monitoringMap");
   if(!root||typeof L==="undefined")return null;
   if(!monitoringMapContainerReady())return null;
-
   if(monitoringMap){
     try{monitoringMap.invalidateSize({pan:false});}catch(_){}
     return monitoringMap;
   }
-
   if(monitoringMapCreating)return null;
   monitoringMapCreating=true;
-
   try{
     if(root._leaflet_id){
       try{delete root._leaflet_id;}catch(_){root._leaflet_id=undefined;}
     }
-
     monitoringMap=L.map(root,{
       zoomControl:true,
       scrollWheelZoom:true,
@@ -11005,12 +8619,10 @@ function ensureMonitoringMap(){
       maxBounds:MONITORING_WORLD_BOUNDS,
       maxBoundsViscosity:1
     }).setView(MONITORING_MAP_FALLBACK_CENTER,15);
-
     monitoringBaseLayers={
       street:createMonitoringStreetLayer(),
       satellite:createMonitoringSatelliteLayer()
     };
-
     setMonitoringBasemap(monitoringBasemapMode);
     return monitoringMap;
   }catch(error){
@@ -11022,7 +8634,6 @@ function ensureMonitoringMap(){
     monitoringMapCreating=false;
   }
 }
-
 function renderMonitoringMapNodeTabs(){
   for(let i=1;i<=3;i++){
     const d=configDevice(`Number ${i}`)||{};
@@ -11034,28 +8645,22 @@ function renderMonitoringMapNodeTabs(){
     if(l)l.textContent=loc||"เลือกเพื่อดูรายละเอียด";
   }
 }
-
 function renderMonitoringMap({fit=false}={}){
   if(currentDashboardPage!=="monitoring"||!monitoringMapContainerReady())return;
   const map=monitoringMap||ensureMonitoringMap();
   if(!map)return;
-
   monitoringMarkers.forEach(marker=>{try{marker.remove();}catch(_){}});
   monitoringMarkers.clear();
-
   const bounds=[];
   const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-
   devices.forEach((d,i)=>{
     const coords=deviceCoordinates(d);
     if(!coords)return;
-
     const number=mapDeviceNumber(d.device_id)||i+1;
     const marker=L.marker(coords,{
       icon:monitoringMarkerIcon(number,d.device_id===selectedMonitoringDeviceId),
       title:String(d.display_name||`จุดตรวจวัด ${number}`)
     }).addTo(map);
-
     marker.on("click",(event)=>{
       if(event?.originalEvent){
         L.DomEvent.stopPropagation(event.originalEvent);
@@ -11063,22 +8668,17 @@ function renderMonitoringMap({fit=false}={}){
       }
       setTimeout(()=>selectMonitoringLocation(d.device_id,{source:"marker"}),0);
     });
-
     monitoringMarkers.set(d.device_id,marker);
     bounds.push(coords);
   });
-
   $("monitoringMapEmpty")?.classList.toggle("hidden",bounds.length>0);
-
   if(fit&&!selectedMonitoringDeviceId){
     if(bounds.length===1)map.setView(bounds[0],18,{animate:false});
     else if(bounds.length>1)map.fitBounds(bounds,{padding:[36,36],maxZoom:18,animate:false});
     else map.setView(MONITORING_MAP_FALLBACK_CENTER,15,{animate:false});
   }
-
   requestAnimationFrame(()=>{try{map.invalidateSize({pan:false});}catch(_){}});
 }
-
 function youtubeEmbedUrl(url){
   const raw=String(url||"").trim();
   if(!raw)return "";
@@ -11097,7 +8697,6 @@ function youtubeEmbedUrl(url){
     return "";
   }
 }
-
 function renderMonitoringLocationDetail(device){
   if(!device)return;
   const title=String(device.display_name||device.device_id||"จุดตรวจวัด").trim();
@@ -11105,19 +8704,16 @@ function renderMonitoringLocationDetail(device){
   const desc=String(device.map_description||device.description||"").trim();
   const images=deviceImageList(device);
   const video=String(device.video_url||"").trim();
-
   if($("mapDetailTitle"))$("mapDetailTitle").textContent=title;
   if($("mapDetailLocation")){
     $("mapDetailLocation").textContent=loc;
     $("mapDetailLocation").classList.toggle("hidden",!loc);
   }
   if($("mapDetailDescription"))$("mapDetailDescription").textContent=desc||"ยังไม่มีรายละเอียดของจุดนี้";
-
   const mainWrap=$("mapDetailMainImageWrap");
   const main=$("mapDetailMainImage");
   const gallery=$("mapDetailGallery");
   const empty=$("mapDetailImageEmpty");
-
   if(mainWrap&&main&&gallery&&empty){
     if(images.length){
       main.src=images[0];
@@ -11146,7 +8742,6 @@ function renderMonitoringLocationDetail(device){
       empty.classList.remove("hidden");
     }
   }
-
   const videoSec=$("mapDetailVideoSection");
   const videoRoot=$("mapDetailVideo");
   if(videoSec&&videoRoot){
@@ -11162,22 +8757,17 @@ function renderMonitoringLocationDetail(device){
     }
   }
 }
-
-
 function monitoringMapMobileMode(){
   return window.matchMedia("(max-width: 700px)").matches;
 }
-
 function monitoringMapTabletMode(){
   return window.matchMedia("(min-width: 701px) and (max-width: 1100px)").matches;
 }
-
 function syncMonitoringDetailHost(){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
   const layout=$("monitoringMapLayout");
   if(!panel||!layout)return;
-
   if(monitoringMapMobileMode()||monitoringMapTabletMode()){
     if(panel.parentElement!==document.body){
       document.body.appendChild(panel);
@@ -11194,18 +8784,14 @@ function syncMonitoringDetailHost(){
     }
   }
 }
-
 function setMobileMonitoringDetailOpen(open){
   const panel=$("mapDetailPanel");
   const backdrop=$("mapDetailBackdrop");
   const show=Boolean(open)&&monitoringMapMobileMode();
   const tabletShow=Boolean(open)&&monitoringMapTabletMode();
-
   syncMonitoringDetailHost();
-
   document.body.classList.toggle("mobile-map-detail-open",show);
   document.body.classList.toggle("tablet-map-detail-open",tabletShow);
-
   if(panel){
     panel.classList.toggle("mobile-detail-open",show);
     panel.classList.toggle("tablet-detail-open",tabletShow);
@@ -11214,14 +8800,12 @@ function setMobileMonitoringDetailOpen(open){
       if(scroller)scroller.scrollTop=0;
     }
   }
-
   if(backdrop){
     backdrop.classList.toggle("hidden",!tabletShow);
     backdrop.classList.toggle("tablet-detail-backdrop-open",tabletShow);
     backdrop.setAttribute("aria-hidden",tabletShow?"false":"true");
   }
 }
-
 function updateMonitoringMarkerSelection(){
   monitoringMarkers.forEach((marker,deviceId)=>{
     const number=mapDeviceNumber(deviceId);
@@ -11233,27 +8817,19 @@ function updateMonitoringMarkerSelection(){
     );
   });
 }
-
-
 function selectMonitoringLocation(deviceId,{source="tab"}={}){
   const d=configDevice(deviceId);
   if(!d)return;
-
   selectedMonitoringDeviceId=deviceId;
-
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.classList.toggle("active",btn.dataset.mapDevice===deviceId);
   });
-
   renderMonitoringLocationDetail(d);
   updateMonitoringMarkerSelection();
-
   syncMonitoringDetailHost();
-
   $("monitoringMapLayout")?.classList.add("has-detail");
   $("mapDetailPanel")?.setAttribute("aria-hidden","false");
   setMobileMonitoringDetailOpen(true);
-
   const coords=deviceCoordinates(d);
   if(monitoringMap&&coords){
     try{
@@ -11263,51 +8839,38 @@ function selectMonitoringLocation(deviceId,{source="tab"}={}){
       console.warn("Map focus skipped:",error);
     }
   }
-
   setTimeout(()=>{try{monitoringMap?.invalidateSize({pan:false});}catch(_){}},220);
 }
-
 function closeMonitoringLocationDetail({fit=true}={}){
   selectedMonitoringDeviceId=null;
-
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.classList.remove("active");
   });
-
   $("monitoringMapLayout")?.classList.remove("has-detail");
   $("mapDetailPanel")?.setAttribute("aria-hidden","true");
-
   setMobileMonitoringDetailOpen(false);
   syncMonitoringDetailHost();
   updateMonitoringMarkerSelection();
-
   if(currentDashboardPage==="monitoring"){
     scheduleMonitoringMapRefresh({fit});
   }
 }
-
-
 function setupMonitoringMapUi(){
   syncMonitoringDetailHost();
   renderMonitoringMapNodeTabs();
-
   if(monitoringMapUiBound){
     if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
     return;
   }
   monitoringMapUiBound=true;
-
   document.querySelectorAll("[data-map-device]").forEach(btn=>{
     btn.addEventListener("click",()=>selectMonitoringLocation(btn.dataset.mapDevice,{source:"tab"}));
   });
-
   $("mapDetailClose")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
   $("mapDetailBackdrop")?.addEventListener("click",()=>closeMonitoringLocationDetail({fit:true}));
-
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"&&selectedMonitoringDeviceId)closeMonitoringLocationDetail({fit:false});
   });
-
   document.querySelectorAll("[data-public-basemap]").forEach(btn=>{
     btn.addEventListener("click",()=>{
       monitoringBasemapMode=btn.dataset.publicBasemap==="satellite"?"satellite":"street";
@@ -11317,10 +8880,8 @@ function setupMonitoringMapUi(){
       else scheduleMonitoringMapRefresh({fit:false});
     });
   });
-
   if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:true});
 }
-
 function adminMapSelectedDeviceId(){
   return activeAdminDeviceId||"Number 1";
 }
@@ -11373,22 +8934,18 @@ function refreshAdminMapEditor({keepZoom=false}={}){
   setTimeout(()=>map.invalidateSize(),60);
 }
 function syncAdminMapSelectOptions(){}
-
-
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
 const d=configDevice(`Number ${i}`)||{};
 const name=String(d.display_name||`จุดตรวจวัด ${i}`).trim()||`จุดตรวจวัด ${i}`;
 const loc=String(d.location_name||"").trim();
 const desc=String(d.description||"").trim();
-
 const ot=$(`overviewNodeTitle${i}`);
 const ol=$(`overviewNodeLocation${i}`);
 const nt=$(`nodeTitle${i}`);
 const nl=$(`nodeLocation${i}`);
 const nd=$(`nodeDescription${i}`);
 const ho=$(`historyNodeOption${i}`);
-
 if(ot)ot.textContent=name;
 if(ol){ol.textContent=loc;ol.classList.toggle("hidden",!loc);}
 if(nt)nt.textContent=name;
@@ -11396,15 +8953,12 @@ if(nl){nl.textContent=loc;nl.classList.toggle("hidden",!loc);}
 if(nd){nd.textContent=desc;nd.classList.toggle("hidden",!desc);}
 if(ho)ho.textContent=loc?`${name} • ${loc}`:name;
 }
-
 const h=$("publicAboutHeading");
 const intro=$("publicAboutIntro");
 const heading=String(publicDisplayConfig?.content?.about_heading||"เกี่ยวกับโครงการ").trim()||"เกี่ยวกับโครงการ";
 const about=String(publicDisplayConfig?.content?.about_intro||"").trim();
-
 if(h)h.textContent=heading;
 if(intro){intro.textContent=about;intro.classList.toggle("hidden",!about);}
-
 const ann=publicDisplayConfig?.content||{};
 const aw=$("siteAnnouncementWrap");
 const ab=$("siteAnnouncement");
@@ -11413,7 +8967,6 @@ const am=$("siteAnnouncementMessage");
 const ai=$("siteAnnouncementIcon");
 const al=$("siteAnnouncementLabel");
 const enabled=String(ann.announcement_enabled||"0")==="1"&&String(ann.announcement_message||"").trim();
-
 if(aw){
 aw.classList.toggle("hidden",!enabled);
 if(enabled){
@@ -11426,19 +8979,16 @@ ai.textContent=sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ";
 if(al) al.textContent=sev==="warning"?"ประกาศสำคัญ":sev==="maintenance"?"แจ้งบำรุงรักษา":"ประกาศทั่วไป";
 }
 }
-
 renderMonitoringMapNodeTabs();
 if(monitoringMap)renderMonitoringMap({fit:!selectedMonitoringDeviceId});
 if(selectedMonitoringDeviceId){
   const selected=configDevice(selectedMonitoringDeviceId);
   if(selected)renderMonitoringLocationDetail(selected);
 }
-
 if(historyActivated&&typeof Chart!=="undefined"){
 try{drawCharts();}catch(e){console.warn("Chart label refresh failed",e);}
 }
 }
-
 async function loadPublicDisplayConfig(){
 try{
 const r=await fetch(API.publicConfig,{cache:"no-store",headers:{Accept:"application/json"}});
@@ -11458,7 +9008,6 @@ applyPublicDisplayConfig();
 return publicDisplayConfig;
 }
 }
-
 (function startPublicDisplayConfig(){
 const run=()=>setTimeout(loadPublicDisplayConfig,350);
 if(document.readyState==="loading"){
@@ -11467,19 +9016,12 @@ document.addEventListener("DOMContentLoaded",run,{once:true});
 run();
 }
 })();
-
-// =====================================================
-// V9 — VISUAL VIEWPORT SAFE FLOATING WINDOWS
-// =====================================================
 (function setupVisualViewportFloatingUI(){
-
   const MOBILE_MAX = 760;
   const GAP = 8;
-
   function isMobileViewport(){
     return window.matchMedia(`(max-width:${MOBILE_MAX}px)`).matches;
   }
-
   function visibleViewport(){
     const vv = window.visualViewport;
     return {
@@ -11489,7 +9031,6 @@ run();
       height: vv ? vv.height : window.innerHeight
     };
   }
-
   function clearFit(el){
     if(!el) return;
     [
@@ -11498,19 +9039,15 @@ run();
       "minHeight","maxHeight","margin","transform"
     ].forEach(prop=>el.style.removeProperty(prop));
   }
-
   function fitFloating(el){
     if(!el || !isMobileViewport()) return;
-
     if(el.parentElement !== document.body){
       document.body.appendChild(el);
     }
-
     const v = visibleViewport();
     const gap = Math.min(GAP, Math.max(4, v.width * 0.02));
     const width = Math.max(240, v.width - gap * 2);
     const height = Math.max(240, v.height - gap * 2);
-
     el.style.setProperty("position","fixed","important");
     el.style.setProperty("left",`${v.left + gap}px`,"important");
     el.style.setProperty("top",`${v.top + gap}px`,"important");
@@ -11523,49 +9060,40 @@ run();
     el.style.setProperty("margin","0","important");
     el.style.setProperty("transform","none","important");
   }
-
   function fitOpenFloatingUI(){
     const help = document.getElementById("helpPopover");
     if(help && help.classList.contains("active")){
       fitFloating(help);
     }
   }
-
   function restoreDesktop(){
     if(isMobileViewport()) return;
     clearFit(document.getElementById("helpPopover"));
   }
-
   function refresh(){
     if(isMobileViewport()) fitOpenFloatingUI();
     else restoreDesktop();
   }
-
   ["helpPopover"].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
-
     const observer=new MutationObserver(()=>{
       requestAnimationFrame(refresh);
     });
-
     observer.observe(el,{
       attributes:true,
       attributeFilter:["class","aria-hidden"]
     });
   });
-
   window.addEventListener("resize",refresh,{passive:true});
   window.addEventListener("orientationchange",()=>{
     setTimeout(refresh,80);
     setTimeout(refresh,260);
   },{passive:true});
-
   if(window.visualViewport){
     window.visualViewport.addEventListener("resize",refresh,{passive:true});
     window.visualViewport.addEventListener("scroll",refresh,{passive:true});
   }
-
   document.addEventListener("click",e=>{
     if(
       e.target.closest?.("#historyRangeButton") ||
@@ -11576,10 +9104,6 @@ run();
     }
   });
 })();
-
-// =====================================================
-// V18 — CONTEXTUAL EXPLANATIONS
-// =====================================================
 const V18_INFO={
 monitoring:{
 title:"สถานะจุดตรวจวัด",
@@ -11613,42 +9137,31 @@ function v18OpenInfo(key){const t=V18_INFO[key],m=$("v18InfoModal");if(!t||!m)re
 function v18CloseInfo(){const m=$("v18InfoModal");if(!m)return;m.classList.remove("active");m.setAttribute("aria-hidden","true");document.body.classList.remove("v18-modal-open");}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-v18-help]");if(b){e.preventDefault();v18OpenInfo(b.dataset.v18Help);return;}if(e.target.closest("[data-v18-info-close]")){e.preventDefault();v18CloseInfo();}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.classList.contains("active"))v18CloseInfo();});
-
-// =====================================================
-// V31 — ACCOUNT / ROLE / CONTENT MANAGEMENT
-// =====================================================
 let managedHelpCache={};
 let currentHelpEditorKey="";
 let adminUsersCache=[];
 let adminAddMode=false;
-
 function authRoleThai(role){
   return role==="owner"?"เจ้าของระบบ":role==="admin"?"ผู้ดูแลระบบ":"ผู้ใช้งาน";
 }
-
 function authRoleLabel(role){
   return role==="owner"?"OWNER":role==="admin"?"ADMIN":"USER";
 }
-
 function authProviderLabel(user){
   if(user?.auth_provider==="google") return "Google";
   if(user?.google_linked) return "Email + Google";
   return "Email";
 }
-
 function authStatusThai(status){
   return status==="disabled"?"ระงับ":status==="pending"?"รอยืนยัน":"ใช้งาน";
 }
-
 async function apiJson(url,options={}){
   const headers={Accept:"application/json",...(options.headers||{})};
   if(options.body && !headers["Content-Type"]) headers["Content-Type"]="application/json";
   if(authToken) headers.Authorization=`Bearer ${authToken}`;
-
   const r=await fetch(url,{...options,headers,cache:"no-store"});
   let j=null;
   try{j=await r.json();}catch(_){j={success:false,message:`HTTP ${r.status}`};}
-
   if(!r.ok){
     const err=new Error(j?.message||`HTTP ${r.status}`);
     err.status=r.status;
@@ -11656,25 +9169,21 @@ async function apiJson(url,options={}){
   }
   return j;
 }
-
 function setAuthMessage(id,text,type=""){
   const el=$(id); if(!el)return;
   el.textContent=text||"";
   el.classList.toggle("is-error",type==="error");
   el.classList.toggle("is-success",type==="success");
 }
-
 function authAvatarUrl(user){return String(user?.profile_image_url||user?.google_picture_url||"").trim();}
 function setAvatar(imgId,fallbackId,user){
   const img=$(imgId),fallback=$(fallbackId),url=authAvatarUrl(user);if(!img||!fallback)return;
-
   if(!url){
     img.removeAttribute("src");
     img.classList.add("hidden");
     fallback.classList.remove("hidden");
     return;
   }
-
   const preload=new Image();
   preload.referrerPolicy="no-referrer";
   preload.onload=()=>{
@@ -11689,9 +9198,6 @@ function setAvatar(imgId,fallbackId,user){
   };
   preload.src=url;
 }
-// =====================================================
-// V34 — PROFILE IMAGE EDITOR
-// =====================================================
 let profileEditorState={
   image:null,
   objectUrl:"",
@@ -11704,7 +9210,6 @@ let profileEditorState={
   lastX:0,
   lastY:0
 };
-
 function closeProfileEditor(){
   const modal=$("profileEditorModal");
   if(!modal)return;
@@ -11718,7 +9223,6 @@ function closeProfileEditor(){
     profileEditorState.objectUrl="";
   }
 }
-
 function profileEditorGeometry(){
   const stage=$("profileCropStage"),img=profileEditorState.image;
   if(!stage||!img)return null;
@@ -11730,7 +9234,6 @@ function profileEditorGeometry(){
     displayH:img.naturalHeight*scale
   };
 }
-
 function clampProfileOffsets(){
   const g=profileEditorGeometry();if(!g)return;
   const maxX=Math.max(0,(g.displayW-g.vw)/2);
@@ -11738,7 +9241,6 @@ function clampProfileOffsets(){
   profileEditorState.offsetX=Math.max(-maxX,Math.min(maxX,profileEditorState.offsetX));
   profileEditorState.offsetY=Math.max(-maxY,Math.min(maxY,profileEditorState.offsetY));
 }
-
 function renderProfileCrop(){
   const el=$("profileCropImage"),g=profileEditorGeometry();if(!el||!g)return;
   clampProfileOffsets();
@@ -11746,25 +9248,20 @@ function renderProfileCrop(){
   el.style.height=`${g.displayH}px`;
   el.style.transform=`translate(-50%,-50%) translate(${profileEditorState.offsetX}px,${profileEditorState.offsetY}px)`;
 }
-
 async function openProfileEditorFromFile(file){
   if(!file||!/^image\/(png|jpeg|webp)$/i.test(file.type))throw new Error("รองรับเฉพาะ JPG, PNG หรือ WebP");
   if(file.size>8*1024*1024)throw new Error("รูปมีขนาดใหญ่เกิน 8 MB");
-
   const modal=$("profileEditorModal"),stage=$("profileCropStage"),preview=$("profileCropImage");
   if(!modal||!stage||!preview)throw new Error("ไม่พบหน้าปรับรูปโปรไฟล์");
-
   if(profileEditorState.objectUrl)URL.revokeObjectURL(profileEditorState.objectUrl);
   const objectUrl=URL.createObjectURL(file);
   profileEditorState.objectUrl=objectUrl;
-
   const img=await new Promise((resolve,reject)=>{
     const x=new Image();
     x.onload=()=>resolve(x);
     x.onerror=()=>reject(new Error("ไม่สามารถอ่านไฟล์รูปภาพได้"));
     x.src=objectUrl;
   });
-
   preview.src=objectUrl;
   profileEditorState.image=img;
   profileEditorState.zoom=1;
@@ -11772,34 +9269,28 @@ async function openProfileEditorFromFile(file){
   profileEditorState.offsetY=0;
   if($("profileZoomRange"))$("profileZoomRange").value="1";
   if($("profileEditorMessage"))$("profileEditorMessage").textContent="";
-
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden","false");
-
   requestAnimationFrame(()=>{
     const vw=stage.clientWidth,vh=stage.clientHeight;
     profileEditorState.baseScale=Math.max(vw/img.naturalWidth,vh/img.naturalHeight);
     renderProfileCrop();
   });
 }
-
 function buildCroppedProfileImage(){
   const img=profileEditorState.image,g=profileEditorGeometry();
   if(!img||!g)throw new Error("ยังไม่มีรูปสำหรับบันทึก");
-
   const sourceSide=Math.min(img.naturalWidth,img.naturalHeight,g.vw/g.scale);
   const centerX=img.naturalWidth/2-profileEditorState.offsetX/g.scale;
   const centerY=img.naturalHeight/2-profileEditorState.offsetY/g.scale;
   const sx=Math.max(0,Math.min(img.naturalWidth-sourceSide,centerX-sourceSide/2));
   const sy=Math.max(0,Math.min(img.naturalHeight-sourceSide,centerY-sourceSide/2));
-
   const canvas=document.createElement("canvas");
   canvas.width=256;canvas.height=256;
   const ctx=canvas.getContext("2d");
   ctx.drawImage(img,sx,sy,sourceSide,sourceSide,0,0,256,256);
   return canvas.toDataURL("image/jpeg",0.84);
 }
-
 async function saveProfileEditor(){
   const button=$("profileEditorSave"),message=$("profileEditorMessage");
   const oldText=button?.textContent;
@@ -11818,16 +9309,13 @@ async function saveProfileEditor(){
     if(button){button.disabled=false;button.textContent=oldText||"บันทึกรูปโปรไฟล์";}
   }
 }
-
 function setupProfileEditorInteraction(){
   const stage=$("profileCropStage"),zoom=$("profileZoomRange");
   if(!stage)return;
-
   zoom?.addEventListener("input",()=>{
     profileEditorState.zoom=Math.max(1,Math.min(3,Number(zoom.value)||1));
     renderProfileCrop();
   });
-
   stage.addEventListener("pointerdown",e=>{
     if(!profileEditorState.image)return;
     profileEditorState.dragging=true;
@@ -11837,7 +9325,6 @@ function setupProfileEditorInteraction(){
     stage.classList.add("is-dragging");
     stage.setPointerCapture?.(e.pointerId);
   });
-
   stage.addEventListener("pointermove",e=>{
     if(!profileEditorState.dragging||e.pointerId!==profileEditorState.pointerId)return;
     profileEditorState.offsetX+=e.clientX-profileEditorState.lastX;
@@ -11846,7 +9333,6 @@ function setupProfileEditorInteraction(){
     profileEditorState.lastY=e.clientY;
     renderProfileCrop();
   });
-
   const stop=e=>{
     if(profileEditorState.pointerId!==null&&e.pointerId!==undefined&&e.pointerId!==profileEditorState.pointerId)return;
     profileEditorState.dragging=false;
@@ -11856,91 +9342,34 @@ function setupProfileEditorInteraction(){
   stage.addEventListener("pointerup",stop);
   stage.addEventListener("pointercancel",stop);
 }
-
-// =====================================================
-// V34 — GUEST / USER / ADMIN / OWNER PERMISSIONS
-// =====================================================
 const PERMISSION_DEFINITIONS=[
-  {key:"history_extended",group:"ข้อมูลย้อนหลัง",title:"ดูย้อนหลัง 7 / 30 วัน",desc:"เข้าถึงช่วงข้อมูลย้อนหลังระยะยาว"},
-  {key:"history_custom_range",group:"ข้อมูลย้อนหลัง",title:"กำหนดช่วงวันและเวลาเอง",desc:"เลือกช่วงเริ่มต้นและสิ้นสุดแบบกำหนดเอง"},
-  {key:"export_data",group:"ข้อมูลย้อนหลัง",title:"ส่งออก Excel",desc:"ดาวน์โหลดข้อมูลออกเป็นไฟล์ Excel"},
-  {key:"manage_help",group:"การจัดการระบบ",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
-  {key:"manage_devices",group:"การจัดการระบบ",title:"แก้ข้อมูลจุดตรวจวัด",desc:"แก้ชื่อ สถานที่ และคำอธิบายของจุดตรวจวัด"},
-  {key:"manage_device_location",group:"การจัดการระบบ",title:"กำหนดตำแหน่งจุดตรวจวัด",desc:"ปักหมุด ลากหมุด และแก้ Latitude / Longitude"},
-  {key:"manage_device_media",group:"การจัดการระบบ",title:"จัดการรูปภาพจุดตรวจวัด",desc:"เพิ่ม ลบ เรียงลำดับ และตั้งภาพหลัก สูงสุด 5 ภาพต่อจุด"},
-  {key:"manage_announcement",group:"การจัดการระบบ",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
-  {key:"manage_mother_wifi",group:"การจัดการระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"เปิดหน้าต่างดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
+  {key:"manage_help",group:"เนื้อหา",title:"แก้คำอธิบายปุ่ม ?",desc:"แก้ไขข้อความช่วยเหลือบน Dashboard"},
+  {key:"manage_devices",group:"จุดตรวจวัด",title:"แก้ข้อมูลจุดตรวจวัด",desc:"แก้ชื่อ สถานที่ และคำอธิบายของจุดตรวจวัด"},
+  {key:"manage_device_location",group:"จุดตรวจวัด",title:"กำหนดตำแหน่งจุดตรวจวัด",desc:"ปักหมุด ลากหมุด และแก้ Latitude / Longitude"},
+  {key:"manage_device_media",group:"จุดตรวจวัด",title:"จัดการรูปภาพจุดตรวจวัด",desc:"เพิ่ม ลบ เรียงลำดับ และตั้งภาพหลัก สูงสุด 5 ภาพต่อจุด"},
+  {key:"manage_announcement",group:"เนื้อหา",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
+  {key:"manage_mother_wifi",group:"ระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"ดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
   {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
 ];
-
 const ROLE_PERMISSION_DEFAULTS={
-  user:{history_extended:true,history_custom_range:true,export_data:true,manage_help:false,manage_devices:false,manage_device_location:false,manage_device_media:false,manage_announcement:false,manage_mother_wifi:false,manage_users_view:false},
-  admin:{history_extended:true,history_custom_range:true,export_data:true,manage_help:true,manage_devices:true,manage_device_location:true,manage_device_media:true,manage_announcement:true,manage_mother_wifi:true,manage_users_view:true},
+  user:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,false])),
+  admin:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true])),
   owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
 };
-
 function normalizedClientPermissions(user){
   if(!user)return {};
   const role=["user","admin","owner"].includes(user.role)?user.role:"user";
-  const base={...(ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user)};
-  if(role==="owner")return base;
+  const base={...ROLE_PERMISSION_DEFAULTS[role]};
+  if(role!=="admin")return base;
   const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
   PERMISSION_DEFINITIONS.forEach(({key})=>{
     if(typeof incoming[key]==="boolean")base[key]=incoming[key];
   });
   return base;
 }
-
 function hasPermission(key,user=authUser){
   if(!user||!authToken)return false;
   return Boolean(normalizedClientPermissions(user)[key]);
-}
-
-function requirePermission(key,featureName="ฟังก์ชันนี้"){
-  if(!authUser||!authToken){
-    openAuthModal("login");
-    setAuthMessage("loginMessage",`${featureName} ใช้ได้หลังเข้าสู่ระบบ`,"error");
-    return false;
-  }
-  if(hasPermission(key))return true;
-  alert(`บัญชีนี้ไม่มีสิทธิ์: ${featureName}`);
-  return false;
-}
-
-function requireMember(featureName="ฟังก์ชันนี้"){
-  return requirePermission("history_extended",featureName);
-}
-
-function updateMemberPermissionUI(){
-// =====================================================
-// V34 — MEMBER GATES
-// =====================================================
-  document.querySelectorAll("[data-member-only]").forEach(el=>{
-    let key=el.dataset.permission||"";
-    if(!key){
-      if(el.id==="exportButton")key="export_data";
-      else if(el.id==="historyRangeApply"||el.id==="customRangeStart"||el.id==="customRangeEnd")key="history_custom_range";
-      else if(el.dataset.range==="7d"||el.dataset.range==="30d")key="history_extended";
-    }
-    const allowed=key?hasPermission(key):Boolean(authUser&&authToken);
-    el.classList.toggle("member-locked",!allowed);
-    el.setAttribute("aria-disabled",allowed?"false":"true");
-    if(!allowed)el.title=authUser?"บัญชีนี้ไม่มีสิทธิ์ใช้งาน":"เข้าสู่ระบบเพื่อใช้งาน";
-    else if(el.title==="เข้าสู่ระบบเพื่อใช้งาน"||el.title==="บัญชีนี้ไม่มีสิทธิ์ใช้งาน")el.removeAttribute("title");
-  });
-
-  const aiAllowed=Boolean(authUser&&authToken);
-  document.querySelectorAll('[data-dashboard-page="analysis"]').forEach(el=>{
-    el.classList.remove("member-locked");
-    el.setAttribute("aria-disabled","false");
-    el.removeAttribute("title");
-  });
-  [$('aiRefreshButton'),$('aiForecastRefreshButton')].forEach(btn=>{
-    if(!btn)return;
-    btn.disabled=false; // Guest ต้องกดได้ เพื่อให้ระบบเปิด Login Modal
-    btn.classList.toggle("member-locked",!aiAllowed);
-    btn.title=aiAllowed?"วิเคราะห์ใหม่ทันที":"เข้าสู่ระบบเพื่อใช้ AI";
-  });
 }
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
@@ -11948,10 +9377,8 @@ function updateAccountUI(){
   const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton"),wifiBtn=$("openWiFiManagementButton");
   const header=document.querySelector(".site-header");
   if(!button||!text)return;
-
   header?.classList.toggle("is-authenticated",Boolean(authUser));
   header?.classList.toggle("is-guest",!authUser);
-
   if(authUser){
     text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
     setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
@@ -11970,14 +9397,11 @@ function updateAccountUI(){
     const canManageContent=["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement"].some(key=>hasPermission(key));
     const canManageUsers=hasPermission("manage_users_view");
     const canManageWiFi=hasPermission("manage_mother_wifi");
-
     contentBtn?.classList.toggle("hidden",!canManageContent);
     usersBtn?.classList.toggle("hidden",!canManageUsers);
     wifiBtn?.classList.toggle("hidden",!canManageWiFi);
-
     const managementSection=document.querySelector(".account-management-section");
     managementSection?.classList.toggle("hidden",!(canManageContent||canManageUsers||canManageWiFi));
-
     syncMyAccountUI();
   }else{
     text.textContent="เข้าสู่ระบบ";
@@ -11988,18 +9412,14 @@ function updateAccountUI(){
     $("headerNotificationButton")?.classList.add("hidden");
     $("headerNotificationBadge")?.classList.add("hidden");
     document.querySelector(".account-management-section")?.classList.add("hidden");
-
     aiPayload=null;
     aiForecastPayload=null;
     if(typeof renderAIForecast==="function")renderAIForecast(null);
     if(typeof loadAI==="function")loadAI(false);
     if(typeof loadAIForecast==="function")loadAIForecast(false);
   }
-  updateMemberPermissionUI();
-
   if(authUser&&aiSectionActivated)activateAISection();
 }
-
 function clearAuthModalMessages(){
   clearTransientUiMessages([
     "loginMessage",
@@ -12009,7 +9429,6 @@ function clearAuthModalMessages(){
     "ownerSetupMessage"
   ]);
 }
-
 function openAuthModal(mode="login"){
   const modal=$("authModal"); if(!modal)return;
   clearAuthModalMessages();
@@ -12036,7 +9455,6 @@ function setAuthMode(mode){
   $("authTabs")?.classList.remove("hidden");
   const t=$("authTitle");if(t)t.textContent=mode==="register"?"สมัครสมาชิก":"เข้าสู่ระบบ";
 }
-
 function openForgotPassword(){
   $("authModal")?.classList.remove("hidden");$("authModal")?.setAttribute("aria-hidden","false");
   $("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");
@@ -12052,14 +9470,9 @@ function openResetPassword(){
 }
 function resetTokenFromUrl(){return new URLSearchParams(location.search).get("reset_token")||"";}
 function clearResetTokenFromUrl(){const u=new URL(location.href);u.searchParams.delete("reset_token");history.replaceState(null,"",u.pathname+(u.search||"")+u.hash);}
-
 async function loadAuthStatus(){
   try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
 }
-
-// =====================================================
-// V34.5 — REFRESH ACCOUNT AFTER LOGIN
-// =====================================================
 async function refreshAuthUserAfterLogin(){
   if(!authToken)return null;
   try{
@@ -12070,7 +9483,6 @@ async function refreshAuthUserAfterLogin(){
   updateAccountUI();
   return authUser;
 }
-
 async function loadAuthConfig(){
   try{
     const j=await apiJson(API.authConfig);
@@ -12084,7 +9496,6 @@ async function loadAuthConfig(){
     $("authSocialArea")?.classList.add("hidden");
   }
 }
-
 function renderGoogleIdentityButton(){
   const target=$("googleSignInButton");
   if(
@@ -12093,27 +9504,21 @@ function renderGoogleIdentityButton(){
     !window.google?.accounts?.id ||
     target.offsetParent===null
   )return false;
-
   const available=Math.floor(
     target.parentElement?.getBoundingClientRect().width ||
     target.getBoundingClientRect().width ||
     0
   );
-
   if(available<220)return false;
-
   const isPhone=window.matchMedia("(max-width: 760px)").matches;
   const maxWidth=isPhone?300:400;
   const sideGutter=isPhone?36:8;
-
   const width=Math.max(
     220,
     Math.min(maxWidth,available-sideGutter)
   );
-
   target.innerHTML="";
   target.removeAttribute("style");
-
   google.accounts.id.renderButton(target,{
     type:"standard",
     theme:"filled_black",
@@ -12124,10 +9529,8 @@ function renderGoogleIdentityButton(){
     width,
     locale:"th"
   });
-
   return true;
 }
-
 function scheduleGoogleIdentityRender(){
   [0,80,240].forEach(delay=>{
     setTimeout(()=>{
@@ -12137,10 +9540,8 @@ function scheduleGoogleIdentityRender(){
     },delay);
   });
 }
-
 async function initGoogleIdentity(){
   if(!authGoogleClientId)return;
-
   if(!window.google?.accounts?.id){
     await new Promise((resolve,reject)=>{
       let s=document.querySelector('script[data-google-identity="1"]');
@@ -12159,9 +9560,7 @@ async function initGoogleIdentity(){
       document.head.appendChild(s);
     });
   }
-
   if(!window.google?.accounts?.id)return;
-
   if(!googleIdentityReady){
     google.accounts.id.initialize({
       client_id:authGoogleClientId,
@@ -12171,10 +9570,8 @@ async function initGoogleIdentity(){
     });
     googleIdentityReady=true;
   }
-
   renderGoogleIdentityButton();
 }
-
 async function handleGoogleCredential(response){
   const credential=String(response?.credential||"");
   if(!credential)return;
@@ -12191,14 +9588,12 @@ async function handleGoogleCredential(response){
     setAuthMessage("loginMessage",e.message,"error");
   }
 }
-
 async function restoreAuthSession(){
   if(!authToken){
     authUser=null;
     updateAccountUI();
     return;
   }
-
   try{
     const j=await apiJson(API.authMe);
     authUser=j.user||authUser||null;
@@ -12216,7 +9611,6 @@ async function restoreAuthSession(){
     }
   }
 }
-
 async function doLogin(email,password){
   const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
   authToken=String(j.token||"");
@@ -12225,7 +9619,6 @@ async function doLogin(email,password){
   await refreshAuthUserAfterLogin();
   return j;
 }
-
 function applyManagedHelpOverrides(help){
   managedHelpCache=help&&typeof help==="object"?help:{};
   if(typeof HELP_CONTENT==="undefined")return;
@@ -12315,7 +9708,6 @@ async function saveHelpEditor(){
   try{const payload=collectHelpEditor();const j=await apiJson(API.manageHelp,{method:"POST",body:JSON.stringify(payload)});managedHelpCache[payload.help_key]=j.data;applyManagedHelpOverrides(managedHelpCache);publicDisplayConfig.help=managedHelpCache;setAuthMessage("helpSaveMessage","บันทึกแล้ว และ Dashboard จะใช้ข้อความใหม่นี้ทันที","success");}
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
-
 function adminDeviceImagesFromCard(card){
   return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES);
 }
@@ -12398,7 +9790,6 @@ async function saveAdminDevices(){
   }catch(e){setAuthMessage("deviceSaveMessage",e.message||"บันทึกไม่สำเร็จ","error");}
   finally{if(b)b.disabled=false;}
 }
-
 function renderAnnouncementPreview(){
   const root=$("announcementPreview");if(!root)return;const enabled=$("announcementEnabled")?.checked;const sev=$("announcementSeverity")?.value||"info";const title=$("announcementTitle")?.value.trim()||"ประกาศจากระบบ";const msg=$("announcementMessage")?.value.trim()||"ตัวอย่างข้อความประกาศ";
   root.innerHTML=enabled?`<div class="site-announcement is-${esc(sev)}"><span class="site-announcement-icon">${sev==="warning"?"⚠":sev==="maintenance"?"🛠":"ℹ"}</span><div class="site-announcement-content"><div class="site-announcement-meta"><span class="site-announcement-label">${sev==="warning"?"ประกาศสำคัญ":sev==="maintenance"?"แจ้งบำรุงรักษา":"ประกาศทั่วไป"}</span></div><strong>${esc(title)}</strong><p>${nl2brEsc(msg)}</p></div></div>`:`<div class="admin-empty">ประกาศถูกปิดอยู่ ผู้ใช้ทั่วไปจะไม่เห็นส่วนนี้</div>`;
@@ -12410,7 +9801,6 @@ async function saveAnnouncement(){
   const payload={enabled:$("announcementEnabled")?.checked?"1":"0",severity:$("announcementSeverity")?.value||"info",title:$("announcementTitle")?.value||"",message:$("announcementMessage")?.value||""};const b=$("saveAnnouncementButton");if(b)b.disabled=true;setAuthMessage("announcementSaveMessage","กำลังบันทึก...");
   try{await apiJson(API.manageAnnouncement,{method:"POST",body:JSON.stringify(payload)});await loadPublicDisplayConfig();loadAnnouncementEditor();setAuthMessage("announcementSaveMessage","บันทึกประกาศแล้ว","success");}catch(e){setAuthMessage("announcementSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
-
 async function loadAdminUsers(){
   const root=$("adminUserList");
   if(!root)return;
@@ -12424,7 +9814,6 @@ async function loadAdminUsers(){
     root.innerHTML=`<div class="admin-empty">${esc(e.message)}</div>`;
   }
 }
-
 function filteredAdminUsers(){
   const q=String($("adminUserSearch")?.value||"").trim().toLowerCase();
   const role=$("adminUserRoleFilter")?.value||"all";
@@ -12435,7 +9824,6 @@ function filteredAdminUsers(){
     return matchesText&&(role==="all"||u.role===role);
   });
 }
-
 function permissionEditorHtml(user){
   const perms=normalizedClientPermissions(user);
   const groups=[...new Set(PERMISSION_DEFINITIONS.map(x=>x.group))];
@@ -12462,32 +9850,34 @@ function permissionEditorHtml(user){
     </section>`;
   }).join("");
 }
-
+function updateAdminRoleEditor(card,role){
+  if(!card)return;
+  const isAdmin=role==="admin";
+  card.querySelector(".admin-permission-admin-only")?.classList.toggle("hidden",!isAdmin);
+  const summary=card.querySelector(".admin-user-role-summary");
+  if(summary)summary.innerHTML=isAdmin
+    ?"<b>Admin</b><span>บัญชีนี้สามารถได้รับสิทธิ์จัดการระบบ เลือกสิทธิ์ที่ต้องการด้านล่าง</span>"
+    :"<b>User</b><span>ใช้งาน Dashboard สาธารณะได้ทั้งหมด เมื่อล็อกอินจะสามารถรับและตั้งค่าการแจ้งเตือนส่วนตัวได้</span>";
+}
 function applyRoleDefaultsToEditor(card,role){
   if(!card)return;
   const defaults=ROLE_PERMISSION_DEFAULTS[role]||ROLE_PERMISSION_DEFAULTS.user;
   card.querySelectorAll(".admin-user-permission").forEach(input=>{
     input.checked=Boolean(defaults[input.dataset.permissionKey]);
-    input.disabled=role==="owner";
+    input.disabled=false;
   });
-  const note=card.querySelector(".admin-permission-role-note");
-  if(note)note.textContent=role==="owner"
-    ?"Owner มีสิทธิ์ทั้งหมดโดยอัตโนมัติและไม่สามารถปิดสิทธิ์รายข้อได้"
-    :"เลือกเปิด/ปิดเพิ่มเติมได้อิสระจากค่าเริ่มต้นของ Role";
+  updateAdminRoleEditor(card,role);
 }
-
 function renderAdminUsers(){
   const root=$("adminUserList");
   if(!root)return;
   const users=filteredAdminUsers();
   const isOwner=authUser?.role==="owner";
   const ownId=Number(authUser?.id||0);
-
   root.innerHTML=users.map(u=>{
     const self=Number(u.id)===ownId;
     const provider=u.auth_provider==="google"?"Google":u.google_linked?"Email + Google":"Email";
     const roleClass=`is-${esc(u.role)}`;
-
     let action="";
     if(self){
       action=`<div class="admin-user-self-lock">บัญชีของคุณ</div>`;
@@ -12496,11 +9886,10 @@ function renderAdminUsers(){
         ?`<div class="admin-user-done">เป็น Admin แล้ว</div>`
         :`<button class="admin-promote-button" type="button" data-promote-admin="${u.id}">ตั้งเป็น Admin</button>`;
     }else if(isOwner){
-      action=`<button class="admin-user-manage-button" type="button">⚙ จัดการสิทธิ์</button>`;
+      action=`<button class="admin-user-manage-button" type="button">⚙ จัดการบัญชี</button>`;
     }else{
       action=`<div class="admin-user-readonly">ดูอย่างเดียว</div>`;
     }
-
     return `<article class="admin-user-card" data-user-id="${u.id}">
       <div class="admin-user-main">
         <div class="admin-user-avatar">${esc((u.display_name||u.email||"U").slice(0,1).toUpperCase())}</div>
@@ -12521,54 +9910,47 @@ function renderAdminUsers(){
       ${(!self&&isOwner&&!adminAddMode&&u.role!=="owner")?`
       <div class="admin-user-editor admin-user-editor-v35 hidden">
         <div class="admin-user-editor-top">
-          <label>Role หลัก
+          <label>ระดับบัญชี
             <select class="admin-user-role">
               <option value="user" ${u.role==="user"?"selected":""}>User</option>
               <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
             </select>
           </label>
-          <button class="admin-permission-reset" type="button">↺ ใช้ค่าเริ่มต้นตาม Role</button>
         </div>
-
-        <div class="admin-permission-role-note">${u.role==="owner"?"Owner มีสิทธิ์ทั้งหมดโดยอัตโนมัติและไม่สามารถปิดสิทธิ์รายข้อได้":"เลือกเปิด/ปิดสิทธิ์รายข้อได้ คล้าย Permission ของ Discord"}</div>
-
-        <div class="admin-permission-grid">
-          ${permissionEditorHtml(u)}
+        <div class="admin-user-role-summary"></div>
+        <div class="admin-permission-admin-only ${u.role==="admin"?"":"hidden"}">
+          <div class="admin-permission-admin-head"><div><b>สิทธิ์การจัดการของ Admin</b><span>เลือกเฉพาะส่วนที่บัญชีนี้ต้องดูแล</span></div><button class="admin-permission-reset" type="button">↺ ค่าเริ่มต้น Admin</button></div>
+          <div class="admin-permission-grid">${permissionEditorHtml(u)}</div>
         </div>
-
         <div class="admin-user-danger-zone">
           <div><b>ลบบัญชี</b><span>ลบบัญชีและเซสชันทั้งหมดอย่างถาวร การกระทำนี้ย้อนกลับไม่ได้</span></div>
           <button class="admin-user-delete" type="button">ลบบัญชี</button>
         </div>
         <div class="admin-user-editor-footer">
-          <span>การเปลี่ยนสิทธิ์มีผลหลังบันทึก และฝั่ง Worker จะตรวจซ้ำก่อนอนุญาต</span>
-          <button class="admin-user-save" type="button">บันทึกสิทธิ์</button>
+          <span>การเปลี่ยนระดับบัญชีและสิทธิ์ Admin มีผลหลังบันทึก</span>
+          <button class="admin-user-save" type="button">บันทึก</button>
         </div>
       </div>`:""}
     </article>`;
   }).join("")||'<div class="admin-empty">ไม่พบผู้ใช้ที่ตรงกับการค้นหา</div>';
-
   root.querySelectorAll(".admin-user-manage-button").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const card=btn.closest(".admin-user-card");
       card?.querySelector(".admin-user-editor")?.classList.toggle("hidden");
     });
   });
-
   root.querySelectorAll(".admin-user-role").forEach(select=>{
     select.addEventListener("change",()=>{
       const card=select.closest(".admin-user-card");
       applyRoleDefaultsToEditor(card,select.value);
     });
   });
-
   root.querySelectorAll(".admin-permission-reset").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const card=btn.closest(".admin-user-card");
       applyRoleDefaultsToEditor(card,card?.querySelector(".admin-user-role")?.value||"user");
     });
   });
-
   root.querySelectorAll(".admin-user-save").forEach(btn=>{
     btn.addEventListener("click",()=>saveAdminUserRow(btn.closest(".admin-user-card")));
   });
@@ -12578,13 +9960,11 @@ function renderAdminUsers(){
   root.querySelectorAll("[data-promote-admin]").forEach(btn=>{
     btn.addEventListener("click",()=>promoteUserToAdmin(Number(btn.dataset.promoteAdmin)));
   });
-
   root.querySelectorAll(".admin-user-card").forEach(card=>{
     const role=card.querySelector(".admin-user-role")?.value;
-    if(role==="owner")card.querySelectorAll(".admin-user-permission").forEach(x=>x.disabled=true);
+    if(role)updateAdminRoleEditor(card,role);
   });
 }
-
 async function saveAdminUserRow(row){
   if(!row||authUser?.role!=="owner")return;
   const btn=row.querySelector(".admin-user-save");
@@ -12595,10 +9975,9 @@ async function saveAdminUserRow(row){
       body:JSON.stringify({
         user_id:Number(row.dataset.userId),
         role:row.querySelector(".admin-user-role")?.value,
-        permissions:Object.fromEntries(
-          [...row.querySelectorAll(".admin-user-permission")]
-            .map(input=>[input.dataset.permissionKey,Boolean(input.checked)])
-        )
+        permissions:row.querySelector(".admin-user-role")?.value==="admin"
+          ?Object.fromEntries([...row.querySelectorAll(".admin-user-permission")].map(input=>[input.dataset.permissionKey,Boolean(input.checked)]))
+          :{}
       })
     });
     setAuthMessage("userSaveMessage","อัปเดตสิทธิ์เรียบร้อย","success");
@@ -12609,7 +9988,6 @@ async function saveAdminUserRow(row){
     if(btn)btn.disabled=false;
   }
 }
-
 async function deleteAdminUser(row){
   if(!row||authUser?.role!=="owner")return;
   const userId=Number(row.dataset.userId||0);
@@ -12624,7 +10002,6 @@ async function deleteAdminUser(row){
     await loadAdminUsers();
   }catch(e){setAuthMessage("userSaveMessage",e.message,"error");if(btn)btn.disabled=false;}
 }
-
 async function promoteUserToAdmin(userId){
   if(authUser?.role!=="owner"||!userId)return;
   const user=adminUsersCache.find(x=>Number(x.id)===Number(userId));
@@ -12642,7 +10019,6 @@ async function promoteUserToAdmin(userId){
     setAuthMessage("userSaveMessage",e.message,"error");
   }
 }
-
 function setAdminAddMode(enabled){
   adminAddMode=Boolean(enabled)&&authUser?.role==="owner";
   $("adminAddModeBanner")?.classList.toggle("hidden",!adminAddMode);
@@ -12652,11 +10028,9 @@ function setAdminAddMode(enabled){
   }
   renderAdminUsers();
 }
-
 function hasAnyManagementPermission(){
   return ["manage_help","manage_devices","manage_announcement","manage_users_view"].some(key=>hasPermission(key));
 }
-
 function openAdminCenter(targetTab=null){
   if(!hasAnyManagementPermission())return;
   clearTransientUiMessages([
@@ -12673,7 +10047,6 @@ function openAdminCenter(targetTab=null){
   const permissionMap={help:"manage_help",announcement:"manage_announcement"};
   const allowedContent=contentTabs.find(tab=>tab==="devices"?canManageAnyDevice():hasPermission(permissionMap[tab]));
   if(!userMode&&!allowedContent)return;
-
   m.classList.toggle("admin-users-page",userMode);
   m.classList.toggle("admin-content-page",!userMode);
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
@@ -12681,13 +10054,11 @@ function openAdminCenter(targetTab=null){
   if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
   if($("adminCenterEyebrow"))$("adminCenterEyebrow").textContent=userMode?"USER MANAGEMENT":"CONTENT MANAGEMENT";
   if($("adminCenterTitle"))$("adminCenterTitle").textContent=userMode?"จัดการผู้ใช้งาน":"จัดการเนื้อหา";
-  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"จัดการ Role, Permission และบัญชีผู้ใช้งาน":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
-
+  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"กำหนดระดับบัญชีและสิทธิ์การจัดการสำหรับ Admin":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
   document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
   document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!canManageAnyDevice());
   document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
   document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!userMode);
-
   if(userMode){loadAdminUsers();switchAdminTab("users");}
   else{if(hasPermission("manage_help"))populateHelpKeySelect();if(canManageAnyDevice())renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
 }
@@ -12714,10 +10085,6 @@ function switchAdminTab(tab){
   if(tab==="announcement")loadAnnouncementEditor();
   if(tab==="devices")renderAdminDevices();
 }
-
-// =====================================================
-// V34.1 — MY ACCOUNT CENTER
-// =====================================================
 function syncMyAccountUI(){
   if(!authUser)return;
   setAvatar("myAccountAvatarImage","myAccountAvatarFallback",authUser);
@@ -12741,7 +10108,6 @@ function closeMyAccount(){
   clearTransientUiMessages(["profileEditorMessage","accountSecurityMessage"]);
   m.classList.add("hidden");m.setAttribute("aria-hidden","true");
 }
-
 function reopenAccountMenu(){
   if(!authUser)return;
   const menu=$("accountDropdown");
@@ -12750,12 +10116,10 @@ function reopenAccountMenu(){
     $("accountButton")?.setAttribute("aria-expanded","true");
   }
 }
-
 function backFromMyAccount(){
   closeMyAccount();
   reopenAccountMenu();
 }
-
 function openAccountSecurity(){
   if(!authUser)return;
   const m=$("accountSecurityModal");if(!m)return;
@@ -12768,15 +10132,9 @@ function closeAccountSecurity(){
   m.classList.add("hidden");m.setAttribute("aria-hidden","true");
 }
 function chooseProfileImageFromAccount(){$("profileImageInput")?.click();}
-
-// =====================================================
-// V34.2 — NOTIFICATIONS
-// =====================================================
 const DEFAULT_NOTIFICATION_PREFS={enabled:true,dust:true,temperature:true,humidity:true,heat_index:true,device:true,mother:true};
 let notificationPrefs={...DEFAULT_NOTIFICATION_PREFS};
 let notificationPrefsLoadedFor=null;
-// V8.8: notificationCheckBusy declared earlier to avoid startup TDZ
-
 let notificationSeeded=false;
 let lastNotificationDetail=null;
 let notificationInboxItems=[];
@@ -12784,7 +10142,6 @@ let notificationInboxTimer=null;
 let browserNotificationSeeded=false;
 let browserNotificationSeenIds=new Set();
 let activeNotificationDetail=null;
-
 function formatNotificationTime(value){
   const d=value?new Date(String(value).replace(" ","T")+"Z"):null;
   if(!d||Number.isNaN(d.getTime()))return "--";
@@ -12794,7 +10151,6 @@ function formatNotificationTime(value){
   if(diff>=3600000&&diff<86400000)return `${Math.floor(diff/3600000)} ชั่วโมงที่แล้ว`;
   return d.toLocaleString("th-TH",{timeZone:"Asia/Bangkok",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
 }
-
 function updateNotificationBadge(unread=0){
   const badge=$("headerNotificationBadge");
   if(!badge)return;
@@ -12802,13 +10158,11 @@ function updateNotificationBadge(unread=0){
   badge.textContent=n>9?"9+":String(n);
   badge.classList.toggle("hidden",n===0||!authUser);
 }
-
 function notificationTargetFor(item){
   if(String(item?.event_type||"").toLowerCase()==="mother"||String(item?.device_id||"").toLowerCase()==="mother")return "system";
   if(item?.device_id)return "monitoring";
   return "none";
 }
-
 function showNotificationDetail(item){
   if(!item)return;
   activeNotificationDetail=item;
@@ -12819,7 +10173,6 @@ function showNotificationDetail(item){
   $("notificationDetailTime").textContent=item.created_at
     ?new Date(String(item.created_at).replace(" ","T")+"Z").toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})
     :(item.time?new Date(item.time).toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"--");
-
   const action=$("notificationDetailGo");
   const target=notificationTargetFor(item);
   if(action){
@@ -12828,11 +10181,9 @@ function showNotificationDetail(item){
     action.classList.toggle("hidden",target==="none"||target==="system");
     action.textContent="ดูข้อมูลจุดตรวจวัด";
   }
-
   const m=$("notificationDetailModal");
   if(m){m.classList.remove("hidden");m.setAttribute("aria-hidden","false");}
 }
-
 function renderNotificationInbox(){
   const root=$("notificationInboxList");if(!root)return;
   if(!notificationInboxItems.length){
@@ -12851,7 +10202,6 @@ function renderNotificationInbox(){
     </button>`).join("");
   root.querySelectorAll("[data-notification-id]").forEach(btn=>btn.addEventListener("click",()=>openInboxNotificationDetail(Number(btn.dataset.notificationId))));
 }
-
 function showBrowserNotificationItem(item){
   if(!item||!("Notification" in window)||Notification.permission!=="granted")return;
   try{
@@ -12867,7 +10217,6 @@ function showBrowserNotificationItem(item){
     };
   }catch(_){}
 }
-
 function processBrowserNotificationInbox(items){
   const rows=Array.isArray(items)?items:[];
   if(!browserNotificationSeeded){
@@ -12881,7 +10230,6 @@ function processBrowserNotificationInbox(items){
   rows.forEach(n=>browserNotificationSeenIds.add(Number(n.id)));
   fresh.slice(-3).forEach(showBrowserNotificationItem);
 }
-
 async function loadNotificationInbox({silent=false}={}){
   if(!authUser)return;
   const root=$("notificationInboxList");
@@ -12896,7 +10244,6 @@ async function loadNotificationInbox({silent=false}={}){
     if(!silent&&root)root.innerHTML=`<div class="notification-inbox-empty"><b>โหลดการแจ้งเตือนไม่สำเร็จ</b><small>${esc(err.message||"")}</small></div>`;
   }
 }
-
 async function markNotificationRead(id=null,all=false,{reload=true}={}){
   if(!authUser)return;
   try{
@@ -12905,13 +10252,11 @@ async function markNotificationRead(id=null,all=false,{reload=true}={}){
     if(reload)await loadNotificationInbox({silent:true});
   }catch(_){}
 }
-
 function closeNotificationInbox(){
   const box=$("notificationInbox");if(!box)return;
   box.classList.add("hidden");box.setAttribute("aria-hidden","true");
   $("headerNotificationButton")?.setAttribute("aria-expanded","false");
 }
-
 async function openNotificationInbox(){
   if(!authUser)return;
   const box=$("notificationInbox");if(!box)return;
@@ -12922,7 +10267,6 @@ async function openNotificationInbox(){
   $("headerNotificationButton")?.setAttribute("aria-expanded","true");
   await loadNotificationInbox();
 }
-
 async function openNotificationById(id,{markRead=true,fromBrowser=false}={}){
   if(!authUser||!Number(id))return false;
   let item=notificationInboxItems.find(x=>Number(x.id)===Number(id))||null;
@@ -12943,11 +10287,9 @@ async function openNotificationById(id,{markRead=true,fromBrowser=false}={}){
     return true;
   }catch(_){return false;}
 }
-
 async function openInboxNotificationDetail(id){
   await openNotificationById(id,{markRead:true});
 }
-
 function startNotificationInboxPolling(){
   if(notificationInboxTimer)clearInterval(notificationInboxTimer);
   if(!authUser)return;
@@ -12958,12 +10300,10 @@ function startNotificationInboxPolling(){
     }
   },60000);
 }
-
 function notificationStorageKey(){return `pm25-notification-state-${authUser?.id||"guest"}`;}
 function notificationEventKey(device,type){return `${device}:${type}`;}
 function readNotificationStates(){try{return JSON.parse(localStorage.getItem(notificationStorageKey())||"{}");}catch(_){return {};}}
 function writeNotificationStates(v){try{localStorage.setItem(notificationStorageKey(),JSON.stringify(v));}catch(_){}}
-
 async function ensureNotificationPreferences(){
   if(!authUser)return false;
   if(notificationPrefsLoadedFor===authUser.id)return true;
@@ -12974,14 +10314,12 @@ async function ensureNotificationPreferences(){
     return true;
   }catch(_){return false;}
 }
-
 function syncNotificationSettingsUI(){
   const map={notificationMaster:"enabled",notifyDust:"dust",notifyTemperature:"temperature",notifyHumidity:"humidity",notifyHeatIndex:"heat_index",notifyDevice:"device",notifyMother:"mother"};
   Object.entries(map).forEach(([id,key])=>{if($(id))$(id).checked=notificationPrefs[key]!==false;});
   updateNotificationMasterUI();
   updateNotificationPermissionUI();
 }
-
 function updateNotificationMasterUI(){
   const enabled=!!$("notificationMaster")?.checked;
   const body=$("notificationSettingsModal");
@@ -12991,7 +10329,6 @@ function updateNotificationMasterUI(){
     if(input)input.disabled=!enabled;
   });
 }
-
 async function openNotificationSettings(){
   if(!authUser){openAuthModal("login");return;}
   $("accountDropdown")?.classList.add("hidden");
@@ -13001,21 +10338,17 @@ async function openNotificationSettings(){
 }
 function closeNotificationSettings(){const m=$("notificationSettingsModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
 function closeNotificationDetail(){const m=$("notificationDetailModal");if(!m)return;m.classList.add("hidden");m.setAttribute("aria-hidden","true");}
-
 function backFromNotificationSettings(){
   closeNotificationSettings();
   reopenAccountMenu();
 }
-
 function backFromAdminCenter(){
   closeAdminCenter();
   reopenAccountMenu();
 }
-
 function backFromNotificationDetail(){
   closeNotificationDetail();
 }
-
 function updateNotificationPermissionUI(){
   const card=$("notificationPermissionCard"),title=$("notificationPermissionTitle"),text=$("notificationPermissionText"),icon=$("notificationPermissionIcon"),btn=$("requestNotificationPermission");
   if(!card)return;
@@ -13040,14 +10373,12 @@ function updateNotificationPermissionUI(){
   }
   else{title.textContent="ยังไม่ได้อนุญาตการแจ้งเตือน";text.textContent="กดอนุญาตเพื่อรับข้อความแจ้งเตือนจากเบราว์เซอร์";icon.textContent="🔕";btn.textContent="อนุญาต";btn.disabled=false;}
 }
-
 async function requestBrowserNotificationPermission(){
   if(!("Notification" in window))return;
   try{await Notification.requestPermission();}catch(_){}
   updateNotificationPermissionUI();
   if(Notification.permission==="granted")await registerNotificationServiceWorker();
 }
-
 async function saveNotificationPreferences(){
   const status=$("notificationSaveStatus");
   const next={enabled:!!$("notificationMaster")?.checked,dust:!!$("notifyDust")?.checked,temperature:!!$("notifyTemperature")?.checked,humidity:!!$("notifyHumidity")?.checked,heat_index:!!$("notifyHeatIndex")?.checked,device:!!$("notifyDevice")?.checked,mother:!!$("notifyMother")?.checked};
@@ -13055,11 +10386,9 @@ async function saveNotificationPreferences(){
   try{const j=await apiJson(API.notificationPreferences,{method:"POST",body:JSON.stringify({preferences:next})});notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...j.preferences};notificationPrefsLoadedFor=authUser?.id||null;if(status)status.textContent="บันทึกแล้ว ✓";setTimeout(()=>{if(status)status.textContent="";},1800);}
   catch(err){if(status)status.textContent=err.message;}
 }
-
 async function registerNotificationServiceWorker(){
   return null;
 }
-
 function notificationSituationFor(node){
   const id=String(node?.device_id||node?.deviceID||"จุดตรวจวัด");
   const out=[];
@@ -13076,13 +10405,10 @@ function notificationSituationFor(node){
   out.push({type:"heat_index",active:heatActive,level:heatActive?hil.level:"normal",icon:"☀️",title:`ดัชนีความร้อน${hil.label?` — ${hil.label}`:""}`,message:`${id} มี Heat Index ประมาณ ${hi===null?"--":fmt(hi)} °C`});
   return out.map(x=>({...x,device:id}));
 }
-
 async function showSituationNotification(evt){
-  // V36.32: Browser notifications are emitted from the authenticated D1 inbox
   // so every popup is tied to a real notification ID and opens the correct event.
   lastNotificationDetail={...evt,time:new Date().toISOString()};
 }
-
 async function checkSituationNotifications(){
   if(notificationCheckBusy||!authUser||!Array.isArray(latestNodes)||!latestNodes.length)return;
   notificationCheckBusy=true;
@@ -13101,7 +10427,6 @@ async function checkSituationNotifications(){
     for(const evt of events.slice(0,3))await showSituationNotification(evt);
   }finally{notificationCheckBusy=false;}
 }
-
 async function openNotificationDetailFromUrl(){
   const q=new URLSearchParams(location.search);
   const id=Number(q.get("notification_id")||0);
@@ -13115,14 +10440,8 @@ async function openNotificationDetailFromUrl(){
   showNotificationDetail({icon:d.icon,title:d.title,message:d.message,device_id:d.device,created_at:null,time:d.time,event_type:d.type});
   history.replaceState({},"",location.pathname+location.hash);
 }
-
-
-
-// =====================================================
 // REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
-// =====================================================
 let wifiManagementPollTimer=null;
-
 function wifiEscapeHtml(value){
   return String(value??"")
     .replace(/&/g,"&amp;")
@@ -13131,7 +10450,6 @@ function wifiEscapeHtml(value){
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
 }
-
 function canManageMotherWiFi(){
   return Boolean(authUser&&authToken&&hasPermission("manage_mother_wifi"));
 }
@@ -13326,12 +10644,9 @@ function setupRemoteWiFiManagement(){
   updateWiFiSecurityUI();
   updateWiFiPasswordEye();
 }
-
 (function setupAuthCmsV31(){
   const run=async()=>{
     setupRemoteWiFiManagement();
-
-    // V36.61 — do not let /auth/me compete with the critical Overview request.
     // All account controls are bound immediately; a saved session is verified
     // after the first screen has had time to render.
     const restoreSavedSession=async()=>{
@@ -13367,9 +10682,6 @@ function setupRemoteWiFiManagement(){
     $("backToLoginButton")?.addEventListener("click",()=>setAuthMode("login"));
     $("forgotPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("forgotPasswordMessage","กำลังส่งลิงก์...");try{const j=await apiJson(API.authForgotPassword,{method:"POST",body:JSON.stringify({email:$("forgotPasswordEmail").value})});setAuthMessage("forgotPasswordMessage",j.message||"หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์ให้","success");}catch(err){setAuthMessage("forgotPasswordMessage",err.message,"error");}});
     $("resetPasswordForm")?.addEventListener("submit",async e=>{e.preventDefault();const a=$("resetPasswordNew").value,b=$("resetPasswordConfirm").value;if(a!==b){setAuthMessage("resetPasswordMessage","รหัสผ่านทั้งสองช่องไม่ตรงกัน","error");return;}setAuthMessage("resetPasswordMessage","กำลังตั้งรหัสผ่านใหม่...");try{const j=await apiJson(API.authResetPassword,{method:"POST",body:JSON.stringify({token:resetTokenFromUrl(),new_password:a})});setAuthMessage("resetPasswordMessage",j.message||"ตั้งรหัสผ่านใหม่เรียบร้อย","success");clearResetTokenFromUrl();setTimeout(()=>setAuthMode("login"),900);}catch(err){setAuthMessage("resetPasswordMessage",err.message,"error");}});
-// =====================================================
-// V34 — PROFILE IMAGE EVENTS
-// =====================================================
     setupProfileEditorInteraction();
     $("myAccountChangePhoto")?.addEventListener("click",chooseProfileImageFromAccount);
     $("myAccountChangePhotoSecondary")?.addEventListener("click",chooseProfileImageFromAccount);
@@ -13390,7 +10702,6 @@ function setupRemoteWiFiManagement(){
         syncMyAccountUI();
       }catch(err){alert(err.message);}
     });
-
     $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
     $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
     $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
@@ -13400,7 +10711,6 @@ function setupRemoteWiFiManagement(){
     $("notificationInboxSettings")?.addEventListener("click",()=>{closeNotificationInbox();openNotificationSettings();});
     $("notificationInboxClose")?.addEventListener("click",closeNotificationInbox);
     $("notificationMarkAllRead")?.addEventListener("click",()=>markNotificationRead(null,true));
-
     document.querySelectorAll("[data-notification-close]").forEach(x=>x.addEventListener("click",closeNotificationSettings));
     document.querySelectorAll("[data-notification-back]").forEach(x=>x.addEventListener("click",backFromNotificationSettings));
     document.querySelectorAll("[data-notification-detail-close]").forEach(x=>x.addEventListener("click",closeNotificationDetail));
@@ -13454,14 +10764,8 @@ function setupRemoteWiFiManagement(){
   if(resetTokenFromUrl()){const oldRun=run;run=()=>{oldRun();setTimeout(openResetPassword,0);};}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});else run();
 })();
-
-// =====================================================
-// V34.4 — TELEGRAM LINK
-// =====================================================
-
 const TELEGRAM_GROUP_URL="https://t.me/project2026PM";
 const TELEGRAM_ANDROID_INTENT="intent://resolve?domain=project2026PM#Intent;scheme=tg;package=org.telegram.messenger;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.telegram.messenger;end";
-
 document.getElementById("telegramSituationLink")?.addEventListener("click",event=>{
     if(!/Android/i.test(navigator.userAgent))return;
     event.preventDefault();
@@ -13470,27 +10774,18 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
         if(document.visibilityState==="visible")window.location.href=TELEGRAM_GROUP_URL;
     },1400);
 });
-
-// =====================================================
 // MAP V2 STARTUP
-// =====================================================
 (function startMapV2(){
   const run=()=>{
     setupMonitoringMapUi();
-
   };
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
   else run();
 })();
-
-// =====================================================
-// V8.14 — SAFE MAP / DETAIL RESPONSIVE SYNC
-// =====================================================
 window.addEventListener("resize",()=>{
   clearTimeout(monitoringResponsiveTimer);
   monitoringResponsiveTimer=setTimeout(()=>{
     syncMonitoringDetailHost();
-
     const panel=$("mapDetailPanel");
     const backdrop=$("mapDetailBackdrop");
     const mobileOpen=Boolean(selectedMonitoringDeviceId)&&monitoringMapMobileMode();
@@ -13504,11 +10799,9 @@ window.addEventListener("resize",()=>{
       backdrop.classList.toggle("tablet-detail-backdrop-open",tabletOpen);
       backdrop.setAttribute("aria-hidden",tabletOpen?"false":"true");
     }
-
     if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:false});
   },120);
 },{passive:true});
-
 window.addEventListener("pageshow",()=>{
   if(currentDashboardPage==="monitoring"){
     scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
