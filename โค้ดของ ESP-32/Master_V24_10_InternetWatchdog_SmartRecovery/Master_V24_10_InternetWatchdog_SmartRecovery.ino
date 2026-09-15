@@ -8,11 +8,8 @@
 
 // =====================================================
 // STATUS LED - MOTHER
-// Green LED: GPIO 22
-// Searching/reconnecting WiFi = blink
-// WiFi connected = solid ON
 // =====================================================
-#define LED_GREEN 22
+#define LED_GREEN 25
 
 // LED wiring is Active LOW:
 // LOW  = ON, HIGH = OFF
@@ -714,7 +711,10 @@ void markCloudHealth(bool ok) {
 }
 
 void startRecoveryPortal(const char* reasonText) {
-  if (recoveryPortalStarted) return;
+  if (recoveryPortalStarted || wifiManager.getConfigPortalActive()) {
+    recoveryPortalStarted = true;
+    return;
+  }
 
   Serial.println();
   Serial.println(reasonText);
@@ -723,13 +723,15 @@ void startRecoveryPortal(const char* reasonText) {
   WiFi.mode(WIFI_AP_STA);
   enableLongRangeProtocol();
 
-  bool started = wifiManager.startConfigPortal(
+  wifiManager.startConfigPortal(
     SETUP_AP_SSID,
     SETUP_AP_PASSWORD
   );
 
-  if (started) {
-    recoveryPortalStarted = true;
+  recoveryPortalStarted =
+    wifiManager.getConfigPortalActive();
+
+  if (recoveryPortalStarted) {
     Serial.println("✅ Recovery Setup Portal Ready");
     Serial.print("Setup SSID: ");
     Serial.println(SETUP_AP_SSID);
@@ -742,7 +744,12 @@ void startRecoveryPortal(const char* reasonText) {
 }
 
 void stopRecoveryPortalIfHealthy() {
-  if (!recoveryPortalStarted) return;
+  if (
+    !recoveryPortalStarted &&
+    !wifiManager.getConfigPortalActive()
+  ) {
+    return;
+  }
   if (WiFi.status() != WL_CONNECTED) return;
   if (cloudFailureSince != 0 || cloudHealthySince == 0) return;
 
@@ -2393,19 +2400,20 @@ void setup() {
   // ถ้าเปิดเครื่องแล้วไม่มี WiFi ที่ใช้ได้ ให้เปิด Setup Portal ทันที
   if (WiFi.status() != WL_CONNECTED) {
 
-    bool portalStarted = wifiManager.startConfigPortal(
+    wifiManager.startConfigPortal(
       SETUP_AP_SSID,
       SETUP_AP_PASSWORD
     );
 
-    if (portalStarted) {
-      recoveryPortalStarted = true;
+    recoveryPortalStarted =
+      wifiManager.getConfigPortalActive();
+
+    if (recoveryPortalStarted) {
       Serial.println("✅ WiFi Setup Portal Ready");
       Serial.print("Setup SSID: ");
       Serial.println(SETUP_AP_SSID);
       Serial.println("เชื่อม Setup WiFi แล้วเปิด http://192.168.4.1");
     } else {
-      recoveryPortalStarted = false;
       wifiDisconnectedSince = millis();
       Serial.println("⚠ WiFi Setup Portal start failed");
       Serial.println("ระบบ Auto Recovery จะลองเปิด Setup AP ใหม่ภายหลัง");
