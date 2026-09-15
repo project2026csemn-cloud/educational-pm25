@@ -9348,8 +9348,7 @@ const PERMISSION_DEFINITIONS=[
   {key:"manage_device_location",group:"จุดตรวจวัด",title:"กำหนดตำแหน่งจุดตรวจวัด",desc:"ปักหมุด ลากหมุด และแก้ Latitude / Longitude"},
   {key:"manage_device_media",group:"จุดตรวจวัด",title:"จัดการรูปภาพจุดตรวจวัด",desc:"เพิ่ม ลบ เรียงลำดับ และตั้งภาพหลัก สูงสุด 5 ภาพต่อจุด"},
   {key:"manage_announcement",group:"เนื้อหา",title:"จัดการประกาศ",desc:"สร้าง แก้ไข เปิด/ปิดประกาศบน Dashboard"},
-  {key:"manage_mother_wifi",group:"ระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"ดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"},
-  {key:"manage_users_view",group:"ผู้ใช้งาน",title:"ดูรายชื่อผู้ใช้งาน",desc:"เปิดหน้ารายชื่อบัญชีและข้อมูลสิทธิ์"}
+  {key:"manage_mother_wifi",group:"ระบบ",title:"จัดการ Wi-Fi ตัวแม่",desc:"ดูและเปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก"}
 ];
 const ROLE_PERMISSION_DEFAULTS={
   user:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,false])),
@@ -9370,6 +9369,9 @@ function normalizedClientPermissions(user){
 function hasPermission(key,user=authUser){
   if(!user||!authToken)return false;
   return Boolean(normalizedClientPermissions(user)[key]);
+}
+function canViewUserDirectory(user=authUser){
+  return Boolean(authToken&&user&&["admin","owner"].includes(user.role));
 }
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
@@ -9395,7 +9397,7 @@ function updateAccountUI(){
     if(mr)mr.textContent=authRoleLabel(authUser.role);
     if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     const canManageContent=["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement"].some(key=>hasPermission(key));
-    const canManageUsers=hasPermission("manage_users_view");
+    const canManageUsers=canViewUserDirectory();
     const canManageWiFi=hasPermission("manage_mother_wifi");
     contentBtn?.classList.toggle("hidden",!canManageContent);
     usersBtn?.classList.toggle("hidden",!canManageUsers);
@@ -9801,6 +9803,7 @@ async function saveAnnouncement(){
   const payload={enabled:$("announcementEnabled")?.checked?"1":"0",severity:$("announcementSeverity")?.value||"info",title:$("announcementTitle")?.value||"",message:$("announcementMessage")?.value||""};const b=$("saveAnnouncementButton");if(b)b.disabled=true;setAuthMessage("announcementSaveMessage","กำลังบันทึก...");
   try{await apiJson(API.manageAnnouncement,{method:"POST",body:JSON.stringify(payload)});await loadPublicDisplayConfig();loadAnnouncementEditor();setAuthMessage("announcementSaveMessage","บันทึกประกาศแล้ว","success");}catch(e){setAuthMessage("announcementSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
+let adminUsersMeta={total:0,users:0,admins:0,owners:0,returned:0};
 async function loadAdminUsers(){
   const root=$("adminUserList");
   if(!root)return;
@@ -9808,6 +9811,13 @@ async function loadAdminUsers(){
   try{
     const j=await apiJson(API.manageUsers);
     adminUsersCache=Array.isArray(j.data)?j.data:[];
+    adminUsersMeta={
+      total:Number(j?.meta?.total??adminUsersCache.length),
+      users:Number(j?.meta?.users||0),
+      admins:Number(j?.meta?.admins||0),
+      owners:Number(j?.meta?.owners||0),
+      returned:Number(j?.meta?.returned??adminUsersCache.length)
+    };
     $("addAdminModeButton")?.classList.toggle("hidden",authUser?.role!=="owner");
     renderAdminUsers();
   }catch(e){
@@ -9868,10 +9878,26 @@ function applyRoleDefaultsToEditor(card,role){
   });
   updateAdminRoleEditor(card,role);
 }
+function adminUserAvatarHtml(user,self=false){
+  const fallback=esc((user?.display_name||user?.email||"U").slice(0,1).toUpperCase());
+  const raw=String((self?authUser?.profile_image_url:"")||user?.profile_image_url||"").trim();
+  const src=/^(?:data:image\/(?:jpeg|png|webp);base64,|https:\/\/)/i.test(raw)?raw:"";
+  if(!src)return `<div class="admin-user-avatar"><span>${fallback}</span></div>`;
+  return `<div class="admin-user-avatar has-image"><img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.opacity='1'"><span>${fallback}</span></div>`;
+}
+function renderAdminUserSummary(visible){
+  const total=$("adminUserTotalCount"),shown=$("adminUserVisibleCount");
+  if(total)total.textContent=String(adminUsersMeta.total||0);
+  if(shown){
+    const filtered=visible!==adminUsersMeta.total;
+    shown.textContent=filtered?`กำลังแสดง ${visible} จาก ${adminUsersMeta.total} บัญชี`:`กำลังแสดง ${visible} บัญชี`;
+  }
+}
 function renderAdminUsers(){
   const root=$("adminUserList");
   if(!root)return;
   const users=filteredAdminUsers();
+  renderAdminUserSummary(users.length);
   const isOwner=authUser?.role==="owner";
   const ownId=Number(authUser?.id||0);
   root.innerHTML=users.map(u=>{
@@ -9892,7 +9918,7 @@ function renderAdminUsers(){
     }
     return `<article class="admin-user-card" data-user-id="${u.id}">
       <div class="admin-user-main">
-        <div class="admin-user-avatar">${esc((u.display_name||u.email||"U").slice(0,1).toUpperCase())}</div>
+        ${adminUserAvatarHtml(u,self)}
         <div class="admin-user-identity">
           <div class="admin-user-title-row">
             <b>${esc(u.display_name||"ผู้ใช้งาน")}</b>
@@ -10029,7 +10055,7 @@ function setAdminAddMode(enabled){
   renderAdminUsers();
 }
 function hasAnyManagementPermission(){
-  return ["manage_help","manage_devices","manage_announcement","manage_users_view"].some(key=>hasPermission(key));
+  return canViewUserDirectory()||["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement","manage_mother_wifi"].some(key=>hasPermission(key));
 }
 function openAdminCenter(targetTab=null){
   if(!hasAnyManagementPermission())return;
@@ -10041,7 +10067,7 @@ function openAdminCenter(targetTab=null){
   ]);
   const m=$("adminCenter");if(!m)return;
   const userMode=targetTab==="users";
-  if(userMode&&!hasPermission("manage_users_view"))return;
+  if(userMode&&!canViewUserDirectory())return;
   const contentTabs=["help","devices","announcement"];
   const canManageAnyDevice=()=>["manage_devices","manage_device_location","manage_device_media"].some(key=>hasPermission(key));
   const permissionMap={help:"manage_help",announcement:"manage_announcement"};
@@ -10054,7 +10080,7 @@ function openAdminCenter(targetTab=null){
   if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
   if($("adminCenterEyebrow"))$("adminCenterEyebrow").textContent=userMode?"USER MANAGEMENT":"CONTENT MANAGEMENT";
   if($("adminCenterTitle"))$("adminCenterTitle").textContent=userMode?"จัดการผู้ใช้งาน":"จัดการเนื้อหา";
-  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"กำหนดระดับบัญชีและสิทธิ์การจัดการสำหรับ Admin":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
+  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"Admin ดูรายชื่อผู้ใช้งานได้ทุกบัญชี และ Owner เป็นผู้กำหนดระดับบัญชีกับสิทธิ์การจัดการ":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
   document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
   document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!canManageAnyDevice());
   document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
