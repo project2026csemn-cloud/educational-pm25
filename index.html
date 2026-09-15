@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="th">
 <head>
 <meta charset="utf-8"/>
@@ -21,7 +20,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260913-v8-28-mobile-close-ux" rel="stylesheet"/>
+<link href="style.css?v=20260915-role-simplified-v1" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -30,7 +29,6 @@
 <meta content="summary" name="twitter:card"/>
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" name="twitter:title"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/img/icon.png" name="twitter:image"/>
-
 <script type="application/ld+json">
     {
   "@context": "https://schema.org",
@@ -71,7 +69,6 @@
 </head>
 <body>
 <div class="max-w-[1800px] mx-auto p-4 md:p-6">
-
 <header class="glass card site-header">
 <div class="site-brand">
   <div class="site-brand-logos" aria-label="ตราสัญลักษณ์โครงการ">
@@ -91,26 +88,21 @@
     </svg>
     <span class="header-notification-badge hidden" id="headerNotificationBadge">0</span>
   </button>
-
   <div class="header-profile-stack">
     <button class="header-account-button" id="accountButton" type="button" aria-haspopup="true" aria-expanded="false">
       <span class="header-account-chevron hidden" id="accountChevron">▾</span>
-
       <span class="header-account-copy">
         <span class="header-account-role hidden" id="accountRoleBadge"></span>
         <span id="accountButtonText">เข้าสู่ระบบ</span>
       </span>
-
       <span class="header-account-avatar">
         <img id="accountAvatarImage" alt="" class="hidden">
         <span id="accountAvatarFallback">👤</span>
       </span>
     </button>
-
     <div class="header-clock" id="clock">--</div>
   </div>
   <div class="account-dropdown account-dropdown-v34 hidden" id="accountDropdown">
-    
     <div class="account-dropdown-profile account-profile-v34">
       <span class="account-menu-avatar"><img id="accountMenuAvatarImage" alt="" class="hidden"><span id="accountMenuAvatarFallback">👤</span></span>
       <div class="account-profile-copy">
@@ -125,7 +117,7 @@
     </div>
     <div class="account-menu-section account-management-section">
       <button type="button" id="openContentManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">✎</span><span><b>จัดการเนื้อหา</b><small>คำอธิบาย จุดตรวจวัด และประกาศ</small></span><i>›</i></button>
-      <button type="button" id="openUserManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">👥</span><span><b>จัดการผู้ใช้งาน</b><small>Role, Permission และลบบัญชีผู้ใช้</small></span><i>›</i></button>
+      <button type="button" id="openUserManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">👥</span><span><b>จัดการผู้ใช้งาน</b><small>ระดับบัญชี สิทธิ์ Admin และลบบัญชีผู้ใช้</small></span><i>›</i></button>
       <button type="button" id="openWiFiManagementButton" class="account-menu-item hidden"><span class="account-menu-icon">📶</span><span><b>จัดการ Wi-Fi ตัวแม่</b><small>เปลี่ยนเครือข่ายของสถานีรับข้อมูลหลัก</small></span><i>›</i></button>
     </div>
     <div class="account-menu-section account-menu-section-last">
@@ -134,7 +126,6 @@
   </div>
 </div>
 </header>
-
 <div class="notification-inbox hidden" id="notificationInbox" aria-hidden="true">
   <div class="notification-inbox-arrow"></div>
   <div class="notification-inbox-head">
@@ -156,7 +147,6 @@
     <button type="button" id="notificationInboxSettings">ตั้งค่า</button>
   </div>
 </div>
-
 <nav class="dashboard-nav glass" id="dashboardNav" aria-label="เมนูหลักของแดชบอร์ด">
   <div class="dashboard-nav-inner">
     <button class="dashboard-mobile-toggle" id="dashboardMobileToggle" type="button" aria-expanded="false" aria-controls="dashboardNavLinks">
@@ -176,7 +166,6 @@
     </div>
   </div>
 </nav>
-
 <div class="site-announcement-wrap hidden" id="siteAnnouncementWrap">
   <div class="site-announcement is-info" id="siteAnnouncement">
     <span class="site-announcement-icon" id="siteAnnouncementIcon">ℹ</span>
@@ -187,12 +176,9 @@
     </div>
   </div>
 </div>
-
 <main class="dashboard-pages" id="dashboardPages">
-
 <section class="dashboard-page active" id="page-overview" data-dashboard-page-panel="overview">
   <div class="overview-top-grid overview-summary-grid">
-
     <section class="overview-summary-card overview-dust-summary glass card" aria-labelledby="overviewDustTitle">
       <div class="overview-summary-scene" aria-hidden="true"></div>
       <div class="overview-hero-decor overview-dust-decor" aria-hidden="true">
@@ -216,7 +202,6 @@
           >?</button>
         </div>
       </div>
-
       <div class="overview-summary-body">
         <div class="overview-summary-character overview-character-art overview-loading-character" id="overviewFace" aria-hidden="true"></div>
         <div class="overview-summary-copy">
@@ -225,7 +210,6 @@
         </div>
       </div>
 </section>
-
     <section class="overview-summary-card overview-weather-summary glass card" aria-labelledby="overviewWeatherTitle">
       <div class="overview-summary-scene" aria-hidden="true"></div>
       <div class="overview-hero-decor overview-weather-decor" aria-hidden="true">
@@ -248,7 +232,6 @@
           >?</button>
         </div>
       </div>
-
       <div class="overview-summary-body">
         <div class="overview-summary-character overview-character-art overview-loading-character" id="overviewWeatherFace" aria-hidden="true"></div>
         <div class="overview-summary-copy">
@@ -258,9 +241,7 @@
         </div>
       </div>
     </section>
-
   </div>
-
   <div class="overview-section-head overview-environment-head">
     <div class="overview-environment-heading-copy">
       <div class="overview-eyebrow">CURRENT CONDITIONS</div>
@@ -292,15 +273,11 @@
       <div class="overview-metric-character overview-character-art overview-loading-character" id="overviewHeatEmoji" aria-hidden="true"></div><span>ดัชนีความร้อน</span><b id="overviewHeat" class="overview-loading-value">--</b><small>°C</small><em class="overview-metric-status no_data overview-loading-chip" id="overviewHeatStatus">รอข้อมูล</em><p id="overviewHeatHint" class="overview-feeling overview-loading-line">กำลังประเมินความรู้สึกร้อน...</p>
     </div>
   </div>
-
-
   <section class="mb-4 dashboard-summary-section"><div class="glass card p-5 smart-summary-card overview-recommendation-card">
     <div class="smart-summary-header"><div class="smart-summary-title-wrap"><div class="smart-summary-icon">💡</div><div><div class="section-title-with-help"><h2 class="font-black text-lg">คำแนะนำขณะนี้</h2><button aria-expanded="false" aria-label="ดูคำอธิบายคำแนะนำขณะนี้" class="help-button" data-help="smartSummary" type="button">?</button></div></div></div><span class="smart-summary-mode">สรุปอัตโนมัติ</span></div>
     <div class="smart-summary-body" id="aiSummary"><div class="smart-summary-loading">กำลังรอข้อมูล...</div></div>
   </div></section>
-
 </section>
-
 <section class="dashboard-page" id="page-monitoring" data-dashboard-page-panel="monitoring">
   <section class="mb-4 dashboard-monitoring-section"><div class="glass card p-4 xl:col-span-3 monitoring-card">
 <div class="dashboard-card-page-head dashboard-card-page-head-split mb-3">
@@ -330,7 +307,6 @@
 </div>
 </div>
 <div class="grid md:grid-cols-3 gap-3">
-
 <div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard1">
 <div class="flex justify-between">
 <b class="text-xl">
@@ -344,7 +320,6 @@
 </b>
 <span class="text-slate-500 text-xs font-bold" id="n1status">
                         ● OFFLINE
-                        
 </span>
 </div>
 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
@@ -374,7 +349,6 @@
 </span>
 </div>
 </div>
-
 <div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard2">
 <div class="flex justify-between">
 <b class="text-xl">
@@ -388,7 +362,6 @@
 </b>
 <span class="text-slate-500 text-xs font-bold" id="n2status">
                         ● OFFLINE
-                        
 </span>
 </div>
 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
@@ -418,7 +391,6 @@
 </span>
 </div>
 </div>
-
 <div class="node offline soft rounded-2xl p-4 border border-slate-800" id="nodeCard3">
 <div class="flex justify-between">
 <b class="text-xl">
@@ -432,7 +404,6 @@
 </b>
 <span class="text-slate-500 text-xs font-bold" id="n3status">
                         ● OFFLINE
-                        
 </span>
 </div>
 <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
@@ -479,7 +450,6 @@
           <span>ข้อมูลปัจจุบัน</span>
         </div>
       </div>
-
       <div class="current-primary-grid" id="currentPrimaryGrid">
         <article class="current-metric-card metric-pm25" data-current-field="pm25">
           <div class="current-metric-card-head"><div class="current-metric-icon dust-emoji dust-emoji-fine" aria-hidden="true">🫧</div><div><span>ฝุ่นละอองขนาดเล็ก</span><h3>PM2.5</h3></div></div>
@@ -489,7 +459,6 @@
             <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-pm25-max">--</b><small id="summary-pm25-max-node">--</small></div>
           </div>
         </article>
-
         <article class="current-metric-card metric-pm10" data-current-field="pm10">
           <div class="current-metric-card-head"><div class="current-metric-icon dust-emoji dust-emoji-coarse" aria-hidden="true">💨</div><div><span>ฝุ่นละอองขนาดใหญ่กว่า</span><h3>PM10</h3></div></div>
           <div class="current-metric-average"><b id="summary-pm10-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
@@ -498,7 +467,6 @@
             <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-pm10-max">--</b><small id="summary-pm10-max-node">--</small></div>
           </div>
         </article>
-
         <article class="current-metric-card metric-temperature" data-current-field="temperature">
           <div class="current-metric-card-head"><div class="current-metric-icon">🌡️</div><div><span>สภาพอากาศ</span><h3>อุณหภูมิ</h3></div></div>
           <div class="current-metric-average"><b id="summary-temperature-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
@@ -507,7 +475,6 @@
             <div><span class="extreme-high">↑ สูงสุด</span><b id="summary-temperature-max">--</b><small id="summary-temperature-max-node">--</small></div>
           </div>
         </article>
-
         <article class="current-metric-card metric-humidity" data-current-field="humidity">
           <div class="current-metric-card-head"><div class="current-metric-icon">💧</div><div><span>สภาพอากาศ</span><h3>ความชื้น</h3></div></div>
           <div class="current-metric-average"><b id="summary-humidity-avg">--</b><small>ค่าเฉลี่ยปัจจุบัน</small></div>
@@ -517,14 +484,12 @@
           </div>
         </article>
       </div>
-
       <div class="current-support-head">
         <div>
           <span>ข้อมูลประกอบ</span>
           <small>ใช้ช่วยอธิบายสภาพแวดล้อม ไม่ใช่ตัวชี้วัดสุขภาพหลัก</small>
         </div>
       </div>
-
       <div class="current-support-grid current-support-grid-simple">
         <article class="current-support-card current-support-card-simple metric-pm1">
           <div class="current-support-title">
@@ -540,7 +505,6 @@
           </div>
           <p>ใช้ประกอบการดูแนวโน้มของฝุ่นขนาดเล็ก</p>
         </article>
-
         <article class="current-support-card current-support-card-simple metric-light">
           <div class="current-support-title">
             <span class="current-support-icon">☀️</span>
@@ -556,14 +520,12 @@
           <p>ใช้ประกอบการดูสภาพแวดล้อมของแต่ละพื้นที่</p>
         </article>
       </div>
-
       <div class="current-environment-footer current-summary-footer">
         <span class="current-environment-footer-dot"></span>
         <span id="currentEnvironmentFooter">กำลังรวบรวมข้อมูลล่าสุด...</span>
       </div>
     </div>
   </section>
-
   <!-- =========================================================
        MAP — เพิ่มต่อจากข้อมูลจุดตรวจวัดเดิม (ไม่แทนที่)
        ========================================================= -->
@@ -582,7 +544,6 @@
           <button type="button" class="map-basemap-button" data-public-basemap="satellite">🛰 ดาวเทียม</button>
         </div>
     </div>
-
     <div class="monitoring-map-node-tabs" id="monitoringMapNodeTabs">
       <button type="button" class="monitoring-map-node-tab" data-map-device="Number 1">
         <span>1</span>
@@ -597,7 +558,6 @@
         <div><b id="mapNodeName3">จุดตรวจวัด 3</b><small id="mapNodeLocation3">เลือกเพื่อดูรายละเอียด</small></div>
       </button>
     </div>
-
     <div class="monitoring-map-layout" id="monitoringMapLayout">
       <div class="monitoring-map-wrap">
         <div id="monitoringMap" class="monitoring-map" aria-label="แผนที่ตำแหน่งจุดตรวจวัด"></div>
@@ -606,9 +566,7 @@
           <span>Admin/Owner สามารถปักหมุดจากเมนูจัดการเนื้อหาได้</span>
         </div>
       </div>
-
       <div class="monitoring-map-detail-backdrop hidden" id="mapDetailBackdrop" aria-hidden="true"></div>
-
       <aside class="monitoring-place-detail" id="mapDetailPanel" aria-hidden="true">
         <div class="monitoring-place-drag-handle" aria-hidden="true"></div>
         <div class="monitoring-place-detail-head">
@@ -619,7 +577,6 @@
           </div>
           <button type="button" id="mapDetailClose" aria-label="ปิดรายละเอียด">×</button>
         </div>
-
         <div class="monitoring-place-detail-scroll">
           <section class="monitoring-place-block">
             <h4>ภาพบริเวณติดตั้ง</h4>
@@ -629,12 +586,10 @@
             <div class="monitoring-place-thumbs hidden" id="mapDetailGallery"></div>
             <div class="monitoring-place-empty" id="mapDetailImageEmpty">ยังไม่มีภาพของจุดนี้</div>
           </section>
-
           <section class="monitoring-place-block">
             <h4>รายละเอียดจุดติดตั้ง</h4>
             <div class="monitoring-place-description" id="mapDetailDescription">ยังไม่มีรายละเอียดของจุดนี้</div>
           </section>
-
           <section class="monitoring-place-block hidden" id="mapDetailVideoSection">
             <h4>วิดีโอ</h4>
             <div class="monitoring-place-video" id="mapDetailVideo"></div>
@@ -643,9 +598,7 @@
       </aside>
     </div>
   </section>
-
 </section>
-
 <section class="dashboard-page" id="page-history" data-dashboard-page-panel="history">
   <section class="glass card p-5 mb-4 historical-section">
 <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
@@ -694,7 +647,6 @@
     </div>
     <button aria-label="ปิด" class="history-range-modal-close" id="historyRangeModalClose" type="button">×</button>
   </div>
-
   <div class="history-range-modal-body history-range-modal-body-v35">
     <div class="history-range-main-v35">
       <section class="history-range-calendar history-range-calendar-v35">
@@ -711,7 +663,6 @@
         <div class="grid grid-cols-7 gap-1" id="rangeCalendarGrid"></div>
         <div class="history-calendar-hint">เลือกวันเริ่มต้น แล้วเลือกวันสิ้นสุด</div>
       </section>
-
       <aside class="history-range-side-v35 history-range-side-v355">
         <div class="history-range-mode-switch" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
           <button class="history-range-mode active" id="historyRangeModeQuick" data-history-range-mode="quick" type="button" role="tab" aria-selected="true">
@@ -721,7 +672,6 @@
             <span>📅</span><b>กำหนดเอง</b>
           </button>
         </div>
-
         <div class="history-range-mode-panel active" id="historyRangeQuickPanel" data-history-range-panel="quick">
           <div class="history-range-panel-head">
             <b>เลือกช่วงเวลา</b>
@@ -741,29 +691,24 @@
             <p>เหมาะสำหรับดูข้อมูลย้อนหลังแบบรวดเร็ว</p>
           </div>
         </div>
-
         <div class="history-range-mode-panel" id="historyRangeCustomPanel" data-history-range-panel="custom">
           <div class="history-range-panel-head">
             <b>กำหนดช่วงเอง</b>
             <span>เลือกจากปฏิทินหรือกรอกวันและเวลา</span>
           </div>
-
           <div class="history-range-custom-card history-range-custom-card-v356">
             <label class="history-range-custom-input-field">
               <span class="history-range-custom-input-head"><span class="history-range-custom-icon">↗</span><b>เริ่มต้น</b></span>
               <input id="customRangeStart" type="datetime-local" aria-label="วันและเวลาเริ่มต้น"/>
               <small id="historyRangeStartPreview">--</small>
             </label>
-
             <div class="history-range-custom-line"><span></span><b>ถึง</b><span></span></div>
-
             <label class="history-range-custom-input-field">
               <span class="history-range-custom-input-head"><span class="history-range-custom-icon">↘</span><b>สิ้นสุด</b></span>
               <input id="customRangeEnd" type="datetime-local" aria-label="วันและเวลาสิ้นสุด"/>
               <small id="historyRangeEndPreview">--</small>
             </label>
           </div>
-
           <div class="history-range-panel-tip">
             <span>💡</span>
             <p>แตะวันที่ในปฏิทินด้านซ้ายเพื่อเลือกเริ่มต้นและสิ้นสุดได้เลย</p>
@@ -772,7 +717,6 @@
       </aside>
     </div>
   </div>
-
   <div class="history-range-footer history-range-footer-v35">
     <div class="history-timezone-note">
       <div><b>เวลาไทย</b><span>GMT+7 • Asia/Bangkok</span></div>
@@ -786,13 +730,12 @@
 </div>
 </div>
 </div>
-<button class="history-toolbar-button history-export-button" id="exportButton" data-member-only="true" type="button">
+<button class="history-toolbar-button history-export-button" id="exportButton" type="button">
 <span class="history-control-icon">⇩</span>
 <span>ส่งออก</span>
 </button>
 </div>
 </div>
-
 <div class="soft rounded-2xl p-4 mt-4">
 <div class="mb-5">
 <div class="text-sm font-bold">
@@ -846,7 +789,6 @@
 </div>
 </div>
 </div>
-
 </section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">📈 กราฟข้อมูลย้อนหลัง</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟกราฟข้อมูลย้อนหลัง" class="help-button" data-help="historyChart" type="button">?</button></div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
 <div class="history-range-caption" id="historyRangeCaption" aria-live="polite"></div>
@@ -883,10 +825,8 @@
 </button>
 </div>
 </div>
-
 </div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมแนวโน้มล่วงหน้า</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลที่พร้อมใช้งานเพื่อแสดงแนวโน้ม</span></div></div></div></div></section>
 </section>
-
 <section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
   <section class="glass card p-5 mb-4 ai-intelligence-section">
 <div class="dashboard-card-page-copy dashboard-card-page-copy-analysis">
@@ -916,10 +856,8 @@
 <div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังเตรียมข้อมูลสำหรับการวิเคราะห์แนวโน้ม...</div>
 </section>
 </section>
-
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
   <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><div class="section-title-with-help"><h1 id="publicAboutHeading">เกี่ยวกับโครงการ</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าเกี่ยวกับโครงการ" class="help-button" data-help="aboutPage" type="button">?</button></div><p class="public-about-intro hidden" id="publicAboutIntro"></p></div>
-
   <section class="glass card about-detail-section about-interpretation-section about-reader-guide">
     <div class="about-detail-head">
       <div>
@@ -928,7 +866,6 @@
         <p class="about-section-lead">หน้านี้สรุปเฉพาะสิ่งที่ผู้ใช้งานควรรู้ เพื่อช่วยให้ดูข้อมูลได้ถูกความหมาย โดยไม่ลงรายละเอียดการทำงานภายในของระบบ</p>
       </div>
     </div>
-
     <div class="about-reader-grid">
       <article class="about-reader-card">
         <div class="about-reader-icon">📍</div>
@@ -937,7 +874,6 @@
           <p>ค่าของแต่ละจุดตรวจวัดอาจไม่เท่ากัน เพราะแต่ละตำแหน่งมีสภาพแวดล้อมต่างกัน จึงควรดูข้อมูลรายจุดเมื่อสนใจบริเวณใดบริเวณหนึ่ง</p>
         </div>
       </article>
-
       <article class="about-reader-card">
         <div class="about-reader-icon">≋</div>
         <div>
@@ -945,7 +881,6 @@
           <p>ค่าเฉลี่ยพื้นที่ช่วยให้เห็นแนวโน้มโดยรวม แต่ไม่ควรใช้แทนค่าของแต่ละจุด เพราะบางตำแหน่งอาจสูงหรือต่ำกว่าค่าเฉลี่ยอย่างชัดเจน</p>
         </div>
       </article>
-
       <article class="about-reader-card">
         <div class="about-reader-icon">📈</div>
         <div>
@@ -953,7 +888,6 @@
           <p>เลือกช่วงเวลาที่เหมาะกับสิ่งที่ต้องการดู และพิจารณารูปแบบการเปลี่ยนแปลงต่อเนื่องร่วมกับค่าปัจจุบัน</p>
         </div>
       </article>
-
       <article class="about-reader-card">
         <div class="about-reader-icon">⚠</div>
         <div>
@@ -962,13 +896,11 @@
         </div>
       </article>
     </div>
-
     <div class="about-reading-tip">
       <div class="about-reading-tip-icon">💡</div>
       <div><b>วิธีดูที่แนะนำ</b><span>เริ่มจากภาพรวม → ดูจุดที่ควรสนใจ → เปิดกราฟย้อนหลังของจุดนั้นเพื่อดูว่าค่าสูงเพียงชั่วคราวหรือมีแนวโน้มต่อเนื่อง</span></div>
     </div>
   </section>
-
   <section class="glass card about-character-guide-section" aria-labelledby="aboutCharacterGuideTitle">
     <div class="about-character-guide-head">
       <div>
@@ -990,16 +922,13 @@
       </div>
       <span class="about-character-guide-badge">ดูภาพ → อ่านสถานะ → ดูค่าจริง</span>
     </div>
-
     <div class="about-character-guide-scene" aria-hidden="true">
       <span class="about-guide-cloud about-guide-cloud-a"></span>
       <span class="about-guide-cloud about-guide-cloud-b"></span>
       <span class="about-guide-spark about-guide-spark-a">✦</span>
       <span class="about-guide-spark about-guide-spark-b">✧</span>
     </div>
-
     <div class="about-character-guide-grid">
-
       <article class="about-character-metric about-character-pm25">
         <div class="about-character-metric-head">
           <div class="about-character-metric-icon">💨</div>
@@ -1036,7 +965,6 @@
         </div>
         <p class="about-character-note">เมื่อฝุ่นสูงขึ้น ตัวละครจะเพิ่มการป้องกันและเปลี่ยนสีหน้าเพื่อสื่อให้เห็นว่าควรระวังมากขึ้น</p>
       </article>
-
       <article class="about-character-metric about-character-temp">
         <div class="about-character-metric-head">
           <div class="about-character-metric-icon">🌡️</div>
@@ -1078,7 +1006,6 @@
         </div>
         <p class="about-character-note">อากาศเย็นจะมีองค์ประกอบช่วยสื่อความหนาว ส่วนอากาศร้อนจะมีสัญลักษณ์แดดและเหงื่อประกอบ</p>
       </article>
-
       <article class="about-character-metric about-character-humidity">
         <div class="about-character-metric-head">
           <div class="about-character-metric-icon">💧</div>
@@ -1110,7 +1037,6 @@
         </div>
         <p class="about-character-note">เมื่อความชื้นสูง ตัวละครจะแสดงหยดน้ำและสีหน้าที่เปลี่ยนไป ส่วนค่าต่ำจะสื่อถึงอากาศที่ค่อนข้างแห้ง</p>
       </article>
-
       <article class="about-character-metric about-character-heat">
         <div class="about-character-metric-head">
           <div class="about-character-metric-icon">☀️</div>
@@ -1147,15 +1073,12 @@
         </div>
         <p class="about-character-note">ยิ่งดัชนีความร้อนสูง ตัวละครจะยิ่งแสดงอาการร้อนและสีหน้าที่ควรเพิ่มความระมัดระวัง</p>
       </article>
-
     </div>
-
     <div class="about-character-guide-tip">
       <span aria-hidden="true">💡</span>
       <p><b>ตัวละครช่วยให้ดูสถานการณ์ได้เร็วขึ้น</b> แต่เมื่อต้องการประเมินรายละเอียด ควรอ่านค่าตัวเลข สถานะ และคำอธิบายของตัวแปรนั้นร่วมกัน</p>
     </div>
   </section>
-
   <section class="glass card about-hero-guide-section" aria-labelledby="aboutHeroGuideTitle">
     <div class="about-hero-guide-head">
       <div>
@@ -1176,9 +1099,7 @@
         </p>
       </div>
     </div>
-
     <div class="about-hero-guide-grid">
-
       <article class="about-hero-guide-card about-hero-guide-dust">
         <div class="about-hero-guide-card-head">
           <div class="about-hero-guide-icon">🌿</div>
@@ -1187,47 +1108,37 @@
             <span>สรุประดับฝุ่นให้เข้าใจง่ายจากสถานการณ์ปัจจุบัน</span>
           </div>
         </div>
-
         <div class="about-hero-status-flow" aria-label="ตัวอย่างสถานะคุณภาพฝุ่น">
           <div class="about-hero-status-item">
             <div class="about-hero-character" data-hero-guide="dust" data-hero-state="excellent"></div>
             <b>ดีมาก</b>
             <span>อากาศสะอาด</span>
           </div>
-
           <span class="about-hero-status-arrow" aria-hidden="true">→</span>
-
           <div class="about-hero-status-item">
             <div class="about-hero-character" data-hero-guide="dust" data-hero-state="good"></div>
             <b>ดี</b>
             <span>ยังอยู่ในระดับดี</span>
           </div>
-
           <span class="about-hero-status-arrow" aria-hidden="true">→</span>
-
           <div class="about-hero-status-item">
             <div class="about-hero-character" data-hero-guide="dust" data-hero-state="moderate"></div>
             <b>เฝ้าระวัง</b>
             <span>เริ่มต้องสังเกต</span>
           </div>
-
           <span class="about-hero-status-arrow" aria-hidden="true">→</span>
-
           <div class="about-hero-status-item">
             <div class="about-hero-character" data-hero-guide="dust" data-hero-state="warning"></div>
             <b>ควรระวัง</b>
             <span>ควรลดการรับฝุ่น</span>
           </div>
-
           <span class="about-hero-status-arrow" aria-hidden="true">→</span>
-
           <div class="about-hero-status-item">
             <div class="about-hero-character" data-hero-guide="dust" data-hero-state="critical"></div>
             <b>อันตราย</b>
             <span>ควรหลีกเลี่ยงฝุ่น</span>
           </div>
         </div>
-
         <div class="about-hero-guide-note">
           <span>💡</span>
           <p>
@@ -1236,7 +1147,6 @@
           </p>
         </div>
       </article>
-
       <article class="about-hero-guide-card about-hero-guide-weather">
         <div class="about-hero-guide-card-head">
           <div class="about-hero-guide-icon">🌤️</div>
@@ -1245,9 +1155,7 @@
             <span>สรุปร่วมจากอุณหภูมิ ความชื้น และดัชนีความร้อน</span>
           </div>
         </div>
-
         <div class="about-weather-combo-grid">
-
           <div class="about-weather-combo-card">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="cold"></div>
             <div class="about-weather-combo-copy">
@@ -1259,7 +1167,6 @@
               </div>
             </div>
           </div>
-
           <div class="about-weather-combo-card">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="comfortable"></div>
             <div class="about-weather-combo-copy">
@@ -1271,7 +1178,6 @@
               </div>
             </div>
           </div>
-
           <div class="about-weather-combo-card">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="humid"></div>
             <div class="about-weather-combo-copy">
@@ -1283,7 +1189,6 @@
               </div>
             </div>
           </div>
-
           <div class="about-weather-combo-card">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="hot_humid"></div>
             <div class="about-weather-combo-copy">
@@ -1295,7 +1200,6 @@
               </div>
             </div>
           </div>
-
           <div class="about-weather-combo-card">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="very_hot"></div>
             <div class="about-weather-combo-copy">
@@ -1307,7 +1211,6 @@
               </div>
             </div>
           </div>
-
           <div class="about-weather-combo-card about-weather-combo-danger">
             <div class="about-hero-character" data-hero-guide="weather" data-hero-state="danger"></div>
             <div class="about-weather-combo-copy">
@@ -1319,9 +1222,7 @@
               </div>
             </div>
           </div>
-
         </div>
-
         <div class="about-hero-guide-note about-hero-guide-note-weather">
           <span>ℹ️</span>
           <p>
@@ -1330,10 +1231,8 @@
           </p>
         </div>
       </article>
-
     </div>
   </section>
-
   <section class="glass card about-standards-section">
     <div class="about-standards-header">
       <div>
@@ -1343,7 +1242,6 @@
       </div>
       <span class="about-standard-badge">อ่านเกณฑ์ก่อนตีความ</span>
     </div>
-
     <div class="about-standards-grid">
       <article class="about-standard-card about-standard-primary">
         <div class="about-standard-head"><span>PM2.5</span><b>ตัวหลักด้านคุณภาพอากาศ</b></div>
@@ -1360,13 +1258,11 @@
         </p>
         <p class="about-standard-note">Dashboard ใช้ระดับนี้เพื่อการสื่อสารและเฝ้าระวังเบื้องต้น ส่วนค่ามาตรฐาน PM2.5 ที่ 37.5 µg/m³ เป็นค่าเฉลี่ย 24 ชั่วโมง จึงไม่ควรนำค่ารอบล่าสุดไปสรุปว่า “ผ่าน/ไม่ผ่านมาตรฐาน 24 ชั่วโมง” โดยตรง</p>
       </article>
-
       <article class="about-standard-card">
         <div class="about-standard-head"><span>PM10</span><b>มาตรฐานอากาศไทย</b></div>
         <div class="about-standard-big">≤ 120 <small>µg/m³</small></div>
         <p>ค่าอ้างอิง PM10 เฉลี่ย 24 ชั่วโมงของประเทศไทย โครงการใช้ค่ารอบล่าสุดที่มากกว่า 120 µg/m³ เป็นสัญญาณ “เฝ้าระวังเบื้องต้น” เท่านั้น ไม่ใช่ผลมาตรฐาน 24 ชั่วโมงอย่างเป็นทางการ</p>
       </article>
-
       <article class="about-standard-card">
         <div class="about-standard-head"><span>อุณหภูมิ</span><b>เย็นถึงร้อน</b></div>
         <div class="about-threshold-list compact">
@@ -1379,7 +1275,6 @@
         </div>
         <p class="about-standard-note">อ้างอิงเกณฑ์อากาศร้อนและอากาศหนาวของกรมอุตุนิยมวิทยา แต่ Dashboard นำมาเทียบค่าปัจจุบันเพื่อเฝ้าระวังเบื้องต้นเท่านั้น เพราะเกณฑ์ต้นฉบับใช้กับอุณหภูมิสูงสุด/ต่ำสุดประจำวันตามฤดูกาล</p>
       </article>
-
       <article class="about-standard-card">
         <div class="about-standard-head"><span>ความชื้นสัมพัทธ์</span><b>เกณฑ์เฝ้าระวังของโครงการ</b></div>
         <div class="about-threshold-list compact">
@@ -1390,7 +1285,6 @@
         </div>
         <p class="about-standard-note">ระดับนี้เป็นเกณฑ์เฝ้าระวังของโครงการเพื่อช่วยสื่อสารค่าที่แห้งหรือชื้นมาก ไม่ใช่มาตรฐานสุขภาพหรือเกณฑ์ทางอุตุนิยมวิทยาอย่างเป็นทางการ ควรพิจารณาร่วมกับอุณหภูมิและ Heat Index</p>
       </article>
-
       <article class="about-standard-card">
         <div class="about-standard-head"><span>Heat Index</span><b>อุณหภูมิ + ความชื้น</b></div>
         <div class="about-threshold-list compact">
@@ -1402,7 +1296,6 @@
         </div>
         <p class="about-standard-note">Heat Index ใช้ประเมินความร้อนที่ร่างกายรู้สึกได้ และไม่ใช่ WBGT</p>
       </article>
-
       <article class="about-standard-card about-standard-supporting">
         <div class="about-standard-head"><span>ข้อมูลประกอบของระบบ</span><b>ใช้ร่วมกับตัวชี้วัดหลัก</b></div>
         <div class="about-supporting-grid">
@@ -1424,7 +1317,6 @@
         </div>
       </article>
     </div>
-
     <div class="about-reference-box">
       <div class="about-reference-title">แหล่งอ้างอิงสำหรับตรวจสอบเพิ่มเติม</div>
       <div class="about-reference-links">
@@ -1437,7 +1329,6 @@
       </div>
     </div>
   </section>
-
   <section class="about-telegram-section" aria-label="ติดตามสถานการณ์ผ่าน Telegram">
   <a
     class="about-telegram-link"
@@ -1457,15 +1348,12 @@
     <span class="about-telegram-arrow" aria-hidden="true">→</span>
   </a>
   </section>
-
   <section class="about-credit-section">
   <div class="about-credit-note"><div><div class="overview-eyebrow">PROJECT CREDIT</div><div class="section-title-with-help"><h2>ผู้เกี่ยวข้องกับโครงการ</h2><button aria-expanded="false" aria-label="ดูคำอธิบายผู้เกี่ยวข้องกับโครงการ" class="help-button" data-help="aboutPeople" type="button">?</button></div></div></div>
-
 <footer class="credit-bar">
 <div class="credit-glow credit-glow-1"></div>
 <div class="credit-glow credit-glow-2"></div>
 <div class="credit-inner">
-
 <div class="credit-box credit-college">
 <div class="credit-icon credit-image-button" onclick="openCreditImage(
                     'img/ตราวิทลัยใหม่.png',
@@ -1592,10 +1480,8 @@
 </footer>
   </section>
 </section>
-
 <div class="tablet-page-end" aria-hidden="true"><span></span><small>LOCAL AIR QUALITY AND PM2.5 MONITORING STATION</small><span></span></div>
 </main>
-
 <div aria-hidden="true" aria-modal="false" class="help-popover" id="helpPopover" role="dialog">
 <div class="help-popover-header">
 <div>
@@ -1612,11 +1498,9 @@
 </div>
 <div class="help-popover-body" id="helpPopoverBody"></div>
 </div>
-
 <div aria-hidden="true" class="export-modal" id="exportModal">
 <div class="export-modal-backdrop" data-export-close="true"></div>
 <div aria-labelledby="exportModalTitle" aria-modal="true" class="export-modal-dialog" role="dialog">
-
 <div class="export-modal-header">
 <div class="export-modal-title-wrap">
 <div class="export-modal-icon">
@@ -1635,9 +1519,7 @@
                 ×
             </button>
 </div>
-
 <div class="export-modal-body">
-
 <div class="export-date-grid">
 <label class="export-field">
 <span>
@@ -1655,7 +1537,6 @@
 <input id="exportEndDate" type="date"/>
 </label>
 </div>
-
 <div class="export-summary-row">
 <div class="export-count-card">
 <div class="export-count-label">
@@ -1683,7 +1564,6 @@
 </div>
 </div>
 </div>
-
 <div class="export-preview-head">
 <div>
 <b>
@@ -1722,7 +1602,6 @@
 </div>
 <div class="export-error hidden" id="exportError"></div>
 </div>
-
 <div class="export-modal-footer">
 <button class="export-cancel-button" id="exportCancelButton" type="button">
                 ยกเลิก
@@ -1733,7 +1612,6 @@
 </div>
 </div>
 </div>
-
 <div class="auth-modal hidden" id="authModal" aria-hidden="true">
   <div class="auth-modal-backdrop" data-auth-close></div>
   <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -1796,12 +1674,10 @@
     </form>
   </section>
 </div>
-
 <div class="profile-editor hidden" id="profileEditorModal" aria-hidden="true">
   <div class="profile-editor-backdrop" data-profile-editor-close></div>
   <section class="profile-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="profileEditorTitle">
     <header class="profile-editor-header">
-      
       <div class="modal-header-copy">
         <span class="profile-editor-eyebrow">PROFILE IMAGE</span>
         <h2 id="profileEditorTitle">ปรับรูปโปรไฟล์</h2>
@@ -1809,35 +1685,29 @@
       </div>
       <button type="button" class="profile-editor-close" data-profile-editor-close aria-label="ปิด">×</button>
     </header>
-
     <div class="profile-editor-body">
       <div class="profile-crop-stage" id="profileCropStage">
         <img id="profileCropImage" alt="ตัวอย่างรูปโปรไฟล์">
         <div class="profile-crop-ring" aria-hidden="true"></div>
       </div>
-
       <div class="profile-zoom-row">
         <span aria-hidden="true">−</span>
         <input id="profileZoomRange" type="range" min="1" max="3" step="0.01" value="1" aria-label="ซูมรูปโปรไฟล์">
         <span aria-hidden="true">＋</span>
       </div>
-
       <div class="profile-editor-help">ลากรูปภายในกรอบเพื่อเลือกส่วนที่จะใช้เป็นรูปโปรไฟล์</div>
       <div class="profile-editor-message" id="profileEditorMessage"></div>
     </div>
-
     <footer class="profile-editor-footer">
       <button type="button" class="profile-editor-secondary" id="profileEditorCancel">ยกเลิก</button>
       <button type="button" class="profile-editor-primary" id="profileEditorSave">บันทึกรูปโปรไฟล์</button>
     </footer>
   </section>
 </div>
-
 <div class="notification-center-modal hidden" id="notificationSettingsModal" aria-hidden="true">
   <div class="notification-modal-backdrop" data-notification-close></div>
   <section class="notification-settings-shell" role="dialog" aria-modal="true" aria-labelledby="notificationSettingsTitle">
     <header class="notification-settings-header">
-      
       <div class="notification-title-wrap"><span class="notification-title-icon">🔔</span><div><span class="notification-eyebrow">NOTIFICATIONS</span><h2 id="notificationSettingsTitle">การแจ้งเตือน</h2><p>เลือกสถานการณ์ที่คุณต้องการให้ระบบแจ้งเตือน</p></div></div>
       <button type="button" class="notification-close" data-notification-close aria-label="ปิด">×</button>
     </header>
@@ -1868,11 +1738,9 @@
     </div>
   </section>
 </div>
-
 <div class="notification-detail-modal hidden" id="notificationDetailModal" aria-hidden="true">
   <div class="notification-modal-backdrop" data-notification-detail-close></div>
   <section class="notification-detail-shell" role="dialog" aria-modal="true" aria-labelledby="notificationDetailTitle">
-    
     <button type="button" class="notification-close" data-notification-detail-close aria-label="ปิด">×</button>
     <div class="notification-detail-icon" id="notificationDetailIcon">🔔</div>
     <span class="notification-detail-kicker">สถานการณ์ล่าสุด</span><h2 id="notificationDetailTitle">การแจ้งเตือน</h2><p id="notificationDetailMessage"></p>
@@ -1880,8 +1748,6 @@
     <button type="button" class="notification-detail-action" id="notificationDetailGo">ดูข้อมูลจุดตรวจวัด</button>
   </section>
 </div>
-
-
 <!-- =====================================================
      REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
      ===================================================== -->
@@ -1896,7 +1762,6 @@
       </div>
       <button type="button" class="wifi-management-close" data-wifi-management-close aria-label="ปิด">×</button>
     </header>
-
     <div class="wifi-management-body">
       <section class="wifi-status-card">
         <div class="wifi-status-row"><span>สถานะตัวแม่</span><strong id="wifiMotherStatus">กำลังตรวจสอบ</strong></div>
@@ -1908,7 +1773,6 @@
         </div>
         <p class="wifi-status-note" id="wifiCommandMessage">ยังไม่มีคำสั่งเปลี่ยนเครือข่าย</p>
       </section>
-
       <section class="wifi-saved-section">
         <div class="wifi-section-heading">
           <div><span>เครือข่ายที่จดจำ</span><small>เลือกเครือข่ายเดิมเพื่อสลับกลับได้โดยไม่ต้องกรอกรหัสผ่านใหม่</small></div>
@@ -1918,17 +1782,14 @@
           <div class="wifi-empty-state">ยังไม่มีเครือข่ายที่จดจำ</div>
         </div>
       </section>
-
       <form id="wifiManagementForm" class="wifi-management-form">
         <div class="wifi-form-title">
           <strong>เชื่อมต่อเครือข่ายใหม่</strong>
           <span>กรอกข้อมูลเครือข่ายที่ต้องการให้ตัวแม่เชื่อมต่อ</span>
         </div>
-
         <label>ชื่อเครือข่าย (SSID)
           <input id="wifiNewSSID" type="text" maxlength="32" autocomplete="off" required placeholder="กรอกชื่อ Wi-Fi">
         </label>
-
         <div class="wifi-password-heading">
           <span>รหัสผ่าน</span>
           <div class="wifi-security-choice" role="radiogroup" aria-label="ประเภทเครือข่าย">
@@ -1936,7 +1797,6 @@
             <label><input type="radio" name="wifiSecurityType" id="wifiSecurityOpen" value="open"><span>ไม่มีรหัสผ่าน</span></label>
           </div>
         </div>
-
         <div class="wifi-password-wrap" id="wifiPasswordField">
           <input id="wifiNewPassword" type="password" maxlength="63" autocomplete="new-password" placeholder="กรอกรหัสผ่าน Wi-Fi">
           <button type="button" id="wifiPasswordToggle" class="wifi-password-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false">
@@ -1952,16 +1812,13 @@
             </svg>
           </button>
         </div>
-
         <label class="wifi-remember-network">
           <input id="wifiRememberNetwork" type="checkbox">
           <span><b>จดจำ</b><small>บันทึกเครือข่ายนี้หลังเชื่อมต่อสำเร็จ เพื่อสลับกลับได้ในครั้งถัดไป</small></span>
         </label>
-
         <div class="wifi-management-message" id="wifiManagementMessage"></div>
         <button type="submit" class="wifi-management-submit" id="wifiManagementSubmit">เชื่อมต่อเครือข่าย</button>
       </form>
-
       <section class="wifi-history-section">
         <div class="wifi-section-heading">
           <div><span>ประวัติการเชื่อมต่อ</span><small>รายการคำสั่งเปลี่ยนเครือข่ายล่าสุดของตัวแม่</small></div>
@@ -1973,12 +1830,10 @@
     </div>
   </section>
 </div>
-
 <div class="my-account-center hidden" id="myAccountCenter" aria-hidden="true">
   <div class="my-account-backdrop" data-my-account-close></div>
   <section class="my-account-shell" role="dialog" aria-modal="true" aria-labelledby="myAccountTitle">
     <header class="my-account-header">
-      
       <div class="my-account-header-copy"><span class="my-account-eyebrow">MY ACCOUNT</span><h2 id="myAccountTitle">บัญชีของฉัน</h2><p>จัดการข้อมูลส่วนตัว รูปโปรไฟล์ และความปลอดภัยของบัญชี</p></div>
       <button type="button" class="my-account-close" data-my-account-close aria-label="ปิด">×</button>
     </header>
@@ -1988,27 +1843,23 @@
         <div class="my-account-identity"><h3 id="myAccountName">ผู้ใช้งาน</h3><p id="myAccountEmail">--</p><div class="my-account-badges"><span id="myAccountRole">USER</span><span id="myAccountProvider">Email</span></div></div>
         <button type="button" class="my-account-primary" id="myAccountChangePhoto">เปลี่ยนรูปโปรไฟล์</button><input id="profileImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
       </section>
-
       <div class="my-account-grid">
         <section class="my-account-card">
           <div class="my-account-card-icon">👤</div>
           <div class="my-account-card-copy"><h3>ข้อมูลบัญชี</h3><p>ข้อมูลที่ใช้ระบุตัวตนในระบบ Dashboard</p></div>
           <dl class="my-account-details"><div><dt>ชื่อที่แสดง</dt><dd id="myAccountDisplayName">--</dd></div><div><dt>อีเมล</dt><dd id="myAccountEmailDetail">--</dd></div><div><dt>ระดับบัญชี</dt><dd id="myAccountRoleDetail">--</dd></div></dl>
         </section>
-
         <section class="my-account-card">
           <div class="my-account-card-icon">🔐</div>
           <div class="my-account-card-copy"><h3>การเข้าสู่ระบบและความปลอดภัย</h3><p>ตรวจสอบวิธีเข้าสู่ระบบและจัดการรหัสผ่าน</p></div>
           <div class="my-account-action-row"><div><b>วิธีเข้าสู่ระบบ</b><span id="myAccountProviderDetail">--</span></div></div>
           <button type="button" class="my-account-secondary" id="myAccountChangePassword">เปลี่ยนรหัสผ่าน</button>
         </section>
-
       </div>
       <div class="my-account-note">ข้อมูลสิทธิ์การใช้งานถูกกำหนดโดยผู้ดูแลระบบ หากต้องการสิทธิ์เพิ่มเติมให้ติดต่อผู้ดูแลโครงการ</div>
     </div>
   </section>
 </div>
-
 <div class="account-security-modal hidden" id="accountSecurityModal" aria-hidden="true">
   <div class="my-account-backdrop" data-security-close></div>
   <section class="account-security-shell" role="dialog" aria-modal="true" aria-labelledby="accountSecurityTitle">
@@ -2022,12 +1873,10 @@
     </form>
   </section>
 </div>
-
 <div class="admin-center hidden" id="adminCenter" aria-hidden="true">
   <div class="admin-center-backdrop" data-admin-close></div>
   <section class="admin-center-shell" role="dialog" aria-modal="true" aria-labelledby="adminCenterTitle">
     <header class="admin-center-header">
-      
       <div class="admin-center-header-copy"><span class="admin-eyebrow" id="adminCenterEyebrow">CONTENT MANAGEMENT</span><h2 id="adminCenterTitle">จัดการเนื้อหา</h2><p id="adminCenterSubtitle">จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard</p></div>
       <button type="button" class="admin-close" data-admin-close aria-label="ปิด">×</button>
     </header>
@@ -2094,19 +1943,18 @@
         <section class="admin-panel" data-admin-panel="users">
           <div class="admin-panel-head admin-users-head">
             <div>
-              <h3>ผู้ใช้งานและสิทธิ์</h3>
-              <p>ค้นหาบัญชี กำหนด Role และเปิด/ปิด Permission รายข้อได้ละเอียดคล้าย Discord</p>
+              <h3>ผู้ใช้งานและระดับบัญชี</h3>
+              <p>User ใช้งาน Dashboard ได้ตามปกติ ส่วน Admin สามารถกำหนดสิทธิ์จัดการระบบเป็นรายบัญชีได้</p>
             </div>
             <button class="admin-add-admin-button hidden" id="addAdminModeButton" type="button">＋ เพิ่ม Admin</button>
           </div>
-
           <div class="admin-user-toolbar">
             <label class="admin-user-search">
               <span>ค้นหาผู้ใช้</span>
               <input id="adminUserSearch" type="search" autocomplete="off" placeholder="พิมพ์ชื่อหรืออีเมล...">
             </label>
             <label class="admin-user-filter">
-              <span>สิทธิ์</span>
+              <span>ระดับบัญชี</span>
               <select id="adminUserRoleFilter">
                 <option value="all">ทั้งหมด</option>
                 <option value="owner">Owner</option>
@@ -2115,12 +1963,10 @@
               </select>
             </label>
           </div>
-
           <div class="admin-add-mode-banner hidden" id="adminAddModeBanner">
             <div><b>เพิ่ม Admin</b><span>ค้นหาบัญชี แล้วกด “ตั้งเป็น Admin”</span></div>
             <button type="button" id="cancelAddAdminMode">ยกเลิก</button>
           </div>
-
           <div class="admin-user-list admin-user-card-list" id="adminUserList">
             <div class="admin-empty">กำลังโหลด...</div>
           </div>
@@ -2130,7 +1976,6 @@
     </div>
   </section>
 </div>
-
 <div aria-hidden="true" class="credit-image-modal" id="creditImageModal">
 <div class="credit-image-overlay" onclick="closeCreditImage()"></div>
 <button aria-label="ปิดรูปภาพ" class="credit-image-close" onclick="closeCreditImage()" type="button">
@@ -2141,7 +1986,6 @@
 <div class="credit-image-caption" id="creditImageCaption"></div>
 </div>
 </div>
-
 <script>
 window.addEventListener("load",()=>{
   setTimeout(()=>{
@@ -2156,7 +2000,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260913-v8-28-mobile-close-ux"></script>
+<script defer src="app.js?v=20260915-role-simplified-v1"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
@@ -2164,6 +2008,5 @@ window.addEventListener("load",()=>{
 <header class="v18-info-header"><div><small>คำอธิบายข้อมูล</small><h2 id="v18InfoTitle">ข้อมูล</h2></div><button type="button" data-v18-info-close aria-label="ปิด">×</button></header>
 <div class="v18-info-body" id="v18InfoBody"></div>
 </section></div>
-
 </body>
 </html>
