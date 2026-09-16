@@ -59,7 +59,7 @@ let chartLibraryPromise=null;
 let chartLibraryReady=false;
 let forecastSectionActivated=false;
 let metric="all";
-let forecastMetric="pm25";
+let forecastMetric="all";
 let historyNode="compare";
 let currentMetric="pm25";
 let averageRange="today";
@@ -3267,14 +3267,7 @@ slope*sx
 n
 };
 }
-function hideForecastTechnicalMessage(){
-const el=$("forecastMessage");
-if(!el)return;
-el.innerHTML="";
-el.style.display="none";
-}
 function updateForecastToggle(){
-hideForecastTechnicalMessage();
 const b=
 $("forecastToggle");
 const l=
@@ -3612,7 +3605,6 @@ return `<div class="forecast-compare-guide-v5">
 </div>`;
 }
 function drawForecast(arr){
-hideForecastTechnicalMessage();
 forecastGroupCharts=
 destroyChartList(
 forecastGroupCharts
@@ -3640,20 +3632,6 @@ const compareMode=
 historyNode==="compare";
 const scope=
 selectedForecastScope();
-const resultReady=
-aiForecastPayload?.data&&
-(
-aiForecastPayload.ai===true||
-[
-"all_ai_unavailable",
-"fast_forecast"
-]
-.includes(
-aiForecastPayload?.reason
-)
-);
-const providerText=
-"ระบบคาดการณ์";
 if(forecastMetric==="all"){
 if(compareMode){
 area.innerHTML=forecastCompareLegendHtml()+`<div class="metric-chart-grid-3">`+
@@ -3729,10 +3707,6 @@ createCompare(
 "light",
 "lux"
 );
-if($("forecastMessage")){
-$("forecastMessage").innerHTML="";
-$("forecastMessage").style.display="none";
-}
 updateForecastToggle();
 return;
 }
@@ -3761,7 +3735,7 @@ miniLegend(
 ["pm1","pm25","pm10"]
 )
 )+
-`<div class="forecastMetric-chart-grid-3">`+
+`<div class="metric-chart-grid-3">`+
 groupedChartShell(
 "อุณหภูมิ",
 `${scopeLabel} • °C`,
@@ -3889,14 +3863,6 @@ create(
 ["light"],
 "lux"
 );
-if($("forecastMessage")){
-$("forecastMessage").innerHTML=
-resultReady
-?`<b class="text-cyan-300">คาดการณ์ 30 นาที • ${esc(scopeLabel)} • ทุกตัวแปร</b>
-<div class="mt-2">${esc(providerText)} • แสดง +10, +20 และ +30 นาที</div>
-<div class="text-[12px] text-slate-500 mt-2">ผลคาดการณ์ใช้ข้อมูลของ ${esc(scopeLabel)} โดยตรง • ไม่ใช่ค่าที่วัดได้ล่วงหน้า</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b><div class="mt-1">ข้อมูลล่าสุดยังไม่เพียงพอ</div></div>';
-}
 updateForecastToggle();
 return;
 }
@@ -3923,7 +3889,7 @@ type:"line",
 data,
 options:{
 ...forecastChartOptions(
-`${metricLabel()} ${metricUnit()}`.trim()
+`${metricLabelFor(forecastMetric)} ${metricUnitFor(forecastMetric)}`.trim()
 ),
 plugins:{
 legend:{display:false},
@@ -3941,14 +3907,6 @@ graphTooltipLabel
 }
 }
 );
-if($("forecastMessage")){
-$("forecastMessage").innerHTML=
-resultReady
-?`<b style="color:${metricColor(forecastMetric)}">คาดการณ์ 30 นาที • เปรียบเทียบทุกจุด • ${metricLabel()}</b>
-<div class="mt-2">${esc(providerText)} • จุด 1/2/3 ถูกคาดการณ์แยกจากข้อมูลของแต่ละจุด</div>
-<div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
-:'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
-}
 updateForecastToggle();
 return;
 }
@@ -4036,7 +3994,7 @@ datasets
 },
 options:{
 ...forecastChartOptions(
-`${metricLabel()} ${metricUnit()}`.trim()
+`${metricLabelFor(forecastMetric)} ${metricUnitFor(forecastMetric)}`.trim()
 ),
 plugins:{
 legend:
@@ -4055,10 +4013,6 @@ graphTooltipLabel
 }
 }
 );
-if($("forecastMessage")){
-$("forecastMessage").innerHTML="";
-$("forecastMessage").style.display="none";
-}
 updateForecastToggle();
 }
 function toDateTimeLocalValue(d){
@@ -4881,10 +4835,6 @@ button.textContent=oldText||"📊 ดาวน์โหลด Excel";
 }
 }
 }
-function confidenceText(v){
-return{high:"สูง",medium:"ปานกลาง",low:"ต่ำ"}[String(v||"").toLowerCase()]||"--";
-}
-
 function normalizeProjectWording(value){
 if(value===null||value===undefined){
 return value;
@@ -4911,42 +4861,42 @@ s=s
 );
 return s;
 }
+function forecastValueText(value,field){
+const n=finiteNumberOrNull(value);
+if(n===null)return"--";
+const unit=metricUnitFor(field);
+return `${fmt(n)}${unit?` ${unit}`:""}`;
+}
 function renderAIForecast(payload){
 const box=$("aiForecastDetails");
-const badge=$("aiForecastStatusBadge");
 const generated=$("aiForecastGeneratedAt");
 if(aiForecastLoading){
 if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังประมวลผลการคาดการณ์...</div>';
-if(badge){badge.className="ai-forecast-status";badge.textContent="กำลังคาดการณ์";}
 return;
 }
 if(!payload){
 if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลการคาดการณ์ในขณะนี้</div>';
-if(badge){badge.className="ai-forecast-status";badge.textContent="รอข้อมูล";}
 if(generated)generated.textContent="อัปเดตการคาดการณ์: --";
 return;
 }
 const d=payload.data||{};
 const dt=parseDate(payload.generated_at);
 if(generated)generated.textContent=dt?`อัปเดตการคาดการณ์: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดตการคาดการณ์: --";
-if(badge){
-badge.className=`ai-forecast-status ${payload.ai===true?"is-connected":"is-unavailable"}`;
-badge.textContent=payload.ai===true?"พร้อมใช้งาน":"ระบบคาดการณ์";
-}
 if(!box)return;
-if(payload.ai!==true && !["fast_forecast","all_ai_unavailable"].includes(payload?.reason)){
-box.innerHTML='<div class="ai-unavailable"><b>ยังไม่สามารถสร้างการคาดการณ์ได้</b><div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div></div>';
+if(payload.ai!==true&&!['fast_forecast','all_ai_unavailable'].includes(payload?.reason)){
+box.innerHTML='<div class="ai-unavailable"><b>ยังไม่สามารถสร้างการคาดการณ์ได้</b><div class="mt-1">ข้อมูลที่จำเป็นยังไม่เพียงพอ กรุณาลองใหม่ภายหลัง</div></div>';
 return;
 }
-box.innerHTML=`
-<div class="ai-forecast-headline">${esc(normalizeProjectWording(d.headline)||"การคาดการณ์ระยะสั้น")}</div>
-<div class="ai-forecast-grid mt-3">
-  <div class="ai-forecast-item"><div class="ai-forecast-label">🌿 คุณภาพอากาศ</div><div>${esc(normalizeProjectWording(d.air_forecast)||"ยังไม่มีข้อมูล")}</div></div>
-  <div class="ai-forecast-item"><div class="ai-forecast-label">🌡 สภาพความร้อน</div><div>${esc(normalizeProjectWording(d.heat_forecast)||"ยังไม่มีข้อมูล")}</div></div>
-  <div class="ai-forecast-item"><div class="ai-forecast-label">📍 พื้นที่</div><div>${esc(normalizeProjectWording(d.local_environment_forecast)||"ยังไม่มีข้อมูล")}</div></div>
-  <div class="ai-forecast-item"><div class="ai-forecast-label">🏃 กิจกรรม</div><div>${esc(normalizeProjectWording(d.activity_forecast)||"ยังไม่มีข้อมูล")}</div></div>
-</div>
-<div class="ai-meta-row"><span>ค่าคาดการณ์เป็นค่าประมาณจากข้อมูลที่ระบบมีอยู่</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}<small> ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</small></span></div>`;
+const scope=selectedForecastScope();
+const scopeData=forecastScopeData(scope)||d;
+const points=Array.isArray(scopeData?.forecast_points)?scopeData.forecast_points:[];
+const fields=forecastMetric==="all"?GRAPH_FIELDS:[forecastMetric];
+const scopeLabel=scope==="AREA"?"ภาพรวมพื้นที่":historyNodeLabel(scope);
+const rows=fields.map(field=>{
+const p=points.find(item=>item?.field===field);
+return `<div class="forecast-value-row-v6"><div class="forecast-value-metric-v6"><b>${esc(metricLabelFor(field))}</b><small>${esc(metricUnitFor(field))}</small></div><div>${esc(forecastValueText(p?.p10,field))}</div><div>${esc(forecastValueText(p?.p20,field))}</div><div>${esc(forecastValueText(p?.p30,field))}</div></div>`;
+}).join("");
+box.innerHTML=`<div class="forecast-values-head-v6"><div><span>มุมมอง</span><b>${esc(scopeLabel)}</b></div>${historyNode==="compare"?'<small>กราฟด้านล่างเปรียบเทียบทุกจุด</small>':''}</div><div class="forecast-values-table-v6"><div class="forecast-value-row-v6 is-head"><div>ตัวแปร</div><div>อีก 10 นาที</div><div>อีก 20 นาที</div><div>อีก 30 นาที</div></div>${rows}</div>`;
 }
 async function loadAIForecast(
 force=false
@@ -4958,12 +4908,6 @@ return;
 }
 aiForecastLoading=
 true;
-const forecastMessageEl=
-$("forecastMessage");
-if(forecastMessageEl){
-forecastMessageEl.innerHTML=
-'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังประมวลผลการคาดการณ์ล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังประมวลผลข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
-}
 renderAIForecast(
 aiForecastPayload
 );
@@ -5117,9 +5061,9 @@ html:`<div class="help-intro-card"><b>แสดงสิ่งที่อาจ
 },
 forecastPage:{
 title:"🔮 หน้าการคาดการณ์",
-html:`<div class="help-intro-card"><b>หน้านี้รวมข้อมูลคาดการณ์ไว้ในที่เดียว</b><span>ประกอบด้วยคำอธิบายการคาดการณ์และกราฟคาดการณ์ 30 นาที</span></div>
-<section class="help-section"><h4>คำอธิบายการคาดการณ์</h4><p>สรุปสิ่งที่ระบบคาดว่าอาจเกิดขึ้นในระยะสั้น โดยเน้นข้อมูลอนาคตและไม่แสดงส่วนสรุปสถานการณ์ปัจจุบัน</p></section>
-<section class="help-section"><h4>กราฟคาดการณ์</h4><p>เส้นทึบคือข้อมูลที่เกิดขึ้นแล้ว ส่วนช่วงคาดการณ์ใช้แสดงค่าประมาณ +10 / +20 / +30 นาที</p></section>`
+html:`<div class="help-intro-card"><b>หน้านี้แสดงค่าที่ระบบคาดสำหรับช่วงเวลาข้างหน้า</b><span>ตารางด้านบนและกราฟด้านล่างใช้ค่าคาดการณ์ +10 / +20 / +30 นาทีชุดเดียวกัน</span></div>
+<section class="help-section"><h4>ค่าคาดการณ์ล่วงหน้า</h4><p>ตารางแสดงตัวเลขที่คาดสำหรับอีก 10, 20 และ 30 นาที ตามมุมมองและตัวแปรที่เลือก</p></section>
+<section class="help-section"><h4>กราฟคาดการณ์</h4><p>เส้นทึบคือข้อมูลที่เกิดขึ้นแล้ว ส่วนเส้นประคือค่าคาดการณ์ +10 / +20 / +30 นาที</p></section>`
 },
 aboutPage:{
 title:"ℹ️ เกี่ยวกับโครงการ",
@@ -5328,6 +5272,7 @@ const next=button.dataset.historyNode;
 if(!["compare","average",...HISTORY_NODES].includes(next)||next===historyNode)return;
 historyNode=next;
 updateHistoryNodeControls();
+renderAIForecast(aiForecastPayload);
 drawCharts();
 });
 });
@@ -5346,6 +5291,7 @@ forecastMetricSelect.value=forecastMetric;
 forecastMetricSelect.addEventListener("change",e=>{
 forecastMetric=e.target.value;
 updateMetricControls();
+renderAIForecast(aiForecastPayload);
 drawForecast([]);
 });
 }
@@ -5713,7 +5659,7 @@ viewer.innerHTML=`
 <div class="chart-series-controls" id="chartSeriesControls">
 <div class="chart-series-controls-head">
 <div class="chart-series-controls-title">เลือกเส้นที่ต้องการดู</div>
-<div class="chart-series-controls-help">เลือกชื่อเพื่อดูเส้นเดียว หรือเลือก “ทุกเส้น” เพื่อกลับมาดูพร้อมกัน</div>
+<div class="chart-series-controls-help">เลือกจุดหรือข้อมูลที่ต้องการดู หรือเลือก “ทุกเส้น” เพื่อกลับมาดูพร้อมกัน</div>
 </div>
 <div class="chart-series-picker-row">
 <button type="button" class="chart-series-show-all" id="chartSeriesShowAll" aria-pressed="true">ทุกเส้น</button>
@@ -6030,21 +5976,36 @@ return all.find(
 c=>c.canvas===canvas
 )||null;
 }
+function chartSeriesGroupLabel(dataset,index){
+const label=String(dataset?.label||`ข้อมูล ${index+1}`);
+return label.replace(/\s*[•-]\s*คาดการณ์\s*$/i,"").replace(/\s+Forecast\s*$/i,"").trim();
+}
 function updateSeriesControlUI(){
 const wrap=$("chartSeriesControls");
 const buttons=$("chartSeriesButtons");
 const showAll=$("chartSeriesShowAll");
 if(!wrap||!buttons||!showAll||!chartInteractiveInstance)return;
 const datasets=chartInteractiveInstance.data.datasets||[];
-if(datasets.length<=1){
+const groups=[];
+const groupMap=new Map();
+datasets.forEach((ds,index)=>{
+const label=chartSeriesGroupLabel(ds,index);
+if(!groupMap.has(label)){
+const group={label,indices:[],color:typeof ds.borderColor==="string"?ds.borderColor:"#67e8f9"};
+groupMap.set(label,group);
+groups.push(group);
+}
+groupMap.get(label).indices.push(index);
+});
+if(groups.length<=1){
 wrap.classList.add("is-single");
 buttons.innerHTML="";
 showAll.classList.add("hidden");
-const one=datasets[0];
+const one=groups[0];
 if(one){
 const label=document.createElement("div");
 label.className="chart-series-single-label";
-label.textContent=one.label||"ข้อมูล";
+label.textContent=one.label;
 buttons.appendChild(label);
 }
 return;
@@ -6052,89 +6013,47 @@ return;
 wrap.classList.remove("is-single");
 showAll.classList.remove("hidden");
 buttons.innerHTML="";
-const visibleIndices=datasets.map((_,index)=>chartInteractiveInstance.isDatasetVisible(index)?index:-1).filter(index=>index>=0);
-const allVisible=visibleIndices.length===datasets.length;
-const singleIndex=visibleIndices.length===1?visibleIndices[0]:-1;
-showAll.disabled=false;
-showAll.classList.toggle("is-active",allVisible);
-showAll.setAttribute("aria-pressed",allVisible?"true":"false");
-datasets.forEach((ds,index)=>{
+const actualIndices=datasets.map((ds,index)=>ds?.isForecast===true?-1:index).filter(index=>index>=0);
+const allActualVisible=actualIndices.every(index=>chartInteractiveInstance.isDatasetVisible(index));
+const visibleGroups=groups.filter(group=>group.indices.some(index=>chartInteractiveInstance.isDatasetVisible(index)));
+const oneGroup=visibleGroups.length===1?visibleGroups[0]:null;
+showAll.classList.toggle("is-active",allActualVisible&&visibleGroups.length===groups.length);
+showAll.setAttribute("aria-pressed",allActualVisible&&visibleGroups.length===groups.length?"true":"false");
+groups.forEach(group=>{
 const button=document.createElement("button");
 button.type="button";
 button.className="chart-series-button";
-const selected=index===singleIndex;
+const selected=oneGroup===group;
 button.classList.toggle("is-active",selected);
 button.setAttribute("aria-pressed",selected?"true":"false");
-button.dataset.index=String(index);
-button.title=`ดูเฉพาะ ${ds.label||`ข้อมูล ${index+1}`}`;
-const color=typeof ds.borderColor==="string"?ds.borderColor:"#67e8f9";
-button.innerHTML=`<span class="chart-series-color" style="background:${esc(color)}"></span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
+button.dataset.indices=group.indices.join(",");
+button.title=`ดูเฉพาะ ${group.label}`;
+button.innerHTML=`<span class="chart-series-color" style="background:${esc(group.color)}"></span><span>${esc(group.label)}</span>`;
 buttons.appendChild(button);
 });
 }
 function bindSeriesControlEvents(){
-const buttons=
-$("chartSeriesButtons");
-const showAll=
-$("chartSeriesShowAll");
-buttons?.addEventListener(
-"click",
-e=>{
-const button=
-e.target.closest(
-".chart-series-button"
-);
-if(
-!button||
-!chartInteractiveInstance
-){
-return;
-}
-const index=
-Number(
-button.dataset.index
-);
-if(
-!Number.isInteger(
-index
-)
-){
-return;
-}
-chartInteractiveInstance.data.datasets.forEach(
-(_,datasetIndex)=>{
-chartInteractiveInstance.setDatasetVisibility(
-datasetIndex,
-datasetIndex===index
-);
-}
-);
-chartInteractiveInstance.update(
-"none"
-);
+const buttons=$("chartSeriesButtons");
+const showAll=$("chartSeriesShowAll");
+buttons?.addEventListener("click",e=>{
+const button=e.target.closest(".chart-series-button");
+if(!button||!chartInteractiveInstance)return;
+const selected=new Set(String(button.dataset.indices||"").split(",").map(Number).filter(Number.isInteger));
+chartInteractiveInstance.data.datasets.forEach((ds,index)=>{
+const visible=selected.has(index)&&(!(ds?.isForecast===true)||forecastVisible);
+chartInteractiveInstance.setDatasetVisibility(index,visible);
+});
+chartInteractiveInstance.update("none");
 updateSeriesControlUI();
-}
-);
-showAll?.addEventListener(
-"click",
-()=>{
-if(!chartInteractiveInstance){
-return;
-}
-chartInteractiveInstance.data.datasets.forEach(
-(_,index)=>{
-chartInteractiveInstance.setDatasetVisibility(
-index,
-true
-);
-}
-);
-chartInteractiveInstance.update(
-"none"
-);
+});
+showAll?.addEventListener("click",()=>{
+if(!chartInteractiveInstance)return;
+chartInteractiveInstance.data.datasets.forEach((ds,index)=>{
+chartInteractiveInstance.setDatasetVisibility(index,!(ds?.isForecast===true)||forecastVisible);
+});
+chartInteractiveInstance.update("none");
 updateSeriesControlUI();
-}
-);
+});
 }
 async function openInteractiveChart(canvas){
 if(typeof Chart==="undefined"){
