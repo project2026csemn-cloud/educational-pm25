@@ -20,7 +20,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด ข้อมูลย้อนหลัง การแจ้งเตือน และการคาดการณ์" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260916-ux-v8" rel="stylesheet"/>
+<link href="style.css?v=20260916-v9" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -791,7 +791,7 @@
       <div class="ai-intelligence-panel ai-forecast-panel">
         <div class="ai-panel-head">
           <div><div class="ai-panel-kicker">FORECAST VALUES</div><div class="section-title-with-help"><h3>ค่าคาดการณ์ล่วงหน้า</h3><button aria-expanded="false" aria-label="ดูคำอธิบายค่าคาดการณ์ล่วงหน้า" class="help-button" data-help="forecast30" type="button">?</button></div></div>
-          <button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ อัปเดตการคาดการณ์</button>
+          <span class="forecast-auto-badge" aria-label="ระบบคาดการณ์อัตโนมัติ">อัปเดตอัตโนมัติทุก 30 นาที</span>
         </div>
         <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
         <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
@@ -1975,7 +1975,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260916-ux-v8"></script>
+<script defer src="app.js?v=20260916-v9"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
