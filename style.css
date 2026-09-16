@@ -24115,3 +24115,30 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .period-compare-item-v4{min-height:0!important}
   .forecast-horizon-metric-v8 b{font-size:13px!important}
 }
+
+/* V9 — responsive guardrails for phone, tablet and desktop */
+.forecast-auto-badge{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 11px;border:1px solid rgba(34,211,238,.22);border-radius:999px;background:rgba(8,145,178,.08);color:#a5f3fc;font-size:11px;font-weight:800;white-space:normal;text-align:center}
+.forecast-horizon-grid-v8{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:clamp(8px,1.2vw,14px)!important}
+.dashboard-nav-inner,.dashboard-nav-links,.history-node-controls,.forecast-filter-panel-v4,.chart-zone-heading-split{min-width:0}
+.history-node-controls,.forecast-filter-panel-v4,.dashboard-nav-links{flex-wrap:wrap!important;overflow:visible!important}
+img,svg,canvas,video{max-width:100%}
+@media (max-width:1180px){
+  .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .metric-chart-grid-3{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:900px){
+  .forecast-horizon-grid-v8{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .metric-chart-grid-3{grid-template-columns:1fr!important}
+  .chart-zone-heading-split{align-items:flex-start!important;flex-wrap:wrap!important}
+}
+@media (max-width:640px){
+  .forecast-horizon-grid-v8{grid-template-columns:1fr!important}
+  .forecast-horizon-values-v8{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .forecast-auto-badge{width:100%;white-space:normal}
+  .dashboard-page,.glass.card{min-width:0}
+  select,.range,button,input{max-width:100%}
+}
+@media (max-height:520px) and (orientation:landscape) and (max-width:960px){
+  .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .forecast-horizon-values-v8{grid-template-columns:1fr!important}
+}
