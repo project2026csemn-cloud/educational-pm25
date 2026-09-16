@@ -59,6 +59,7 @@ let chartLibraryPromise=null;
 let chartLibraryReady=false;
 let forecastSectionActivated=false;
 let metric="all";
+let forecastMetric="pm25";
 let historyNode="compare";
 let currentMetric="pm25";
 let averageRange="today";
@@ -2656,7 +2657,7 @@ function chartTickLimit(){
 return window.innerWidth<=640?5:10;
 }
 function chartFontSize(){
-return window.innerWidth<=640?12:13;
+return window.innerWidth<=640?13:14;
 }
 function groupedChartShell(title, subtitle, canvasId, legendHtml=""){
 return `<section class="metric-chart-panel">
@@ -2849,6 +2850,10 @@ return location?`${configured.display_name} • ${location}`:configured.display_
 const m=key.match(/(\d+)/);
 return m?`จุดตรวจวัด ${m[1]}`:key;
 }
+function historyNodeShortLabel(id){
+const m=String(id??"").match(/(\d+)/);
+return m?`จุด ${m[1]}`:historyNodeLabel(id);
+}
 function historyRowsForNode(rows,nodeId){
 return (rows||[]).filter(r=>String(r?.device_id??"").trim()===nodeId);
 }
@@ -2858,7 +2863,7 @@ return historyRowsForNode(rows,historyNode);
 }
 function makeNodeDataset(nodeId,field,values){
 return{
-label:historyNodeLabel(nodeId),
+label:historyNodeShortLabel(nodeId),
 metricField:field,
 rawValues:values,
 data:values,
@@ -2992,10 +2997,10 @@ button.setAttribute("aria-pressed",active?"true":"false");
 });
 }
 function updateMetricControls(){
-["metric","forecastMetric"].forEach(id=>{
-const select=$(id);
-if(select&&select.value!==metric)select.value=metric;
-});
+const historySelect=$("metric");
+const forecastSelect=$("forecastMetric");
+if(historySelect&&historySelect.value!==metric)historySelect.value=metric;
+if(forecastSelect&&forecastSelect.value!==forecastMetric)forecastSelect.value=forecastMetric;
 }
 function historySummaryRows(allRows,fields){
 if(historyNode==="compare"||historyNode==="average"){
@@ -3304,12 +3309,12 @@ forecastVisible
 );
 b.title=
 forecastVisible
-?"กดเพื่อซ่อน Forecast"
-:"กดเพื่อแสดง Forecast";
+?"กดเพื่อซ่อนเส้นคาดการณ์"
+:"กดเพื่อแสดงเส้นคาดการณ์";
 l.textContent=
 forecastVisible
-?"กำลังแสดงการคาดการณ์"
-:"ซ่อนการคาดการณ์";
+?"แสดง +10 / +20 / +30 นาที"
+:"ซ่อนเส้นคาดการณ์";
 if(s){
 s.textContent=
 forecastVisible
@@ -3572,7 +3577,7 @@ field,
 forecastValues
 );
 fd.label=
-`${historyNodeLabel(nodeId)} • คาดการณ์`;
+`${historyNodeShortLabel(nodeId)} • คาดการณ์`;
 fd.isForecast=true;
 fd.borderDash=[
 6,
@@ -3592,6 +3597,19 @@ datasets:[
 ...forecastDatasets
 ]
 };
+}
+function forecastCompareLegendHtml(){
+return `<div class="forecast-compare-guide-v5">
+<div class="forecast-guide-nodes-v5">
+<span><i class="node-view-dot node-view-dot-1"></i>จุด 1</span>
+<span><i class="node-view-dot node-view-dot-2"></i>จุด 2</span>
+<span><i class="node-view-dot node-view-dot-3"></i>จุด 3</span>
+</div>
+<div class="forecast-guide-lines-v5">
+<span><i class="forecast-guide-solid-v5"></i>ข้อมูลจริง</span>
+<span><i class="forecast-guide-dash-v5"></i>คาดการณ์ +10 / +20 / +30 นาที</span>
+</div>
+</div>`;
 }
 function drawForecast(arr){
 hideForecastTechnicalMessage();
@@ -3636,26 +3654,9 @@ aiForecastPayload?.reason
 );
 const providerText=
 "ระบบคาดการณ์";
-if(metric==="all"){
+if(forecastMetric==="all"){
 if(compareMode){
-area.innerHTML=
-`<div style="
-display:flex;
-align-items:center;
-gap:10px 18px;
-flex-wrap:wrap;
-padding:9px 12px;
-margin:0 0 12px;
-border:1px solid rgba(56,189,248,.14);
-border-radius:12px;
-background:rgba(2,132,199,.045);
-font-size:12px;
-color:#94a3b8">
-<span><b style="color:#e2e8f0">เส้นทึบ</b> ข้อมูลจริง</span>
-<span><b style="color:#e2e8f0">เส้นประ</b> คาดการณ์</span>
-<span><b style="color:#e2e8f0">จุดที่ 1 / 2 / 3</b> = อีก 10 / 20 / 30 นาที</span>
-</div>`+
-`<div class="metric-chart-grid-3">`+
+area.innerHTML=forecastCompareLegendHtml()+`<div class="metric-chart-grid-3">`+
 groupedChartShell("PM1.0","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
 groupedChartShell("PM2.5","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
 groupedChartShell("PM10","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm10",miniLegend([]))+
@@ -3681,8 +3682,7 @@ options:{
 yTitle
 ),
 plugins:{
-legend:
-graphLegendOptions(),
+legend:{display:false},
 tooltip:{
 mode:"nearest",
 intersect:false,
@@ -3761,7 +3761,7 @@ miniLegend(
 ["pm1","pm25","pm10"]
 )
 )+
-`<div class="metric-chart-grid-3">`+
+`<div class="forecastMetric-chart-grid-3">`+
 groupedChartShell(
 "อุณหภูมิ",
 `${scopeLabel} • °C`,
@@ -3905,7 +3905,7 @@ if(compareMode){
 const data=
 buildForecastCompareData(
 allRows,
-metric
+forecastMetric
 );
 if(
 !data.labels.length
@@ -3914,8 +3914,7 @@ area.innerHTML=
 '<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>ข้อมูลล่าสุดยังไม่เพียงพอ</span></div></div>';
 return;
 }
-area.innerHTML=
-'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
+area.innerHTML=forecastCompareLegendHtml()+'<canvas class="bottom-forecast-canvas" id="forecastChart"></canvas>';
 forecastChart=
 new Chart(
 $("forecastChart"),
@@ -3927,8 +3926,7 @@ options:{
 `${metricLabel()} ${metricUnit()}`.trim()
 ),
 plugins:{
-legend:
-graphLegendOptions(),
+legend:{display:false},
 tooltip:{
 mode:"nearest",
 intersect:false,
@@ -3946,7 +3944,7 @@ graphTooltipLabel
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
-?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • เปรียบเทียบทุกจุด • ${metricLabel()}</b>
+?`<b style="color:${metricColor(forecastMetric)}">คาดการณ์ 30 นาที • เปรียบเทียบทุกจุด • ${metricLabel()}</b>
 <div class="mt-2">${esc(providerText)} • จุด 1/2/3 ถูกคาดการณ์แยกจากข้อมูลของแต่ละจุด</div>
 <div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
@@ -3958,7 +3956,7 @@ rows=
 recentRowsForScope(
 allRows,
 scope,
-metric,
+forecastMetric,
 12
 );
 if(!rows.length){
@@ -3974,7 +3972,7 @@ const values=
 rows.map(
 r=>
 finiteNumberOrNull(
-r[metric]
+r[forecastMetric]
 )
 );
 const labels=
@@ -3983,14 +3981,14 @@ r=>r.timestamp
 );
 const datasets=[
 makeActualDataset(
-metric,
+forecastMetric,
 values
 )
 ];
 const pts=
 forecastPointsForScope(
 scope,
-metric
+forecastMetric
 );
 if(pts){
 labels.push(
@@ -4014,7 +4012,7 @@ const current=
 values.at(-1);
 const fd=
 makeForecastDataset(
-metric,
+forecastMetric,
 values.length,
 current,
 pts
@@ -5333,16 +5331,24 @@ updateHistoryNodeControls();
 drawCharts();
 });
 });
-["metric","forecastMetric"].forEach(id=>{
-const select=$(id);
-if(!select)return;
-select.value=metric;
-select.addEventListener("change",e=>{
+const historyMetricSelect=$("metric");
+if(historyMetricSelect){
+historyMetricSelect.value=metric;
+historyMetricSelect.addEventListener("change",e=>{
 metric=e.target.value;
 updateMetricControls();
 drawCharts();
 });
+}
+const forecastMetricSelect=$("forecastMetric");
+if(forecastMetricSelect){
+forecastMetricSelect.value=forecastMetric;
+forecastMetricSelect.addEventListener("change",e=>{
+forecastMetric=e.target.value;
+updateMetricControls();
+drawForecast([]);
 });
+}
 updateHistoryNodeControls();
 updateMetricControls();
 $("historyRangeButton")
@@ -5706,13 +5712,13 @@ viewer.innerHTML=`
 
 <div class="chart-series-controls" id="chartSeriesControls">
 <div class="chart-series-controls-head">
-<div>
-<div class="chart-series-controls-title">ข้อมูลที่แสดง</div>
-<div class="chart-series-controls-help">เลือกชื่อข้อมูลเพื่อดูเส้นนั้นเพียงเส้นเดียว • กด “แสดงทั้งหมด” เพื่อกลับมาดูทุกเส้น</div>
+<div class="chart-series-controls-title">เลือกเส้นที่ต้องการดู</div>
+<div class="chart-series-controls-help">เลือกชื่อเพื่อดูเส้นเดียว หรือเลือก “ทุกเส้น” เพื่อกลับมาดูพร้อมกัน</div>
 </div>
-<button type="button" class="chart-series-show-all" id="chartSeriesShowAll">แสดงทั้งหมด</button>
-</div>
+<div class="chart-series-picker-row">
+<button type="button" class="chart-series-show-all" id="chartSeriesShowAll" aria-pressed="true">ทุกเส้น</button>
 <div class="chart-series-buttons" id="chartSeriesButtons"></div>
+</div>
 </div>
 
 <div class="chart-zoom-stage" id="chartZoomStage">
@@ -6025,110 +6031,46 @@ c=>c.canvas===canvas
 )||null;
 }
 function updateSeriesControlUI(){
-const wrap=
-$("chartSeriesControls");
-const buttons=
-$("chartSeriesButtons");
-const showAll=
-$("chartSeriesShowAll");
-if(
-!wrap||
-!buttons||
-!showAll||
-!chartInteractiveInstance
-){
-return;
-}
-const datasets=
-chartInteractiveInstance.data.datasets||[];
+const wrap=$("chartSeriesControls");
+const buttons=$("chartSeriesButtons");
+const showAll=$("chartSeriesShowAll");
+if(!wrap||!buttons||!showAll||!chartInteractiveInstance)return;
+const datasets=chartInteractiveInstance.data.datasets||[];
 if(datasets.length<=1){
-wrap.classList.add(
-"is-single"
-);
+wrap.classList.add("is-single");
 buttons.innerHTML="";
-showAll.classList.add(
-"hidden"
-);
-const one=
-datasets[0];
+showAll.classList.add("hidden");
+const one=datasets[0];
 if(one){
-const label=
-document.createElement(
-"div"
-);
-label.className=
-"chart-series-single-label";
-label.textContent=
-one.label||
-"ข้อมูล";
-buttons.appendChild(
-label
-);
+const label=document.createElement("div");
+label.className="chart-series-single-label";
+label.textContent=one.label||"ข้อมูล";
+buttons.appendChild(label);
 }
 return;
 }
-wrap.classList.remove(
-"is-single"
-);
-showAll.classList.remove(
-"hidden"
-);
+wrap.classList.remove("is-single");
+showAll.classList.remove("hidden");
 buttons.innerHTML="";
-datasets.forEach(
-(ds,index)=>{
-const button=
-document.createElement(
-"button"
-);
+const visibleIndices=datasets.map((_,index)=>chartInteractiveInstance.isDatasetVisible(index)?index:-1).filter(index=>index>=0);
+const allVisible=visibleIndices.length===datasets.length;
+const singleIndex=visibleIndices.length===1?visibleIndices[0]:-1;
+showAll.disabled=false;
+showAll.classList.toggle("is-active",allVisible);
+showAll.setAttribute("aria-pressed",allVisible?"true":"false");
+datasets.forEach((ds,index)=>{
+const button=document.createElement("button");
 button.type="button";
-button.className=
-"chart-series-button";
-const visible=
-chartInteractiveInstance.isDatasetVisible(
-index
-);
-button.classList.toggle(
-"is-active",
-visible
-);
-button.classList.toggle(
-"is-hidden",
-!visible
-);
-button.setAttribute(
-"aria-pressed",
-visible
-?"true"
-:"false"
-);
-button.dataset.index=
-String(
-index
-);
-const mark=
-visible
-?"✓"
-:"";
-button.innerHTML=
-`<span class="chart-series-check">${mark}</span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
-buttons.appendChild(
-button
-);
-}
-);
-const allVisible=
-datasets.every(
-(_,index)=>
-chartInteractiveInstance.isDatasetVisible(
-index
-)
-);
-showAll.disabled=
-allVisible;
-showAll.classList.toggle(
-"is-complete",
-allVisible
-);
+button.className="chart-series-button";
+const selected=index===singleIndex;
+button.classList.toggle("is-active",selected);
+button.setAttribute("aria-pressed",selected?"true":"false");
+button.dataset.index=String(index);
+button.title=`ดูเฉพาะ ${ds.label||`ข้อมูล ${index+1}`}`;
+const color=typeof ds.borderColor==="string"?ds.borderColor:"#67e8f9";
+button.innerHTML=`<span class="chart-series-color" style="background:${esc(color)}"></span><span>${esc(ds.label||`ข้อมูล ${index+1}`)}</span>`;
+buttons.appendChild(button);
+});
 }
 function bindSeriesControlEvents(){
 const buttons=
