@@ -20,7 +20,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด ข้อมูลย้อนหลัง การแจ้งเตือน และการคาดการณ์" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260916-ux-v5" rel="stylesheet"/>
+<link href="style.css?v=20260916-ux-v7" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -619,7 +619,7 @@
 </div>
 </div>
 <div class="history-filter-row-v4">
-<label class="history-control-field">
+<label class="history-control-field history-metric-field-v7">
 <span class="history-control-label">ข้อมูลที่แสดง</span>
 <select aria-label="ข้อมูลที่แสดง" class="history-metric-select" id="metric">
 <option selected="" value="all">ทุกตัวแปร</option>
@@ -739,7 +739,6 @@
 </div>
 </div>
 <div class="history-control-field history-download-field">
-<span class="history-control-label">ดาวน์โหลด</span>
 <button class="history-toolbar-button history-export-button" id="exportButton" type="button">
 <span class="history-control-icon">⇩</span>
 <span>ดาวน์โหลดข้อมูล</span>
@@ -786,23 +785,18 @@
         <h1>การคาดการณ์</h1>
         <button aria-expanded="false" aria-label="ดูคำอธิบายหน้าการคาดการณ์" class="help-button" data-help="forecastPage" type="button">?</button>
       </div>
-      <p>แสดงค่าที่ระบบคาดว่าอาจเกิดขึ้นในอีก 30 นาทีจากข้อมูลล่าสุดและข้อมูลย้อนหลัง ค่าคาดการณ์เป็นค่าประมาณ ไม่ใช่ค่าที่ตรวจวัดได้จริงล่วงหน้า</p>
-    </div>
-    <div class="ai-intelligence-header ai-intelligence-header-compact">
-      <div class="ai-intelligence-statusline">คาดการณ์ระยะสั้น • 10 / 20 / 30 นาที</div>
-      <div class="ai-intelligence-badges"><span class="ai-forecast-status" id="aiForecastStatusBadge">คาดการณ์ • รอข้อมูล</span></div>
+      <p>แสดงค่าที่คาดว่าจะเกิดขึ้นในอีก 10, 20 และ 30 นาที จากข้อมูลตรวจวัดล่าสุดและข้อมูลย้อนหลัง</p>
     </div>
     <div class="ai-intelligence-grid ai-intelligence-grid-forecast-only">
       <div class="ai-intelligence-panel ai-forecast-panel">
         <div class="ai-panel-head">
-          <div><div class="ai-panel-kicker">30-MINUTE FORECAST</div><div class="section-title-with-help"><h3>อีก 30 นาทีเป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายการคาดการณ์ 30 นาที" class="help-button" data-help="forecast30" type="button">?</button></div></div>
+          <div><div class="ai-panel-kicker">FORECAST VALUES</div><div class="section-title-with-help"><h3>ค่าคาดการณ์ล่วงหน้า</h3><button aria-expanded="false" aria-label="ดูคำอธิบายค่าคาดการณ์ล่วงหน้า" class="help-button" data-help="forecast30" type="button">?</button></div></div>
           <button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ คาดการณ์ใหม่</button>
         </div>
         <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
         <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
       </div>
     </div>
-    <div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังเตรียมข้อมูลสำหรับการคาดการณ์...</div>
   </section>
   <section class="dashboard-charts-zone forecast-page-chart-zone mb-4">
     <div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟคาดการณ์ 30 นาที" class="help-button" data-help="forecastChart" type="button">?</button></div></div><div class="forecast-filter-panel-v4">
@@ -817,8 +811,8 @@
 </div>
 <label class="forecast-metric-field-v4"><span>ข้อมูลที่แสดง</span>
 <select aria-label="ข้อมูลที่แสดงในกราฟคาดการณ์" class="history-metric-select" id="forecastMetric">
-<option value="all">ทุกตัวแปร (หลายกราฟ)</option>
-<option selected="" value="pm25">PM2.5</option>
+<option selected="" value="all">ทุกตัวแปร</option>
+<option value="pm25">PM2.5</option>
 <option value="pm1">PM1.0</option>
 <option value="pm10">PM10</option>
 <option value="temperature">อุณหภูมิ</option>
@@ -861,7 +855,7 @@
 </button>
 </div>
 </div>
-</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมการคาดการณ์</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลที่พร้อมใช้งานเพื่อแสดงผลคาดการณ์</span></div></div></div></div>
+</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมการคาดการณ์</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลล่าสุดเพื่อแสดงผลคาดการณ์</span></div></div></div></div>
   </section>
 </section>
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
@@ -2009,7 +2003,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260916-ux-v5"></script>
+<script defer src="app.js?v=20260916-ux-v7"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
