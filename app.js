@@ -6,7 +6,6 @@ export:`${BASE}/api/export.php`,
 mother:`${BASE}/api/mother_status`,
 alerts:`${BASE}/api/alert_states`,
 standards:`${BASE}/api/standards.php`,
-ai:`${BASE}/api/ai_analysis`,
 forecast:`${BASE}/api/ai_forecast`,
 publicConfig:`${BASE}/api/public_config`,
 authStatus:`${BASE}/api/auth/status`,
@@ -49,9 +48,7 @@ let forecastGroupCharts=[];
 let forecastVisible=true;
 let historyActivated=false;
 let historyLoading=false;
-// D1 OPT V1 — History auto refresh is page-aware and range-aware.
-// Opening History or changing the range still loads immediately.
-// The timer only refreshes while the History page is actually visible.
+// Refresh history only while its page is visible; long ranges refresh less often to protect D1 usage.
 let historyLastAutoRefreshAt=0;
 function historyAutoRefreshIntervalMs(){
   if(averageRange==="30d") return 60*60*1000; // 30 วัน: ชั่วโมงละครั้ง
@@ -60,7 +57,7 @@ function historyAutoRefreshIntervalMs(){
 }
 let chartLibraryPromise=null;
 let chartLibraryReady=false;
-let aiSectionActivated=false;
+let forecastSectionActivated=false;
 let metric="all";
 let historyNode="compare";
 let currentMetric="pm25";
@@ -74,9 +71,6 @@ let calendarSelectionStep=
 let apiConnectionOnline=false;
 let exportRows=[];
 let activeHelpButton=null;
-let aiPayload=null;
-let aiLoading=false;
-let aiLastLoadedAt=null;
 let aiForecastPayload=null;
 let aiForecastLoading=false;
 let aiForecastLastLoadedAt=null;
@@ -88,7 +82,6 @@ devices:[
 ],
 content:{about_heading:"เกี่ยวกับโครงการ",about_intro:"",help_overview:"",help_monitoring:"",help_history:"",help_forecast:""}
 };
-// RANGE
 const RANGE_CONFIG={
 "today":{label:"วันนี้",minutes:null,apiRange:"today"},
 "30m":{
@@ -127,9 +120,8 @@ minutes:43200,
 apiRange:"30d"
 }
 };
-// METRIC
 const CURRENT_METRIC_CONFIG={
-all:{label:"ALL",unit:"",color:"#e2e8f0"},
+all:{label:"ทุกตัวแปร",unit:"",color:"#e2e8f0"},
 pm1:{label:"PM1.0",unit:"µg/m³",color:"#60a5fa"},
 pm25:{label:"PM2.5",unit:"µg/m³",color:"#f87171"},
 pm10:{label:"PM10",unit:"µg/m³",color:"#fbbf24"},
@@ -137,7 +129,6 @@ temperature:{label:"อุณหภูมิ",unit:"°C",color:"#fb923c"},
 humidity:{label:"ความชื้น",unit:"%",color:"#34d399"},
 light:{label:"แสง",unit:"lux",color:"#c084fc"}
 };
-// FORMAT
 function fmt(v){
 return(
 v==null||
@@ -149,7 +140,6 @@ Number(v)
 ?"--"
 :Number(v).toFixed(1);
 }
-// SAFE SENSOR NUMBER
 function finiteNumberOrNull(value){
 if(value===null||value===undefined||value==="") return null;
 const n=Number(value);
@@ -184,7 +174,6 @@ v??""
 "&#039;"
 );
 }
-// DATE
 function parseDate(v){
 if(!v){
 return null;
@@ -237,7 +226,6 @@ false
 )
 :"--";
 }
-// NODE READING DATE / TIME
 function thaiNodeReadingDateTime(v){
   const d=parseDate(v);
   if(!d) return "--";
@@ -264,7 +252,6 @@ function thaiNodeReadingDateTime(v){
   });
   return `${date} ${time}`;
 }
-// CHART DATE / TIME LABELS
 function thaiChartDateTime(value, compact=false){
 const d=parseDate(value);
 if(!d){
@@ -291,7 +278,6 @@ hour12:false
 };
 return d.toLocaleString("th-TH",opts);
 }
-// ADAPTIVE TIME AXIS
 function chartDayKey(value){
 const d=parseDate(value);
 if(!d)return"";
@@ -348,7 +334,6 @@ return timeRange;
 function chartTickText(value,spanMs=null){
 return formatAxisInterval(value,spanMs);
 }
-// ADAPTIVE INTERVAL TICKS
 function chartBucketKey(date,stepMs){
 const d=parseDate(date);
 if(!d)return"";
@@ -555,7 +540,6 @@ out.push(null);
 }
 return out;
 }
-// SENSOR SANITIZER
 function cleanSensorNumber(field,value){
 if(
 value===null||
@@ -618,7 +602,6 @@ n<=200000
 }
 return n;
 }
-// NORMALIZE API
 function normalize(d){
 if(!d){
 return null;
@@ -668,7 +651,7 @@ cleanSensorNumber(
 "light",
 d.light
 ),
-// HISTORY SUMMARY V1 — metadata สำหรับสถิติ 7d/30d
+// Keep summary metadata used by weighted 7d/30d statistics.
 reading_count:
 Number.isFinite(Number(d.reading_count))
 ?Math.max(0,Number(d.reading_count))
@@ -742,7 +725,6 @@ out.sensor_invalid=true;
 }
 return out;
 }
-// NODE
 function nodeNo(id){
 const m=
 String(
@@ -791,7 +773,6 @@ d.getTime()
 MOTHER_OFFLINE_MS
 );
 }
-// NODE STATUS RULE
 function nodeStatusTime(node){
   if(!node)return null;
   return parseDate(
@@ -829,12 +810,10 @@ getNodeStatus(n)
 )
 .length;
 }
-// DASHBOARD DISPLAY STATUS
 function getNodeDisplayStatus(node){
 const st=getNodeStatus(node);
 return st==="offline"?"offline":"online";
 }
-// AUTH STATE
 const AUTH_TOKEN_KEY="localAirAuthTokenV33";
 let authToken=
   localStorage.getItem(AUTH_TOKEN_KEY)||
@@ -847,7 +826,6 @@ if(authToken){
 let authUser=null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
-// FETCH
 async function fetchJson(url,timeoutMs=15000){
 const controller=
 new AbortController();
@@ -895,7 +873,6 @@ j?.message||
 }
 return j;
 }
-// LOAD API
 async function loadLatest(){
 const j=
 await fetchJson(
@@ -1021,7 +998,6 @@ normalize
 Boolean
 );
 }
-// MONITORING NODES
 function setMonitoringValueText(el,text){
   if(!el)return;
   const next=String(text??"--");
@@ -1274,7 +1250,6 @@ onlineNodes===TOTAL_NODES
 );
 }
 }
-// THRESHOLD
 function threshold(field,value){
 const n=
 finiteNumberOrNull(value);
@@ -1326,7 +1301,6 @@ level
 ]||
 "รอข้อมูล";
 }
-// PM2.5 GUIDANCE
 function pm25Guidance(value){
 const n=
 finiteNumberOrNull(value);
@@ -1372,7 +1346,6 @@ return{level:"warning",label:"เริ่มมีผลกระทบต่�
 }
 return{level:"critical",label:"มีผลกระทบต่อสุขภาพ"};
 }
-// TEMPERATURE / HUMIDITY INTERPRETATION
 function temperatureLevel(value){
 const n=finiteNumberOrNull(value);
 if(n===null)return{level:"no_data",label:"ไม่มีข้อมูล",severity:"no_data"};
@@ -1408,7 +1381,6 @@ if(field==="temperature"){const x=temperatureLevel(value);return{severity:x.seve
 if(field==="humidity"){const x=humidityLevel(value);return{severity:x.severity,label:x.label};}
 return{severity:finiteNumberOrNull(value)===null?"no_data":"info",label:finiteNumberOrNull(value)===null?"ไม่มีข้อมูล":"ข้อมูลประกอบ"};
 }
-// HEAT INDEX
 function heatIndexC(
 tempC,
 rh
@@ -1481,7 +1453,6 @@ hi-32
 5/
 9;
 }
-// HEAT LEVEL
 function heatLevel(value){
 const n=
 finiteNumberOrNull(value);
@@ -1516,7 +1487,6 @@ return{level:"critical",label:"อันตราย"};
 }
 return{level:"critical",label:"อันตรายมาก"};
 }
-// ACTIVE NODE DATA
 function activeNodes(){
 if(
 !motherOnline()
@@ -1601,7 +1571,7 @@ humidity
 )
 };
 }
-// สภาพแวดล้อมในพื้นที่ ANALYSIS
+
 function pearsonCorrelation(rows, xField, yField){
 const pairs=rows
 .map(r=>[finiteNumberOrNull(r[xField]),finiteNumberOrNull(r[yField])])
@@ -1626,7 +1596,7 @@ function correlationText(result,label){
 if(result.r===null) return `${label}: ข้อมูลคู่ยังไม่เพียงพอ (${result.n} จุด)`;
 const a=Math.abs(result.r);
 const strength=a>=.7?"ค่อนข้างสูง":a>=.4?"ปานกลาง":a>=.2?"เล็กน้อย":"ยังไม่ชัดเจน";
-const direction=result.r>0?"ทิศทางเดียวกัน":result.r<0?"ทิศทางตรงข้าม":"ไม่พบแนวโน้ม";
+const direction=result.r>0?"ทิศทางเดียวกัน":result.r<0?"ทิศทางตรงข้าม":"ไม่พบรูปแบบชัดเจน";
 return `${label}: ${strength} • ${direction} (r=${result.r.toFixed(2)}, n=${result.n})`;
 }
 function localEnvironmentAnalysis(){
@@ -1662,10 +1632,9 @@ lightHumidity,
 lightPM25,
 relationships,
 label: currentLight==null?"รอข้อมูลแสง":`${fmt(currentLight)} lux`,
-detail:`${trend} • วิเคราะห์ความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง`
+detail:`${trend} • พิจารณาความสัมพันธ์ของข้อมูล ณ จุดตรวจวัด โดยไม่สรุปว่าแสงเป็นสาเหตุโดยตรง`
 };
 }
-// COMBINED AIR QUALITY + DUST PROFILE
 function pm10Guidance(value){
 const n=
 finiteNumberOrNull(value);
@@ -1811,7 +1780,6 @@ label,
 detail:details.join(" • ")
 };
 }
-// ACTIVITY RECOMMENDATION
 function activityRecommendation(
 pm25,
 pm10,
@@ -1849,7 +1817,6 @@ return"ทำกิจกรรมได้โดยเพิ่มความ�
 }
 return"ยังไม่พบข้อจำกัดเด่นจากฝุ่นและสภาพความร้อนสำหรับกิจกรรมทั่วไป แต่ควรติดตามข้อมูลต่อเนื่อง";
 }
-// CURRENT ENVIRONMENT
 const CURRENT_SUMMARY_FIELDS={
   pm25:{unit:"µg/m³"},
   pm10:{unit:"µg/m³"},
@@ -1932,7 +1899,6 @@ function updateCurrent(){
       `ใช้ข้อมูลล่าสุดจาก ${participating.size} / ${TOTAL_NODES} จุดตรวจวัด`;
   }
 }
-// SMART SUMMARY
 function updateSmart(){
   const e=$("aiSummary");
   if(!e)return;
@@ -2020,7 +1986,7 @@ function updateSmart(){
         {icon:"😷",title:"เตรียมหน้ากาก",detail:"สวมเมื่อต้องอยู่กลางแจ้งเป็นเวลานาน"},
         {icon:"🏃",title:"ลดกิจกรรมนาน ๆ",detail:"พักเป็นระยะเมื่อทำกิจกรรมภายนอก"},
         {icon:"🏠",title:"เลือกพื้นที่อากาศดี",detail:"หลีกเลี่ยงบริเวณที่มีฝุ่นสะสม"},
-        {icon:"📊",title:"ติดตามค่าฝุ่น",detail:"ดูแนวโน้มก่อนออกไปทำกิจกรรม"}
+        {icon:"📊",title:"ติดตามค่าฝุ่น",detail:"ตรวจค่าล่าสุดและข้อมูลย้อนหลัง ก่อนออกไปทำกิจกรรม"}
       ],
       active
     };
@@ -2098,14 +2064,13 @@ function updateSmart(){
         {icon:"💧",title:"ดื่มน้ำให้เพียงพอ",detail:"ชดเชยน้ำระหว่างทำกิจกรรม"},
         {icon:"🌳",title:"พักในที่ร่ม",detail:"ลดการรับความร้อนโดยตรง"},
         {icon:"👕",title:"เสื้อผ้าระบายอากาศ",detail:"เลือกเสื้อผ้าที่ช่วยระบายความร้อน"},
-        {icon:"📊",title:"ติดตามอุณหภูมิ",detail:"ดูแนวโน้มก่อนทำกิจกรรมกลางแจ้ง"}
+        {icon:"📊",title:"ติดตามอุณหภูมิ",detail:"ตรวจค่าล่าสุดและข้อมูลย้อนหลัง ก่อนทำกิจกรรมกลางแจ้ง"}
       ],
       active
     };
   }
   renderAdvice(data);
 }
-// ALERT
 function updateAlertUI(){
 const e=
 $("alerts");
@@ -2262,7 +2227,6 @@ ${esc(x.detail)}
 .join("")
 :'<div class="soft rounded-xl p-3"><b class="text-emerald-300">✅ ยังไม่มีสิ่งที่ต้องเฝ้าระวัง</b></div>';
 }
-// HISTORY
 function rangeLabel(){
 if(
 averageRange==="custom"&&
@@ -2494,9 +2458,7 @@ min:null,
 last:null
 };
 }
-// HISTORY SUMMARY V1
-// Raw Data: น้ำหนัก 1 เหมือนเดิม
-// Summary: ใช้ reading_count เป็นน้ำหนัก เพื่อให้ค่าเฉลี่ยใกล้ Raw Data เดิม
+// Summary rows use reading_count as weight so long-range averages stay comparable with raw readings.
 let weightedSum=0;
 let totalWeight=0;
 let min=null;
@@ -2713,12 +2675,12 @@ return{
 responsive:true,
 maintainAspectRatio:false,
 animation:false,
-interaction:{mode:"nearest",intersect:true},
+interaction:{mode:"nearest",intersect:false},
 plugins:{
 legend:{display:false},
 tooltip:{
 mode:"nearest",
-intersect:true,
+intersect:false,
 callbacks:{
 title:graphTooltipTitle,
 label:graphTooltipLabel
@@ -3007,7 +2969,7 @@ cubicInterpolationMode:"monotone"
 function makeForecastDataset(field, actualLength, current, points){
 const raw=[...new Array(Math.max(0,actualLength-1)).fill(null),current,...points];
 return{
-label:`${metricLabelFor(field)} Forecast`,
+label:`${metricLabelFor(field)} • คาดการณ์`,
 isForecast:true,
 metricField:field,
 rawValues:raw,
@@ -3022,13 +2984,97 @@ hidden:!forecastVisible,
 cubicInterpolationMode:"monotone"
 };
 }
+function updateHistoryNodeControls(){
+document.querySelectorAll("[data-history-node]").forEach(button=>{
+const active=button.dataset.historyNode===historyNode;
+button.classList.toggle("is-active",active);
+button.setAttribute("aria-pressed",active?"true":"false");
+});
+}
+function updateMetricControls(){
+["metric","forecastMetric"].forEach(id=>{
+const select=$(id);
+if(select&&select.value!==metric)select.value=metric;
+});
+}
+function historySummaryRows(allRows,fields){
+if(historyNode==="compare"||historyNode==="average"){
+return spatialAverageRows(allRows,fields);
+}
+return historyRowsForNode(allRows,historyNode);
+}
+function weightedMetricMean(rows,field){
+let sum=0;
+let weightTotal=0;
+for(const row of rows||[]){
+const value=finiteNumberOrNull(row?.[field]);
+if(value===null)continue;
+const rawWeight=Number(row?.reading_count);
+const weight=row?.summary_level&&Number.isFinite(rawWeight)&&rawWeight>0?rawWeight:1;
+sum+=value*weight;
+weightTotal+=weight;
+}
+return weightTotal?sum/weightTotal:null;
+}
+function periodEndpointComparison(rows,field){
+const valid=(rows||[]).filter(row=>finiteNumberOrNull(row?.[field])!==null);
+if(valid.length<2)return null;
+const sampleSize=Math.max(1,Math.min(3,Math.floor(valid.length/2)));
+const start=weightedMetricMean(valid.slice(0,sampleSize),field);
+const end=weightedMetricMean(valid.slice(-sampleSize),field);
+if(start===null||end===null)return null;
+return{start,end,diff:end-start};
+}
+function periodComparisonStatus(diff){
+const rounded=Math.round(diff*10)/10;
+if(Math.abs(rounded)<0.05)return{label:"ใกล้เคียงกัน",symbol:"→",className:"is-steady"};
+return rounded>0
+?{label:"สูงขึ้น",symbol:"↑",className:"is-up"}
+:{label:"ลดลง",symbol:"↓",className:"is-down"};
+}
+function renderPeriodComparison(rows,fields){
+const container=$("periodCompareContent");
+if(!container)return;
+const items=(fields||[]).map(field=>{
+const result=periodEndpointComparison(rows,field);
+if(!result)return{field,result:null};
+return{field,result,status:periodComparisonStatus(result.diff)};
+});
+container.classList.toggle("is-multi",items.length>1);
+if(!items.some(item=>item.result)){
+container.innerHTML='<div class="period-compare-empty-v4">ข้อมูลยังไม่เพียงพอสำหรับเปรียบเทียบต้นช่วงกับปลายช่วง</div>';
+return;
+}
+container.innerHTML=items.map(({field,result,status})=>{
+const label=metricLabelFor(field);
+const unit=metricUnitFor(field);
+if(!result){
+return`<div class="period-compare-item-v4 is-empty"><div class="period-compare-metric-v4">${esc(label)}</div><div class="period-compare-no-data-v4">ข้อมูลไม่เพียงพอ</div></div>`;
+}
+const change=Math.abs(result.diff);
+return`<div class="period-compare-item-v4">
+<div class="period-compare-metric-v4">${esc(label)}</div>
+<div class="period-compare-values-v4"><span><small>ต้นช่วง</small><b>${fmt(result.start)}</b></span><i>→</i><span><small>ปลายช่วง</small><b>${fmt(result.end)}</b></span><em>${esc(unit)}</em></div>
+<div class="period-compare-result-v4 ${status.className}"><span>${status.symbol}</span><b>${status.label}</b>${status.className==="is-steady"?"":`<small>${fmt(change)} ${esc(unit)}</small>`}</div>
+</div>`;
+}).join("");
+}
+function setHistoryStatsVisible(visible){
+$("historyStatsGrid")?.classList.toggle("is-hidden",!visible);
+}
+function resetHistorySummary(message="รอข้อมูลในช่วงเวลาที่เลือก"){
+["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
+setHistoryStatsVisible(metric!=="all");
+const container=$("periodCompareContent");
+if(container)container.innerHTML=`<div class="period-compare-empty-v4">${esc(message)}</div>`;
+}
 function drawCharts(){
+updateHistoryNodeControls();
+updateMetricControls();
 if(typeof Chart==="undefined"){
 const area=$("historyChartArea");
 if(area)area.innerHTML='<div class="chart-empty chart-loading-state"><b>กำลังโหลดข้อมูลย้อนหลัง</b><span>กราฟจะพร้อมแสดงอัตโนมัติเมื่อข้อมูลโหลดเสร็จ</span></div>';
-if(historyActivated){
-ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load error:",e));
-}
+if(historyActivated)ensureChartLibrary().then(()=>drawCharts()).catch(e=>console.error("Chart load error:",e));
 return;
 }
 const allBase=selectedRecords()
@@ -3038,14 +3084,12 @@ const base=historyDisplayRows(allBase);
 const compareMode=historyNode==="compare";
 const averageMode=historyNode==="average";
 const areaAverageBase=averageMode?spatialAverageRows(allBase):[];
-if($("selectedMetricLabel")){
 const nodeText=compareMode
-?"แยก 3 จุด"
+?"เปรียบเทียบทุกจุด"
 :averageMode
-?"ค่าเฉลี่ยพื้นที่"
+?"ภาพรวมพื้นที่"
 :historyNodeLabel(historyNode);
-$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
-}
+if($("selectedMetricLabel"))$("selectedMetricLabel").textContent=`${metricLabel()} • ${nodeText}`;
 historyGroupCharts=destroyChartList(historyGroupCharts);
 destroyChartSafe(historyChart);
 historyChart=null;
@@ -3054,42 +3098,39 @@ if(!area)return;
 historyRangeCaption(averageMode?(areaAverageBase.length?areaAverageBase:allBase):(base.length?base:allBase));
 if(!base.length){
 area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
-["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
-if($("trend"))$("trend").textContent="ไม่มีข้อมูลในช่วงเวลาที่เลือก";
+resetHistorySummary("ไม่มีข้อมูลในช่วงเวลาที่เลือก");
 drawForecast([]);
 return;
 }
-if(metric==="all"&&averageMode){
+
+if(metric==="all"){
+setHistoryStatsVisible(false);
+const summaryRows=historySummaryRows(allBase,GRAPH_FIELDS);
+renderPeriodComparison(summaryRows,GRAPH_FIELDS);
+if(averageMode){
 const avgBase=areaAverageBase;
 if(!avgBase.length){
-area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลสำหรับคำนวณค่าเฉลี่ยพื้นที่ในช่วงเวลาที่เลือก</div>';
-["trendAvg","trendMax","trendMin","trendLast"].forEach(id=>{if($(id))$(id).textContent="--";});
-if($("trend"))$("trend").textContent="ไม่มีข้อมูล";
+area.innerHTML='<div class="chart-empty">ไม่มีข้อมูลสำหรับคำนวณภาพรวมพื้นที่ในช่วงเวลาที่เลือก</div>';
+resetHistorySummary("ไม่มีข้อมูลสำหรับเปรียบเทียบ");
 drawForecast([]);
 return;
 }
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="ค่าเฉลี่ยพื้นที่จากจุดที่มีข้อมูลจริง";
 area.innerHTML=`<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","ค่าเฉลี่ยพื้นที่","historyPm1",miniLegend(["pm1"]))+
-groupedChartShell("PM2.5","ค่าเฉลี่ยพื้นที่","historyPm25",miniLegend(["pm25"]))+
-groupedChartShell("PM10","ค่าเฉลี่ยพื้นที่","historyPm10",miniLegend(["pm10"]))+
-groupedChartShell("อุณหภูมิ","ค่าเฉลี่ยพื้นที่ • °C","historyTemp",miniLegend(["temperature"]))+
-groupedChartShell("ความชื้น","ค่าเฉลี่ยพื้นที่ • %","historyHumidity",miniLegend(["humidity"]))+
-groupedChartShell("แสง","ค่าเฉลี่ยพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
+groupedChartShell("PM1.0","ภาพรวมพื้นที่","historyPm1",miniLegend(["pm1"]))+
+groupedChartShell("PM2.5","ภาพรวมพื้นที่","historyPm25",miniLegend(["pm25"]))+
+groupedChartShell("PM10","ภาพรวมพื้นที่","historyPm10",miniLegend(["pm10"]))+
+groupedChartShell("อุณหภูมิ","ภาพรวมพื้นที่ • °C","historyTemp",miniLegend(["temperature"]))+
+groupedChartShell("ความชื้น","ภาพรวมพื้นที่ • %","historyHumidity",miniLegend(["humidity"]))+
+groupedChartShell("แสง","ภาพรวมพื้นที่ • lux","historyLight",miniLegend(["light"]))+`</div>`;
 const createAverage=(canvasId,field,yTitle)=>{
-const arr=avgBase.filter(r=>isRealHistoryReading(r,field));
-const labels=historyLabelsToRangeEnd(arr);
-const vals=arr.map(r=>finiteNumberOrNull(r[field]));
-const c=new Chart($(canvasId),{
+const rows=avgBase.filter(r=>isRealHistoryReading(r,field));
+const labels=historyLabelsToRangeEnd(rows);
+const values=rows.map(r=>finiteNumberOrNull(r[field]));
+historyGroupCharts.push(new Chart($(canvasId),{
 type:"line",
-data:{labels,datasets:[makeActualDataset(field,padChartValuesToLabels(vals,labels))]},
+data:{labels,datasets:[makeActualDataset(field,padChartValuesToLabels(values,labels))]},
 options:groupedChartOptions(yTitle)
-});
-historyGroupCharts.push(c);
+}));
 };
 createAverage("historyPm1","pm1","µg/m³");
 createAverage("historyPm25","pm25","µg/m³");
@@ -3100,26 +3141,21 @@ createAverage("historyLight","light","lux");
 drawForecast(avgBase);
 return;
 }
-if(metric==="all"&&compareMode){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent="แยกเส้นตาม 3 จุด";
+if(compareMode){
 area.innerHTML=`<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด","historyPm1",miniLegend([]))+
-groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด","historyPm25",miniLegend([]))+
-groupedChartShell("PM10","เปรียบเทียบ 3 จุด","historyPm10",miniLegend([]))+
-groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","historyTemp",miniLegend([]))+
-groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","historyHumidity",miniLegend([]))+
-groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","historyLight",miniLegend([]))+`</div>`;
+groupedChartShell("PM1.0","เปรียบเทียบทุกจุด","historyPm1",miniLegend([]))+
+groupedChartShell("PM2.5","เปรียบเทียบทุกจุด","historyPm25",miniLegend([]))+
+groupedChartShell("PM10","เปรียบเทียบทุกจุด","historyPm10",miniLegend([]))+
+groupedChartShell("อุณหภูมิ","เปรียบเทียบทุกจุด • °C","historyTemp",miniLegend([]))+
+groupedChartShell("ความชื้น","เปรียบเทียบทุกจุด • %","historyHumidity",miniLegend([]))+
+groupedChartShell("แสง","เปรียบเทียบทุกจุด • lux","historyLight",miniLegend([]))+`</div>`;
 const createCompare=(canvasId,field,yTitle)=>{
 const data=buildNodeComparisonData(base,field);
-const c=new Chart($(canvasId),{
-type:"line",data,
-options:{...groupedChartOptions(yTitle),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
-});
-historyGroupCharts.push(c);
+historyGroupCharts.push(new Chart($(canvasId),{
+type:"line",
+data,
+options:{...groupedChartOptions(yTitle),plugins:{legend:graphLegendOptions(),tooltip:{mode:"nearest",intersect:false,callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
+}));
 };
 createCompare("historyPm1","pm1","µg/m³");
 createCompare("historyPm25","pm25","µg/m³");
@@ -3130,12 +3166,6 @@ createCompare("historyLight","light","lux");
 drawForecast(spatialAverageRows(base));
 return;
 }
-if(metric==="all"){
-if($("trendAvg"))$("trendAvg").textContent="—";
-if($("trendMax"))$("trendMax").textContent="—";
-if($("trendMin"))$("trendMin").textContent="—";
-if($("trendLast"))$("trendLast").textContent="—";
-if($("trend"))$("trend").textContent=historyNodeLabel(historyNode);
 area.innerHTML=
 groupedChartShell("ฝุ่นละออง",`${historyNodeLabel(historyNode)} • PM1.0 • PM2.5 • PM10`,"historyDust",miniLegend(["pm1","pm25","pm10"]))+
 `<div class="metric-chart-grid-3">`+
@@ -3146,11 +3176,10 @@ groupedChartShell("แสง",`${historyNodeLabel(historyNode)} • lux`,"histor
 const labels=historyLabelsToRangeEnd(base);
 const create=(canvasId,fields,yTitle)=>{
 const datasets=fields.map(field=>{
-const vals=base.map(r=>finiteNumberOrNull(r[field]));
-return makeActualDataset(field,padChartValuesToLabels(vals,labels));
+const values=base.map(r=>finiteNumberOrNull(r[field]));
+return makeActualDataset(field,padChartValuesToLabels(values,labels));
 });
-const c=new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)});
-historyGroupCharts.push(c);
+historyGroupCharts.push(new Chart($(canvasId),{type:"line",data:{labels,datasets},options:groupedChartOptions(yTitle)}));
 };
 create("historyDust",["pm1","pm25","pm10"],"µg/m³");
 create("historyTemp",["temperature"],"°C");
@@ -3159,27 +3188,24 @@ create("historyLight",["light"],"lux");
 drawForecast(spatialAverageRows(allBase));
 return;
 }
+
+setHistoryStatsVisible(true);
 area.innerHTML='<canvas id="historyChart"></canvas>';
 const sourceRows=averageMode?areaAverageBase:base;
 const chartRows=sourceRows.filter(r=>isRealHistoryReading(r,metric));
 const summaryRows=compareMode?spatialAverageRows(base,[metric]):chartRows;
-const summaryValues=summaryRows.map(r=>finiteNumberOrNull(r[metric])).filter(v=>v!==null);
-const s=stats(summaryRows,metric);
-if($("trendAvg"))$("trendAvg").textContent=s.avg==null?"--":fmt(s.avg);
-if($("trendMax"))$("trendMax").textContent=s.max==null?"--":fmt(s.max);
-if($("trendMin"))$("trendMin").textContent=s.min==null?"--":fmt(s.min);
-if($("trendLast"))$("trendLast").textContent=s.last==null?"--":fmt(s.last);
-if($("trend")){
-const diff=summaryValues.length?summaryValues.at(-1)-summaryValues[0]:0;
-const pct=summaryValues[0]?diff/Math.abs(summaryValues[0])*100:0;
-const trendText=!summaryValues.length?"ไม่มีข้อมูล":Math.abs(pct)<1?"→ คงที่":diff>0?"↑ เพิ่มขึ้น":"↓ ลดลง";
-$("trend").textContent=averageMode&&trendText!=="ไม่มีข้อมูล"?`${trendText} • ค่าเฉลี่ยพื้นที่`:trendText;
-}
+const summary=stats(summaryRows,metric);
+if($("trendAvg"))$("trendAvg").textContent=summary.avg==null?"--":fmt(summary.avg);
+if($("trendMax"))$("trendMax").textContent=summary.max==null?"--":fmt(summary.max);
+if($("trendMin"))$("trendMin").textContent=summary.min==null?"--":fmt(summary.min);
+if($("trendLast"))$("trendLast").textContent=summary.last==null?"--":fmt(summary.last);
+renderPeriodComparison(summaryRows,[metric]);
 if(compareMode){
 const data=buildNodeComparisonData(base.filter(r=>isRealHistoryReading(r,metric)),metric);
 historyChart=new Chart($("historyChart"),{
-type:"line",data,
-options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
+type:"line",
+data,
+options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{mode:"nearest",intersect:false,callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
 });
 drawForecast(summaryRows);
 }else{
@@ -3188,12 +3214,11 @@ const labels=historyLabelsToRangeEnd(chartRows);
 historyChart=new Chart($("historyChart"),{
 type:"line",
 data:{labels,datasets:[makeActualDataset(metric,padChartValuesToLabels(values,labels))]},
-options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
+options:{...groupedChartOptions(`${metricLabel()} ${metricUnit()}`.trim()),plugins:{legend:graphLegendOptions(),tooltip:{mode:"nearest",intersect:false,callbacks:{title:graphTooltipTitle,label:graphTooltipLabel}}}}
 });
 drawForecast(spatialAverageRows(allBase,[metric]));
 }
 }
-// FORECAST
 function linear(points){
 const n=
 points.length;
@@ -3323,14 +3348,6 @@ chart.update(
 "none"
 );
 });
-}
-function aiTrendFor(field){
-const list=aiForecastPayload?.data?.trend_analysis;
-if(!Array.isArray(list))return null;
-return list.find(x=>x?.field===field)||null;
-}
-function aiDirectionText(direction){
-return {increasing:"↗ เพิ่มขึ้น",decreasing:"↘ ลดลง",stable:"→ ค่อนข้างคงที่",uncertain:"? ยังไม่แน่ชัด"}[direction]||"? ยังไม่แน่ชัด";
 }
 function forecastScopeData(scope){
 const list=
@@ -3618,9 +3635,7 @@ aiForecastPayload?.reason
 )
 );
 const providerText=
-aiForecastPayload?.ai===true
-?"ระบบวิเคราะห์"
-:"ระบบคาดการณ์";
+"ระบบคาดการณ์";
 if(metric==="all"){
 if(compareMode){
 area.innerHTML=
@@ -3641,12 +3656,12 @@ color:#94a3b8">
 <span><b style="color:#e2e8f0">จุดที่ 1 / 2 / 3</b> = อีก 10 / 20 / 30 นาที</span>
 </div>`+
 `<div class="metric-chart-grid-3">`+
-groupedChartShell("PM1.0","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
-groupedChartShell("PM2.5","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
-groupedChartShell("PM10","เปรียบเทียบ 3 จุด • ข้อมูลจริง + คาดการณ์","forecastPm10",miniLegend([]))+
-groupedChartShell("อุณหภูมิ","เปรียบเทียบ 3 จุด • °C","forecastTemp",miniLegend([]))+
-groupedChartShell("ความชื้น","เปรียบเทียบ 3 จุด • %","forecastHumidity",miniLegend([]))+
-groupedChartShell("แสง","เปรียบเทียบ 3 จุด • lux","forecastLight",miniLegend([]))+
+groupedChartShell("PM1.0","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm1",miniLegend([]))+
+groupedChartShell("PM2.5","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm25",miniLegend([]))+
+groupedChartShell("PM10","เปรียบเทียบทุกจุด • ข้อมูลจริง + คาดการณ์","forecastPm10",miniLegend([]))+
+groupedChartShell("อุณหภูมิ","เปรียบเทียบทุกจุด • °C","forecastTemp",miniLegend([]))+
+groupedChartShell("ความชื้น","เปรียบเทียบทุกจุด • %","forecastHumidity",miniLegend([]))+
+groupedChartShell("แสง","เปรียบเทียบทุกจุด • lux","forecastLight",miniLegend([]))+
 `</div>`;
 const createCompare=
 (canvasId,field,yTitle)=>{
@@ -3670,7 +3685,7 @@ legend:
 graphLegendOptions(),
 tooltip:{
 mode:"nearest",
-intersect:true,
+intersect:false,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -3730,12 +3745,12 @@ null,
 );
 if(!rows.length){
 area.innerHTML=
-'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงแนวโน้มล่วงหน้าให้อัตโนมัติ</span></div></div>';
+'<div class="forecast-wait-state is-idle"><div><b>รอข้อมูลสำหรับการคาดการณ์</b><span>เมื่อมีข้อมูลล่าสุดเพียงพอ ระบบจะแสดงผลคาดการณ์ให้อัตโนมัติ</span></div></div>';
 return;
 }
 const scopeLabel=
 scope==="AREA"
-?"ค่าเฉลี่ยพื้นที่"
+?"ภาพรวมพื้นที่"
 :historyNodeLabel(scope);
 area.innerHTML=
 groupedChartShell(
@@ -3916,7 +3931,7 @@ legend:
 graphLegendOptions(),
 tooltip:{
 mode:"nearest",
-intersect:true,
+intersect:false,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -3931,7 +3946,7 @@ graphTooltipLabel
 if($("forecastMessage")){
 $("forecastMessage").innerHTML=
 resultReady
-?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • เปรียบเทียบ 3 จุด • ${metricLabel()}</b>
+?`<b style="color:${metricColor(metric)}">คาดการณ์ 30 นาที • เปรียบเทียบทุกจุด • ${metricLabel()}</b>
 <div class="mt-2">${esc(providerText)} • จุด 1/2/3 ถูกคาดการณ์แยกจากข้อมูลของแต่ละจุด</div>
 <div class="text-[12px] text-slate-500 mt-2">เส้นทึบ = ข้อมูลจริง • เส้นประ = +10, +20, +30 นาที</div>`
 :'<div class="ai-unavailable"><b>ยังไม่พร้อมคาดการณ์</b></div>';
@@ -3953,7 +3968,7 @@ return;
 }
 const scopeLabel=
 scope==="AREA"
-?"ค่าเฉลี่ยพื้นที่"
+?"ภาพรวมพื้นที่"
 :historyNodeLabel(scope);
 const values=
 rows.map(
@@ -4030,7 +4045,7 @@ legend:
 graphLegendOptions(),
 tooltip:{
 mode:"nearest",
-intersect:true,
+intersect:false,
 callbacks:{
 title:
 graphTooltipTitle,
@@ -4048,7 +4063,6 @@ $("forecastMessage").style.display="none";
 }
 updateForecastToggle();
 }
-// DATE RANGE PICKER
 function toDateTimeLocalValue(d){
 if(!d){
 return"";
@@ -4649,7 +4663,6 @@ updateHistoryRangeButtonLabel();
 closeHistoryRangePicker();
 loadHistorical();
 }
-// EXPORT
 function exportBounds(){
 const s=
 $("exportStartDate")
@@ -4870,453 +4883,15 @@ button.textContent=oldText||"📊 ดาวน์โหลด Excel";
 }
 }
 }
-// AI ANALYSIS
-function aiStatusClass(payload){
-if(
-aiLoading
-){
-return"is-loading";
-}
-if(!payload){
-return"is-unavailable";
-}
-if(
-payload.ai===true&&
-payload.cached===true
-){
-return"is-ready";
-}
-if(
-payload.ai===true
-){
-return"is-connected";
-}
-if(
-payload.reason===
-"data_unavailable"
-){
-return"is-unavailable";
-}
-return"is-fallback";
-}
-function aiStatusText(payload){
-if(
-aiLoading
-){
-return"LOADING";
-}
-if(!payload){
-return"UNAVAILABLE";
-}
-if(
-payload.ai===true&&
-payload.cached===true
-){
-return"ข้อมูลพร้อมใช้งาน";
-}
-if(
-payload.ai===true
-){
-return"AI CONNECTED";
-}
-if(
-payload.reason===
-"data_unavailable"
-){
-return"ระบบข้อมูล OFFLINE";
-}
-if(
-payload.reason===
-"gemini_secret_not_configured"
-){
-return"ยังไม่พร้อมใช้งาน";
-}
-if(
-payload.reason===
-"gemini_quota_exhausted"
-){
-return"AI QUOTA LIMIT";
-}
-if(
-payload.reason===
-"gemini_unavailable"
-){
-return"ใช้ข้อมูลย้อนหลัง";
-}
-return"ระบบสำรอง";
-}
 function confidenceText(v){
-return{
-high:
-"สูง",
-medium:
-"ปานกลาง",
-low:
-"ต่ำ"
-}[
-String(
-v||""
-)
-.toLowerCase()
-]||
-"--";
-}
-function cleanAIObservationList(items){
-const source=
-Array.isArray(items)
-?items
-:[];
-const seen=
-new Set();
-return source
-.map(x=>normalizeProjectWording(x))
-.map(x=>String(x||"").trim())
-.filter(Boolean)
-.filter(x=>
-!/\b(?:Node|Number)\s*[123]\b/i.test(x)&&
-!/Gateway/i.test(x)&&
-!/ออนไลน์|ออฟไลน์|Sleep|OFFLINE|ONLINE/i.test(x)
-)
-.filter(x=>{
-const key=x
-.toLowerCase()
-.replace(/\s+/g," ");
-if(seen.has(key))return false;
-seen.add(key);
-return true;
-})
-.slice(0,3);
-}
-function aiSituationHeadline(data){
-const headline=
-normalizeProjectWording(
-data?.headline
-);
-if(
-headline&&
-String(headline).trim()
-){
-return String(headline).trim();
-}
-return"กำลังประเมินสถานการณ์จากข้อมูลล่าสุด";
-}
-function aiSituationSummary(data){
-const summary=
-normalizeProjectWording(
-data?.summary
-);
-if(
-summary&&
-String(summary).trim()
-){
-return String(summary).trim();
-}
-return"ยังไม่มีข้อสรุปเพิ่มเติมในขณะนี้";
-}
-function renderAI(payload){
-const badge=
-$("aiStatusBadge");
-const details=
-$("aiDetails");
-const generated=
-$("aiGeneratedAt");
-if(
-!badge||
-!details
-){
-return;
-}
-badge.className=
-`ai-status-badge ${aiStatusClass(payload)}`;
-badge.textContent=
-aiStatusText(
-payload
-);
-if(aiLoading){
-details.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังตีความสถานการณ์จากข้อมูลล่าสุด...</div>';
-return;
-}
-if(!payload){
-details.innerHTML=
-`<div class="ai-result-headline">ยังไม่มีบทวิเคราะห์ในขณะนี้</div>
-<div class="ai-result-summary">ดูค่าตรวจวัดล่าสุดได้จากหน้า “ภาพรวม” และ “จุดตรวจวัด”</div>`;
-if(generated){
-generated.textContent=
-"อัปเดตการวิเคราะห์: --";
-}
-return;
-}
-const data=
-payload.data||
-{};
-const observations=
-cleanAIObservationList(
-data.observations
-);
-const generatedDate=
-parseDate(
-payload.generated_at
-);
-if(generated){
-generated.textContent=
-generatedDate
-?`อัปเดตการวิเคราะห์: ${generatedDate.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok"
-}
-)}`
-:"อัปเดตการวิเคราะห์: --";
-}
-const recommendation=
-normalizeProjectWording(
-data.recommendation
-)||
-"ติดตามการเปลี่ยนแปลงของข้อมูลในรอบถัดไป";
-details.innerHTML=
-`
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-ภาพรวมที่ AI ตีความ
-</div>
-
-<div class="ai-result-headline">
-${esc(aiSituationHeadline(data))}
-</div>
-
-<div class="ai-result-summary">
-${esc(aiSituationSummary(data))}
-</div>
-
-</div>
-
-${observations.length
-?`
-<div class="ai-result-section">
-<div class="ai-result-label">
-สิ่งที่ควรสนใจ
-</div>
-<div class="ai-observation-list">
-${observations
-.map(
-x=>
-`<div class="ai-observation">
-• ${esc(x)}
-</div>`
-)
-.join("")}
-</div>
-</div>
-`
-:`
-<div class="ai-result-section">
-<div class="ai-result-label">
-สิ่งที่ควรสนใจ
-</div>
-<div class="ai-result-summary">
-ยังไม่พบประเด็นเพิ่มเติมที่จำเป็นต้องเน้นจากข้อมูลชุดนี้
-</div>
-</div>
-`
+return{high:"สูง",medium:"ปานกลาง",low:"ต่ำ"}[String(v||"").toLowerCase()]||"--";
 }
 
-<div class="ai-result-section">
-
-<div class="ai-result-label">
-คำแนะนำสำหรับตอนนี้
-</div>
-
-<div class="ai-recommendation">
-${esc(recommendation)}
-</div>
-
-</div>
-
-<div class="ai-meta-row">
-<span>AI ทำหน้าที่ตีความข้อมูล ไม่ได้แสดงรายการค่าตรวจวัดซ้ำจากหน้าอื่น</span>
-</div>`;
-}
-async function loadAI(
-force=false
-){
-if(
-aiLoading
-){
-return;
-}
-aiLoading=
-true;
-renderAI(
-aiPayload
-);
-const button=
-$("aiRefreshButton");
-if(button){
-button.disabled=
-true;
-}
-try{
-const url=
-API.ai+
-(
-force
-?"?refresh=1"
-:""
-);
-aiPayload=
-await fetchJson(
-url
-);
-aiLastLoadedAt=
-new Date();
-}catch(e){
-console.error(
-"AI analysis error:",
-e
-);
-aiPayload=
-null;
-}finally{
-aiLoading=
-false;
-if(button){
-button.disabled=
-false;
-}
-renderAI(
-aiPayload
-);
-}
-}
-// AI FORECAST
-function dustTrendSummary(trends){
-const fields=[
-"pm1",
-"pm25",
-"pm10"
-];
-const items=
-fields.map(
-field=>
-trends.find(
-x=>x?.field===field
-)
-);
-const valid=
-items.filter(Boolean);
-if(!valid.length){
-return{
-items,
-summary:"ยังไม่มีข้อมูลแนวโน้มฝุ่นเพียงพอ"
-};
-}
-const codes=
-valid.map(
-x=>
-String(
-x.direction||
-"stable"
-)
-.toLowerCase()
-);
-const up=
-codes.filter(
-x=>
-["up","increase","increasing"].includes(x)
-).length;
-const down=
-codes.filter(
-x=>
-["down","decrease","decreasing"].includes(x)
-).length;
-const stable=
-valid.length-
-up-
-down;
-let summary;
-if(
-down===valid.length
-){
-summary="ฝุ่นทุกขนาดมีแนวโน้มลดลง";
-}else if(
-up===valid.length
-){
-summary="ฝุ่นทุกขนาดมีแนวโน้มเพิ่มขึ้น";
-}else if(
-stable===valid.length
-){
-summary="ฝุ่นทุกขนาดค่อนข้างคงที่";
-}else if(
-down>up&&
-down>=stable
-){
-summary="ฝุ่นโดยรวมมีแนวโน้มลดลง แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
-}else if(
-up>down&&
-up>=stable
-){
-summary="ฝุ่นโดยรวมมีแนวโน้มเพิ่มขึ้น แต่แต่ละขนาดเปลี่ยนแปลงไม่เท่ากัน";
-}else{
-summary="แนวโน้มฝุ่นแต่ละขนาดแตกต่างกัน ควรติดตามต่อเนื่อง";
-}
-return{
-items,
-summary
-};
-}
-function renderDustTrendCard(trends){
-const dust=
-dustTrendSummary(
-trends
-);
-const fields=[
-["pm1","PM1.0"],
-["pm25","PM2.5"],
-["pm10","PM10"]
-];
-const rows=
-fields.map(
-([field,label])=>{
-const item=
-trends.find(
-x=>x?.field===field
-);
-if(!item){
-return`
-<div class="ai-dust-mini is-missing">
-<div class="ai-dust-mini-label">${label}</div>
-<div class="ai-dust-mini-direction">ยังไม่มีข้อมูล</div>
-</div>`;
-}
-return`
-<div class="ai-dust-mini">
-<div class="ai-dust-mini-label">${label}</div>
-<div class="ai-dust-mini-direction">${esc(aiDirectionText(item.direction))}</div>
-<div class="ai-dust-mini-note">${esc(item.explanation||"")}</div>
-</div>`;
-})
-.join("");
-return`
-<div class="ai-trend-item ai-trend-dust">
-<div class="ai-trend-variable">🌫 ฝุ่นละออง</div>
-
-<div class="ai-dust-trend-grid">
-${rows}
-</div>
-
-<div class="ai-dust-summary">
-${esc(dust.summary)}
-</div>
-</div>`;
-}
 function normalizeProjectWording(value){
 if(value===null||value===undefined){
 return value;
 }
 let s=String(value);
-/* ขอบเขตโครงการเป็นการตรวจวัดระดับพื้นที่ และรองรับข้อความจาก ผลวิเคราะห์เวอร์ชันก่อนหน้า */
 s=s
 .replaceAll("สภาพอากาศและคุณภาพอากาศในสถานศึกษา","สภาพอากาศและคุณภาพอากาศในพื้นที่")
 .replaceAll("การตรวจวัดสิ่งแวดล้อมในสถานศึกษา","การตรวจวัดสภาพแวดล้อมในพื้นที่")
@@ -5324,11 +4899,9 @@ s=s
 .replaceAll("สภาพแวดล้อมของสถานศึกษา","สภาพแวดล้อมในพื้นที่")
 .replaceAll("ในสถานศึกษา","ในพื้นที่")
 .replaceAll("ของสถานศึกษา","ในพื้นที่");
-/* หลีกเลี่ยงคำแนะนำที่สมมติว่าพื้นที่มีระบบระบายอากาศ */
 if(/ระบบระบายอากาศ/.test(s)){
 s="ควรติดตามสภาพอากาศและคุณภาพอากาศในพื้นที่อย่างต่อเนื่อง เพื่อสังเกตการเปลี่ยนแปลง";
 }
-/* ปรับประโยคความสัมพันธ์ให้ไม่ฟันธงเกินข้อมูล */
 s=s
 .replace(
 /สภาพแวดล้อมในพื้นที่(?:ไม่|ไม่มี)\s*สัมพันธ์กับข้อมูลอื่น/g,
@@ -5341,266 +4914,41 @@ s=s
 return s;
 }
 function renderAIForecast(payload){
-const box=
-$("aiForecastDetails");
-const badge=
-$("aiForecastStatusBadge");
-const generated=
-$("aiForecastGeneratedAt");
-const providerLabel=
-$("aiTrendDecisionProvider");
-if(providerLabel){
-const provider=
-payload?.provider;
-providerLabel.textContent=
-provider==="gemini"
-?"ระบบวิเคราะห์"
-:provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:payload?.ai===false
-?"ระบบคาดการณ์"
-:"กำลังรอการวิเคราะห์...";
-}
+const box=$("aiForecastDetails");
+const badge=$("aiForecastStatusBadge");
+const generated=$("aiForecastGeneratedAt");
 if(aiForecastLoading){
-if(providerLabel){
-providerLabel.textContent=
-"กำลังวิเคราะห์...";
-}
-if(box){
-box.innerHTML=
-'<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังวิเคราะห์แนวโน้มและคาดการณ์...</div>';
-}
-if(badge){
-badge.textContent=
-"กำลังวิเคราะห์";
-}
+if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังประมวลผลการคาดการณ์...</div>';
+if(badge){badge.className="ai-forecast-status";badge.textContent="กำลังคาดการณ์";}
 return;
 }
 if(!payload){
-if(box){
-box.innerHTML=
-'<div class="ai-unavailable">ยังไม่มีผลการวิเคราะห์แนวโน้ม</div>';
+if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลการคาดการณ์ในขณะนี้</div>';
+if(badge){badge.className="ai-forecast-status";badge.textContent="รอข้อมูล";}
+if(generated)generated.textContent="อัปเดตการคาดการณ์: --";
+return;
 }
+const d=payload.data||{};
+const dt=parseDate(payload.generated_at);
+if(generated)generated.textContent=dt?`อัปเดตการคาดการณ์: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดตการคาดการณ์: --";
 if(badge){
-badge.textContent=
-"รอข้อมูล";
+badge.className=`ai-forecast-status ${payload.ai===true?"is-connected":"is-unavailable"}`;
+badge.textContent=payload.ai===true?"พร้อมใช้งาน":"ระบบคาดการณ์";
 }
+if(!box)return;
+if(payload.ai!==true && !["fast_forecast","all_ai_unavailable"].includes(payload?.reason)){
+box.innerHTML='<div class="ai-unavailable"><b>ยังไม่สามารถสร้างการคาดการณ์ได้</b><div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div></div>';
 return;
 }
-const d=
-payload.data||
-{};
-const isAI=
-payload.ai===true;
-if(generated){
-const dt=
-parseDate(
-payload.generated_at
-);
-generated.textContent=
-dt
-?`อัปเดตการวิเคราะห์: ${dt.toLocaleString(
-"th-TH",
-{
-timeZone:"Asia/Bangkok"
-}
-)}`
-:"อัปเดตการวิเคราะห์: --";
-}
-if(badge){
-badge.className=
-`ai-forecast-status ${isAI?"is-connected":"is-unavailable"}`;
-const p=
-payload?.provider==="gemini"
-?"ระบบวิเคราะห์"
-:payload?.provider==="cloudflare"
-?"ระบบวิเคราะห์"
-:payload?.provider==="rule"
-?"ระบบคาดการณ์"
-:"AI";
-badge.textContent=
-isAI
-?p
-:"ระบบคาดการณ์";
-}
-if(!box){
-return;
-}
-if(!isAI){
-if(
-payload?.reason==="fast_forecast" ||
-payload?.reason==="all_ai_unavailable"
-){
-const d=
-payload.data||
-{};
-box.innerHTML=
-`<div class="ai-ready-summary">
-<b>${esc(d.headline||"แนวโน้มระยะสั้นพร้อมใช้งาน")}</b>
-<div class="mt-1">${esc(d.air_forecast||"ระบบกำลังประเมินแนวโน้มจากข้อมูลที่มีอยู่")}</div>
-${d.heat_forecast?`<div class="mt-1">${esc(d.heat_forecast)}</div>`:""}
-</div>`;
-return;
-}
-box.innerHTML=
-`<div class="ai-unavailable">
-<b>ยังไม่สามารถสร้างแนวโน้มได้</b>
-<div class="mt-1">ข้อมูลที่จำเป็นยังไม่พร้อม กรุณาลองใหม่ภายหลัง</div>
-</div>`;
-return;
-}
-const trends=
-Array.isArray(
-d.trend_analysis
-)
-?d.trend_analysis
-:[];
-/*
-  ฝุ่น 3 ขนาดอยู่ในการ์ดเดียว
-  ส่วน Temperature / Humidity / Light
-  ยังคงเป็นการ์ดแยกเหมือนเดิม
-*/
-const environmentFields=[
-"temperature",
-"humidity",
-"light"
-];
-const environmentCards=
-environmentFields
-.map(
-field=>
-trends.find(
-x=>x?.field===field
-)
-)
-.filter(Boolean);
-const dustCard=
-renderDustTrendCard(
-trends
-);
-const otherCards=
-environmentCards
-.map(
-x=>
-`<div class="ai-trend-item">
-<div class="ai-trend-variable">
-${esc(
-CURRENT_METRIC_CONFIG[
-x.field
-]?.label||
-x.field
-)}
-</div>
-
-<div class="ai-trend-direction">
-${esc(
-aiDirectionText(
-x.direction
-)
-)}
-</div>
-
-<div class="ai-trend-explanation">
-${esc(
-x.explanation||
-""
-)}
-</div>
-</div>`
-)
-.join("");
-box.innerHTML=
-`
-<div class="ai-forecast-headline">
-${esc(
-normalizeProjectWording(d.headline)||
-"แนวโน้มและคาดการณ์"
-)}
-</div>
-
-<div class="ai-trend-summary">
-${dustCard}
-${otherCards}
-</div>
-
-<div class="ai-trend-driver">
-<b>ปัจจัยที่เด่น:</b>
-${esc(
-normalizeProjectWording(d.primary_driver)||
-"--"
-)}
-<br>
-<b>สิ่งผิดปกติ:</b>
-${esc(
-normalizeProjectWording(d.anomaly_summary)||
-"--"
-)}
-</div>
-
+box.innerHTML=`
+<div class="ai-forecast-headline">${esc(normalizeProjectWording(d.headline)||"การคาดการณ์ระยะสั้น")}</div>
 <div class="ai-forecast-grid mt-3">
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🌿 คุณภาพอากาศ
+  <div class="ai-forecast-item"><div class="ai-forecast-label">🌿 คุณภาพอากาศ</div><div>${esc(normalizeProjectWording(d.air_forecast)||"ยังไม่มีข้อมูล")}</div></div>
+  <div class="ai-forecast-item"><div class="ai-forecast-label">🌡 สภาพความร้อน</div><div>${esc(normalizeProjectWording(d.heat_forecast)||"ยังไม่มีข้อมูล")}</div></div>
+  <div class="ai-forecast-item"><div class="ai-forecast-label">📍 พื้นที่</div><div>${esc(normalizeProjectWording(d.local_environment_forecast)||"ยังไม่มีข้อมูล")}</div></div>
+  <div class="ai-forecast-item"><div class="ai-forecast-label">🏃 กิจกรรม</div><div>${esc(normalizeProjectWording(d.activity_forecast)||"ยังไม่มีข้อมูล")}</div></div>
 </div>
-<div>
-${esc(
-normalizeProjectWording(d.air_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🌡 สภาพความร้อน
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.heat_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-📍 พื้นที่
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.local_environment_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-<div class="ai-forecast-item">
-<div class="ai-forecast-label">
-🏃 กิจกรรม
-</div>
-<div>
-${esc(
-normalizeProjectWording(d.activity_forecast)||
-"ยังไม่มีข้อมูล"
-)}
-</div>
-</div>
-
-</div>
-
-<div class="ai-meta-row">
-<span>
-คาดการณ์จากข้อมูลล่าสุดและข้อมูลย้อนหลัง
-</span>
-<span class="ai-confidence">
-${confidenceText(
-d.confidence||
-"low"
-)}
-<small>ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</small>
-</span>
-</div>`;
+<div class="ai-meta-row"><span>ค่าคาดการณ์เป็นค่าประมาณจากข้อมูลที่ระบบมีอยู่</span><span class="ai-confidence">ความเชื่อมั่น: ${confidenceText(d.confidence||"low")}<small> ไม่ใช่เปอร์เซ็นต์ความแม่นยำ</small></span></div>`;
 }
 async function loadAIForecast(
 force=false
@@ -5616,7 +4964,7 @@ const forecastMessageEl=
 $("forecastMessage");
 if(forecastMessageEl){
 forecastMessageEl.innerHTML=
-'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังวิเคราะห์แนวโน้มล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังวิเคราะห์ข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
+'<div class="forecast-processing-state"><span class="forecast-processing-spinner" aria-hidden="true"></span><div><b>กำลังประมวลผลการคาดการณ์ล่วงหน้า</b><div class="mt-1">กรุณารอสักครู่ ระบบกำลังประมวลผลข้อมูลล่าสุดและข้อมูลย้อนหลัง...</div></div></div>';
 }
 renderAIForecast(
 aiForecastPayload
@@ -5643,7 +4991,7 @@ aiForecastLastLoadedAt=
 new Date();
 }catch(e){
 console.error(
-"AI forecast error:",
+"Forecast error:",
 e
 );
 aiForecastPayload=
@@ -5661,14 +5009,13 @@ aiForecastPayload
 drawCharts();
 }
 }
-// HELP
 const HELP_CONTENT={
 systemGuide:{
 title:"📘 วิธีอ่าน Dashboard",
 html:`<div class="help-intro-card"><b>คู่มือรวมสำหรับการอ่านข้อมูล</b><span>ช่วยแยกความหมายของข้อมูลปัจจุบัน ข้อมูลย้อนหลัง และค่าคาดการณ์</span></div>
 <section class="help-section"><h4>ข้อมูลปัจจุบัน</h4><p>ใช้ดูสถานการณ์ล่าสุดที่ระบบยืนยันได้ในขณะนั้น หากขึ้น <b>--</b> หมายถึงยังไม่มีค่าที่เหมาะสำหรับแสดง ไม่ได้หมายถึงค่า 0</p></section>
 <section class="help-section"><h4>ข้อมูลย้อนหลัง</h4><p>ใช้ดูสิ่งที่เกิดขึ้นแล้วในช่วงเวลาที่เลือก เพื่อเปรียบเทียบการเปลี่ยนแปลงตามเวลา</p></section>
-<section class="help-section"><h4>ค่าคาดการณ์</h4><p>เป็นค่าประมาณของช่วงเวลาข้างหน้าเพื่อช่วยดูแนวโน้ม ไม่ใช่ค่าที่วัดได้ล่วงหน้าและไม่รับประกันว่าจะเกิดขึ้นจริง</p></section>
+<section class="help-section"><h4>ค่าคาดการณ์</h4><p>เป็นค่าประมาณของช่วงเวลาข้างหน้าเพื่อช่วยดูค่าที่อาจเกิดขึ้น ไม่ใช่ค่าที่วัดได้ล่วงหน้าและไม่รับประกันว่าจะเกิดขึ้นจริง</p></section>
 <div class="help-tip"><b>อ่านให้ง่าย</b><span>เริ่มจากภาพรวมปัจจุบัน → ดูจุดตรวจวัด → ดูย้อนหลัง → ใช้การคาดการณ์เป็นข้อมูลประกอบ</span></div>`
 },
 overviewQuality:{
@@ -5738,56 +5085,43 @@ html:`<div class="help-intro-card"><b>รวมเฉพาะเรื่อง
 <div class="help-warning">การเตือนจากค่าปัจจุบันเป็นการเฝ้าระวังเบื้องต้น ไม่ใช่ผลตัดสินมาตรฐานเฉลี่ยตามช่วงเวลาหรือคำวินิจฉัยทางสุขภาพ</div>`
 },
 historyPage:{
-title:"📈 หน้าสถิติและกราฟ",
-html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูสิ่งที่เกิดขึ้นแล้วตามเวลา</b><span>เลือกจุด ตัวแปร และช่วงเวลาเพื่อดูค่าเฉลี่ย ค่าสูงสุด ค่าต่ำสุด ค่าล่าสุด และแนวโน้ม</span></div>
-<section class="help-section"><h4>อย่าเทียบคนละช่วงเวลา</h4><p>ก่อนเปรียบเทียบตัวเลข ควรตรวจว่ากำลังดูช่วงเวลาเดียวกัน เพราะช่วงเวลาที่ต่างกันอาจให้ภาพรวมต่างกัน</p></section>
-<section class="help-section"><h4>กราฟย้อนหลังกับคาดการณ์ต่างกันอย่างไร?</h4><p>กราฟย้อนหลังแสดงสิ่งที่เกิดขึ้นแล้ว ส่วนกราฟคาดการณ์เป็นค่าประมาณของช่วงเวลาข้างหน้า</p></section>`
+title:"📊 หน้าข้อมูลย้อนหลัง",
+html:`<div class="help-intro-card"><b>หน้านี้ใช้ดูข้อมูลที่เกิดขึ้นแล้ว</b><span>เลือกมุมมอง ข้อมูลที่แสดง และช่วงเวลา เพื่อดูสถิติ กราฟ และเปรียบเทียบต้นช่วงกับปลายช่วง</span></div>
+<section class="help-section"><h4>ต้นช่วงเทียบกับปลายช่วง</h4><p>ระบบใช้ค่าเฉลี่ยของข้อมูลช่วงต้นและช่วงท้ายของช่วงเวลาที่เลือก เพื่อลดผลจากค่ารอบเดียว แล้วแสดงว่าสูงขึ้น ลดลง หรือใกล้เคียงกัน</p></section>
+<section class="help-section"><h4>ข้อมูลย้อนหลังกับการคาดการณ์ต่างกันอย่างไร?</h4><p>ข้อมูลย้อนหลังคือค่าที่เกิดขึ้นแล้ว ส่วนการคาดการณ์เป็นค่าประมาณของช่วงเวลาข้างหน้า</p></section>`
 },
 historical:{
-title:"📊 ตัวเลือกสถิติย้อนหลัง",
-html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูลที่ต้องการดู</b><span>เลือกจุดตรวจวัด ตัวแปร และช่วงเวลาให้ตรงกับคำถามที่ต้องการตอบ</span></div>
-<section class="help-section"><h4>เลือกจุด</h4><p>“เปรียบเทียบ 3 จุด” ใช้ดูความแตกต่างระหว่างจุด ส่วน “ค่าเฉลี่ยพื้นที่” ใช้ดูภาพรวมของจุดที่มีข้อมูลในช่วงนั้น</p></section>
-<section class="help-section"><h4>เลือกตัวแปร</h4><p>แต่ละตัวแปรมีหน่วยและความหมายต่างกัน จึงควรอ่านเกณฑ์ของตัวแปรนั้นก่อนสรุปว่า “สูง” หรือ “ต่ำ” หมายถึงอะไร</p></section>
-<section class="help-section"><h4>เลือกช่วงเวลา</h4><p>ช่วงสั้นเหมาะกับการดูการเปลี่ยนแปลงล่าสุด ส่วนช่วงยาวเหมาะกับการดูแนวโน้มโดยรวม</p></section>`
+title:"📊 ตัวเลือกข้อมูลย้อนหลัง",
+html:`<div class="help-intro-card"><b>ใช้กำหนดข้อมูลที่ต้องการดู</b><span>เลือกมุมมอง ข้อมูลที่แสดง และช่วงเวลาให้ตรงกับสิ่งที่ต้องการตรวจสอบ</span></div>
+<section class="help-section"><h4>มุมมองข้อมูล</h4><p>“เปรียบเทียบทุกจุด” แยกเส้นของจุด 1–3 ส่วน “ภาพรวมพื้นที่” ใช้ค่าเฉลี่ยจากจุดที่มีข้อมูลในช่วงนั้น</p></section>
+<section class="help-section"><h4>ข้อมูลที่แสดง</h4><p>เลือกทุกตัวแปร หรือเลือกเฉพาะ PM1.0, PM2.5, PM10, อุณหภูมิ ความชื้น หรือแสงได้</p></section>
+<section class="help-section"><h4>ช่วงเวลาย้อนหลัง</h4><p>เลือกช่วงด่วนหรือกำหนดวันและเวลาเองได้ โดยสรุปข้อมูลและกราฟจะคำนวณตามช่วงที่เลือก</p></section>`
 },
 historyChart:{
 title:"📈 กราฟข้อมูลย้อนหลัง",
 html:`<div class="help-intro-card"><b>กราฟนี้แสดงข้อมูลที่เกิดขึ้นแล้ว</b><span>ตำแหน่งตามแนวนอนคือเวลา ส่วนแนวตั้งคือค่าของตัวแปรที่เลือก</span></div>
 <section class="help-section"><h4>เส้นของแต่ละจุด</h4><p>เมื่อเปรียบเทียบหลายจุด แต่ละเส้นแทนจุดของตัวเอง ค่าที่เกิดคนละเวลาไม่จำเป็นต้องอยู่ตำแหน่งเวลาเดียวกัน</p></section>
-<section class="help-section"><h4>ซูมกราฟ</h4><p>ใช้ดูช่วงเวลาที่สนใจให้ละเอียดขึ้น โดยรายละเอียดเมื่อชี้จุดจะแสดงวันและเวลาของค่านั้น</p></section>
+<section class="help-section"><h4>เปิดดูกราฟแบบละเอียด</h4><p>แตะกราฟเพื่อเปิดหน้าดูรายละเอียด จากนั้นซูม เลื่อนช่วงเวลา และแตะใกล้จุดข้อมูลเพื่อดูค่าและเวลาที่บันทึกได้</p></section>
 <section class="help-section"><h4>ช่วงที่ไม่มีจุดข้อมูล</h4><p>ไม่ควรตีความว่าเป็นค่า 0 เพราะอาจหมายถึงไม่มีข้อมูลสำหรับช่วงนั้น</p></section>`
 },
 forecastChart:{
 title:"🔮 กราฟคาดการณ์ 30 นาที",
-html:`<div class="help-intro-card"><b>ใช้ดูแนวโน้มที่อาจเกิดขึ้นในอีก 30 นาที</b><span>ข้อมูลจริงและค่าคาดการณ์ถูกแยกให้เห็นชัดเจน</span></div>
+html:`<div class="help-intro-card"><b>ใช้ดูค่าที่ระบบคาดว่าอาจเกิดขึ้นในอีก 30 นาที</b><span>ข้อมูลจริงและค่าคาดการณ์ถูกแยกให้เห็นชัดเจน</span></div>
 <section class="help-section"><h4>ข้อมูลจริง</h4><p>คือค่าที่เกิดขึ้นแล้ว ใช้เป็นจุดอ้างอิงก่อนเข้าสู่ช่วงคาดการณ์</p></section>
 <section class="help-section"><h4>ค่าคาดการณ์ +10 / +20 / +30 นาที</h4><p>เป็นค่าประมาณของอนาคตเพื่อช่วยดูทิศทาง ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p></section>
 <section class="help-section"><h4>ควรใช้อย่างไร?</h4><p>ใช้ประกอบกับสถานการณ์ปัจจุบันและกราฟย้อนหลัง หากสถานการณ์เปลี่ยนเร็ว ผลคาดการณ์ก็อาจเปลี่ยนตามข้อมูลใหม่</p></section>`
 },
-currentSituation:{
-title:"🧭 สถานการณ์ปัจจุบัน",
-html:`<div class="help-intro-card"><b>อธิบายเฉพาะสิ่งที่เกิดขึ้นในข้อมูลปัจจุบัน</b><span>ช่วยสรุปว่าตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรระวังเรื่องใด</span></div>
-<section class="help-section"><h4>อ่านร่วมกับอะไร?</h4><p>ควรดูตัวเลขจริงในหน้าภาพรวมหรือหน้าจุดตรวจวัดร่วมด้วย โดยเฉพาะเมื่อจำเป็นต้องรู้ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p></section>
-<div class="help-warning">ส่วนนี้ไม่ใช่การคาดการณ์อนาคต</div>`
-},
 forecast30:{
-title:"🔮 แนวโน้ม 30 นาที",
-html:`<div class="help-intro-card"><b>อธิบายสิ่งที่อาจเกิดขึ้นในช่วง 30 นาทีข้างหน้า</b><span>ใช้ดูทิศทางโดยประมาณ เช่น มีแนวโน้มเพิ่ม ลด หรือทรงตัว</span></div>
-<section class="help-section"><h4>ต่างจากสถานการณ์ปัจจุบันอย่างไร?</h4><p>สถานการณ์ปัจจุบันมาจากข้อมูลที่เกิดขึ้นแล้ว ส่วนแนวโน้ม 30 นาทีเป็นค่าประมาณของอนาคต จึงมีความไม่แน่นอน</p></section>
-<div class="help-warning">ใช้เป็นข้อมูลประกอบ ไม่ใช่คำยืนยันว่าจะเกิดค่าตามนั้นจริง</div>`
+title:"🔮 การคาดการณ์ 30 นาที",
+html:`<div class="help-intro-card"><b>แสดงสิ่งที่อาจเกิดขึ้นในช่วง 30 นาทีข้างหน้า</b><span>ใช้ดูทิศทางโดยประมาณจากข้อมูลล่าสุดและข้อมูลย้อนหลัง</span></div>
+<section class="help-section"><h4>+10 / +20 / +30 นาที</h4><p>เป็นค่าประมาณในอนาคตเพื่อช่วยดูทิศทาง ไม่ใช่ค่าที่รับประกันว่าจะเกิดขึ้นจริง</p></section>
+<div class="help-warning">ใช้เป็นข้อมูลประกอบการติดตาม และควรตรวจค่าจริงล่าสุดร่วมด้วย</div>`
 },
-analysisPage:{
-title:"✦ หน้าวิเคราะห์และคาดการณ์",
-html:`<div class="help-intro-card"><b>หน้านี้แยก “ตอนนี้” ออกจาก “ข้างหน้า”</b><span>ฝั่งสถานการณ์ปัจจุบันช่วยสรุปสิ่งที่ควรสนใจ ส่วนฝั่งคาดการณ์ช่วยดูแนวโน้ม 30 นาที</span></div>
-<section class="help-section"><h4>สถานการณ์ปัจจุบัน</h4><p>อธิบายความหมายของข้อมูลล่าสุดโดยเน้นประเด็นสำคัญ ไม่ควรใช้แทนตัวเลขจริงเมื่อจำเป็นต้องดูค่ารายละเอียด</p></section>
-<section class="help-section"><h4>แนวโน้ม 30 นาที</h4><p>ใช้ดูทิศทางที่อาจเกิดขึ้นและควรอ่านเป็น “แนวโน้ม” ไม่ใช่คำยืนยันเหตุการณ์ในอนาคต</p></section>`
-},
-ai:{
-title:"✦ วิเคราะห์สถานการณ์",
-html:`<div class="help-intro-card"><b>ช่วยแปลข้อมูลให้เป็นภาษาที่อ่านง่าย</b><span>เน้นตอบว่า ตอนนี้เป็นอย่างไร มีอะไรควรสนใจ และควรทำอะไรต่อ</span></div>
-<section class="help-section"><h4>ข้อมูลที่นำมาพิจารณา</h4><p>พิจารณาฝุ่น อุณหภูมิ ความชื้น ดัชนีความร้อน และแนวโน้มของข้อมูลที่เกี่ยวข้อง โดยไม่ควรใช้ตัวแปรใดเพียงค่าเดียวสรุปทุกสถานการณ์</p></section>
-<section class="help-section"><h4>เหตุใดอุณหภูมิ ความชื้น และดัชนีความร้อนจึงเชื่อมกัน?</h4><p>อุณหภูมิและความชื้นมีความหมายของตัวเอง แต่เมื่อประเมินความร้อนที่ร่างกายอาจรู้สึก จะต้องพิจารณาทั้งสองร่วมกันผ่านดัชนีความร้อน</p></section>
-<div class="help-warning">ข้อความวิเคราะห์เป็นข้อมูลประกอบการติดตาม ไม่ใช่คำวินิจฉัยทางการแพทย์หรือประกาศจากหน่วยงานทางการ</div>`
+forecastPage:{
+title:"🔮 หน้าการคาดการณ์",
+html:`<div class="help-intro-card"><b>หน้านี้รวมข้อมูลคาดการณ์ไว้ในที่เดียว</b><span>ประกอบด้วยคำอธิบายการคาดการณ์และกราฟคาดการณ์ 30 นาที</span></div>
+<section class="help-section"><h4>คำอธิบายการคาดการณ์</h4><p>สรุปสิ่งที่ระบบคาดว่าอาจเกิดขึ้นในระยะสั้น โดยเน้นข้อมูลอนาคตและไม่แสดงส่วนสรุปสถานการณ์ปัจจุบัน</p></section>
+<section class="help-section"><h4>กราฟคาดการณ์</h4><p>เส้นทึบคือข้อมูลที่เกิดขึ้นแล้ว ส่วนช่วงคาดการณ์ใช้แสดงค่าประมาณ +10 / +20 / +30 นาที</p></section>`
 },
 aboutPage:{
 title:"ℹ️ เกี่ยวกับโครงการ",
@@ -5798,7 +5132,7 @@ aboutReadGuide:{
 title:"📖 อ่านข้อมูลบน Dashboard อย่างไร",
 html:`<div class="help-intro-card"><b>คำแนะนำสำหรับผู้ใช้ทั่วไป</b><span>เริ่มจากภาพรวม แล้วค่อยลงรายละเอียดรายจุดและข้อมูลย้อนหลัง</span></div>
 <section class="help-section"><h4>ข้อมูลรายจุด</h4><p>ใช้เมื่อต้องการรู้สถานการณ์ของตำแหน่งใดตำแหน่งหนึ่ง เพราะแต่ละจุดอาจมีสภาพแวดล้อมต่างกัน</p></section>
-<section class="help-section"><h4>ค่าเฉลี่ยพื้นที่</h4><p>ช่วยสรุปภาพรวมของจุดที่มีข้อมูลในช่วงนั้น แต่ไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
+<section class="help-section"><h4>ภาพรวมพื้นที่</h4><p>คำนวณจากค่าเฉลี่ยของจุดที่มีข้อมูลในช่วงนั้น เพื่อดูภาพรวม และไม่ใช่ค่าจริงของตำแหน่งใดตำแหน่งหนึ่ง</p></section>`
 },
 aboutCharacterGuide:{
 title:"🙂 ตัวละครบอกอะไรเรา?",
@@ -5892,7 +5226,6 @@ closeHelp();
 }
 });
 }
-// CREDIT IMAGE VIEWER
 function openCreditImage(src,caption=""){
 const modal=
 $("creditImageModal");
@@ -5973,7 +5306,6 @@ closeCreditImage();
 }
 }
 );
-// EVENTS
 let googleButtonResizeTimer=null;
 window.addEventListener("resize",()=>{
   clearTimeout(googleButtonResizeTimer);
@@ -5992,32 +5324,27 @@ setHistoryRangeMode(button.dataset.historyRangeMode);
 updateRangePickerPreviews();
 });
 });
-const historyNodeSelect=
-$("historyNode");
-if(historyNodeSelect){
-historyNodeSelect.value=historyNode;
-historyNodeSelect.addEventListener(
-"change",
-e=>{
-historyNode=e.target.value;
+document.querySelectorAll("[data-history-node]").forEach(button=>{
+button.addEventListener("click",()=>{
+const next=button.dataset.historyNode;
+if(!["compare","average",...HISTORY_NODES].includes(next)||next===historyNode)return;
+historyNode=next;
+updateHistoryNodeControls();
 drawCharts();
-}
-);
-}
-const metricSelect=
-$("metric");
-if(metricSelect){
-metricSelect.value=
-metric;
-metricSelect.addEventListener(
-"change",
-e=>{
-metric=
-e.target.value;
+});
+});
+["metric","forecastMetric"].forEach(id=>{
+const select=$(id);
+if(!select)return;
+select.value=metric;
+select.addEventListener("change",e=>{
+metric=e.target.value;
+updateMetricControls();
 drawCharts();
-}
-);
-}
+});
+});
+updateHistoryNodeControls();
+updateMetricControls();
 $("historyRangeButton")
 ?.addEventListener(
 "click",
@@ -6190,15 +5517,6 @@ drawCharts();
 }
 }
 );
-$("aiRefreshButton")
-?.addEventListener(
-"click",
-()=>{
-loadAI(
-true
-);
-}
-);
 $("aiForecastRefreshButton")
 ?.addEventListener(
 "click",
@@ -6223,13 +5541,6 @@ $("exportCancelButton")
 "click",
 closeExport
 );
-/*
-  ปิดหน้าต่างส่งออกได้เหมือนตัวเลือกช่วงเวลา:
-  - คลิกพื้นที่ว่าง / ฉากหลัง
-  - ปุ่ม X
-  - ปุ่มยกเลิก
-  - ปุ่ม Esc (มี listener ด้านล่าง)
-*/
 $("exportModal")
 ?.addEventListener(
 "click",
@@ -6278,7 +5589,6 @@ closeProfileEditor();
 }
 );
 }
-// INTERACTIVE CHART VIEWER — NO EXTERNAL ZOOM PLUGIN
 let chartInteractiveViewerReady=false;
 let chartInteractiveInstance=null;
 function cloneChartDatasetForViewer(ds){
@@ -6374,7 +5684,7 @@ viewer.innerHTML=`
 <div class="chart-zoom-heading">
 <div class="chart-zoom-title" id="chartZoomTitle">กราฟแบบโต้ตอบ</div>
 <div class="chart-zoom-help" id="chartZoomHelp">
-จุดกราฟวางตามเวลาที่ข้อมูลเข้าจริง • ตัวเลขด้านล่างเป็นช่วงเวลาที่อ่านง่าย และจะละเอียดขึ้นเรื่อย ๆ เมื่อซูม • ชี้/แตะจุดเพื่อดูเวลาบันทึกจริง
+ข้อมูลย้อนหลังวางตามเวลาที่บันทึกจริง • จุดคาดการณ์ใช้เวลาจริงของ +10 / +20 / +30 นาที • ซูมหรือลากเพื่อดูช่วงที่ต้องการ และแตะใกล้จุดเพื่อดูรายละเอียด
 </div>
 </div>
 
@@ -6901,10 +6211,17 @@ labels=
 Array.isArray(original.data.labels)
 ?[...original.data.labels]
 :[];
-const timeValues=
-labels.map(v=>{
-const d=parseDate(v);
-return d?d.getTime():null;
+let latestActualTime=null;
+const timeValues=labels.map(value=>{
+const d=parseDate(value);
+if(d){
+latestActualTime=d.getTime();
+return latestActualTime;
+}
+const match=String(value??"").match(/^\+(\d+)\s*นาที/);
+return match&&latestActualTime!==null
+?latestActualTime+Number(match[1])*60*1000
+:null;
 });
 const validTimes=
 timeValues.filter(Number.isFinite);
@@ -6966,7 +6283,7 @@ animation:false,
 normalized:true,
 interaction:{
 mode:"nearest",
-intersect:true
+intersect:false
 },
 layout:{
 padding:{
@@ -6983,7 +6300,7 @@ display:false
 tooltip:{
 enabled:true,
 mode:"nearest",
-intersect:true,
+intersect:false,
 callbacks:{
 title:graphTooltipTitle,
 label:graphTooltipLabel
@@ -7284,7 +6601,6 @@ closeViewer();
 }
 });
 }
-// PERFORMANCE — DEFER BELOW-THE-FOLD WORK
 const lazyAssetPromises=new Map();
 function loadScriptOnce(src,key=src){
   if(window[key] && typeof window[key]!=="string") return Promise.resolve(window[key]);
@@ -7324,8 +6640,7 @@ function loadStyleOnce(href,key=href){
   lazyAssetPromises.set("style:"+key,promise);
   return promise;
 }
-// Future Map rule: call loadStyleOnce/loadScriptOnce only when Map page opens.
-// Nothing map-related is downloaded during Overview startup.
+// Load map assets only when the Map page opens so Overview startup stays light.
 function ensureChartLibrary(){
 if(
 chartLibraryReady&&
@@ -7420,51 +6735,24 @@ true
 historyLoading=false;
 }
 }
-function activateAISection(){
-// Forecast ต้องเปิด Chart Viewer ได้ แม้ผู้ใช้ยังไม่เคยเข้าหน้า History
-if(!chartInteractiveViewerReady){
-  setupChartZoomViewer();
-}
-if(aiSectionActivated){
-  if(!aiPayload&&!aiLoading)loadAI(false);
-  if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
-  return;
-}
-aiSectionActivated=true;
-// โหลดผลล่าสุด/Cache อัตโนมัติ ไม่ต้องกด “วิเคราะห์ใหม่”
-loadAI(false);
-loadAIForecast(false);
+async function activateForecastSection(){
+if(!chartInteractiveViewerReady)setupChartZoomViewer();
+if(!historyActivated&&!historyLoading)await activateHistorySection(false);
+forecastSectionActivated=true;
+if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
+else if(typeof drawCharts==="function")drawCharts();
 }
 function setupDeferredSections(){
-const aiTarget=
-document.querySelector(".ai-intelligence-section");
-if(
-"IntersectionObserver" in window &&
-aiTarget
-){
-const aiObserver=
-new IntersectionObserver(
-entries=>{
-if(
-entries.some(x=>x.isIntersecting)
-){
-aiObserver.disconnect();
-activateAISection();
+const target=document.querySelector(".forecast-page-section");
+if("IntersectionObserver" in window&&target){
+const observer=new IntersectionObserver(entries=>{
+if(entries.some(x=>x.isIntersecting)){
+observer.disconnect();
+activateForecastSection();
 }
-},
-{
-rootMargin:"500px 0px"
-}
-);
-aiObserver.observe(aiTarget);
-}else{
-setTimeout(
-()=>{
-activateAISection();
-},
-1200
-);
-}
+},{rootMargin:"500px 0px"});
+observer.observe(target);
+}else setTimeout(()=>activateForecastSection(),1200);
 }
 const LATEST_CACHE_KEY="pm25_latest_snapshot_v1";
 const LATEST_CACHE_MAX_AGE_MS=30*60*1000;
@@ -7493,9 +6781,7 @@ function restoreLatestSnapshot(){
     return true;
   }catch(_){return false;}
 }
-// Fix TDZ: these variables are used during startup before their
-// original declarations later in this file.
-// Must exist before bindDashboardNavigation() can open #monitoring.
+// Define these before dashboard navigation can open Monitoring during startup.
 let monitoringMap=null;
 let monitoringMarkers=new Map();
 let selectedMonitoringDeviceId=null;
@@ -7508,7 +6794,6 @@ let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"s
 let activeAdminDeviceId="Number 1";
 let adminMediaDragIndex=null;
 let notificationCheckBusy=false;
-// INITIAL LOAD
 async function loadInitial(){
 restoreLatestSnapshot();
 try{
@@ -7548,14 +6833,11 @@ renderMonitoring();
 updateCurrent();
 updateSmart();
 updateAlertUI();
-// Network request has settled. If there was no usable cache,
-// replace the skeleton with the real "no data" state instead of
-// leaving a loading indicator forever.
+// If the request settles without usable cache, replace the skeleton with the real no-data state.
 setOverviewLoadingState(false);
 updateNavigationDashboard();
 }
 }
-// REALTIME
 async function loadRealtime(){
 try{
 const latest=await loadLatest();
@@ -7593,7 +6875,6 @@ updateAlertUI();
 updateNavigationDashboard();
 }
 }
-// HISTORY
 async function loadHistorical(){
 if(!historyActivated||historyLoading){
 return;
@@ -7621,7 +6902,6 @@ true
 historyLoading=false;
 }
 }
-// STANDARDS
 async function loadStandardsOnly(){
 try{
 standardsData=
@@ -7637,7 +6917,6 @@ e
 );
 }
 }
-// CLOCK
 function updateClock(){
 if(
 $("clock")
@@ -7657,15 +6936,11 @@ timeStyle:
 );
 }
 }
-// START
 updateHistoryRangeButtonLabel();
 updateQuickRangeUI(
 averageRange
 );
 updateForecastToggle();
-renderAI(
-null
-);
 renderAIForecast(
 null
 );
@@ -7678,18 +6953,14 @@ const scheduleStartup=(fn,delay)=>{
 };
 scheduleStartup(bindEvents,60);
 scheduleStartup(bindHelp,180);
-// It is loaded only when History/Analysis is opened. This keeps future
-// heavy features (such as Map) from competing with the first screen.
-// CLOCK
+// Heavy forecast/history data is loaded only when those pages are opened.
 setInterval(
 updateClock,
 1000
 );
-// REALTIME
 setInterval(()=>{
   if(document.visibilityState==="visible") loadRealtime();
 },15000);
-// HISTORICAL
 setInterval(()=>{
   if(
     document.visibilityState!=="visible"||
@@ -7705,16 +6976,15 @@ setInterval(()=>{
   }
   loadHistorical();
 },60000);
-// STANDARDS
 setInterval(
 loadStandardsOnly,
 300000
 );
-// NAVIGATION REDESIGN 2026-08-28
-const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","analysis","about"]);
+const DASHBOARD_PAGE_NAMES=new Set(["overview","monitoring","history","forecast","about"]);
 let currentDashboardPage="overview";
 function getDashboardPageFromHash(){
   const raw=String(location.hash||"").replace(/^#/,"").trim().toLowerCase();
+  if(raw==="analysis")return"forecast";
   return DASHBOARD_PAGE_NAMES.has(raw)?raw:"overview";
 }
 function clearTransientUiMessages(ids=null){
@@ -7733,7 +7003,7 @@ function clearTransientUiMessages(ids=null){
   ];
   list.forEach(id=>setAuthMessage(id,""));
 }
-// IMPORTANT: these must exist before dashboard navigation can call map code.
+// Map functions must exist before navigation can call them.
 let monitoringMapRefreshTimer=null;
 let monitoringMapCreating=false;
 let monitoringMapUiBound=false;
@@ -7758,17 +7028,11 @@ function openDashboardPage(page,{updateHash=true}={}){
     const next="#"+page;
     if(location.hash!==next) history.replaceState(null,"",next);
   }
-  if(page==="history"){
-    if(typeof activateHistorySection==="function") activateHistorySection();
-    if(typeof loadAIForecast==="function"){
-      loadAIForecast(false);
-    }
-  }
-  if(page==="analysis" && typeof activateAISection==="function") activateAISection();
+  if(page==="history"&&typeof activateHistorySection==="function")activateHistorySection();
+  if(page==="forecast"&&typeof activateForecastSection==="function")activateForecastSection();
   if(page==="monitoring"){
     scheduleMonitoringMapRefresh({fit:!selectedMonitoringDeviceId});
   }
-  // the user actually opens About, so they do not compete with Overview startup.
   if(page==="about" && !window.__aboutCharacterGuideRendered){
     const renderGuides=()=>{
       try{
@@ -7782,7 +7046,7 @@ function openDashboardPage(page,{updateHash=true}={}){
     if("requestAnimationFrame" in window) requestAnimationFrame(renderGuides);
     else setTimeout(renderGuides,0);
   }
-  if((page==="history"||page==="analysis") && typeof Chart!=="undefined"){
+  if((page==="history"||page==="forecast")&&typeof Chart!=="undefined"){
     setTimeout(()=>{
       try{
         if(historyChart) historyChart.resize();
@@ -7969,12 +7233,8 @@ function overviewCharacterSvg(metric,state="normal"){
   const hair="#442d24";
   const hair2="#704939";
   const cheek=severe?"#f27676":caution?"#f79584":"#f7a58f";
-  // Final face colors start from the base palette.
-  // They must exist BEFORE accessory/arm rendering because some
-  // Heat Index states use faceSkin while building the arm SVG.
   let faceSkin=skin;
   let faceCheek=cheek;
-  // Default happy/normal face.
   let eyes=`<path d="M39 54c3.4 4 7.5 4 11 0M70 54c3.4 4 7.5 4 11 0" fill="none" stroke="#3c2925" stroke-width="3.5" stroke-linecap="round"/>`;
   let mouth=`<path d="M49 72c6 7 16 7 22 0" fill="none" stroke="#a33d49" stroke-width="3.7" stroke-linecap="round"/>`;
   if(noData){
@@ -7998,7 +7258,6 @@ function overviewCharacterSvg(metric,state="normal"){
   let accessory="";
   let leftArm=`<path d="M34 98c-8 2-12 8-13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
   let rightArm=`<path d="M86 98c8 2 12 8 13 17" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/>`;
-  // PM2.5 — each About state has its own visual language.
   if(metric==="pm25"){
     if(s==="excellent"){
       accessory+=`
@@ -8027,7 +7286,6 @@ function overviewCharacterSvg(metric,state="normal"){
       accessory+=`<path d="M23 38c7-10 14-12 20-9-2 8-8 14-18 14M93 42c-7-9-14-11-20-8 2 8 8 13 18 13" fill="#55c98a" opacity=".55"/>`;
     }
   }
-  // Temperature — progressively different accessories.
   if(metric==="temperature"){
     if(s==="very_cold"){
       accessory+=`
@@ -8049,7 +7307,6 @@ function overviewCharacterSvg(metric,state="normal"){
         <path d="M32 45c5 7 2 12-2 12-5 0-6-6-3-11l3-6z" fill="#66c8f4" opacity=".9"/>`;
     }
   }
-  // Humidity — low/normal/high/very high are visually unique.
   if(metric==="humidity"){
     if(s==="low"){
       accessory+=`
@@ -8065,7 +7322,6 @@ function overviewCharacterSvg(metric,state="normal"){
         <path d="M17 70c4 6 2 11-2 11-5 0-6-6-3-10l3-6zM103 72c4 6 2 11-2 11-5 0-6-6-3-10l3-6z" fill="#6bc8ef" opacity=".88"/>`;
     }
   }
-  // Heat Index — escalating sun/sweat cues.
   if(metric==="heat"){
     if(s==="normal"){
       accessory+=`<circle cx="99" cy="28" r="6" fill="#ffd866" opacity=".82"/>`;
@@ -8095,8 +7351,6 @@ function overviewCharacterSvg(metric,state="normal"){
       rightArm=`<path d="M85 99Q80 80 70 68" fill="none" stroke="${skin}" stroke-width="9.5" stroke-linecap="round"/><circle cx="69" cy="67" r="5.2" fill="${skin}"/>`;
     }
   }
-  // FINAL FACE/EXPRESSION OVERRIDES
-  // Make each severity readable even without the label.
   if(metric==="temperature"){
     if(s==="very_cold"){
       faceSkin="#dff3ff";
@@ -8140,8 +7394,6 @@ function overviewCharacterSvg(metric,state="normal"){
     }else if(s==="critical"){
       faceSkin="#ff9d8c";
       faceCheek="#df5555";
-      // Distinguish "danger" from "extreme danger".
-      // In the guide, the second critical entry is visually intensified via CSS class below.
       if(accessory.includes('M32 45c5 8 2 14')){
         accessory+=`
           <path d="M15 83c4-7 7-10 11-13M105 83c-4-7-7-10-11-13" stroke="#ff6b4f" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>`;
@@ -8164,8 +7416,7 @@ function overviewCharacterSvg(metric,state="normal"){
       <circle cx="76" cy="58" r="2.5" fill="#3d2b28"/>`;
     mouth=`<path d="M52 75c5-5 11-5 16 0" fill="none" stroke="#9f3f49" stroke-width="3.4" stroke-linecap="round"/>`;
   }
-  // Important: direct solid fills intentionally avoid duplicated inline-SVG
-  // gradient IDs, which caused the shirt/body to flash and then disappear.
+  // Solid fills avoid duplicate inline-SVG gradient IDs that can make the body disappear.
   return `<svg viewBox="0 0 120 126" role="img" aria-hidden="true" focusable="false">
     <circle cx="60" cy="60" r="52" fill="rgba(255,255,255,.28)"/>
     <circle cx="60" cy="60" r="45" fill="rgba(255,255,255,.17)"/>
@@ -8441,11 +7692,9 @@ const runWhenIdle=fn=>{
   if("requestIdleCallback" in window) requestIdleCallback(fn,{timeout:9000});
   else setTimeout(fn,5000);
 };
-// Standards are useful but not part of first-screen rendering.
 runWhenIdle(()=>{
   if(document.visibilityState==="visible") loadStandardsOnly();
 });
-// Avoid recurring DOM work during Lighthouse / the critical first seconds.
 setTimeout(()=>{
   setInterval(()=>{
     if(document.visibilityState==="visible") updateNavigationDashboard();
@@ -8483,7 +7732,6 @@ setTimeout(()=>{
     setTimeout(fitHelpToViewport,80);
   });
 })();
-// PUBLIC DISPLAY CONFIG
 function configDevice(deviceId){
 return(publicDisplayConfig?.devices||[]).find(x=>String(x?.device_id||"")===deviceId)||null;
 }
@@ -8499,8 +7747,6 @@ function deviceDisplayName(deviceId){
   const m=id.match(/(?:Number\s*)?(\d+)/i);
   return m?`จุดตรวจวัด ${m[1]}`:id;
 }
-// MAP V2 — ADDITIVE LOCATION MAP
-// หน้าข้อมูลตรวจวัดเดิมยังคงอยู่ทั้งหมด
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
 const ADMIN_DEVICE_MAX_IMAGES=5;
@@ -9112,13 +8358,13 @@ html:`<p><b>ONLINE</b> — จุดตรวจวัดพร้อมใช�
 <p><b>ข้อมูลล่าสุด</b> — เวลาของข้อมูลตรวจวัดชุดที่กำลังแสดง ซึ่งอาจต่างจากเวลาที่สถานะเปลี่ยนแปลง</p>`
 },
 history:{
-title:"กราฟย้อนหลังและค่าเฉลี่ยพื้นที่",
+title:"ข้อมูลย้อนหลังและภาพรวมพื้นที่",
 html:`<p>กราฟย้อนหลังใช้ดูข้อมูลตามช่วงเวลาที่เลือกและเปรียบเทียบแต่ละจุดได้</p>
-<p><b>ค่าเฉลี่ยพื้นที่</b> ใช้ช่วยมองสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
-<p>ช่วงเวลาที่ยาวอาจแสดงข้อมูลในระดับรายละเอียดที่เหมาะสมเพื่อให้อ่านแนวโน้มได้ชัดเจน</p>`
+<p><b>ภาพรวมพื้นที่</b> ใช้ค่าเฉลี่ยจากจุดที่มีข้อมูลเพื่อช่วยมองสถานการณ์โดยรวม ไม่ใช่ค่าของตำแหน่งใดตำแหน่งหนึ่ง</p>
+<p>ช่วงเวลาที่ยาวอาจแสดงข้อมูลในระดับรายละเอียดที่เหมาะสมเพื่อให้อ่านข้อมูลตามเวลาได้ชัดเจน</p>`
 },
 forecast:{
-title:"แนวโน้มล่วงหน้า 30 นาที",
+title:"การคาดการณ์ 30 นาที",
 html:`<p>แสดงค่าประมาณที่อาจเกิดขึ้นในอีก <b>10, 20 และ 30 นาที</b> เพื่อช่วยดูทิศทางระยะสั้น</p>
 <p>ผลลัพธ์ <b>ไม่ใช่ค่ารับประกัน</b> และไม่ใช่การพยากรณ์อากาศอย่างเป็นทางการ</p>
 <p> ใช้บอกระดับความพร้อมของข้อมูลประกอบการคาดการณ์ ไม่ใช่เปอร์เซ็นต์ Accuracy</p>`
@@ -9414,13 +8660,11 @@ function updateAccountUI(){
     $("headerNotificationButton")?.classList.add("hidden");
     $("headerNotificationBadge")?.classList.add("hidden");
     document.querySelector(".account-management-section")?.classList.add("hidden");
-    aiPayload=null;
     aiForecastPayload=null;
     if(typeof renderAIForecast==="function")renderAIForecast(null);
-    if(typeof loadAI==="function")loadAI(false);
     if(typeof loadAIForecast==="function")loadAIForecast(false);
   }
-  if(authUser&&aiSectionActivated)activateAISection();
+  if(forecastSectionActivated&&typeof activateForecastSection==="function")activateForecastSection();
 }
 function clearAuthModalMessages(){
   clearTransientUiMessages([
@@ -10203,7 +9447,6 @@ function showNotificationDetail(item){
   const target=notificationTargetFor(item);
   if(action){
     action.dataset.target=target;
-    // Mother/Gateway notification is informational only — no extra system-status button.
     action.classList.toggle("hidden",target==="none"||target==="system");
     action.textContent="ดูข้อมูลจุดตรวจวัด";
   }
@@ -10432,7 +9675,6 @@ function notificationSituationFor(node){
   return out.map(x=>({...x,device:id}));
 }
 async function showSituationNotification(evt){
-  // so every popup is tied to a real notification ID and opens the correct event.
   lastNotificationDetail={...evt,time:new Date().toISOString()};
 }
 async function checkSituationNotifications(){
@@ -10466,7 +9708,6 @@ async function openNotificationDetailFromUrl(){
   showNotificationDetail({icon:d.icon,title:d.title,message:d.message,device_id:d.device,created_at:null,time:d.time,event_type:d.type});
   history.replaceState({},"",location.pathname+location.hash);
 }
-// REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
 let wifiManagementPollTimer=null;
 function wifiEscapeHtml(value){
   return String(value??"")
@@ -10562,7 +9803,6 @@ function updateWiFiPasswordEye(){
   const visible=input.type==="text";
   btn.setAttribute("aria-pressed",visible?"true":"false");
   btn.setAttribute("aria-label",visible?"ซ่อนรหัสผ่าน":"แสดงรหัสผ่าน");
-  // Password hidden = eye with slash, Password visible = normal eye
   btn.querySelector(".wifi-eye-open")?.classList.toggle("hidden",!visible);
   btn.querySelector(".wifi-eye-off")?.classList.toggle("hidden",visible);
 }
@@ -10673,8 +9913,7 @@ function setupRemoteWiFiManagement(){
 (function setupAuthCmsV31(){
   const run=async()=>{
     setupRemoteWiFiManagement();
-    // All account controls are bound immediately; a saved session is verified
-    // after the first screen has had time to render.
+    // Bind account controls first; verify a saved session after the first screen renders.
     const restoreSavedSession=async()=>{
       await restoreAuthSession();
       if(authUser){
@@ -10800,7 +10039,6 @@ document.getElementById("telegramSituationLink")?.addEventListener("click",event
         if(document.visibilityState==="visible")window.location.href=TELEGRAM_GROUP_URL;
     },1400);
 });
-// MAP V2 STARTUP
 (function startMapV2(){
   const run=()=>{
     setupMonitoringMapUi();
