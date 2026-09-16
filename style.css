@@ -24516,3 +24516,136 @@ img,svg,canvas,video{max-width:100%}
     margin-top:10px!important;
   }
 }
+
+/* V9.6 — responsive polish from device regression tests */
+@media (max-width:599px){
+  .historical-section .history-control-heading{
+    align-items:flex-start!important;
+    gap:4px 10px!important;
+  }
+  .historical-section .history-filter-row-v4{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    column-gap:clamp(7px,2.4vw,10px)!important;
+    row-gap:12px!important;
+  }
+  .historical-section .history-filter-row-v4 > .history-download-field{
+    grid-column:1/-1!important;
+  }
+  .historical-section .history-metric-select,
+  .historical-section #historyRangeButton,
+  .historical-section #exportButton{
+    min-width:0!important;
+    max-width:none!important;
+  }
+  .historical-section #historyRangeButton{
+    grid-template-columns:12px minmax(0,1fr) 10px!important;
+    gap:clamp(4px,1.5vw,7px)!important;
+  }
+  .historical-section #historyRangeButtonLabel{
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+}
+
+@media (max-width:359px){
+  .historical-section .history-control-heading{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    justify-items:start!important;
+    margin-bottom:8px!important;
+  }
+  .historical-section .history-control-heading > small{
+    display:block!important;
+    width:100%!important;
+    max-width:none!important;
+    font-size:10px!important;
+    line-height:1.4!important;
+  }
+  .historical-section .node-view-switch,
+  .forecast-section .node-view-switch-forecast{
+    gap:6px!important;
+    padding:6px!important;
+  }
+  .historical-section .node-view-option,
+  .forecast-section .node-view-option{
+    min-height:44px!important;
+    padding:7px 5px!important;
+    gap:5px!important;
+    font-size:10.5px!important;
+    line-height:1.2!important;
+  }
+  .historical-section .history-filter-row-v4{
+    column-gap:6px!important;
+  }
+  .historical-section .history-control-label{
+    font-size:10px!important;
+  }
+  .historical-section .history-metric-select,
+  .historical-section #historyRangeButton{
+    min-height:44px!important;
+    height:44px!important;
+    padding-left:8px!important;
+    padding-right:8px!important;
+    font-size:12px!important;
+  }
+  .historical-section #historyRangeButton{
+    grid-template-columns:11px minmax(0,1fr) 8px!important;
+    gap:3px!important;
+  }
+  .historical-section #exportButton{
+    min-height:44px!important;
+    height:44px!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    font-size:12px!important;
+  }
+}
+
+@media (min-width:600px) and (max-width:719px){
+  .historical-section .history-filter-row-v4{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+  .historical-section .history-filter-row-v4 > .history-download-field{
+    grid-column:1/-1!important;
+  }
+}
+
+@media (min-width:720px) and (max-width:980px){
+  .historical-section .history-filter-row-v4{
+    display:grid!important;
+    grid-template-columns:minmax(0,.92fr) minmax(0,1.12fr) minmax(0,.96fr)!important;
+    gap:10px!important;
+  }
+  .historical-section .history-filter-row-v4 > *{
+    grid-column:auto!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+}
+
+@media (orientation:landscape) and (max-height:520px) and (min-width:600px) and (max-width:960px){
+  .historical-section .node-view-switch,
+  .forecast-section .node-view-switch-forecast{
+    grid-template-columns:minmax(0,1.6fr) minmax(0,1.25fr) repeat(3,minmax(0,.85fr))!important;
+    gap:5px!important;
+    padding:5px!important;
+  }
+  .historical-section .node-view-option,
+  .forecast-section .node-view-option{
+    min-height:40px!important;
+    padding:6px 5px!important;
+    font-size:clamp(10px,1.7vw,12px)!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+  .historical-section .node-view-option:first-child,
+  .forecast-section .node-view-option:first-child{
+    grid-column:auto!important;
+  }
+  .historical-section .history-filter-row-v4{
+    margin-top:9px!important;
+  }
+}
