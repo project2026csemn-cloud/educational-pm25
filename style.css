@@ -24142,3 +24142,74 @@ img,svg,canvas,video{max-width:100%}
   .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr))!important}
   .forecast-horizon-values-v8{grid-template-columns:1fr!important}
 }
+
+/* V9.1 — history spacing, summary readability and forecast guide alignment */
+.historical-section .history-filter-row-v4{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  width:100%!important;
+  max-width:100%!important;
+  gap:clamp(8px,1vw,12px)!important;
+}
+.historical-section .history-filter-row-v4>.history-control-field,
+.historical-section .history-filter-row-v4>.history-download-field{
+  width:100%!important;
+  min-width:0!important;
+  flex:none!important;
+}
+.history-summary-v4{gap:clamp(14px,1.3vw,20px)!important}
+.history-summary-title-v4{font-size:clamp(17px,1.15vw,21px)!important;line-height:1.35!important}
+.history-summary-current-v4{margin-top:6px!important;font-size:clamp(12px,.82vw,14px)!important;line-height:1.5!important}
+.history-stat-v4{padding:clamp(13px,1vw,17px)!important}
+.history-stat-v4 span{font-size:clamp(11px,.78vw,13px)!important;line-height:1.4!important}
+.history-stat-v4 b{font-size:clamp(21px,1.6vw,27px)!important;line-height:1.2!important}
+.period-compare-head-v4 b{font-size:clamp(14px,.95vw,17px)!important;line-height:1.35!important}
+.period-compare-head-v4 span{margin-top:5px!important;font-size:clamp(11px,.76vw,13px)!important;line-height:1.5!important}
+.period-compare-metric-v4{font-size:clamp(14px,.95vw,16px)!important}
+.period-compare-values-v4 small{font-size:clamp(10px,.7vw,12px)!important}
+.period-compare-values-v4 b{font-size:clamp(19px,1.45vw,24px)!important}
+.period-compare-values-v4 em{font-size:clamp(10px,.68vw,12px)!important}
+.period-compare-result-v4{font-size:clamp(12px,.82vw,14px)!important}
+.period-compare-result-v4>span{font-size:clamp(16px,1.05vw,19px)!important}
+.period-compare-result-v4 small{font-size:clamp(10px,.7vw,12px)!important}
+
+.forecast-filter-head-v4{align-items:flex-start!important}
+.forecast-filter-head-v4>div{display:grid;gap:4px;min-width:0}
+.forecast-filter-head-v4 b{display:block;font-size:clamp(13px,.9vw,15px)!important;line-height:1.35!important}
+.forecast-filter-head-v4 span{display:block;font-size:clamp(11px,.75vw,13px)!important;line-height:1.45!important}
+.forecast-fixed-legend-v8{
+  width:100%;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+}
+.forecast-fixed-legend-items-v9{display:flex;align-items:center;gap:clamp(10px,1.4vw,20px);flex-wrap:wrap;min-width:0}
+.forecast-fixed-legend-items-v9>span{display:inline-flex;align-items:center;gap:8px;color:#a9b7c9;font-size:clamp(11px,.8vw,13px);font-weight:800}
+.forecast-fixed-legend-v8>.chart-open-hint{margin-left:auto;flex:0 0 auto}
+
+@media (max-width:899px){
+  .historical-section .history-filter-row-v4{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .history-stats-grid-v4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:680px){
+  .historical-section .history-filter-row-v4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .historical-section .history-filter-row-v4>.history-download-field{grid-column:1/-1!important}
+  .forecast-fixed-legend-v8{align-items:flex-start!important}
+  .forecast-fixed-legend-v8>.chart-open-hint{margin-left:0}
+}
+@media (max-width:430px){
+  .historical-section .history-filter-row-v4{grid-template-columns:1fr!important}
+  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
+  .history-stats-grid-v4{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .history-summary-v4{padding:13px!important}
+  .forecast-fixed-legend-items-v9{display:grid;gap:8px;width:100%}
+  .forecast-fixed-legend-v8>.chart-open-hint{width:max-content;max-width:100%;white-space:normal}
+}
+@media (orientation:landscape) and (max-height:520px) and (min-width:600px){
+  .historical-section .history-filter-row-v4{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
+  .history-stats-grid-v4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .forecast-fixed-legend-v8{flex-wrap:nowrap!important}
+}
