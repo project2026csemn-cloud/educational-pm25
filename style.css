@@ -24213,3 +24213,78 @@ img,svg,canvas,video{max-width:100%}
   .history-stats-grid-v4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
   .forecast-fixed-legend-v8{flex-wrap:nowrap!important}
 }
+
+/* V9.2 — history desktop balance */
+@media (min-width:900px){
+  .historical-section .history-filter-row-v4{
+    display:grid!important;
+    grid-template-columns:180px 220px 190px!important;
+    width:max-content!important;
+    max-width:100%!important;
+    justify-content:start!important;
+    align-items:end!important;
+    gap:clamp(10px,.9vw,14px)!important;
+  }
+  .historical-section .history-filter-row-v4>.history-control-field,
+  .historical-section .history-filter-row-v4>.history-download-field{
+    width:100%!important;
+    min-width:0!important;
+    flex:none!important;
+  }
+  .period-compare-content-v4.is-multi .period-compare-item-v4{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:"metric metric" "values result"!important;
+    align-items:end!important;
+    column-gap:clamp(14px,1.4vw,24px)!important;
+    row-gap:12px!important;
+  }
+  .period-compare-content-v4.is-multi .period-compare-metric-v4{grid-area:metric}
+  .period-compare-content-v4.is-multi .period-compare-values-v4{grid-area:values}
+  .period-compare-content-v4.is-multi .period-compare-result-v4{
+    grid-area:result;
+    justify-content:flex-end!important;
+    align-self:end!important;
+    text-align:right;
+  }
+}
+
+@media (min-width:900px) and (max-width:1180px){
+  .period-compare-content-v4.is-multi .period-compare-item-v4{
+    grid-template-columns:1fr!important;
+    grid-template-areas:"metric" "values" "result"!important;
+  }
+  .period-compare-content-v4.is-multi .period-compare-result-v4{
+    justify-content:flex-start!important;
+    text-align:left;
+  }
+}
+
+@media (min-width:600px) and (max-width:899px){
+  .historical-section .history-filter-row-v4{
+    display:grid!important;
+    grid-template-columns:minmax(150px,180px) minmax(185px,220px) minmax(165px,190px)!important;
+    width:max-content!important;
+    max-width:100%!important;
+    justify-content:start!important;
+    gap:10px!important;
+  }
+  .historical-section .history-filter-row-v4>*{
+    width:100%!important;
+    min-width:0!important;
+    grid-column:auto!important;
+  }
+}
+
+@media (max-width:599px){
+  .historical-section .history-filter-row-v4{
+    width:100%!important;
+    gap:10px!important;
+  }
+}
+
+@media (orientation:landscape) and (max-height:520px) and (min-width:600px) and (max-width:899px){
+  .historical-section .history-filter-row-v4{
+    grid-template-columns:minmax(145px,180px) minmax(180px,215px) minmax(160px,185px)!important;
+  }
+}
