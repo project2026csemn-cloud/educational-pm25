@@ -12888,7 +12888,7 @@ button,input,select,textarea{max-width:100%;min-width:0}
   font-size:.9rem;
   line-height:1.6;
 }
-.dashboard-card-page-copy-analysis{
+.dashboard-card-page-copy-forecast{
   margin-bottom:18px;
   padding-bottom:16px;
   border-bottom:1px solid rgba(51,65,85,.58);
@@ -16042,9 +16042,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     color:#67e8f9!important;
   }
 }
-/* =====================================================
-   V36.31 — MOBILE TBT / CLS
-   ===================================================== */
+
 .site-header,
 .dashboard-nav{
   contain:layout paint;
@@ -16113,9 +16111,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     contain-intrinsic-size:auto 220px;
   }
 }
-/* =====================================================
-   V36.32 — PROFILE DROPDOWN + NOTIFICATION POLISH
-   ===================================================== */
+
 .site-header,
 .header-account-zone,
 .header-profile-stack{
@@ -16138,14 +16134,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .notification-detail-action.hidden{
   display:none!important;
 }
-/* =====================================================
-   V36.33 — HEADER POPOVER LAYER / NOTIFICATION CONTRAST FIX
-   ===================================================== */
-/*
- * V36.31 used paint containment on the header to reduce repaint/CLS work.
- * Paint containment clips absolutely positioned children, including the
- * account dropdown. Keep layout containment, but allow popovers to escape.
- */
+
 .site-header{
   contain:layout style!important;
   overflow:visible!important;
@@ -16154,15 +16143,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .header-profile-stack{
   overflow:visible!important;
 }
-/* Account menu must float above the header/nav without changing layout. */
+
 .account-dropdown{
   z-index:1700!important;
 }
-/*
- * The notification inbox sits outside <header>, so it must be above the
- * header stacking layer. Previously the header (z-index 1300) covered the
- * inbox header, which made NOTIFICATIONS / การแจ้งเตือน look faded.
- */
+
 .notification-inbox{
   z-index:1800!important;
   background:#071624!important;
@@ -16222,9 +16207,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .notification-inbox-footer button{
   color:#67e8f9!important;
 }
-/* =====================================================
-   REMOTE WI-FI MANAGEMENT V1
-   ===================================================== */
+
 .wifi-management-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px}
 .wifi-management-modal.hidden{display:none}
 .wifi-management-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.78);backdrop-filter:blur(10px)}
@@ -16257,9 +16240,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .wifi-management-submit{height:48px;border:0;border-radius:14px;background:linear-gradient(135deg,#0891b2,#0284c7);color:white;font-weight:800;cursor:pointer}
 .wifi-management-submit:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:640px){.wifi-management-modal{padding:10px}.wifi-management-header,.wifi-management-body{padding-left:16px;padding-right:16px}.wifi-status-grid{grid-template-columns:1fr}}
-/* =====================================================
-   REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
-   ===================================================== */
+
 .wifi-management-shell{max-width:680px}
 .wifi-form-title{display:flex;flex-direction:column;gap:3px;padding-bottom:2px}
 .wifi-form-title strong{font-size:15px;color:#eef8ff}
@@ -16315,11 +16296,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .wifi-history-item{grid-template-columns:1fr}
   .wifi-history-result{text-align:left}
 }
-/* =====================================================
-   V2.2 — FINAL WINDOW POSITION / PERMISSION UI
-   ===================================================== */
-/* Notification panel was visually too close to the right edge.
-   Pull it inward while keeping the bell arrow aligned. */
+
 @media (min-width:761px){
   .notification-inbox{
     right:28px!important;
@@ -16328,27 +16305,23 @@ html body .site-header.is-authenticated #accountRoleBadge{
     right:140px!important;
   }
 }
-/* Keep full-screen management windows optically centered. */
+
 .admin-center,
 .notification-center-modal,
 .notification-detail-modal,
 .wifi-management-modal{
   place-items:center!important;
 }
-/* Do not let large management shells visually stick to one side. */
+
 .admin-center-shell{
   margin-left:auto!important;
   margin-right:auto!important;
 }
-/* =====================================================
-   V2.3 — MODAL LAYER FIX
-   Header must never cover management/account windows.
-   ===================================================== */
-/* Main site header stays above normal page content. */
+
 .site-header{
   z-index:1300!important;
 }
-/* Full-screen dialogs must sit above the site header. */
+
 .admin-center,
 .my-account-center,
 .account-security-modal,
@@ -16358,7 +16331,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .auth-modal{
   z-index:2200!important;
 }
-/* Their backdrops/dialog shells remain in the same stacking context. */
+
 .admin-center-backdrop,
 .my-account-backdrop,
 .wifi-management-backdrop,
@@ -16377,13 +16350,9 @@ html body .site-header.is-authenticated #accountRoleBadge{
   position:relative!important;
   z-index:1!important;
 }
-/* =====================================================
-   V2.4 — MOBILE POLISH
-   Notification detail safe margins + Remember checkbox
-   ===================================================== */
+
 @media (max-width: 760px){
-  /* 1) Notification detail:
-     keep equal left/right breathing room on small and large phones */
+  
   .notification-detail-modal{
     padding:
       max(16px, env(safe-area-inset-top))
@@ -16402,7 +16371,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     right:auto!important;
     transform:none!important;
   }
-  /* Prevent long notification text from forcing the card wider. */
+  
   .notification-detail-shell,
   .notification-detail-shell *{
     min-width:0;
@@ -16413,8 +16382,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .notification-detail-shell h3{
     overflow-wrap:anywhere;
   }
-  /* 2) Remember:
-     reset checkbox styles inherited from normal form inputs */
+  
   .wifi-remember-network{
     display:flex!important;
     align-items:flex-start!important;
@@ -16448,7 +16416,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     overflow-wrap:anywhere;
   }
 }
-/* Extra-narrow phones */
+
 @media (max-width: 380px){
   .notification-detail-modal{
     padding-left:12px!important;
@@ -16458,11 +16426,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     gap:10px!important;
   }
 }
-/* =====================================================
-   V2.5 — RESPONSIVE DEEP AUDIT HARDENING
-   CSS-only. No application logic / API / permissions changed.
-   ===================================================== */
-/* Core anti-stretch rules for flexible children. */
+
 .site-header *,
 .account-dropdown *,
 .notification-inbox *,
@@ -16478,8 +16442,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   min-width:0;
   box-sizing:border-box;
 }
-/* Long values (SSID, email, status messages, Thai/English labels)
-   must wrap instead of widening a card. */
+
 .wifi-status-card b,
 .wifi-status-note,
 .wifi-saved-name,
@@ -16497,7 +16460,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   overflow-wrap:anywhere;
   word-break:break-word;
 }
-/* Keep wide tables inside their own scroll area, not the whole page. */
+
 .export-table-wrap,
 .export-preview-table-wrap{
   width:100%;
@@ -16505,11 +16468,9 @@ html body .site-header.is-authenticated #accountRoleBadge{
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
 }
-/* =====================================================
-   TABLET + MOBILE
-   ===================================================== */
+
 @media (max-width:900px){
-  /* Every full-screen modal gets a predictable safe gutter. */
+  
   .admin-center,
   .my-account-center,
   .notification-center-modal,
@@ -16523,7 +16484,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding-left:max(12px,env(safe-area-inset-left))!important;
     padding-right:max(12px,env(safe-area-inset-right))!important;
   }
-  /* Shells can never become wider than the viewport. */
+  
   .admin-center-shell,
   .my-account-shell,
   .notification-settings-shell,
@@ -16539,7 +16500,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     margin-right:auto!important;
     box-sizing:border-box!important;
   }
-  /* Form controls must shrink with their parent. */
+  
   .admin-center-shell input,
   .admin-center-shell select,
   .admin-center-shell textarea,
@@ -16559,7 +16520,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     max-width:100%!important;
     box-sizing:border-box!important;
   }
-  /* Buttons/actions can wrap instead of pushing the parent wider. */
+  
   .wifi-saved-actions,
   .notification-actions,
   .account-security-form footer,
@@ -16569,16 +16530,14 @@ html body .site-header.is-authenticated #accountRoleBadge{
     flex-wrap:wrap!important;
     min-width:0!important;
   }
-  /* Notification dropdown: keep a real gutter on tablets/small laptops. */
+  
   .notification-inbox{
     max-width:calc(100vw - 24px)!important;
   }
 }
-/* =====================================================
-   PHONES
-   ===================================================== */
+
 @media (max-width:760px){
-  /* Account menu / notification inbox stay inside both screen edges. */
+  
   .account-dropdown{
     max-width:calc(100vw - 24px)!important;
   }
@@ -16590,11 +16549,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
     width:auto!important;
     max-width:none!important;
   }
-  /* An arrow tied to the desktop bell position is misleading on phone. */
+  
   .notification-inbox-arrow{
     display:none!important;
   }
-  /* Wi-Fi saved network rows and history never force horizontal scroll. */
+  
   .wifi-saved-item,
   .wifi-history-item{
     width:100%!important;
@@ -16609,7 +16568,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     max-width:100%!important;
     white-space:normal!important;
   }
-  /* Security selector stays as two equal choices even on narrow phones. */
+  
   .wifi-security-choice{
     display:grid!important;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
@@ -16620,7 +16579,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-width:0!important;
     width:100%!important;
   }
-  /* Header/modal titles can wrap, close button retains its own space. */
+  
   .wifi-management-header,
   .notification-settings-header,
   .my-account-header,
@@ -16635,7 +16594,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-width:0!important;
     flex:1 1 auto!important;
   }
-  /* Avoid iOS/Android zoom and clipped native date/select controls. */
+  
   .wifi-management-shell input,
   .wifi-management-shell select,
   .auth-dialog input,
@@ -16648,16 +16607,14 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .export-modal-dialog select{
     font-size:max(16px,1em);
   }
-  /* Tables remain horizontally scrollable inside the modal only. */
+  
   .export-table-wrap,
   .export-preview-table-wrap{
     overflow-x:auto!important;
     overscroll-behavior-x:contain;
   }
 }
-/* =====================================================
-   EXTRA-NARROW PHONES / FOLDS
-   ===================================================== */
+
 @media (max-width:380px){
   .admin-center,
   .my-account-center,
@@ -16690,9 +16647,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     flex:1 1 0!important;
   }
 }
-/* =====================================================
-   V36.34 — PEOPLE-FIRST OVERVIEW + SYSTEM ANNOUNCEMENT
-   ===================================================== */
+
 .site-announcement-wrap{width:min(1800px,calc(100% - 48px));margin:14px auto 0!important}
 .site-announcement{position:relative;display:grid!important;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:14px!important;padding:15px 18px!important;border-radius:16px!important;background:linear-gradient(135deg,rgba(14,165,233,.13),rgba(8,145,178,.055))!important;border:1px solid rgba(56,189,248,.32)!important;box-shadow:0 12px 30px rgba(0,0,0,.16);overflow:hidden}
 .site-announcement:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#38bdf8}
@@ -16703,9 +16658,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(max-width:1100px){.overview-people-hero{grid-template-columns:auto minmax(0,1fr)!important}.overview-main-value{grid-column:1/-1}.overview-face-wrap{width:140px;height:140px}.overview-face{font-size:72px}.overview-metrics-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:760px){.site-announcement-wrap{width:calc(100% - 20px)!important}.site-announcement{grid-template-columns:38px minmax(0,1fr);padding:12px!important}.site-announcement-icon{width:36px!important;height:36px!important}.site-announcement-source{display:none}.overview-people-hero{grid-template-columns:1fr!important;text-align:center;min-height:0!important}.overview-face-wrap{width:118px;height:118px;margin:0 auto}.overview-face{font-size:62px}.overview-source-line{justify-content:center}.overview-freshness{justify-content:center}.overview-metrics-grid-four{grid-template-columns:1fr 1fr!important}.overview-friendly-card{min-height:205px;padding:14px!important}.overview-metric-emoji{font-size:36px}.overview-friendly-card b{font-size:1.65rem!important}.overview-advice-state{grid-template-columns:46px minmax(0,1fr);padding:13px}.overview-advice-icon{font-size:28px}}
 @media(max-width:430px){.overview-metrics-grid-four{grid-template-columns:1fr!important}.overview-friendly-card{min-height:0}.overview-face-wrap{width:104px;height:104px}.overview-face{font-size:54px}}
-/* =====================================================
-   V36.35 — METRIC STORY CARDS + LIGHTER OVERVIEW
-   ===================================================== */
+
 .overview-friendly-card{
   isolation:isolate;
   min-height:238px!important;
@@ -16759,7 +16712,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-friendly-card:hover .overview-metric-character{transform:translateY(-2px) scale(1.03)}
 .overview-friendly-card>span:not(.overview-card-symbol):not(.overview-card-scene){position:relative;z-index:2}
 .overview-friendly-card>b,.overview-friendly-card>small,.overview-friendly-card>em,.overview-friendly-card>p{position:relative;z-index:2}
-/* PM2.5 — อนุภาคในอากาศ */
+
 .metric-pm25 .overview-card-scene{
   background:
     radial-gradient(circle at 14% 22%,rgba(167,243,208,.15) 0 2px,transparent 3px),
@@ -16776,15 +16729,15 @@ html body .site-header.is-authenticated #accountRoleBadge{
     linear-gradient(145deg,rgba(120,113,108,.20),rgba(245,158,11,.07));
 }
 .metric-pm25.metric-state-critical{border-color:rgba(248,113,113,.34)!important}
-/* Temperature — air gradient / warm-cold atmosphere */
+
 .metric-temp .overview-card-scene{background:linear-gradient(155deg,rgba(56,189,248,.13),transparent 56%),radial-gradient(circle at 88% 18%,rgba(125,211,252,.12),transparent 30%)}
 .metric-temp.metric-state-hot .overview-card-scene,.metric-temp.metric-state-very_hot .overview-card-scene{background:linear-gradient(155deg,rgba(249,115,22,.20),transparent 58%),radial-gradient(circle at 86% 18%,rgba(251,191,36,.19),transparent 31%)}
 .metric-temp.metric-state-cold .overview-card-scene,.metric-temp.metric-state-very_cold .overview-card-scene,.metric-temp.metric-state-cool .overview-card-scene{background:linear-gradient(155deg,rgba(59,130,246,.20),transparent 60%),radial-gradient(circle at 86% 18%,rgba(186,230,253,.18),transparent 31%)}
-/* Humidity — condensed water / moist atmosphere */
+
 .metric-humidity .overview-card-scene{background:radial-gradient(ellipse at 18% 78%,rgba(56,189,248,.15),transparent 28%),radial-gradient(ellipse at 82% 20%,rgba(14,165,233,.13),transparent 30%)}
 .metric-humidity.metric-state-high .overview-card-scene,.metric-humidity.metric-state-very_high .overview-card-scene{background:radial-gradient(ellipse at 15% 78%,rgba(56,189,248,.28),transparent 31%),radial-gradient(ellipse at 83% 20%,rgba(14,165,233,.25),transparent 34%),linear-gradient(155deg,rgba(14,116,144,.12),transparent 62%)}
 .metric-humidity.metric-state-low .overview-card-scene{background:linear-gradient(155deg,rgba(180,83,9,.13),transparent 60%),radial-gradient(circle at 85% 18%,rgba(251,191,36,.12),transparent 28%)}
-/* Heat Index — perceived heat around the body */
+
 .metric-heat .overview-card-scene{background:radial-gradient(circle at 82% 18%,rgba(251,191,36,.13),transparent 30%),linear-gradient(155deg,rgba(245,158,11,.07),transparent 62%)}
 .metric-heat.metric-state-watch .overview-card-scene,.metric-heat.metric-state-warning .overview-card-scene,.metric-heat.metric-state-critical .overview-card-scene{background:radial-gradient(circle at 82% 18%,rgba(251,146,60,.28),transparent 34%),linear-gradient(155deg,rgba(239,68,68,.12),rgba(245,158,11,.07),transparent 70%)}
 .metric-heat.metric-state-critical{border-color:rgba(248,113,113,.34)!important}
@@ -16806,9 +16759,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .overview-advice-actions span{min-height:38px}
 }
 @media(max-width:430px){.overview-friendly-card{min-height:205px!important}}
-/* =====================================================
-   V36.36 — EMOJI RENDERING + OVERVIEW CLEANUP
-   ===================================================== */
+
 .overview-card-symbol,
 .overview-metric-character,
 .overview-face{
@@ -16828,9 +16779,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   overflow:visible;
   white-space:nowrap;
 }
-/* =====================================================
-   V36.37 — FEELING COPY + PUBLIC ANNOUNCEMENT
-   ===================================================== */
+
 .overview-friendly-card .overview-feeling{
   position:relative;
   z-index:2;
@@ -16890,9 +16839,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .site-announcement p{font-size:12px!important;line-height:1.6!important}
   .overview-friendly-card .overview-feeling{min-height:0;max-width:none;font-size:11.5px!important}
 }
-/* =====================================================
-   V36.38 — TOP-RIGHT EMOJI RENDER FIX
-   ===================================================== */
+
 .overview-card-symbol{
   position:absolute!important;
   top:14px!important;
@@ -16945,10 +16892,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
   .metric-temp .overview-card-symbol{font-size:24px!important}
 }
-/* =====================================================
-   V36.39 — CLEAN METRIC SYMBOL + REAL ANNOUNCEMENT BANNER
-   ===================================================== */
-/* Metric identity symbol: emoji only, no surrounding box. */
+
 .overview-card-symbol{
   top:16px!important;
   right:18px!important;
@@ -16970,7 +16914,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .metric-temp .overview-card-symbol,
 .metric-humidity .overview-card-symbol,
 .metric-heat .overview-card-symbol{font-size:30px!important}
-/* Public announcement is aligned with the dashboard, not a floating narrow card. */
+
 .site-announcement-wrap{
   width:100%!important;
   max-width:none!important;
@@ -17088,9 +17032,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .site-announcement strong{font-size:13.5px!important}
   .site-announcement p{font-size:12px!important;line-height:1.5!important}
 }
-/* =====================================================
-   V36.40 — INFOGRAPHIC OVERVIEW + DYNAMIC SYSTEM PANEL
-   ===================================================== */
+
 .overview-top-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.78fr);gap:14px;align-items:stretch;margin-bottom:16px}
 .overview-top-grid .overview-hero{margin-bottom:0!important;height:100%}
 .overview-hero-infographic{grid-template-columns:190px minmax(0,1fr) 180px!important;min-height:325px!important;padding:28px 28px 24px!important;background:linear-gradient(135deg,rgba(180,245,224,.97),rgba(123,222,239,.93) 54%,rgba(111,207,229,.90))!important;border-color:rgba(165,243,252,.50)!important;color:#073047!important;box-shadow:0 18px 46px rgba(2,132,199,.14)!important}
@@ -17104,19 +17046,17 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-system-nodes{display:grid;gap:8px;min-height:0}.overview-system-node{appearance:none;width:100%;border:1px solid rgba(148,163,184,.14);border-radius:14px;background:rgba(15,35,55,.72);color:inherit;padding:10px 10px;display:grid;grid-template-columns:34px minmax(0,1fr) 11px 16px;gap:9px;align-items:center;text-align:left;cursor:pointer;transition:transform .17s ease,border-color .17s ease,background .17s ease}.overview-system-node:hover{transform:translateX(2px);border-color:rgba(56,189,248,.36);background:rgba(17,50,76,.86)}.overview-system-node-no{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:rgba(56,189,248,.10);color:#7dd3fc;font-size:10px;font-weight:900;letter-spacing:.05em}.overview-system-node-copy{min-width:0}.overview-system-node-copy b{display:block;color:#eef8ff;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.overview-system-node-copy small{display:block;color:#7890a8;font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.overview-system-node-copy>span{display:block;color:#8ba1b8;font-size:9.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.overview-system-node .overview-node-arrow{color:#6f8ba5;font-size:1.1rem}.overview-node-dot.sleep{background:#fbbf24;box-shadow:0 0 9px rgba(251,191,36,.36)}.overview-node-dot.unknown{background:#64748b}.overview-node-dot.online{background:#34d399!important}.overview-node-dot.offline{background:#64748b!important}
 .overview-metrics-grid-four{gap:12px!important}.overview-friendly-card{min-height:270px!important;padding:20px 18px 18px!important;justify-content:flex-start!important;padding-top:24px!important;border-radius:20px!important}.overview-metric-character{width:108px!important;height:108px!important;margin:12px auto 7px!important;border:0!important;background:rgba(255,255,255,.17)!important;box-shadow:0 10px 24px rgba(4,34,53,.11)!important;overflow:hidden!important}.overview-metric-character svg{width:102px;height:102px}.overview-card-symbol{font-size:28px!important;opacity:.95}.overview-friendly-card>span:not(.overview-card-symbol):not(.overview-card-scene){font-size:15px!important;color:#102f46!important}.overview-friendly-card b{color:#082d45!important;font-size:2.15rem!important}.overview-friendly-card small{color:#527287!important}.overview-friendly-card .overview-feeling{color:#315a6f!important;font-size:11.5px!important;max-width:260px}.overview-metric-status{margin-top:5px}
 .metric-pm25{background:linear-gradient(165deg,#d8fae8,#bcf3dd)!important;border-color:rgba(34,197,94,.22)!important}.metric-temp{background:linear-gradient(165deg,#e0f3ff,#c9eafe)!important;border-color:rgba(56,189,248,.24)!important}.metric-humidity{background:linear-gradient(165deg,#dff5ff,#c8eefe)!important;border-color:rgba(14,165,233,.22)!important}.metric-heat{background:linear-gradient(165deg,#ffe5dc,#ffd5ca)!important;border-color:rgba(251,146,60,.25)!important}.metric-heat.metric-state-normal{background:linear-gradient(165deg,#ddf8e5,#c9f1d8)!important}.metric-pm25 .overview-card-scene,.metric-temp .overview-card-scene,.metric-humidity .overview-card-scene,.metric-heat .overview-card-scene{opacity:.45!important}
-/* Keep the recommendation visually close to the infographic reference while retaining current dynamic logic. */
+
 .overview-recommendation-card{background:linear-gradient(90deg,rgba(16,45,69,.96),rgba(10,35,56,.96))!important}.overview-advice-simple{background:rgba(255,255,255,.035)}
 @media(max-width:1200px){.overview-top-grid{grid-template-columns:1fr}.overview-system-panel{min-height:0}.overview-system-nodes{grid-template-columns:repeat(3,minmax(0,1fr))}.overview-system-node{grid-template-columns:30px minmax(0,1fr) 10px 14px}.overview-hero-infographic{grid-template-columns:160px minmax(0,1fr) 160px!important}.overview-face-wrap{width:150px!important;height:150px!important}.overview-character-large svg{width:130px;height:130px}}
 @media(max-width:840px){.overview-hero-infographic{grid-template-columns:1fr!important;text-align:center;padding:22px!important}.overview-face-wrap{margin:0 auto}.overview-hero-infographic .overview-main-value{width:min(320px,100%);margin:0 auto}.overview-hero-infographic .overview-source-line,.overview-hero-infographic .overview-freshness{justify-content:center}.overview-system-nodes{grid-template-columns:1fr}.overview-system-head{align-items:center}.overview-metrics-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){.overview-metrics-grid-four{grid-template-columns:1fr!important}.overview-system-panel{padding:14px}.overview-system-head{align-items:flex-start}.overview-system-head .overview-link-button{font-size:10px}.overview-friendly-card{min-height:245px!important}.overview-metric-character{width:98px!important;height:98px!important}.overview-metric-character svg{width:92px;height:92px}}
-/* =====================================================
-   V36.41 — LIVELY ILLUSTRATED OVERVIEW
-   ===================================================== */
+
 #page-overview{
   --ink:#082b43;
   --ink-soft:#30586e;
 }
-/* Hero: illustrated landscape and stronger readable text */
+
 .overview-hero-infographic{
   position:relative;
   isolation:isolate;
@@ -17153,14 +17093,14 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-hero-infographic .overview-main-unit{color:#315d71!important}
 .overview-hero-infographic .overview-eyebrow{color:#087b77!important}
 .overview-source-line{color:#0f584f!important;background:rgba(255,255,255,.26)!important;border-color:rgba(6,110,100,.16)!important}
-/* Hero character */
+
 .overview-face-wrap{
   background:rgba(255,255,255,.34)!important;
   border:8px solid rgba(255,255,255,.72)!important;
   box-shadow:0 14px 34px rgba(5,76,88,.16)!important;
 }
 .overview-character-large svg{filter:drop-shadow(0 9px 10px rgba(22,83,84,.12))}
-/* Main metric cards: illustration-like scenes */
+
 .overview-friendly-card{
   position:relative!important;
   isolation:isolate!important;
@@ -17233,7 +17173,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   left:-8%;right:-8%;bottom:-4px;height:36%;
   background:radial-gradient(65% 110% at 25% 110%,rgba(246,96,75,.10) 0 52%,transparent 53%),radial-gradient(72% 120% at 78% 110%,rgba(241,94,74,.12) 0 50%,transparent 51%);
 }
-/* state tint: keep card identity while reacting to live data */
+
 .overview-friendly-card.metric-state-warning,
 .overview-friendly-card.metric-state-hot,
 .overview-friendly-card.metric-state-high,
@@ -17241,7 +17181,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-friendly-card.metric-state-critical,
 .overview-friendly-card.metric-state-very_hot,
 .overview-friendly-card.metric-state-very_high{box-shadow:inset 0 0 0 2px rgba(239,68,68,.17),0 16px 34px rgba(3,30,49,.14)!important}
-/* More lively cartoon */
+
 .overview-metric-character{
   position:relative!important;
   z-index:2!important;
@@ -17265,7 +17205,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   filter:drop-shadow(0 3px 4px rgba(0,0,0,.10));
 }
 .metric-heat .overview-card-symbol{font-size:34px!important}
-/* Subtle motion; disabled automatically for reduced-motion users */
+
 @keyframes overviewFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes overviewDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(7px)}}
 .overview-metric-character{animation:overviewFloat 4.4s ease-in-out infinite}
@@ -17273,7 +17213,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(prefers-reduced-motion:reduce){
   .overview-metric-character,.metric-humidity::before,.metric-pm25::after{animation:none!important}
 }
-/* System panel readability */
+
 .overview-system-panel{
   border-color:rgba(80,185,226,.28)!important;
   box-shadow:0 18px 42px rgba(0,0,0,.18)!important;
@@ -17282,7 +17222,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-system-node-copy small,.overview-system-node-copy>span{color:#9bb0c2!important}
 .overview-mother-copy b{color:#f5fbff!important}
 .overview-mother-copy small,.overview-mother-copy span{color:#9bb0c2!important}
-/* Recommendation card visually tied to the infographic */
+
 .overview-recommendation-card{
   border-color:rgba(56,189,248,.22)!important;
   background:linear-gradient(135deg,rgba(13,38,60,.96),rgba(9,50,65,.94))!important;
@@ -17291,12 +17231,9 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .overview-metric-character{width:108px!important;height:108px!important}
   .overview-metric-character svg{width:104px!important;height:104px!important}
 }
-/* =====================================================
-   V36.42 — VISUAL MATCH / CONTRAST / SLEEP-AS-ONLINE
-   ===================================================== */
-/* Keep Overview status simple: deep sleep is expected normal operation. */
+
 .overview-system-node .overview-node-dot.sleep{background:#34d399!important;box-shadow:0 0 10px rgba(52,211,153,.50)!important}
-/* Strong, readable status pills */
+
 .overview-metric-status{
   min-width:78px!important;
   min-height:28px!important;
@@ -17343,7 +17280,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:#718096!important;
   color:#fff!important;
 }
-/* Typography: stronger contrast */
+
 .overview-friendly-card>span:not(.overview-card-symbol):not(.overview-card-scene){
   color:#08263b!important;
   text-shadow:none!important;
@@ -17359,7 +17296,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   color:#123a50!important;
   font-weight:900!important;
 }
-/* Character more prominent like the reference illustration */
+
 .overview-metric-character{
   width:132px!important;
   height:132px!important;
@@ -17379,7 +17316,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   width:168px!important;
   height:168px!important;
 }
-/* Decorative illustrated scenes — code only, no image assets */
+
 .metric-pm25{
   background:
     radial-gradient(ellipse at 18% 102%,rgba(61,199,123,.32) 0 34%,transparent 35%),
@@ -17442,7 +17379,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     radial-gradient(ellipse at 20% 24%,rgba(255,255,255,.28) 0 8%,transparent 9%),
     radial-gradient(ellipse at 30% 24%,rgba(255,255,255,.22) 0 10%,transparent 11%)!important;
 }
-/* Larger single symbols in the top-right */
+
 .overview-card-symbol{
   font-size:34px!important;
   right:18px!important;
@@ -17450,7 +17387,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   opacity:1!important;
 }
 .metric-heat .overview-card-symbol{font-size:36px!important}
-/* Hero illustration gets fuller landscape and brighter foreground */
+
 .overview-hero-infographic{
   background:
     radial-gradient(ellipse at 78% 20%,rgba(255,255,255,.58) 0 6%,transparent 7%),
@@ -17471,10 +17408,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .overview-metric-character{width:116px!important;height:116px!important}
   .overview-metric-character svg{width:110px!important;height:110px!important}
 }
-/* =====================================================
-   V36.43 — HERO / STATUS ICONS / RECOMMENDATION
-   ===================================================== */
-/* Hero character: keep illustration inside ring and float gently */
+
 .overview-face-wrap{
   position:relative!important;
   overflow:hidden!important;
@@ -17516,7 +17450,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(prefers-reduced-motion:reduce){
   .overview-character-large{animation:none!important}
 }
-/* System panel icons */
+
 .overview-mother-icon,
 .overview-system-node-no{
   font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important;
@@ -17543,9 +17477,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .overview-mother-icon{
   font-size:24px!important;
 }
-/* =====================================================
-   Recommendation panel — infographic-style
-   ===================================================== */
+
 .overview-recommendation-card{
   padding:22px!important;
   border-radius:22px!important;
@@ -17664,7 +17596,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   line-height:1.4;
   font-weight:600;
 }
-/* Recommendation state accent */
+
 .overview-advice-panel.is-good .overview-advice-summary{border-color:rgba(52,211,153,.25);background:rgba(16,185,129,.07)}
 .overview-advice-panel.is-watch .overview-advice-summary{border-color:rgba(251,191,36,.25);background:rgba(245,158,11,.07)}
 .overview-advice-panel.is-critical .overview-advice-summary{border-color:rgba(248,113,113,.28);background:rgba(239,68,68,.07)}
@@ -17682,10 +17614,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .overview-advice-action{min-height:105px}
   .overview-advice-summary-copy b{font-size:15px}
 }
-/* =====================================================
-   V36.44 — OVERVIEW READABILITY + HELP + STATUS ICON
-   ===================================================== */
-/* General overview typography */
+
 #page-overview .overview-eyebrow{
   font-size:12px!important;
   line-height:1.2!important;
@@ -17739,7 +17668,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-weight:950!important;
   box-shadow:0 7px 18px rgba(6,90,65,.14)!important;
 }
-/* Section heading */
+
 #page-overview .overview-section-head h2{
   font-size:20px!important;
   line-height:1.25!important;
@@ -17753,7 +17682,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-environment-head .section-title-with-help{
   gap:8px!important;
 }
-/* ? help buttons more visible */
+
 #page-overview .help-button{
   width:28px!important;
   height:28px!important;
@@ -17770,7 +17699,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:#1f5874!important;
   border-color:rgba(103,232,249,.55)!important;
 }
-/* Current metric cards: larger labels/numbers and clear contrast */
+
 #page-overview .overview-friendly-card{
   padding:22px 18px 20px!important;
   min-height:330px!important;
@@ -17811,7 +17740,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-weight:950!important;
   border:1px solid rgba(0,0,0,.09)!important;
 }
-/* Make all status colors unmistakable */
+
 #page-overview .overview-metric-status.normal,
 #page-overview .overview-metric-status.good{
   background:#20c86a!important;
@@ -17846,7 +17775,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:#64748b!important;
   color:#fff!important;
 }
-/* System status panel */
+
 #page-overview .overview-system-head h2{
   font-size:21px!important;
   font-weight:950!important;
@@ -17900,7 +17829,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:linear-gradient(145deg,rgba(30,169,217,.20),rgba(20,102,147,.15))!important;
   border:1px solid rgba(91,195,235,.16)!important;
 }
-/* Recommendation readability */
+
 #page-overview .overview-recommendation-card{
   padding:24px!important;
 }
@@ -17948,9 +17877,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:32px!important;
   }
 }
-/* =====================================================
-   V36.45 — NATURAL HELP COPY / EDITOR
-   ===================================================== */
+
 .help-natural-copy{
   color:#cbdbe6;
   font-size:14px;
@@ -17980,10 +17907,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   line-height:1.8!important;
   font-weight:600!important;
 }
-/* =====================================================
-   V36.46 — HERO TITLE / HELP ALIGNMENT / STATUS SPACING
-   ===================================================== */
-/* HERO — prevent title lines from colliding and keep ? attached nicely */
+
 #page-overview .overview-copy{
   min-width:0!important;
 }
@@ -18013,7 +17937,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin-left:2px!important;
   align-self:flex-start!important;
 }
-/* Give subtitle/guidance breathing room after large title */
+
 #page-overview .overview-subtitle{
   margin-top:8px!important;
 }
@@ -18021,7 +17945,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin-top:14px!important;
   max-width:94%!important;
 }
-/* Keep hero grid from squeezing copy too hard */
+
 #page-overview .overview-hero-infographic{
   grid-template-columns:minmax(170px,220px) minmax(0,1fr) minmax(190px,230px)!important;
   column-gap:26px!important;
@@ -18043,7 +17967,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     margin-top:1px!important;
   }
 }
-/* SYSTEM STATUS — create explicit gap between icon and copy */
+
 #page-overview .overview-mother-status,
 #page-overview .overview-system-node{
   display:grid!important;
@@ -18076,13 +18000,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   display:block!important;
   margin:0!important;
 }
-/* Keep status dot / chevron separated on the far right */
+
 #page-overview .overview-node-tail,
 #page-overview .overview-mother-tail{
   justify-self:end!important;
   padding-left:8px!important;
 }
-/* Slightly wider panel on desktop for long admin-configured names */
+
 #page-overview .overview-system-panel{
   min-width:0!important;
 }
@@ -18093,9 +18017,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     column-gap:11px!important;
   }
 }
-/* =====================================================
-   V36.47 — SINGLE-LINE OVERVIEW TITLE
-   ===================================================== */
+
 #page-overview .overview-title-row{
   align-items:center!important;
   flex-wrap:nowrap!important;
@@ -18126,10 +18048,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     white-space:normal!important;
   }
 }
-/* =====================================================
-   V36.48 — PM2.5/PM10 FADE + MOBILE CENTER
-   ===================================================== */
-/* Keep all three lines truly centered on every viewport. */
+
 #page-overview .overview-main-value{
   display:flex!important;
   flex-direction:column!important;
@@ -18155,7 +18074,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-main-unit{
   display:block!important;
 }
-/* Fade the whole metric block while PM2.5 / PM10 swaps. */
+
 #page-overview .overview-main-value{
   transition:
     opacity .26s ease,
@@ -18203,12 +18122,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transform:none!important;
   }
 }
-/* =====================================================
-   V36.49 — FULL HERO + SYSTEM ARROW FIX
-   ===================================================== */
-/* -----------------------------------------------------
-   HERO TITLE + HELP BUTTON
-   ----------------------------------------------------- */
+
 #page-overview .overview-copy{
   min-width:0!important;
 }
@@ -18250,7 +18164,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin-top:14px!important;
   max-width:100%!important;
 }
-/* Give the middle column enough room so title does not crowd ? */
+
 #page-overview .overview-hero-infographic{
   grid-template-columns:
     minmax(170px,220px)
@@ -18270,10 +18184,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:clamp(22px,2vw,32px)!important;
   }
 }
-/* -----------------------------------------------------
-   SYSTEM STATUS
-   icon | text | dot | arrow
-   ----------------------------------------------------- */
+
 #page-overview .overview-system-node{
   display:grid!important;
   grid-template-columns:
@@ -18308,7 +18219,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   display:block!important;
   margin:0!important;
 }
-/* Status dot always stays in its own column */
+
 #page-overview .overview-system-node .overview-node-dot{
   grid-column:3!important;
   justify-self:center!important;
@@ -18316,7 +18227,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin:0!important;
   transform:none!important;
 }
-/* Arrow always at far right */
+
 #page-overview .overview-system-node .overview-node-arrow{
   grid-column:4!important;
   justify-self:center!important;
@@ -18339,10 +18250,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   top:auto!important;
   bottom:auto!important;
 }
-/* -----------------------------------------------------
-   MOTHER / GATEWAY
-   icon | text | dot
-   ----------------------------------------------------- */
+
 #page-overview .overview-mother-status{
   display:grid!important;
   grid-template-columns:
@@ -18383,9 +18291,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   margin:0!important;
   transform:none!important;
 }
-/* -----------------------------------------------------
-   RESPONSIVE
-   ----------------------------------------------------- */
+
 @media(max-width:980px){
   #page-overview .overview-title-row{
     flex-wrap:wrap!important;
@@ -18420,11 +18326,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     column-gap:11px!important;
   }
 }
-/* =====================================================
-   V36.50 — HERO TITLE COLLISION FIX
-   ===================================================== */
-/* Keep the desktop title on one line while reserving a
-   separate column for the help button. */
+
 #page-overview .overview-title-row{
   display:grid!important;
   grid-template-columns:max-content 30px!important;
@@ -18464,8 +18366,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   bottom:auto!important;
   transform:none!important;
 }
-/* Give the text area more room without changing the
-   PM value box or the character behavior. */
+
 #page-overview .overview-hero-infographic{
   grid-template-columns:
     minmax(155px,195px)
@@ -18473,8 +18374,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     minmax(180px,215px)!important;
   column-gap:20px!important;
 }
-/* At narrower widths the title may wrap safely instead
-   of colliding with the help button. */
+
 @media(max-width:980px){
   #page-overview .overview-title-row{
     grid-template-columns:minmax(0,1fr) 28px!important;
@@ -18485,7 +18385,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     max-width:100%!important;
   }
 }
-/* On mobile retain the existing centered presentation. */
+
 @media(max-width:840px){
   #page-overview .overview-title-row{
     justify-content:center!important;
@@ -18494,9 +18394,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     text-align:center!important;
   }
 }
-/* =====================================================
-   V36.50 — OVERVIEW SUMMARY CARDS + MOBILE FOUNDATION
-   ===================================================== */
+
 #page-overview .overview-summary-grid{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
@@ -18633,11 +18531,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-size:12px!important;
   opacity:.72!important;
 }
-/* The four numeric cards remain the dedicated place for measured values. */
+
 #page-overview .overview-environment-head{
   margin-top:24px!important;
 }
-/* Tablet: keep both summaries readable before switching to one column. */
+
 @media (max-width:900px){
   #page-overview .overview-summary-grid{
     grid-template-columns:1fr!important;
@@ -18646,7 +18544,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-height:300px!important;
   }
 }
-/* Phones: never squeeze Thai text into character-by-character columns. */
+
 @media (max-width:600px){
   #page-overview,
   #page-overview *{
@@ -18752,9 +18650,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     grid-template-columns:minmax(0,1fr)!important;
   }
 }
-/* =====================================================
-   V36.51 — POLISHED OVERVIEW HERO
-   ===================================================== */
+
 #page-overview .overview-summary-grid{
   gap:20px!important;
 }
@@ -18890,7 +18786,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:rgba(241,245,249,.88)!important;
   border-color:rgba(100,116,139,.20)!important;
 }
-/* Soft scene decoration — visual only */
+
 #page-overview .overview-hero-decor{
   position:absolute!important;
   inset:0!important;
@@ -18948,7 +18844,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     0 0 0 13px rgba(255,193,54,.08),
     0 0 36px rgba(255,179,31,.23)!important;
 }
-/* Make the scenery feel grounded without creating another information row. */
+
 #page-overview .overview-summary-scene{
   inset:auto -8% -31% -8%!important;
   height:62%!important;
@@ -18968,15 +18864,15 @@ html body .site-header.is-authenticated #accountRoleBadge{
     radial-gradient(ellipse at 79% 42%,rgba(238,184,57,.20) 0 20%,transparent 21%),
     linear-gradient(180deg,rgba(117,188,218,.05),rgba(225,183,85,.13))!important;
 }
-/* The old freshness line is intentionally removed from the Hero. */
+
 #page-overview .overview-summary-freshness{
   display:none!important;
 }
-/* Keep next section closer so the page feels like one designed composition. */
+
 #page-overview .overview-environment-head{
   margin-top:20px!important;
 }
-/* Tablet */
+
 @media (max-width:900px){
   #page-overview .overview-summary-card{
     min-height:292px!important;
@@ -18986,7 +18882,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     gap:22px!important;
   }
 }
-/* Mobile */
+
 @media (max-width:600px){
   #page-overview .overview-summary-card{
     padding:17px 16px 18px!important;
@@ -19050,10 +18946,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     display:none!important;
   }
 }
-/* =====================================================
-   V36.52 — PREMIUM OVERVIEW HERO REFINEMENT
-   ===================================================== */
-/* Overall composition */
+
 #page-overview .overview-summary-grid{
   gap:22px!important;
   margin-bottom:22px!important;
@@ -19069,7 +18962,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     0 2px 8px rgba(0,18,38,.06),
     inset 0 1px 0 rgba(255,255,255,.72)!important;
 }
-/* Richer but calmer backgrounds */
+
 #page-overview .overview-dust-summary{
   background:
     radial-gradient(circle at 8% 5%,rgba(255,255,255,.98),transparent 26%),
@@ -19082,7 +18975,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     radial-gradient(circle at 84% 78%,rgba(255,189,74,.22),transparent 34%),
     linear-gradient(135deg,#edf8ff 0%,#eef2f3 47%,#f7ebc9 100%)!important;
 }
-/* Thin status accent at top makes cards feel intentional */
+
 #page-overview .overview-summary-card::after{
   content:""!important;
   position:absolute!important;
@@ -19100,7 +18993,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-weather-summary::after{
   background:linear-gradient(90deg,#f59e0b,#fb7185)!important;
 }
-/* Heading */
+
 #page-overview .overview-summary-heading{
   margin-bottom:10px!important;
   gap:11px!important;
@@ -19116,7 +19009,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-size:29px!important;
   transform:translateY(-1px)!important;
 }
-/* Body */
+
 #page-overview .overview-summary-body{
   grid-template-columns:minmax(180px,34%) minmax(0,1fr)!important;
   gap:26px!important;
@@ -19130,7 +19023,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   z-index:2!important;
   transform:none!important;
 }
-/* halo behind character */
+
 #page-overview .overview-summary-character::before{
   content:""!important;
   position:absolute!important;
@@ -19149,7 +19042,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   position:relative!important;
   z-index:1!important;
 }
-/* Main text area gets a subtle focus panel */
+
 #page-overview .overview-summary-copy{
   position:relative!important;
   padding:18px 20px 18px 22px!important;
@@ -19174,7 +19067,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-weather-summary .overview-summary-copy::before{
   background:#f97316!important;
 }
-/* Status hierarchy */
+
 #page-overview .overview-summary-status{
   max-width:100%!important;
   margin:0 0 8px!important;
@@ -19190,7 +19083,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   color:#b91c1c!important;
   font-size:clamp(36px,2.7vw,52px)!important;
 }
-/* Severity looks like a real status chip */
+
 #page-overview .overview-weather-severity{
   margin:2px 0 4px!important;
   min-height:34px!important;
@@ -19199,7 +19092,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-weight:900!important;
   box-shadow:none!important;
 }
-/* Supporting copy */
+
 #page-overview .overview-summary-message{
   margin-top:10px!important;
   max-width:36ch!important;
@@ -19208,7 +19101,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   line-height:1.65!important;
   font-weight:720!important;
 }
-/* Decorative elements toned down so they don't compete with the status */
+
 #page-overview .overview-hero-decor{
   opacity:.72!important;
 }
@@ -19221,7 +19114,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .decor-sun{
   opacity:.70!important;
 }
-/* Better landscape grounding */
+
 #page-overview .overview-summary-scene{
   bottom:-38%!important;
   height:70%!important;
@@ -19240,11 +19133,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
     radial-gradient(ellipse at 82% 47%,rgba(243,184,52,.22) 0 22%,transparent 23%),
     linear-gradient(180deg,rgba(99,179,215,.03),rgba(224,179,77,.12))!important;
 }
-/* Bring section title closer while preserving breathing room */
+
 #page-overview .overview-environment-head{
   margin-top:16px!important;
 }
-/* Tablet */
+
 @media (max-width:900px){
   #page-overview .overview-summary-card{
     min-height:305px!important;
@@ -19258,7 +19151,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding:16px 18px 16px 20px!important;
   }
 }
-/* Mobile - keep premium feel without squeezing content */
+
 @media (max-width:600px){
   #page-overview .overview-summary-grid{
     gap:14px!important;
@@ -19317,10 +19210,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     bottom:-46%!important;
   }
 }
-/* =====================================================
-   V36.53 — FRIENDLY HERO + HELP BUTTONS
-   ===================================================== */
-/* Title + ? stay together and never squeeze the Thai heading. */
+
 #page-overview .overview-summary-title-help{
   display:flex!important;
   align-items:center!important;
@@ -19363,7 +19253,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     0 7px 16px rgba(23,52,70,.12),
     inset 0 1px 0 rgba(255,255,255,.82)!important;
 }
-/* Softer, friendlier glass copy panel. */
+
 #page-overview .overview-summary-copy{
   background:
     linear-gradient(135deg,rgba(255,255,255,.36),rgba(255,255,255,.16))!important;
@@ -19372,7 +19262,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     inset 0 1px 0 rgba(255,255,255,.50),
     0 8px 22px rgba(20,57,69,.035)!important;
 }
-/* Give the characters a warm floating presence. */
+
 #page-overview .overview-summary-character{
   animation:overviewCharacterFloat 5.5s ease-in-out infinite!important;
   transform-origin:center bottom!important;
@@ -19381,7 +19271,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(-4px)}
 }
-/* Friendly dust scene */
+
 #page-overview .decor-spark{
   position:absolute!important;
   color:rgba(255,255,255,.92)!important;
@@ -19415,7 +19305,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   0%,100%{translate:0 0}
   50%{translate:-7px -5px}
 }
-/* Weather gets subtle heat movement rather than more icons. */
+
 #page-overview .decor-warm-wave{
   position:absolute!important;
   width:70px!important;
@@ -19439,7 +19329,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   0%,100%{transform:translateY(0) scaleX(.92);opacity:.22}
   50%{transform:translateY(-7px) scaleX(1.05);opacity:.55}
 }
-/* Clouds move very slowly to keep the dashboard alive without distraction. */
+
 #page-overview .decor-cloud-a,
 #page-overview .decor-cloud-c{
   animation:overviewCloudDrift 13s ease-in-out infinite!important;
@@ -19452,7 +19342,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   0%,100%{translate:0 0}
   50%{translate:9px 0}
 }
-/* A small ground glow connects illustration and card background. */
+
 #page-overview .overview-summary-character::after{
   content:""!important;
   position:absolute!important;
@@ -19468,14 +19358,14 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-weather-summary .overview-summary-character::after{
   background:rgba(190,107,25,.11)!important;
 }
-/* Slightly friendlier status type. */
+
 #page-overview .overview-summary-status{
   text-wrap:balance!important;
 }
 #page-overview .overview-summary-message{
   text-wrap:pretty!important;
 }
-/* Reduce motion when the OS/user asks for it. */
+
 @media (prefers-reduced-motion:reduce){
   #page-overview .overview-summary-character,
   #page-overview .decor-spark,
@@ -19489,7 +19379,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     animation:none!important;
   }
 }
-/* Mobile */
+
 @media (max-width:600px){
   #page-overview .overview-summary-title-help{
     gap:7px!important;
@@ -19514,10 +19404,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     width:48px!important;
   }
 }
-/* =====================================================
-   V36.54 — CURRENT CONDITIONS SOURCE + CHARACTER GUIDE
-   ===================================================== */
-/* Current conditions: make the "3 monitoring points" origin explicit. */
+
 #page-overview .overview-environment-heading-copy{
   min-width:0;
 }
@@ -19550,7 +19437,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:rgba(148,163,184,.055);
   color:#94a3b8;
 }
-/* About: character status guide */
+
 #page-about .about-character-guide-section{
   position:relative;
   overflow:hidden;
@@ -19820,10 +19707,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     animation:none!important;
   }
 }
-/* =====================================================
-   V36.55 — CHARACTER GUIDE POLISH + SOURCE COPY FIX
-   ===================================================== */
-/* Cleaner current-conditions explanation */
+
 #page-overview .overview-environment-source{
   align-items:center!important;
   gap:9px!important;
@@ -19845,7 +19729,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-size:10.5px!important;
   font-weight:600!important;
 }
-/* Prevent the temporary body/shirt flash before JS finishes the SVG. */
+
 #page-about .about-character-avatar{
   opacity:0!important;
   visibility:hidden!important;
@@ -19857,7 +19741,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   transform:translateY(0)!important;
   transition:opacity .20s ease, transform .24s ease!important;
 }
-/* More friendly guide-card surfaces */
+
 #page-about .about-character-metric{
   transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease!important;
 }
@@ -19893,7 +19777,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   opacity:.20!important;
   transform:translateX(-50%)!important;
 }
-/* Soft scene behind the whole guide */
+
 #page-about .about-character-guide-scene{
   position:absolute!important;
   inset:0!important;
@@ -19951,7 +19835,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   left:3%!important;
   font-size:13px!important;
 }
-/* A soft colored floor behind each row of characters */
+
 #page-about .about-character-flow::before{
   content:""!important;
   position:absolute!important;
@@ -19964,7 +19848,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   opacity:.035!important;
   pointer-events:none!important;
 }
-/* Friendlier arrows */
+
 #page-about .about-character-arrow{
   display:grid!important;
   place-items:center!important;
@@ -19976,7 +19860,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   border:1px solid rgba(148,163,184,.07)!important;
   font-size:11px!important;
 }
-/* Small-screen copy stays readable instead of becoming one long pill. */
+
 @media (max-width:700px){
   #page-overview .overview-environment-source > span:last-child{
     display:block!important;
@@ -19996,9 +19880,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
-/* =====================================================
-   V36.56 — UNIQUE CHARACTER STATES + SVG BODY FIX
-   ===================================================== */
+
 #page-about .about-character-avatar{
   width:88px!important;
   height:94px!important;
@@ -20022,9 +19904,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     height:84px!important;
   }
 }
-/* =====================================================
-   V36.59 — ABOUT HERO SUMMARY GUIDE
-   ===================================================== */
+
 #page-about .about-hero-guide-section{
   position:relative;
   overflow:hidden;
@@ -20300,13 +20180,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
-/* =====================================================
-   V36.60 — RESPONSIVE HERO + FAST LOADING STATE
-   ===================================================== */
-/* -----------------------------------------------------
-   1. Equal Hero status typography
-   Both cards use the same sizing rule.
-   ----------------------------------------------------- */
+
 #page-overview .overview-summary-body{
   grid-template-columns:minmax(155px,29%) minmax(0,1fr)!important;
   gap:20px!important;
@@ -20323,15 +20197,14 @@ html body .site-header.is-authenticated #accountRoleBadge{
   line-height:1.04!important;
   letter-spacing:-.045em!important;
 }
-/* Desktop/tablet: keep current Hero result on a single line.
-   The copy column receives more width instead of shrinking only one card. */
+
 @media (min-width:701px){
   #page-overview .overview-summary-status{
     white-space:nowrap!important;
     overflow:visible!important;
   }
 }
-/* Tablet */
+
 @media (min-width:701px) and (max-width:1100px){
   #page-overview .overview-summary-body{
     grid-template-columns:minmax(135px,27%) minmax(0,1fr)!important;
@@ -20346,8 +20219,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:clamp(14px,1.45vw,17px)!important;
   }
 }
-/* Small screens: both Hero cards still share exactly the same status size.
-   We scale both together; we never make Weather smaller than Dust. */
+
 @media (max-width:700px){
   #page-overview .overview-summary-body{
     display:flex!important;
@@ -20378,10 +20250,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding-right:10px!important;
   }
 }
-/* -----------------------------------------------------
-   2. Skeleton / loading placeholders
-   Loading is visually different from a real "no data" result.
-   ----------------------------------------------------- */
+
 @keyframes overviewSkeletonPulse{
   0%,100%{opacity:.46}
   50%{opacity:.86}
@@ -20419,7 +20288,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-metric-character.overview-loading-character::after{
   width:82px!important;
 }
-/* Text skeletons keep their original dimensions so CLS stays low. */
+
 #page-overview .overview-loading-text,
 #page-overview .overview-loading-value,
 #page-overview .overview-loading-chip,
@@ -20472,7 +20341,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   width:min(84%,290px)!important;
   height:10px!important;
 }
-/* Metric loading layout remains stable. */
+
 #page-overview .overview-metric-card .overview-loading-value{
   min-width:82px!important;
   min-height:1.25em!important;
@@ -20484,7 +20353,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 #page-overview .overview-metric-card .overview-loading-line{
   min-height:22px!important;
 }
-/* Once data is ready, characters enter softly rather than popping. */
+
 #page-overview .overview-character-art:not(.overview-loading-character) svg{
   animation:overviewDataReady .20s ease-out both;
 }
@@ -20492,7 +20361,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   from{opacity:0;transform:translateY(3px) scale(.985)}
   to{opacity:1;transform:translateY(0) scale(1)}
 }
-/* Avoid animation work for users/devices asking for less motion. */
+
 @media (prefers-reduced-motion:reduce){
   #page-overview .overview-loading-character::after,
   #page-overview .overview-loading-text::before,
@@ -20507,10 +20376,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     animation:none!important;
   }
 }
-/* =====================================================
-   V36.61 — STARTUP PERFORMANCE / FUTURE HEAVY FEATURE READY
-   ===================================================== */
-/* Below-the-fold content does not need full layout/paint during first screen. */
+
 #page-overview .overview-recommendation-section,
 #page-about .about-character-guide-section,
 #page-about .about-hero-guide-section,
@@ -20518,11 +20384,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
   content-visibility:auto;
   contain-intrinsic-size:1px 680px;
 }
-/* Hidden pages should never animate or paint while another dashboard page is active. */
+
 [data-dashboard-page-panel]:not(.active) *{
   animation-play-state:paused!important;
 }
-/* Keep first-screen skeleton cheap on slower/mobile devices. */
+
 @media (max-width:700px){
   #page-overview .overview-loading-text::after,
   #page-overview .overview-loading-value::after,
@@ -20531,10 +20397,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     animation-duration:1.8s!important;
   }
 }
-/* =========================================================
-   MAP V2 — ADDITIVE LOCATION SECTION
-   ไม่แทนที่การ์ดข้อมูลตรวจวัดเดิม
-   ========================================================= */
+
 .monitoring-location-section{
   margin-top:16px;
   padding:18px;
@@ -20824,7 +20687,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .admin-device-map .leaflet-control-attribution a{
   color:#67e8f9;
 }
-/* Admin additive map editor */
+
 .admin-location-map-editor{
   margin-top:16px;
   padding:16px;
@@ -20942,9 +20805,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .admin-coordinate-readout,
   .admin-device-map-fields{grid-template-columns:1fr}
 }
-/* ============================================================
-   V7 SAFE RECOVERY — scoped map switch only
-   ============================================================ */
+
 .map-basemap-switch{
   display:inline-flex;
   align-items:center;
@@ -20979,9 +20840,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .map-basemap-switch{width:100%}
   .map-basemap-button{flex:1}
 }
-/* ============================================================
-   V8 ADMIN MAP + IMAGE MANAGER — scoped only
-   ============================================================ */
+
 .admin-devices-v8{min-width:0}
 .admin-devices-v8 .admin-device-list{display:block!important;grid-template-columns:1fr!important;min-width:0!important}
 .admin-device-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
@@ -21021,10 +20880,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(max-width:900px){.admin-device-tabs{display:flex;overflow-x:auto}.admin-device-tab{flex:0 0 155px}.admin-media-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-map-workspace-head,.admin-media-manager-head{flex-direction:column}.map-basemap-switch-admin{width:100%}.map-basemap-switch-admin .map-basemap-button{flex:1}}
 @media(max-width:600px){.admin-device-map-fields,.admin-coordinate-readout{grid-template-columns:1fr!important}.admin-media-url-row{grid-template-columns:1fr}.admin-media-gallery{grid-template-columns:1fr 1fr}.admin-device-savebar{flex-direction:column;align-items:stretch}.admin-device-savebar .admin-save-button{width:100%}}
 @media(max-width:380px){.admin-media-gallery{grid-template-columns:1fr}}
-/* ============================================================
-   V8.2 — BRIGHT CURRENT COMPARISON BOARD
-   Scoped to monitoring comparison only
-   ============================================================ */
+
 .current-summary-board{
   position:relative;
   overflow:hidden;
@@ -21279,11 +21135,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-metric-extremes,.current-support-range{grid-template-columns:1fr}
   .current-metric-average>b{font-size:21px}
 }
-/* ============================================================
-   V8.3 — SIMPLE COMPARISON + MONITORING NODE EFFECTS
-   Layout preserved; effects use mostly transform/opacity.
-   ============================================================ */
-/* ---------- Comparison: easier to read ---------- */
+
 .current-summary-board .current-summary-header p{
   font-size:15px!important;
   line-height:1.65!important;
@@ -21369,7 +21221,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     gap:10px!important;
   }
 }
-/* ---------- Monitoring Nodes: visual polish, same layout ---------- */
+
 .monitoring-card .node{
   --node-accent:100,116,139;
   isolation:isolate;
@@ -21393,7 +21245,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   --node-accent:100,116,139;
   border-color:rgba(100,116,139,.16)!important;
 }
-/* soft light in the corner */
+
 .monitoring-card .node::after{
   content:"";
   position:absolute;
@@ -21408,7 +21260,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   pointer-events:none;
   transform:translate3d(0,0,0);
 }
-/* subtle shine line, desktop only */
+
 @keyframes monitoringNodeSweep{
   0%,72%{transform:translate3d(-130%,0,0);opacity:0}
   78%{opacity:.18}
@@ -21429,7 +21281,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .monitoring-card .node > .flex.justify-between{
   position:relative;
 }
-/* status pulse */
+
 @keyframes monitoringStatusPulse{
   0%,100%{opacity:1;transform:scale(1);text-shadow:0 0 0 rgba(52,211,153,0)}
   50%{opacity:.82;transform:scale(.94);text-shadow:0 0 9px rgba(52,211,153,.55)}
@@ -21439,7 +21291,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   transform-origin:center;
   animation:monitoringStatusPulse 2.4s ease-in-out infinite;
 }
-/* changed-value flash; runs only when a value actually changes */
+
 @keyframes nodeValueUpdated{
   0%{
     color:#fff;
@@ -21461,7 +21313,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   display:inline-block;
   animation:nodeValueUpdated .7s ease-out both;
 }
-/* make status/card feel alive without changing content placement */
+
 @media(hover:hover) and (pointer:fine){
   .monitoring-card .node:hover{
     transform:translateY(-3px) translateZ(0);
@@ -21475,7 +21327,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     opacity:1;
   }
 }
-/* Slightly cleaner metric hover on desktop, no layout change */
+
 @media(hover:hover) and (pointer:fine){
   .monitoring-card .node .grid>span{
     border-radius:7px;
@@ -21486,7 +21338,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     color:#cbd5e1!important;
   }
 }
-/* Mobile: keep it light; no continuous sweep or hover work */
+
 @media(max-width:760px){
   .monitoring-card .node.node-online > .flex.justify-between::after{
     animation:none!important;
@@ -21500,7 +21352,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     opacity:.48;
   }
 }
-/* Accessibility / low-motion preference */
+
 @media(prefers-reduced-motion:reduce){
   .monitoring-card .node,
   .monitoring-card .status-online-dot,
@@ -21511,10 +21363,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transform:none!important;
   }
 }
-/* ============================================================
-   V8.7 — SAFE COMPARISON VISUAL FIX
-   Scoped strictly under .current-summary-board.
-   ============================================================ */
+
 .current-summary-board .current-metric-card{
   position:relative!important;
   overflow:hidden!important;
@@ -21603,9 +21452,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-summary-board .dust-emoji-fine{font-size:19px!important}
   .current-summary-board .dust-emoji-coarse{font-size:25px!important}
 }
-/* ============================================================
-   V8.8 — COMPACT MONITORING STATUS CARDS
-   ============================================================ */
+
 .monitoring-status-cluster{
   gap:10px!important;
   min-width:min(370px,100%)!important;
@@ -21685,16 +21532,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(prefers-reduced-motion:reduce){
   .status-is-online .monitoring-live-dot{animation:none!important}
 }
-/* ============================================================
-   V8.13 — CANONICAL MOBILE MAP
-   One mobile implementation only. No V8.9–V8.12 override stack.
-   ============================================================ */
+
 .monitoring-map-detail-backdrop,
 .monitoring-place-drag-handle{
   display:none;
 }
 @media(max-width:700px){
-  /* ---------- section ---------- */
+  
   .monitoring-location-section{
     padding:14px!important;
     overflow:visible!important;
@@ -21724,7 +21568,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding:8px 10px!important;
     font-size:.84rem!important;
   }
-  /* ---------- three fixed choices, always visible ---------- */
+  
   .monitoring-map-node-tabs{
     display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -21779,7 +21623,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     background:rgba(8,145,178,.18)!important;
     box-shadow:inset 0 0 0 1px rgba(34,211,238,.10)!important;
   }
-  /* ---------- map ---------- */
+  
   .monitoring-map-layout,
   .monitoring-map-layout.has-detail{
     display:block!important;
@@ -21811,9 +21655,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     max-width:80%!important;
     font-size:9px!important;
   }
-  /* ---------- full-screen mobile detail ----------
-     JS portals this panel to <body> on mobile, so no parent can clip it.
-  */
+  
   body > #mapDetailPanel.monitoring-place-detail{
     display:flex!important;
     flex-direction:column!important;
@@ -21942,13 +21784,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   body > #mapDetailPanel .monitoring-place-empty{
     font-size:.88rem!important;
   }
-  /* No body lock. If detail ever fails, the page remains usable. */
+  
   body.mobile-map-detail-open{
     overflow:auto!important;
     position:static!important;
     touch-action:auto!important;
   }
-  /* ---------- comparison typography on phones ---------- */
+  
   .current-summary-board .current-summary-header p{
     font-size:14px!important;
   }
@@ -22004,9 +21846,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     transition:none!important;
   }
 }
-/* ============================================================
-   V8.14 — COMPARISON READABILITY
-   ============================================================ */
+
 .current-summary-board .current-summary-header h2{font-size:clamp(1.35rem,1.7vw,1.7rem)!important}
 .current-summary-board .current-summary-header p{font-size:clamp(.90rem,1vw,1rem)!important;line-height:1.65!important}
 .current-summary-board .current-metric-card-head h3{font-size:clamp(1.12rem,1.3vw,1.32rem)!important}
@@ -22035,13 +21875,9 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .current-summary-board .current-metric-extremes b{font-size:.84rem!important}
   .current-support-card-simple .current-support-average-simple b{font-size:1.30rem!important}
 }
-/* ============================================================
-   V8.16 — ADMIN MOBILE UX
-   Scope: Admin > ข้อมูลจุดตรวจวัด only.
-   Desktop and all public dashboard pages remain unchanged.
-   ============================================================ */
+
 @media (max-width:700px){
-  /* ---------- Admin devices page: comfortable single-column flow ---------- */
+  
   .admin-panel.admin-devices-v8{
     min-width:0!important;
     overflow:visible!important;
@@ -22061,7 +21897,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:.84rem!important;
     line-height:1.6!important;
   }
-  /* ---------- จุด 1 / 2 / 3: all visible, no horizontal swipe ---------- */
+  
   .admin-devices-v8 .admin-device-tabs{
     display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -22108,7 +21944,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     background:linear-gradient(180deg,rgba(8,145,178,.20),rgba(8,145,178,.10))!important;
     box-shadow:inset 0 0 0 1px rgba(34,211,238,.08),0 7px 20px rgba(6,182,212,.06)!important;
   }
-  /* ---------- Editor + map: true one-column mobile layout ---------- */
+  
   .admin-devices-v8 .admin-device-workspace{
     display:flex!important;
     flex-direction:column!important;
@@ -22133,7 +21969,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-width:0!important;
     max-width:none!important;
   }
-  /* Fix the title breaking vertically on narrow phones */
+  
   .admin-devices-v8 .admin-device-card-head{
     display:block!important;
     width:100%!important;
@@ -22160,7 +21996,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     line-height:1.4!important;
     white-space:normal!important;
   }
-  /* ---------- Forms: large touch targets ---------- */
+  
   .admin-devices-v8 .admin-field{
     display:block!important;
     width:100%!important;
@@ -22179,7 +22015,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-height:46px!important;
     margin-top:6px!important;
     padding:11px 12px!important;
-    font-size:16px!important; /* avoids mobile browser input zoom */
+    font-size:16px!important; 
     line-height:1.45!important;
     box-sizing:border-box!important;
     border-radius:11px!important;
@@ -22193,13 +22029,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:.72rem!important;
     line-height:1.5!important;
   }
-  /* Coordinates stay side-by-side when there is enough width */
+  
   .admin-devices-v8 .admin-device-map-fields{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:8px!important;
   }
-  /* ---------- Map editor ---------- */
+  
   .admin-devices-v8 .admin-map-workspace-head{
     display:block!important;
     margin-bottom:11px!important;
@@ -22253,7 +22089,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     overflow:hidden!important;
     text-overflow:ellipsis!important;
   }
-  /* ---------- Media manager: simpler on touch ---------- */
+  
   .admin-devices-v8 .admin-media-manager-card{
     margin-top:12px!important;
   }
@@ -22336,7 +22172,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     line-height:1.2!important;
     touch-action:manipulation!important;
   }
-  /* ---------- Sticky save: always reachable, no need to scroll to find it ---------- */
+  
   .admin-devices-v8 .admin-device-savebar{
     position:sticky!important;
     bottom:calc(8px + env(safe-area-inset-bottom))!important;
@@ -22411,20 +22247,16 @@ html body .site-header.is-authenticated #accountRoleBadge{
     grid-template-columns:1fr!important;
   }
 }
-/* ============================================================
-   V8.17 — RESPONSIVE POLISH
-   Based on full viewport/video audit.
-   Tablet + Mobile presentation only.
-   ============================================================ */
+
 @media (min-width:701px) and (max-width:1100px){
-  /* Project identity: keep it prominent on non-desktop widths */
+  
   header .flex.items-center.gap-4:first-child{gap:12px!important;min-width:0!important;flex:1 1 auto!important}
   header img.w-20{width:64px!important;height:64px!important;min-width:64px!important}
   header .text-xl,
   header .md\:text-2xl{font-size:clamp(1.45rem,2.65vw,1.9rem)!important;line-height:1.12!important}
   header .text-xs,
   header .text-sm{line-height:1.45!important}
-  /* Public map switches to vertical before side panel becomes cramped */
+  
   #monitoringMapLayout.has-detail,
   .monitoring-map-layout.has-detail{grid-template-columns:1fr!important}
   #mapDetailPanel,
@@ -22433,7 +22265,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .map-detail-main-image{aspect-ratio:16/10!important;object-fit:cover!important}
 }
 @media (max-width:700px){
-  /* HEADER — logo/title were too tiny in audit */
+  
   header.glass.card{padding:16px 14px!important}
   header .flex.items-center.gap-4:first-child{gap:10px!important;width:100%!important;min-width:0!important}
   header img.w-20{width:58px!important;height:58px!important;min-width:58px!important;max-width:58px!important;object-fit:contain!important}
@@ -22441,13 +22273,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   header .md\:text-2xl{font-size:clamp(1.28rem,5.4vw,1.58rem)!important;line-height:1.12!important;font-weight:800!important;letter-spacing:-.025em!important}
   header .text-xs,
   header .text-sm{font-size:.76rem!important;line-height:1.4!important}
-  /* Mobile navigation: remove large dead space */
+  
   .dashboard-nav,
   .dashboard-nav-shell,
   nav.glass.card{min-height:0!important;padding-top:9px!important;padding-bottom:9px!important}
   .dashboard-nav-inner,
   .dashboard-nav-main{min-height:0!important;gap:8px!important}
-  /* Historical controls/charts */
+  
   .history-controls,
   .history-filter-grid,
   .history-toolbar{gap:9px!important}
@@ -22460,7 +22292,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .chart-wrap,
   .chart-container,
   .history-chart-wrap{min-height:310px!important}
-  /* Public map/detail: one document scroll, no nested touch scroll */
+  
   #monitoringMapLayout,
   #monitoringMapLayout.has-detail,
   .monitoring-map-layout,
@@ -22480,7 +22312,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   body.mobile-map-detail-open{overflow-x:hidden!important;overflow-y:auto!important}
   .monitoring-location-main-image,
   .map-detail-main-image{width:100%!important;aspect-ratio:16/10!important;height:auto!important;object-fit:cover!important}
-  /* General content polish: less vertical waste without shrinking readable text */
+  
   .about-card,
   .analysis-card,
   .project-info-card,
@@ -22501,9 +22333,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .chart-container,
   .history-chart-wrap{min-height:290px!important}
 }
-/* ============================================================
-   V8.18 — SAFE TABLET / FOLD / SHORT-SCREEN POLISH
-   ============================================================ */
+
 @media (min-width:701px) and (max-width:1100px){
   .site-header{min-height:118px!important;padding:18px 20px!important;gap:18px!important}
   .site-brand{gap:15px!important;min-width:0!important}
@@ -22546,14 +22376,9 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .dashboard-nav-link{min-height:40px!important;padding-top:7px!important;padding-bottom:7px!important}
   body > #mapDetailPanel.monitoring-place-detail.tablet-detail-open{max-height:88dvh!important}
 }
-/* ============================================================
-   V8.19 — TABLET FINAL FIX
-   1) Keep ONLINE/OFFLINE on one line inside monitoring cards.
-   2) Remove the empty dark area below the public map on tablets.
-   Desktop >1100 and mobile <=700 are intentionally untouched.
-   ============================================================ */
+
 @media (min-width:701px) and (max-width:1100px){
-  /* Node status must never break into ONLIN / E. */
+  
   .monitoring-card .node > .flex.justify-between{
     gap:10px!important;
     align-items:flex-start!important;
@@ -22570,8 +22395,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     overflow-wrap:normal!important;
     line-height:1.25!important;
   }
-  /* The detail panel is a BODY modal in V8.18, so the map layout
-     no longer needs the old 570px side-panel minimum height. */
+  
   #monitoringMapLayout,
   #monitoringMapLayout.has-detail,
   .monitoring-map-layout,
@@ -22586,24 +22410,16 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-height:0!important;
   }
 }
-/* Short tablet landscape / smart displays: keep the map useful
-   without making the section taller than the viewport. */
+
 @media (min-width:701px) and (max-width:1100px) and (max-height:700px){
   #monitoringMapLayout .monitoring-map-wrap,
   #monitoringMapLayout .monitoring-map{
     height:clamp(320px,58vh,410px)!important;
   }
 }
-/* ============================================================
-   V8.20 — TABLET LAYOUT FINAL
-   Canonical tablet tier: 701–1100px
-   - Repairs the 701–760px collision with legacy mobile rules.
-   - Gives monitoring cards real breathing room on tablets.
-   - Preserves V8.18 modal map + V8.19 map/status fixes.
-   ============================================================ */
-/* ---------- ALL TABLETS ---------- */
+
 @media (min-width:701px) and (max-width:1100px){
-  /* Header: one intentional tablet row; never the legacy mobile stack. */
+  
   .site-header{
     display:grid!important;
     grid-template-columns:minmax(0,1fr) auto!important;
@@ -22692,7 +22508,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   #accountButtonText{max-width:128px!important;font-size:12.5px!important}
   .header-account-role{font-size:9px!important}
   .header-clock{font-size:10px!important;white-space:nowrap!important}
-  /* Navigation: five tabs stay horizontal on the entire tablet tier. */
+  
   .dashboard-nav{top:7px!important;margin:-2px 0 14px!important;min-height:0!important}
   .dashboard-nav-inner{
     display:flex!important;
@@ -22747,7 +22563,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     line-height:1.2!important;
     white-space:nowrap!important;
   }
-  /* Monitoring section spacing. */
+  
   .monitoring-card{padding:18px!important}
   .dashboard-card-page-head{
     gap:16px!important;
@@ -22758,7 +22574,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .monitoring-status-card{min-width:132px!important;padding:11px 13px!important}
   .monitoring-status-value{white-space:nowrap!important}
   .monitoring-node-count-main{white-space:nowrap!important}
-  /* Every node gets comfortable typography and metrics. */
+  
   .monitoring-card .node{
     padding:16px!important;
     min-width:0!important;
@@ -22792,7 +22608,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
   .monitoring-card .node > .grid > span{min-width:0!important;white-space:nowrap!important}
   .monitoring-card .node > .grid b{font-size:.9rem!important}
-  /* Keep the V8.19 map height correction authoritative. */
+  
   #monitoringMapLayout,
   #monitoringMapLayout.has-detail,
   .monitoring-map-layout,
@@ -22801,9 +22617,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     height:auto!important;
   }
 }
-/* ---------- COMPACT / MID TABLET: 701–960 ----------
-   Two columns are much more readable than squeezing three desktop cards.
-   Node 3 spans the row, so all three remain visible without tiny text. */
+
 @media (min-width:701px) and (max-width:960px){
   .monitoring-card > .grid{
     display:grid!important;
@@ -22818,7 +22632,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     column-gap:20px!important;
   }
 }
-/* ---------- 701–760 LEGACY-MOBILE COLLISION REPAIR ---------- */
+
 @media (min-width:701px) and (max-width:760px){
   .site-header{
     grid-template-columns:minmax(0,1fr) auto!important;
@@ -22889,7 +22703,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .monitoring-card .node{padding:14px!important}
   .monitoring-card .node > .grid{column-gap:12px!important;row-gap:8px!important}
 }
-/* ---------- LARGE TABLET: 961–1100 ---------- */
+
 @media (min-width:961px) and (max-width:1100px){
   .monitoring-card > .grid{
     display:grid!important;
@@ -22898,16 +22712,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
   .monitoring-card > .grid > .node:nth-child(3){grid-column:auto!important}
 }
-/* Height-aware tablet polish. */
+
 @media (min-width:701px) and (max-width:1100px) and (max-height:700px){
   .site-header{padding-top:11px!important;padding-bottom:11px!important}
   .site-brand-logo,.site-brand-logos img{width:50px!important;height:50px!important;min-width:50px!important;max-width:50px!important}
   .dashboard-nav-inner{min-height:52px!important}
 }
-/* ============================================================
-   V8.21 — COMPACT TABLET 701–760px
-   Fix horizontal overflow at the mobile/tablet boundary
-   ============================================================ */
+
 @media (min-width:701px) and (max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .max-w-\[1800px\]{width:100%!important;max-width:100%!important;min-width:0!important}
@@ -22937,14 +22748,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .node{min-width:0!important}
   .node .status,.node [class*="status"],.node-status,.status-online,.status-offline{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
 }
-/* ============================================================
-   V8.22 — OVERVIEW TABLET GAP FIX (901–1100px)
-   The startup optimization reserves a 680px intrinsic block for
-   .overview-recommendation-section while content-visibility:auto
-   is active. On tablet widths this can leave a large empty area
-   after the recommendation content. Let the active Overview page
-   use its real content height in this range.
-   ============================================================ */
+
 @media (min-width:901px) and (max-width:1100px){
   #page-overview{
     height:auto!important;
@@ -22964,15 +22768,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     min-height:0!important;
   }
 }
-/* ============================================================
-   V8.23 — TABLET GLOBAL LAYOUT FIX
-   1) 761–900: top navigation is no longer squeezed into one row.
-   2) 761–1023: History controls use a clean 2×2 equal grid.
-   3) 901–1100: all dashboard pages use real content height;
-      no reserved/intrinsic/flex height is allowed to create a
-      large empty dark block below short pages.
-   ============================================================ */
-/* ---------- 761–900 : COMFORTABLE TABLET NAV ---------- */
+
 @media (min-width:761px) and (max-width:900px){
   .dashboard-nav,
   .dashboard-nav-inner,
@@ -23036,7 +22832,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     text-overflow:ellipsis!important;
   }
 }
-/* ---------- 761–1023 : HISTORY TOOLBAR 2×2 ---------- */
+
 @media (min-width:761px) and (max-width:1023px){
   .historical-section > .flex:first-child{
     display:grid!important;
@@ -23088,7 +22884,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     grid-column:1/-1!important;
   }
 }
-/* ---------- 901–1100 : REAL PAGE HEIGHT ON EVERY PAGE ---------- */
+
 @media (min-width:901px) and (max-width:1100px){
   body > .max-w-\[1800px\],
   #dashboardPages,
@@ -23103,7 +22899,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     display:block!important;
     align-self:start!important;
   }
-  /* Disable reserved below-the-fold space for every active tablet page. */
+  
   [data-dashboard-page-panel].active,
   [data-dashboard-page-panel].active > section,
   [data-dashboard-page-panel].active > div,
@@ -23115,31 +22911,26 @@ html body .site-header.is-authenticated #accountRoleBadge{
     contain-intrinsic-size:auto!important;
     contain:none!important;
   }
-  /* Top-level cards/sections must size from their actual content. */
+  
   #page-overview > *,
   #page-monitoring > *,
   #page-history > *,
-  #page-analysis > *,
+  #page-forecast > *,
   #page-about > *{
     height:auto!important;
     min-height:0!important;
     max-height:none!important;
   }
-  /* Prevent grid/flex children from stretching a short final section. */
+  
   #page-overview,
   #page-monitoring,
   #page-history,
-  #page-analysis,
+  #page-forecast,
   #page-about{
     align-content:start!important;
   }
 }
-/* ============================================================
-   V8.24 — TABLET FINAL COMBINED FIX
-   A) 901–1100: page tail is trimmed by JS to the last rendered
-      meaningful element. CSS here removes reserved-size hints.
-   B) 1101–1450: Project Credit stays 5 columns without overflow.
-   ============================================================ */
+
 @media (min-width:901px) and (max-width:1100px){
   [data-dashboard-page-panel].active,
   [data-dashboard-page-panel].active *{
@@ -23257,13 +23048,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:8px!important;
   }
 }
-/* ============================================================
-   V8.25 — TABLET PAGE END / NO HEIGHT CLIPPING
-   901–1100px only.
-   Important: page height is NEVER measured or clipped by JavaScript.
-   Short pages end with a compact visual terminator instead of looking
-   like a broken empty black canvas. Long pages continue naturally.
-   ============================================================ */
+
 .tablet-page-end{display:none}
 @media (min-width:901px) and (max-width:1100px){
   html{
@@ -23289,7 +23074,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     max-height:none!important;
     overflow:visible!important;
   }
-  /* No reserved rendering height on the active page. */
+  
   [data-dashboard-page-panel].active,
   [data-dashboard-page-panel].active > *{
     contain-intrinsic-size:auto!important;
@@ -23324,14 +23109,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     white-space:nowrap;
   }
 }
-/* ============================================================
-   V8.26 — TABLET 901–1100 STATUS NAV FIX
-   Supports all status text lengths without overlapping the 5 tabs:
-   - Mother ONLINE + 3/3 nodes
-   - Mother ONLINE + one/more child nodes offline / waiting
-   - System / Mother OFFLINE
-   Only presentation changes. Status logic is untouched.
-   ============================================================ */
+
 @media (min-width:901px) and (max-width:1100px){
   .dashboard-nav{
     width:100%!important;
@@ -23385,11 +23163,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     overflow:hidden!important;
     text-overflow:ellipsis!important;
   }
-  /*
-   * Give the status its own safe row.
-   * It remains compact/right aligned for short ONLINE text,
-   * but can grow leftward for OFFLINE / waiting-node messages.
-   */
+  
   .dashboard-system-pill{
     grid-area:status!important;
     justify-self:end!important;
@@ -23426,7 +23200,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     flex:0 0 auto!important;
   }
 }
-/* Short-height tablets: keep the second status row compact. */
+
 @media (min-width:901px) and (max-width:1100px) and (max-height:700px){
   .dashboard-nav-inner{
     padding-top:7px!important;
@@ -23444,9 +23218,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding-bottom:5px!important;
   }
 }
-/* ============================================================
-   V8.27 — TABLET STATUS BALANCE (901–1100px)
-   ============================================================ */
+
 @media (min-width:901px) and (max-width:1100px){
   .dashboard-nav-inner{
     grid-template-columns:minmax(0,1fr)!important;
@@ -23486,15 +23258,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
     padding-bottom:5px!important;
   }
 }
-/* ============================================================
-   V8.28 — MOBILE CLOSE UX (<=760px)
-   Notification inbox:
-   - smaller footprint
-   - explicit X close button
-   - keeps existing tap-outside-to-close behavior
-   Map detail:
-   - backdrop can be tapped to close (JS)
-   ============================================================ */
+
 .notification-inbox-head-actions{
   display:flex;
   align-items:center;
@@ -23604,8 +23368,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .admin-permission-admin-head>div{display:grid;gap:3px}.admin-permission-admin-head b{color:#e2e8f0;font-size:13px}.admin-permission-admin-head span{color:#64748b;font-size:10px}.admin-permission-admin-head .admin-permission-reset{min-height:36px}
 @media(max-width:620px){.admin-permission-admin-head{align-items:stretch;flex-direction:column}.admin-permission-admin-head .admin-permission-reset{width:100%}}
 
-
-/* User directory V2 */
 .admin-user-summary-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px;padding:14px 16px;border:1px solid rgba(34,211,238,.15);border-radius:14px;background:linear-gradient(135deg,rgba(8,145,178,.07),rgba(15,23,42,.24))}
 .admin-user-summary-total{display:flex;align-items:baseline;gap:8px;min-width:0}.admin-user-summary-total span{color:#94a3b8;font-size:12px;font-weight:800}.admin-user-summary-total strong{color:#67e8f9;font-size:24px;line-height:1;font-weight:900}.admin-user-summary-total small,.admin-user-summary-visible{color:#64748b;font-size:11px;font-weight:700}.admin-user-summary-visible{text-align:right}
 .admin-user-avatar{position:relative;overflow:hidden}.admin-user-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}.admin-user-avatar.has-image>span{opacity:0}.admin-user-avatar img:not([src]),.admin-user-avatar img[src=""]{display:none}.admin-user-avatar img:not([src])+span,.admin-user-avatar img[src=""]+span{opacity:1}
@@ -23613,3 +23375,453 @@ html body .site-header.is-authenticated #accountRoleBadge{
 @media(max-width:900px){.admin-center.admin-users-page .admin-main{padding:20px!important}.admin-users-head{align-items:flex-start!important;gap:12px;flex-wrap:wrap}.admin-add-admin-button{flex:0 0 auto}.admin-user-summary-bar{margin-bottom:12px}.admin-user-main{grid-template-columns:auto minmax(0,1fr) auto;gap:11px}.admin-user-action{max-width:180px}}
 @media(max-width:700px){.admin-center.admin-users-page .admin-main{padding:14px!important}.admin-user-summary-bar{align-items:flex-start;flex-direction:column;padding:13px}.admin-user-summary-visible{text-align:left}.admin-user-summary-total strong{font-size:22px}.admin-user-main{grid-template-columns:48px minmax(0,1fr);align-items:start;padding:13px}.admin-user-avatar{width:48px;height:48px;border-radius:14px}.admin-user-action{grid-column:1/-1;max-width:none;width:100%}.admin-user-action>*{width:100%;box-sizing:border-box;text-align:center}.admin-user-title-row{align-items:flex-start;flex-wrap:wrap}.admin-user-title-row b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}.admin-user-identity>span{font-size:11px}.admin-permission-admin-head{align-items:stretch;flex-direction:column}.admin-permission-reset{width:100%}.admin-user-danger-zone{align-items:stretch;flex-direction:column}.admin-user-delete{width:100%}.admin-user-editor-footer{align-items:stretch;flex-direction:column}.admin-user-editor-footer .admin-user-save{width:100%}}
 @media(max-width:420px){.admin-center.admin-users-page .admin-main{padding:10px!important}.admin-user-summary-bar{border-radius:12px}.admin-user-summary-total{flex-wrap:wrap}.admin-user-main{grid-template-columns:42px minmax(0,1fr);gap:10px;padding:11px}.admin-user-avatar{width:42px;height:42px;border-radius:12px}.admin-user-meta{gap:4px}.admin-user-meta i{font-size:9px}.admin-user-editor-top,.admin-permission-grid{padding-left:11px!important;padding-right:11px!important}.admin-user-danger-zone{margin-left:11px;margin-right:11px}}
+
+.ai-intelligence-grid-forecast-only{grid-template-columns:1fr!important}
+#page-forecast .ai-forecast-panel{width:100%;min-width:0}
+.forecast-page-chart-zone{width:100%;margin-top:0!important}
+#page-forecast .dashboard-chart-card{width:100%;min-width:0}
+@media(max-width:760px){
+  #page-forecast .ai-intelligence-section,#page-forecast .dashboard-chart-card{padding:14px!important}
+  #page-forecast .forecast-display-controls{align-items:stretch}
+}
+@media(max-width:480px){
+  #page-forecast .ai-forecast-grid{grid-template-columns:1fr!important}
+  #page-forecast .forecast-toggle-wrap{width:100%;justify-content:space-between}
+}
+
+.history-toolbar-v4{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:14px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.history-view-control,.forecast-filter-panel-v4{
+  min-width:0;
+  padding:12px;
+  border:1px solid rgba(51,65,85,.72);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(7,24,39,.72),rgba(5,17,31,.56));
+}
+.history-control-heading,.forecast-filter-head-v4{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.history-control-heading>span,.forecast-filter-head-v4 b{
+  color:#e2e8f0;
+  font-size:12px;
+  font-weight:900;
+}
+.history-control-heading>small,.forecast-filter-head-v4 span{
+  color:#64748b;
+  font-size:10px;
+  line-height:1.4;
+}
+.node-view-switch{
+  display:grid;
+  grid-template-columns:minmax(150px,1.35fr) minmax(130px,1.1fr) repeat(3,minmax(86px,.72fr));
+  gap:7px;
+  min-width:0;
+  padding:5px;
+  border:1px solid rgba(51,65,85,.72);
+  border-radius:14px;
+  background:rgba(2,12,23,.66);
+}
+.node-view-option{
+  min-width:0!important;
+  min-height:43px!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:8px 10px;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease;
+}
+.node-view-option:hover{
+  color:#e2e8f0;
+  background:rgba(30,41,59,.46);
+}
+.node-view-option.is-active{
+  color:#ecfeff;
+  border-color:rgba(34,211,238,.44);
+  background:linear-gradient(180deg,rgba(8,145,178,.27),rgba(14,116,144,.14));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 0 1px rgba(34,211,238,.04);
+}
+.node-view-option:focus-visible{
+  outline:2px solid rgba(103,232,249,.8);
+  outline-offset:2px;
+}
+.node-view-icon{
+  display:grid;
+  place-items:center;
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  border-radius:7px;
+  background:rgba(15,35,55,.86);
+  color:#67e8f9;
+  font-size:12px;
+  font-weight:900;
+}
+.node-view-dot{
+  width:8px;
+  height:8px;
+  flex:0 0 8px;
+  border-radius:50%;
+  box-shadow:0 0 0 4px rgba(148,163,184,.06);
+}
+.node-view-dot-1{background:#22d3ee}
+.node-view-dot-2{background:#a78bfa}
+.node-view-dot-3{background:#f59e0b}
+.history-filter-row-v4{
+  display:grid!important;
+  grid-template-columns:minmax(170px,.8fr) minmax(220px,1fr) minmax(170px,.72fr)!important;
+  gap:10px!important;
+  min-width:0!important;
+  align-items:end!important;
+}
+.history-control-field,.forecast-metric-field-v4{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+.history-control-label,.forecast-metric-field-v4>span{
+  color:#64748b;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.history-control-field .history-metric-select,
+.forecast-metric-field-v4 .history-metric-select,
+.history-control-field #historyRangeButton,
+.history-download-field #exportButton{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:46px!important;
+  min-height:46px!important;
+  border-radius:12px!important;
+}
+.history-download-field #exportButton{
+  justify-content:center!important;
+}
+.historical-section #historyRangePicker.history-range-picker-v4{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  flex:none!important;
+}
+.historical-section #historyRangePicker.history-range-picker-v4 #historyRangeButton{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+.history-summary-v4{
+  display:grid!important;
+  gap:15px!important;
+}
+.history-summary-head-v4{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.history-summary-title-v4{
+  color:#f1f5f9;
+  font-size:13px;
+  font-weight:900;
+}
+.history-summary-current-v4{
+  margin-top:4px;
+  color:#64748b;
+  font-size:10px;
+}
+.history-summary-current-v4 b{
+  color:#67e8f9;
+}
+.history-stats-grid-v4{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.history-stats-grid-v4.is-hidden{display:none!important}
+.history-stat-v4{
+  min-width:0;
+  padding:12px 13px;
+  border:1px solid rgba(51,65,85,.62);
+  border-radius:13px;
+  background:rgba(6,21,35,.5);
+}
+.history-stat-v4 span{
+  display:block;
+  color:#64748b;
+  font-size:10px;
+}
+.history-stat-v4 b{
+  display:block;
+  margin-top:5px;
+  color:#f8fafc;
+  font-size:21px;
+  font-weight:900;
+  overflow-wrap:anywhere;
+}
+.period-compare-v4{
+  min-width:0;
+  padding-top:14px;
+  border-top:1px solid rgba(51,65,85,.58);
+}
+.period-compare-head-v4{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.period-compare-head-v4 b{
+  display:block;
+  color:#e2e8f0;
+  font-size:12px;
+  font-weight:900;
+}
+.period-compare-head-v4 span{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-size:9px;
+  line-height:1.45;
+}
+.period-compare-content-v4{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  min-width:0;
+}
+.period-compare-content-v4.is-multi{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.period-compare-item-v4{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(76px,.7fr) minmax(145px,1.3fr) minmax(118px,.9fr);
+  align-items:center;
+  gap:10px;
+  padding:10px 11px;
+  border:1px solid rgba(51,65,85,.62);
+  border-radius:12px;
+  background:rgba(6,21,35,.48);
+}
+.period-compare-content-v4.is-multi .period-compare-item-v4{
+  grid-template-columns:1fr;
+  gap:7px;
+}
+.period-compare-metric-v4{
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+}
+.period-compare-values-v4{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.period-compare-values-v4>span{
+  min-width:0;
+}
+.period-compare-values-v4 small{
+  display:block;
+  color:#64748b;
+  font-size:8px;
+}
+.period-compare-values-v4 b{
+  display:block;
+  margin-top:1px;
+  color:#f8fafc;
+  font-size:15px;
+  font-weight:900;
+}
+.period-compare-values-v4 i{
+  color:#475569;
+  font-size:13px;
+  font-style:normal;
+}
+.period-compare-values-v4 em{
+  color:#64748b;
+  font-size:8px;
+  font-style:normal;
+  white-space:nowrap;
+}
+.period-compare-result-v4{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  font-size:10px;
+  white-space:nowrap;
+}
+.period-compare-content-v4.is-multi .period-compare-result-v4{
+  justify-content:flex-start;
+}
+.period-compare-result-v4>span{
+  font-size:14px;
+  font-weight:900;
+}
+.period-compare-result-v4 b{font-weight:900}
+.period-compare-result-v4 small{
+  color:#94a3b8;
+  font-size:9px;
+}
+.period-compare-result-v4.is-up{color:#fbbf24}
+.period-compare-result-v4.is-down{color:#67e8f9}
+.period-compare-result-v4.is-steady{color:#94a3b8}
+.period-compare-empty-v4,.period-compare-no-data-v4{
+  padding:12px;
+  color:#64748b;
+  font-size:10px;
+  text-align:center;
+}
+.chart-open-hint{
+  flex:0 0 auto;
+  padding:6px 9px;
+  border:1px solid rgba(34,211,238,.16);
+  border-radius:999px;
+  background:rgba(8,145,178,.07);
+  color:#67e8f9;
+  font-size:9px;
+  font-weight:800;
+  white-space:nowrap;
+}
+#historyChartArea canvas,#forecastChartArea canvas{
+  cursor:zoom-in;
+}
+.forecast-filter-panel-v4{
+  margin:12px 0;
+}
+.forecast-filter-grid-v4{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(170px,220px);
+  gap:10px;
+  align-items:end;
+  min-width:0;
+}
+.node-view-switch-forecast{
+  width:100%;
+}
+.forecast-metric-field-v4 .history-metric-select{
+  background-color:rgba(4,18,31,.9);
+}
+@media(max-width:1100px){
+  .node-view-switch{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .history-filter-row-v4{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .history-download-field{
+    grid-column:1/-1;
+  }
+  .forecast-filter-grid-v4{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:760px){
+  .history-view-control,.forecast-filter-panel-v4{
+    padding:10px;
+    border-radius:14px;
+  }
+  .history-control-heading,.forecast-filter-head-v4{
+    align-items:flex-start;
+  }
+  .history-control-heading>small,.forecast-filter-head-v4 span{
+    display:none;
+  }
+  .node-view-switch{
+    display:flex;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+    scroll-snap-type:x proximity;
+    gap:6px;
+    padding:5px;
+    scrollbar-width:none;
+  }
+  .node-view-switch::-webkit-scrollbar{display:none}
+  .node-view-option{
+    flex:0 0 auto;
+    min-width:112px!important;
+    min-height:44px!important;
+    scroll-snap-align:start;
+    font-size:10px;
+  }
+  .node-view-option:first-child{min-width:145px!important}
+  .node-view-option:nth-child(2){min-width:126px!important}
+  .history-filter-row-v4{
+    grid-template-columns:1fr!important;
+  }
+  .history-download-field{grid-column:auto}
+  .history-control-field .history-metric-select,
+  .forecast-metric-field-v4 .history-metric-select,
+  .history-control-field #historyRangeButton,
+  .history-download-field #exportButton{
+    height:48px!important;
+    min-height:48px!important;
+    font-size:16px!important;
+  }
+  .history-stats-grid-v4{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .history-stat-v4 b{font-size:19px}
+  .period-compare-content-v4.is-multi{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .period-compare-item-v4{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+  .period-compare-result-v4{
+    justify-content:flex-start;
+  }
+  .chart-open-hint{
+    font-size:8px;
+    padding:5px 7px;
+  }
+}
+@media(max-width:480px){
+  .history-summary-v4{padding:12px!important}
+  .history-stats-grid-v4{gap:7px}
+  .history-stat-v4{padding:10px}
+  .period-compare-content-v4.is-multi{grid-template-columns:1fr}
+  .period-compare-values-v4 b{font-size:14px}
+  .forecast-filter-head-v4 .chart-open-hint{
+    display:none;
+  }
+}
+.historical-section .history-toolbar.history-toolbar-v4{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  gap:14px!important;
+}
+.historical-section .history-toolbar.history-toolbar-v4>.history-view-control,
+.historical-section .history-toolbar.history-toolbar-v4>.history-filter-row-v4{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+@media(max-width:760px){
+  .historical-section .history-toolbar.history-toolbar-v4 .node-view-option{
+    font-size:10px!important;
+  }
+}
