@@ -45,7 +45,6 @@ let historyChart=null;
 let forecastChart=null;
 let historyGroupCharts=[];
 let forecastGroupCharts=[];
-let forecastVisible=true;
 let historyActivated=false;
 let historyLoading=false;
 // Refresh history only while its page is visible; long ranges refresh less often to protect D1 usage.
@@ -75,6 +74,7 @@ let activeHelpButton=null;
 let aiForecastPayload=null;
 let aiForecastLoading=false;
 let aiForecastLastLoadedAt=null;
+let forecastLastLoadFailed=false;
 let publicDisplayConfig={
 devices:[
 {device_id:"Number 1",display_name:"จุดตรวจวัด 1",location_name:"",description:"",map_description:"",latitude:null,longitude:null,images:[],video_url:""},
@@ -2985,7 +2985,7 @@ borderDash:[6,5],
 borderWidth:2,
 pointRadius:2,
 tension:.08,
-hidden:!forecastVisible,
+hidden:false,
 cubicInterpolationMode:"monotone"
 };
 }
@@ -3267,86 +3267,6 @@ slope*sx
 n
 };
 }
-function updateForecastToggle(){
-const b=
-$("forecastToggle");
-const l=
-$("forecastToggleLabel");
-const s=
-$("forecastToggleState");
-if(
-!b||
-!l
-){
-return;
-}
-b.classList.toggle(
-"is-on",
-forecastVisible
-);
-b.classList.toggle(
-"is-off",
-!forecastVisible
-);
-b.setAttribute(
-"aria-checked",
-forecastVisible
-?"true"
-:"false"
-);
-b.setAttribute(
-"aria-pressed",
-forecastVisible
-?"true"
-:"false"
-);
-b.title=
-forecastVisible
-?"กดเพื่อซ่อนเส้นคาดการณ์"
-:"กดเพื่อแสดงเส้นคาดการณ์";
-l.textContent=
-forecastVisible
-?"แสดง +10 / +20 / +30 นาที"
-:"ซ่อนเส้นคาดการณ์";
-if(s){
-s.textContent=
-forecastVisible
-?"ON"
-:"OFF";
-}
-const charts=[
-forecastChart,
-...forecastGroupCharts
-]
-.filter(Boolean);
-charts.forEach(chart=>{
-if(
-!chart?.data?.datasets
-){
-return;
-}
-chart.data.datasets.forEach((ds,i)=>{
-const label=
-String(
-ds?.label||
-""
-);
-const isForecast=
-ds?.isForecast===true||
-label.includes("Forecast")||
-label.includes("คาดการณ์");
-if(isForecast){
-chart.setDatasetVisibility(
-i,
-forecastVisible
-);
-}
-});
-chart.update(
-"none"
-);
-});
-}
 function forecastScopeData(scope){
 const list=
 Array.isArray(
@@ -3578,8 +3498,7 @@ fd.borderDash=[
 ];
 fd.pointRadius=2;
 fd.tension=.08;
-fd.hidden=
-!forecastVisible;
+fd.hidden=false;
 forecastDatasets.push(fd);
 }
 }
@@ -3707,7 +3626,6 @@ createCompare(
 "light",
 "lux"
 );
-updateForecastToggle();
 return;
 }
 const rows=
@@ -3819,8 +3737,7 @@ raw.length,
 current,
 pts
 );
-forecastDs.hidden=
-!forecastVisible;
+forecastDs.hidden=false;
 datasets.push(
 forecastDs
 );
@@ -3863,7 +3780,6 @@ create(
 ["light"],
 "lux"
 );
-updateForecastToggle();
 return;
 }
 let rows;
@@ -3907,7 +3823,6 @@ graphTooltipLabel
 }
 }
 );
-updateForecastToggle();
 return;
 }
 rows=
@@ -3975,8 +3890,7 @@ values.length,
 current,
 pts
 );
-fd.hidden=
-!forecastVisible;
+fd.hidden=false;
 datasets.push(
 fd
 );
@@ -4013,7 +3927,6 @@ graphTooltipLabel
 }
 }
 );
-updateForecastToggle();
 }
 function toDateTimeLocalValue(d){
 if(!d){
@@ -4870,33 +4783,61 @@ return `${fmt(n)}${unit?` ${unit}`:""}`;
 function renderAIForecast(payload){
 const box=$("aiForecastDetails");
 const generated=$("aiForecastGeneratedAt");
-if(aiForecastLoading){
-if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังประมวลผลการคาดการณ์...</div>';
+if(aiForecastLoading&&!payload){
+if(box)box.innerHTML='<div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังอัปเดตการคาดการณ์...</div>';
 return;
 }
-if(!payload){
-if(box)box.innerHTML='<div class="ai-unavailable">ยังไม่มีผลการคาดการณ์ในขณะนี้</div>';
-if(generated)generated.textContent="อัปเดตการคาดการณ์: --";
-return;
+const d=payload?.data||{};
+const dt=parseDate(payload?.generated_at);
+if(generated){
+const timeText=dt?dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"--";
+generated.textContent=forecastLastLoadFailed&&payload
+?`อัปเดตล่าสุด: ${timeText} • กำลังใช้ผลล่าสุด`
+:`อัปเดตการคาดการณ์: ${timeText}`;
 }
-const d=payload.data||{};
-const dt=parseDate(payload.generated_at);
-if(generated)generated.textContent=dt?`อัปเดตการคาดการณ์: ${dt.toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})}`:"อัปเดตการคาดการณ์: --";
 if(!box)return;
-if(payload.ai!==true&&!['fast_forecast','all_ai_unavailable'].includes(payload?.reason)){
-box.innerHTML='<div class="ai-unavailable"><b>ยังไม่สามารถสร้างการคาดการณ์ได้</b><div class="mt-1">ข้อมูลที่จำเป็นยังไม่เพียงพอ กรุณาลองใหม่ภายหลัง</div></div>';
-return;
-}
 const scope=selectedForecastScope();
 const scopeData=forecastScopeData(scope)||d;
 const points=Array.isArray(scopeData?.forecast_points)?scopeData.forecast_points:[];
-const fields=forecastMetric==="all"?GRAPH_FIELDS:[forecastMetric];
+const fields=forecastMetric==="all"
+?["pm25","pm1","pm10","temperature","humidity","light"]
+:[forecastMetric];
 const scopeLabel=scope==="AREA"?"ภาพรวมพื้นที่":historyNodeLabel(scope);
-const rows=fields.map(field=>{
-const p=points.find(item=>item?.field===field);
-return `<div class="forecast-value-row-v6"><div class="forecast-value-metric-v6"><b>${esc(metricLabelFor(field))}</b><small>${esc(metricUnitFor(field))}</small></div><div>${esc(forecastValueText(p?.p10,field))}</div><div>${esc(forecastValueText(p?.p20,field))}</div><div>${esc(forecastValueText(p?.p30,field))}</div></div>`;
+const horizons=[
+{key:"p10",label:"อีก 10 นาที"},
+{key:"p20",label:"อีก 20 นาที"},
+{key:"p30",label:"อีก 30 นาที"}
+];
+const hasAny=fields.some(field=>{
+const point=points.find(item=>item?.field===field);
+return horizons.some(h=>finiteNumberOrNull(point?.[h.key])!==null);
+});
+if(!hasAny){
+box.innerHTML='<div class="ai-unavailable"><b>ยังไม่มีข้อมูลเพียงพอสำหรับคาดการณ์</b><div class="mt-1">ระบบจะเริ่มแสดงค่าล่วงหน้าเมื่อมีข้อมูลล่าสุดเพียงพอสำหรับคำนวณ</div></div>';
+return;
+}
+const cards=horizons.map(horizon=>{
+const values=fields.map(field=>{
+const point=points.find(item=>item?.field===field);
+const value=forecastValueText(point?.[horizon.key],field);
+return `<div class="forecast-horizon-metric-v8${field==="pm25"?" is-primary":""}">
+<span>${esc(metricLabelFor(field))}</span>
+<b>${esc(value)}</b>
+</div>`;
 }).join("");
-box.innerHTML=`<div class="forecast-values-head-v6"><div><span>มุมมอง</span><b>${esc(scopeLabel)}</b></div>${historyNode==="compare"?'<small>กราฟด้านล่างเปรียบเทียบทุกจุด</small>':''}</div><div class="forecast-values-table-v6"><div class="forecast-value-row-v6 is-head"><div>ตัวแปร</div><div>อีก 10 นาที</div><div>อีก 20 นาที</div><div>อีก 30 นาที</div></div>${rows}</div>`;
+return `<section class="forecast-horizon-card-v8${fields.length===1?" is-single":""}">
+<div class="forecast-horizon-time-v8">${esc(horizon.label)}</div>
+<div class="forecast-horizon-values-v8">${values}</div>
+</section>`;
+}).join("");
+const compareNote=historyNode==="compare"
+?'<span>ค่าด้านบนเป็นภาพรวมพื้นที่ • กราฟด้านล่างใช้เปรียบเทียบแต่ละจุด</span>'
+:"";
+box.innerHTML=`<div class="forecast-values-head-v8">
+<div><small>มุมมองค่าคาดการณ์</small><b>${esc(scopeLabel)}</b></div>
+${compareNote}
+</div>
+<div class="forecast-horizon-grid-v8">${cards}</div>`;
 }
 async function loadAIForecast(
 force=false
@@ -4929,15 +4870,12 @@ aiForecastPayload=
 await fetchJson(
 url
 );
+forecastLastLoadFailed=false;
 aiForecastLastLoadedAt=
 new Date();
 }catch(e){
-console.error(
-"Forecast error:",
-e
-);
-aiForecastPayload=
-null;
+console.error("Forecast error:",e);
+forecastLastLoadFailed=true;
 }finally{
 aiForecastLoading=
 false;
@@ -5451,21 +5389,6 @@ e.target?.classList?.contains(
 )
 ){
 closeHistoryRangePicker();
-}
-}
-);
-$("forecastToggle")
-?.addEventListener(
-"click",
-()=>{
-forecastVisible=
-!forecastVisible;
-updateForecastToggle();
-if(
-historyActivated&&
-typeof drawCharts==="function"
-){
-drawCharts();
 }
 }
 );
@@ -6040,7 +5963,7 @@ const button=e.target.closest(".chart-series-button");
 if(!button||!chartInteractiveInstance)return;
 const selected=new Set(String(button.dataset.indices||"").split(",").map(Number).filter(Number.isInteger));
 chartInteractiveInstance.data.datasets.forEach((ds,index)=>{
-const visible=selected.has(index)&&(!(ds?.isForecast===true)||forecastVisible);
+const visible=selected.has(index);
 chartInteractiveInstance.setDatasetVisibility(index,visible);
 });
 chartInteractiveInstance.update("none");
@@ -6049,7 +5972,7 @@ updateSeriesControlUI();
 showAll?.addEventListener("click",()=>{
 if(!chartInteractiveInstance)return;
 chartInteractiveInstance.data.datasets.forEach((ds,index)=>{
-chartInteractiveInstance.setDatasetVisibility(index,!(ds?.isForecast===true)||forecastVisible);
+chartInteractiveInstance.setDatasetVisibility(index,true);
 });
 chartInteractiveInstance.update("none");
 updateSeriesControlUI();
@@ -6801,7 +6724,6 @@ updateHistoryRangeButtonLabel();
 updateQuickRangeUI(
 averageRange
 );
-updateForecastToggle();
 renderAIForecast(
 null
 );
