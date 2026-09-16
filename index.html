@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่</title>
-<meta content="ระบบตรวจวัดคุณภาพอากาศและฝุ่น PM2.5 ในระดับพื้นที่ แสดงข้อมูลจาก 3 จุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน แนวโน้ม และการคาดการณ์ 30 นาที" name="description"/>
+<meta content="ระบบตรวจวัดคุณภาพอากาศและฝุ่น PM2.5 ในระดับพื้นที่ แสดงข้อมูลจาก 3 จุดตรวจวัด ข้อมูลย้อนหลัง การแจ้งเตือน และการคาดการณ์ 30 นาที" name="description"/>
 <meta content="โครงงาน PM2.5, คุณภาพอากาศระดับพื้นที่, PM1.0, PM2.5, PM10, อุณหภูมิ, ความชื้น, ดัชนีความร้อน" name="keywords"/>
 <meta content="แผนกวิชาเทคโนโลยีสารสนเทศและการสื่อสาร วิทยาลัยเสริมทักษะพระภิกษุ สามเณร" name="author"/>
 <meta content="index, follow" name="robots"/>
@@ -17,10 +17,10 @@
 <meta content="website" property="og:type"/>
 <meta content="Local Air Quality and PM2.5 Monitoring Station" property="og:site_name"/>
 <meta content="สถานีตรวจวัดคุณภาพอากาศและ PM2.5 ในระดับพื้นที่" property="og:title"/>
-<meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด สถิติย้อนหลัง การแจ้งเตือน และแนวโน้มคุณภาพอากาศ" property="og:description"/>
+<meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด ข้อมูลย้อนหลัง การแจ้งเตือน และการคาดการณ์" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260915-user-directory-v2" rel="stylesheet"/>
+<link href="style.css?v=20260916-history-ui-v4" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -49,7 +49,7 @@
     },
     {
       "@type": "Thing",
-      "name": "วิเคราะห์แนวโน้มคุณภาพอากาศ"
+      "name": "การคาดการณ์คุณภาพอากาศระยะสั้น"
     }
   ],
   "publisher": {
@@ -156,8 +156,8 @@
     <div class="dashboard-nav-links" id="dashboardNavLinks">
       <button class="dashboard-nav-link active" type="button" data-dashboard-page="overview">ภาพรวม</button>
       <button class="dashboard-nav-link" type="button" data-dashboard-page="monitoring">จุดตรวจวัด</button>
-      <button class="dashboard-nav-link" type="button" data-dashboard-page="history">สถิติและกราฟ</button>
-      <button class="dashboard-nav-link" type="button" data-dashboard-page="analysis">วิเคราะห์และคาดการณ์</button>
+      <button class="dashboard-nav-link" type="button" data-dashboard-page="history">ข้อมูลย้อนหลัง</button>
+      <button class="dashboard-nav-link" type="button" data-dashboard-page="forecast">การคาดการณ์</button>
       <button class="dashboard-nav-link" type="button" data-dashboard-page="about">เกี่ยวกับโครงการ</button>
     </div>
     <div class="dashboard-system-pill" id="dashboardSystemPill" title="สถานะระบบโดยรวม">
@@ -503,7 +503,7 @@
             <b id="summary-pm1-avg">--</b>
             <span>ค่าเฉลี่ยปัจจุบัน</span>
           </div>
-          <p>ใช้ประกอบการดูแนวโน้มของฝุ่นขนาดเล็ก</p>
+          <p>ใช้ประกอบการดูค่าฝุ่นขนาดเล็กตามเวลา</p>
         </article>
         <article class="current-support-card current-support-card-simple metric-light">
           <div class="current-support-title">
@@ -526,9 +526,6 @@
       </div>
     </div>
   </section>
-  <!-- =========================================================
-       MAP — เพิ่มต่อจากข้อมูลจุดตรวจวัดเดิม (ไม่แทนที่)
-       ========================================================= -->
   <section class="monitoring-location-section glass card" id="monitoringLocationSection">
     <div class="monitoring-location-head">
       <div>
@@ -605,20 +602,27 @@
 <div class="dashboard-card-page-copy">
 <div class="overview-eyebrow">HISTORICAL DATA</div>
 <div class="section-title-with-help">
-<h1>📊 สถิติและกราฟ</h1>
-<button aria-expanded="false" aria-label="ดูคำอธิบายหน้าสถิติและกราฟ" class="help-button" data-help="historyPage" type="button">?</button>
+<h1>📊 ข้อมูลย้อนหลัง</h1>
+<button aria-expanded="false" aria-label="ดูคำอธิบายหน้าข้อมูลย้อนหลัง" class="help-button" data-help="historyPage" type="button">?</button>
 </div>
-<p>เลือกตัวแปร ช่วงเวลา ดูสถิติย้อนหลัง กราฟแนวโน้ม และส่งออกข้อมูลได้จากหน้านี้</p>
+<p>เลือกจุดตรวจวัด ข้อมูลที่ต้องการดู และช่วงเวลา เพื่อดูค่าที่บันทึกไว้ เปรียบเทียบต้นช่วงกับปลายช่วง และดาวน์โหลดข้อมูล</p>
 </div>
-<div class="history-toolbar">
-<select aria-label="เลือกจุดตรวจวัดสำหรับกราฟย้อนหลัง" class="history-metric-select" id="historyNode">
-<option selected="" value="compare">เปรียบเทียบ 3 จุด</option>
-<option value="average">ค่าเฉลี่ยพื้นที่</option>
-<option id="historyNodeOption1" value="Number 1">จุดตรวจวัด 1</option>
-<option id="historyNodeOption2" value="Number 2">จุดตรวจวัด 2</option>
-<option id="historyNodeOption3" value="Number 3">จุดตรวจวัด 3</option>
-</select>
-<select aria-label="เลือกตัวแปร" class="history-metric-select" id="metric"><option selected="" value="all">ALL</option>
+<div class="history-toolbar history-toolbar-v4">
+<div class="history-view-control">
+<div class="history-control-heading"><span>มุมมองข้อมูล</span><small>เลือกดูภาพรวม เปรียบเทียบ หรือดูรายจุด</small></div>
+<div class="node-view-switch" data-node-switch-group="history" role="group" aria-label="มุมมองข้อมูลย้อนหลัง">
+<button class="node-view-option is-active" type="button" data-history-node="compare" aria-pressed="true"><span class="node-view-icon">≋</span><span>เปรียบเทียบทุกจุด</span></button>
+<button class="node-view-option" type="button" data-history-node="average" aria-pressed="false"><span class="node-view-icon">◫</span><span>ภาพรวมพื้นที่</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 1" aria-pressed="false"><span class="node-view-dot node-view-dot-1"></span><span>จุด 1</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 2" aria-pressed="false"><span class="node-view-dot node-view-dot-2"></span><span>จุด 2</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 3" aria-pressed="false"><span class="node-view-dot node-view-dot-3"></span><span>จุด 3</span></button>
+</div>
+</div>
+<div class="history-filter-row-v4">
+<label class="history-control-field">
+<span class="history-control-label">ข้อมูลที่แสดง</span>
+<select aria-label="ข้อมูลที่แสดง" class="history-metric-select" id="metric">
+<option selected="" value="all">ทุกตัวแปร</option>
 <option value="pm25">PM2.5</option>
 <option value="pm1">PM1.0</option>
 <option value="pm10">PM10</option>
@@ -626,7 +630,10 @@
 <option value="humidity">ความชื้น</option>
 <option value="light">แสง</option>
 </select>
-<div class="relative" id="historyRangePicker">
+</label>
+<div class="history-control-field">
+<span class="history-control-label">ช่วงเวลาย้อนหลัง</span>
+<div class="relative history-range-picker-v4" id="historyRangePicker">
 <button aria-expanded="false" class="history-toolbar-button" id="historyRangeButton" type="button">
 <span class="history-control-icon">▣</span>
 <span id="historyRangeButtonLabel">
@@ -730,69 +737,98 @@
 </div>
 </div>
 </div>
+</div>
+<div class="history-control-field history-download-field">
+<span class="history-control-label">ดาวน์โหลด</span>
 <button class="history-toolbar-button history-export-button" id="exportButton" type="button">
 <span class="history-control-icon">⇩</span>
-<span>ส่งออก</span>
+<span>ดาวน์โหลดข้อมูล</span>
 </button>
 </div>
 </div>
-<div class="soft rounded-2xl p-4 mt-4">
-<div class="mb-5">
-<div class="text-sm font-bold">
-                📊 สรุปตัวแปรที่เลือก
-            </div>
-<div class="text-xs text-slate-500 mt-1">
-                กำลังดู:
-                <b class="text-cyan-300" id="selectedMetricLabel">ALL</b>
 </div>
 </div>
-<div class="grid grid-cols-5 gap-6">
-<div class="min-w-0">
-<span class="text-xs text-slate-400">
-                    ค่าเฉลี่ย
-                </span>
-<b class="block text-2xl mt-2" id="trendAvg">
-                    --
-                </b>
+<div class="soft rounded-2xl p-4 mt-4 history-summary-v4">
+<div class="history-summary-head-v4">
+<div>
+<div class="history-summary-title-v4">📊 สรุปข้อมูลในช่วงที่เลือก</div>
+<div class="history-summary-current-v4">มุมมองปัจจุบัน: <b id="selectedMetricLabel">ทุกตัวแปร • เปรียบเทียบทุกจุด</b></div>
 </div>
-<div class="min-w-0">
-<span class="text-xs text-slate-400">
-                    ค่าสูงสุด
-                </span>
-<b class="block text-2xl mt-2" id="trendMax">
-                    --
-                </b>
 </div>
-<div class="min-w-0">
-<span class="text-xs text-slate-400">
-                    ค่าต่ำสุด
-                </span>
-<b class="block text-2xl mt-2" id="trendMin">
-                    --
-                </b>
+<div class="history-stats-grid-v4" id="historyStatsGrid">
+<div class="history-stat-v4"><span>ค่าเฉลี่ย</span><b id="trendAvg">--</b></div>
+<div class="history-stat-v4"><span>ค่าสูงสุด</span><b id="trendMax">--</b></div>
+<div class="history-stat-v4"><span>ค่าต่ำสุด</span><b id="trendMin">--</b></div>
+<div class="history-stat-v4"><span>ค่าล่าสุดในช่วง</span><b id="trendLast">--</b></div>
 </div>
-<div class="min-w-0">
-<span class="text-xs text-slate-400">
-                    ค่าล่าสุด
-                </span>
-<b class="block text-2xl mt-2" id="trendLast">
-                    --
-                </b>
+<div class="period-compare-v4">
+<div class="period-compare-head-v4">
+<div>
+<b>ต้นช่วงเทียบกับปลายช่วง</b>
+<span>เปรียบเทียบค่าเฉลี่ยของข้อมูลช่วงต้นและช่วงท้าย เพื่อลดผลจากค่ารอบเดียว</span>
 </div>
-<div class="min-w-0">
-<span class="text-xs text-slate-400">
-                    แนวโน้ม
-                </span>
-<b class="block text-2xl mt-2" id="trend">
-                    รอข้อมูล
-                </b>
+</div>
+<div class="period-compare-content-v4" id="periodCompareContent" aria-live="polite">
+<div class="period-compare-empty-v4">รอข้อมูลในช่วงเวลาที่เลือก</div>
 </div>
 </div>
 </div>
-</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">📈 กราฟข้อมูลย้อนหลัง</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟกราฟข้อมูลย้อนหลัง" class="help-button" data-help="historyChart" type="button">?</button></div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
+</section><section class="dashboard-charts-zone mb-4"><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">📈 กราฟข้อมูลย้อนหลัง</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟข้อมูลย้อนหลัง" class="help-button" data-help="historyChart" type="button">?</button></div><div class="chart-open-hint">↗ แตะกราฟเพื่อดูรายละเอียด</div></div><div class="soft rounded-xl p-4 mt-4 bottom-chart-wrap">
 <div id="historyChartArea" class="chart-render-area"><canvas id="historyChart"></canvas></div>
 <div class="history-range-caption" id="historyRangeCaption" aria-live="polite"></div>
-</div></div><div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟคาดการณ์ 30 นาที" class="help-button" data-help="forecastChart" type="button">?</button></div></div><div class="forecast-display-panel forecast-display-panel-compact" id="forecastGuide">
+</div></div></section>
+</section>
+<section class="dashboard-page" id="page-forecast" data-dashboard-page-panel="forecast">
+  <section class="glass card p-5 mb-4 ai-intelligence-section forecast-page-section">
+    <div class="dashboard-card-page-copy dashboard-card-page-copy-forecast">
+      <div class="overview-eyebrow">SHORT-TERM FORECAST</div>
+      <div class="section-title-with-help">
+        <h1>การคาดการณ์</h1>
+        <button aria-expanded="false" aria-label="ดูคำอธิบายหน้าการคาดการณ์" class="help-button" data-help="forecastPage" type="button">?</button>
+      </div>
+      <p>แสดงค่าที่ระบบคาดว่าอาจเกิดขึ้นในอีก 30 นาทีจากข้อมูลล่าสุดและข้อมูลย้อนหลัง ค่าคาดการณ์เป็นค่าประมาณ ไม่ใช่ค่าที่ตรวจวัดได้จริงล่วงหน้า</p>
+    </div>
+    <div class="ai-intelligence-header ai-intelligence-header-compact">
+      <div class="ai-intelligence-statusline">คาดการณ์ระยะสั้น • 10 / 20 / 30 นาที</div>
+      <div class="ai-intelligence-badges"><span class="ai-forecast-status" id="aiForecastStatusBadge">คาดการณ์ • รอข้อมูล</span></div>
+    </div>
+    <div class="ai-intelligence-grid ai-intelligence-grid-forecast-only">
+      <div class="ai-intelligence-panel ai-forecast-panel">
+        <div class="ai-panel-head">
+          <div><div class="ai-panel-kicker">30-MINUTE FORECAST</div><div class="section-title-with-help"><h3>อีก 30 นาทีเป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายการคาดการณ์ 30 นาที" class="help-button" data-help="forecast30" type="button">?</button></div></div>
+          <button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ คาดการณ์ใหม่</button>
+        </div>
+        <div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
+        <div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
+      </div>
+    </div>
+    <div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังเตรียมข้อมูลสำหรับการคาดการณ์...</div>
+  </section>
+  <section class="dashboard-charts-zone forecast-page-chart-zone mb-4">
+    <div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟคาดการณ์ 30 นาที" class="help-button" data-help="forecastChart" type="button">?</button></div></div><div class="forecast-filter-panel-v4">
+<div class="forecast-filter-head-v4"><div><b>มุมมองกราฟ</b><span>เลือกจุดตรวจวัดและข้อมูลที่ต้องการดู</span></div><div class="chart-open-hint">↗ แตะกราฟเพื่อดูรายละเอียด</div></div>
+<div class="forecast-filter-grid-v4">
+<div class="node-view-switch node-view-switch-forecast" data-node-switch-group="forecast" role="group" aria-label="มุมมองกราฟคาดการณ์">
+<button class="node-view-option is-active" type="button" data-history-node="compare" aria-pressed="true"><span class="node-view-icon">≋</span><span>เปรียบเทียบทุกจุด</span></button>
+<button class="node-view-option" type="button" data-history-node="average" aria-pressed="false"><span class="node-view-icon">◫</span><span>ภาพรวมพื้นที่</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 1" aria-pressed="false"><span class="node-view-dot node-view-dot-1"></span><span>จุด 1</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 2" aria-pressed="false"><span class="node-view-dot node-view-dot-2"></span><span>จุด 2</span></button>
+<button class="node-view-option" type="button" data-history-node="Number 3" aria-pressed="false"><span class="node-view-dot node-view-dot-3"></span><span>จุด 3</span></button>
+</div>
+<label class="forecast-metric-field-v4"><span>ข้อมูลที่แสดง</span>
+<select aria-label="ข้อมูลที่แสดงในกราฟคาดการณ์" class="history-metric-select" id="forecastMetric">
+<option selected="" value="all">ทุกตัวแปร</option>
+<option value="pm25">PM2.5</option>
+<option value="pm1">PM1.0</option>
+<option value="pm10">PM10</option>
+<option value="temperature">อุณหภูมิ</option>
+<option value="humidity">ความชื้น</option>
+<option value="light">แสง</option>
+</select>
+</label>
+</div>
+</div>
+<div class="forecast-display-panel forecast-display-panel-compact" id="forecastGuide">
 <div class="forecast-display-controls">
 <div class="forecast-actual-legend">
 <span class="forecast-actual-line"></span>
@@ -815,7 +851,7 @@
                             แสดงการคาดการณ์
                         </div>
 </div>
-<button aria-checked="true" aria-pressed="true" class="forecast-switch is-on" id="forecastToggle" role="switch" title="กดเพื่อซ่อน Forecast" type="button">
+<button aria-checked="true" aria-pressed="true" class="forecast-switch is-on" id="forecastToggle" role="switch" title="กดเพื่อซ่อนค่าคาดการณ์" type="button">
 <span class="forecast-switch-track">
 <span class="forecast-switch-thumb"></span>
 </span>
@@ -825,36 +861,8 @@
 </button>
 </div>
 </div>
-</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมแนวโน้มล่วงหน้า</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลที่พร้อมใช้งานเพื่อแสดงแนวโน้ม</span></div></div></div></div></section>
-</section>
-<section class="dashboard-page" id="page-analysis" data-dashboard-page-panel="analysis">
-  <section class="glass card p-5 mb-4 ai-intelligence-section">
-<div class="dashboard-card-page-copy dashboard-card-page-copy-analysis">
-<div class="overview-eyebrow">ENVIRONMENTAL INTELLIGENCE</div>
-<div class="section-title-with-help">
-<h1>วิเคราะห์และคาดการณ์</h1>
-<button aria-expanded="false" aria-label="ดูคำอธิบายหน้าวิเคราะห์และคาดการณ์" class="help-button" data-help="analysisPage" type="button">?</button>
-</div>
-<p>สรุปสถานการณ์ปัจจุบันและแสดงค่าประมาณแนวโน้มในอีก 30 นาที เพื่อใช้ประกอบการติดตาม ไม่ใช่ค่าที่วัดได้จริงล่วงหน้า</p>
-</div>
-<div class="ai-intelligence-header ai-intelligence-header-compact">
-<div class="ai-intelligence-statusline">สรุปสถานการณ์ปัจจุบัน • แนวโน้ม • คาดการณ์ 30 นาที</div>
-<div class="ai-intelligence-badges"><span class="ai-status-badge is-loading" id="aiStatusBadge">LOADING</span><span class="ai-forecast-status" id="aiForecastStatusBadge">คาดการณ์ • รอข้อมูล</span></div>
-</div>
-<div class="ai-intelligence-grid">
-<div class="ai-intelligence-panel ai-situation-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">สถานการณ์ปัจจุบัน</div><div class="section-title-with-help"><h3>ตอนนี้เป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายสถานการณ์ปัจจุบัน" class="help-button" data-help="currentSituation" type="button">?</button></div></div><button class="ai-refresh-button" id="aiRefreshButton" title="วิเคราะห์ใหม่ทันที" type="button">↻ วิเคราะห์ใหม่</button></div>
-<div class="ai-details-panel" id="aiDetails"><div class="ai-loading-state"><span class="ai-loading-dot"></span>กำลังเชื่อมต่อ AI...</div></div>
-<div class="ai-analysis-footer"><span id="aiGeneratedAt">อัปเดต AI: --</span></div>
-</div>
-<div class="ai-intelligence-panel ai-forecast-panel">
-<div class="ai-panel-head"><div><div class="ai-panel-kicker">แนวโน้ม 30 นาที</div><div class="section-title-with-help"><h3>อีก 30 นาทีเป็นอย่างไร</h3><button aria-expanded="false" aria-label="ดูคำอธิบายแนวโน้ม 30 นาที" class="help-button" data-help="forecast30" type="button">?</button></div></div><button class="ai-forecast-refresh" id="aiForecastRefreshButton" type="button">↻ วิเคราะห์ใหม่</button></div>
-<div class="ai-forecast-details" id="aiForecastDetails">กำลังรอข้อมูลสำหรับการคาดการณ์...</div>
-<div class="ai-forecast-generated" id="aiForecastGeneratedAt">อัปเดตการคาดการณ์: --</div>
-</div>
-</div>
-<div class="soft rounded-xl p-4 mt-4 text-sm text-slate-300 ai-numeric-base" id="forecastMessage">กำลังเตรียมข้อมูลสำหรับการวิเคราะห์แนวโน้ม...</div>
-</section>
+</div><div id="forecastChartArea" class="chart-render-area mt-3"><div class="forecast-wait-state"><span class="forecast-wait-spinner" aria-hidden="true"></span><div><b>กำลังเตรียมการคาดการณ์</b><span>กรุณารอสักครู่ กำลังประมวลผลข้อมูลที่พร้อมใช้งานเพื่อแสดงผลคาดการณ์</span></div></div></div></div>
+  </section>
 </section>
 <section class="dashboard-page" id="page-about" data-dashboard-page-panel="about">
   <div class="dashboard-page-heading"><div class="overview-eyebrow">PROJECT INFORMATION</div><div class="section-title-with-help"><h1 id="publicAboutHeading">เกี่ยวกับโครงการ</h1><button aria-expanded="false" aria-label="ดูคำอธิบายหน้าเกี่ยวกับโครงการ" class="help-button" data-help="aboutPage" type="button">?</button></div><p class="public-about-intro hidden" id="publicAboutIntro"></p></div>
@@ -877,15 +885,15 @@
       <article class="about-reader-card">
         <div class="about-reader-icon">≋</div>
         <div>
-          <b>ใช้ “ค่าเฉลี่ยพื้นที่” เพื่อดูภาพรวม</b>
-          <p>ค่าเฉลี่ยพื้นที่ช่วยให้เห็นแนวโน้มโดยรวม แต่ไม่ควรใช้แทนค่าของแต่ละจุด เพราะบางตำแหน่งอาจสูงหรือต่ำกว่าค่าเฉลี่ยอย่างชัดเจน</p>
+          <b>ใช้ “ภาพรวมพื้นที่” เพื่อดูภาพรวม</b>
+          <p>ภาพรวมพื้นที่คำนวณจากค่าเฉลี่ยของจุดที่มีข้อมูลในช่วงนั้น และไม่ควรใช้แทนค่าของแต่ละจุด เพราะบางตำแหน่งอาจสูงหรือต่ำกว่าค่าเฉลี่ยอย่างชัดเจน</p>
         </div>
       </article>
       <article class="about-reader-card">
         <div class="about-reader-icon">📈</div>
         <div>
-          <b>กราฟย้อนหลังใช้ดูแนวโน้ม ไม่ใช่ดูเพียงจุดเดียว</b>
-          <p>เลือกช่วงเวลาที่เหมาะกับสิ่งที่ต้องการดู และพิจารณารูปแบบการเปลี่ยนแปลงต่อเนื่องร่วมกับค่าปัจจุบัน</p>
+          <b>กราฟย้อนหลังใช้ดูข้อมูลที่เกิดขึ้นตามเวลา</b>
+          <p>เลือกช่วงเวลาที่เหมาะกับสิ่งที่ต้องการดู แล้วอ่านค่าที่เกิดขึ้นตั้งแต่ต้นช่วงถึงปลายช่วงร่วมกับค่าปัจจุบัน</p>
         </div>
       </article>
       <article class="about-reader-card">
@@ -898,7 +906,7 @@
     </div>
     <div class="about-reading-tip">
       <div class="about-reading-tip-icon">💡</div>
-      <div><b>วิธีดูที่แนะนำ</b><span>เริ่มจากภาพรวม → ดูจุดที่ควรสนใจ → เปิดกราฟย้อนหลังของจุดนั้นเพื่อดูว่าค่าสูงเพียงชั่วคราวหรือมีแนวโน้มต่อเนื่อง</span></div>
+      <div><b>วิธีดูที่แนะนำ</b><span>เริ่มจากภาพรวม → ดูจุดที่ควรสนใจ → เปิดกราฟย้อนหลังของจุดนั้นเพื่อดูว่าค่าสูงเพียงชั่วคราวหรือสูงต่อเนื่อง</span></div>
     </div>
   </section>
   <section class="glass card about-character-guide-section" aria-labelledby="aboutCharacterGuideTitle">
@@ -1748,9 +1756,6 @@
     <button type="button" class="notification-detail-action" id="notificationDetailGo">ดูข้อมูลจุดตรวจวัด</button>
   </section>
 </div>
-<!-- =====================================================
-     REMOTE WI-FI MANAGEMENT V2 — SAVED NETWORKS
-     ===================================================== -->
 <div class="wifi-management-modal hidden" id="wifiManagementModal" aria-hidden="true">
   <div class="wifi-management-backdrop" data-wifi-management-close></div>
   <section class="wifi-management-shell" role="dialog" aria-modal="true" aria-labelledby="wifiManagementTitle">
@@ -2004,7 +2009,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260915-user-directory-v2"></script>
+<script defer src="app.js?v=20260916-history-ui-v4"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
