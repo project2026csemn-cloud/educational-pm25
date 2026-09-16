@@ -20,7 +20,7 @@
 <meta content="ติดตาม PM1.0, PM2.5, PM10 อุณหภูมิ ความชื้น แสง สถานะจุดตรวจวัด ข้อมูลย้อนหลัง การแจ้งเตือน และการคาดการณ์" property="og:description"/>
 <meta content="https://project2026csemn-cloud.github.io/educational-pm25/" property="og:url"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="style.css?v=20260916-history-ui-v4" rel="stylesheet"/>
+<link href="style.css?v=20260916-ux-v5" rel="stylesheet"/>
 <link href="img/icon.png" rel="icon" type="image/png" sizes="48x48"/>
 <link href="img/icon.png" rel="apple-touch-icon" sizes="180x180"/>
 <link href="img/icon.png" rel="shortcut icon" type="image/png"/>
@@ -609,7 +609,7 @@
 </div>
 <div class="history-toolbar history-toolbar-v4">
 <div class="history-view-control">
-<div class="history-control-heading"><span>มุมมองข้อมูล</span><small>เลือกดูภาพรวม เปรียบเทียบ หรือดูรายจุด</small></div>
+<div class="history-control-heading"><span>มุมมองข้อมูล</span><small>เลือก 1 มุมมอง กราฟจะเปลี่ยนตามที่เลือก</small></div>
 <div class="node-view-switch" data-node-switch-group="history" role="group" aria-label="มุมมองข้อมูลย้อนหลัง">
 <button class="node-view-option is-active" type="button" data-history-node="compare" aria-pressed="true"><span class="node-view-icon">≋</span><span>เปรียบเทียบทุกจุด</span></button>
 <button class="node-view-option" type="button" data-history-node="average" aria-pressed="false"><span class="node-view-icon">◫</span><span>ภาพรวมพื้นที่</span></button>
@@ -806,7 +806,7 @@
   </section>
   <section class="dashboard-charts-zone forecast-page-chart-zone mb-4">
     <div class="glass card p-5 dashboard-chart-card"><div class="chart-zone-heading chart-zone-heading-split"><div class="section-title-with-help chart-title-with-help"><div class="chart-zone-title">🔮 กราฟคาดการณ์ 30 นาที</div><button aria-expanded="false" aria-label="ดูคำอธิบายกราฟคาดการณ์ 30 นาที" class="help-button" data-help="forecastChart" type="button">?</button></div></div><div class="forecast-filter-panel-v4">
-<div class="forecast-filter-head-v4"><div><b>มุมมองกราฟ</b><span>เลือกจุดตรวจวัดและข้อมูลที่ต้องการดู</span></div><div class="chart-open-hint">↗ แตะกราฟเพื่อดูรายละเอียด</div></div>
+<div class="forecast-filter-head-v4"><div><b>เลือกจุดที่ต้องการดู</b><span>เลือก 1 มุมมอง แล้วเลือกตัวแปรสำหรับกราฟคาดการณ์</span></div><div class="chart-open-hint">↗ แตะกราฟเพื่อดูรายละเอียด</div></div>
 <div class="forecast-filter-grid-v4">
 <div class="node-view-switch node-view-switch-forecast" data-node-switch-group="forecast" role="group" aria-label="มุมมองกราฟคาดการณ์">
 <button class="node-view-option is-active" type="button" data-history-node="compare" aria-pressed="true"><span class="node-view-icon">≋</span><span>เปรียบเทียบทุกจุด</span></button>
@@ -817,8 +817,8 @@
 </div>
 <label class="forecast-metric-field-v4"><span>ข้อมูลที่แสดง</span>
 <select aria-label="ข้อมูลที่แสดงในกราฟคาดการณ์" class="history-metric-select" id="forecastMetric">
-<option selected="" value="all">ทุกตัวแปร</option>
-<option value="pm25">PM2.5</option>
+<option value="all">ทุกตัวแปร (หลายกราฟ)</option>
+<option selected="" value="pm25">PM2.5</option>
 <option value="pm1">PM1.0</option>
 <option value="pm10">PM10</option>
 <option value="temperature">อุณหภูมิ</option>
@@ -834,10 +834,10 @@
 <span class="forecast-actual-line"></span>
 <div>
 <div class="forecast-actual-label">
-                            ข้อมูลจริง
+                            ข้อมูลจริงย้อนหลัง
                         </div>
 <div class="forecast-actual-note">
-                            ค่าที่เกิดขึ้นแล้ว
+                            เส้นทึบ
                         </div>
 </div>
 </div>
@@ -845,10 +845,10 @@
 <div class="forecast-toggle-copy">
 <div class="forecast-toggle-name">
 <span class="forecast-dash-line"></span>
-                            คาดการณ์
+                            เส้นคาดการณ์
                         </div>
 <div class="forecast-toggle-status" id="forecastToggleLabel">
-                            แสดงการคาดการณ์
+                            แสดง +10 / +20 / +30 นาที
                         </div>
 </div>
 <button aria-checked="true" aria-pressed="true" class="forecast-switch is-on" id="forecastToggle" role="switch" title="กดเพื่อซ่อนค่าคาดการณ์" type="button">
@@ -2009,7 +2009,7 @@ window.addEventListener("load",()=>{
 });
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="app.js?v=20260916-history-ui-v4"></script>
+<script defer src="app.js?v=20260916-ux-v5"></script>
 </div>
 <div class="v18-info-modal" id="v18InfoModal" aria-hidden="true">
 <div class="v18-info-backdrop" data-v18-info-close></div>
