@@ -24039,3 +24039,79 @@ html body .site-header.is-authenticated #accountRoleBadge{
     font-size:16px!important;
   }
 }
+/* V8 UX: compact history controls, larger summaries, clearer forecast cards. */
+.historical-section .history-filter-row-v4{
+  display:flex!important;width:max-content!important;max-width:100%!important;
+  align-items:flex-end!important;justify-content:flex-start!important;gap:6px!important
+}
+.historical-section .history-filter-row-v4>.history-control-field:nth-child(1){width:180px!important;flex:0 0 180px!important}
+.historical-section .history-filter-row-v4>.history-control-field:nth-child(2){width:220px!important;flex:0 0 220px!important}
+.historical-section .history-filter-row-v4>.history-download-field{width:190px!important;flex:0 0 190px!important}
+.period-compare-content-v4,.period-compare-content-v4.is-multi{gap:11px!important}
+.period-compare-item-v4{min-height:126px!important;padding:17px 18px!important;border-radius:15px!important}
+.period-compare-content-v4.is-multi .period-compare-item-v4{gap:10px!important}
+.period-compare-metric-v4{font-size:15px!important}
+.period-compare-values-v4{gap:11px!important}
+.period-compare-values-v4 small{font-size:11px!important}
+.period-compare-values-v4 b{font-size:21px!important;line-height:1.15!important}
+.period-compare-values-v4 i{font-size:16px!important}
+.period-compare-values-v4 em{font-size:11px!important}
+.period-compare-result-v4{font-size:13px!important;gap:7px!important}
+.period-compare-result-v4>span{font-size:17px!important}
+.period-compare-result-v4 small{font-size:11px!important}
+.forecast-fixed-guide-v8{padding:9px 11px!important}
+.forecast-fixed-legend-v8{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.forecast-fixed-legend-v8>span{display:inline-flex;align-items:center;gap:8px;color:#a9b7c9;font-size:13px;font-weight:800}
+.forecast-fixed-legend-v8 i{flex:0 0 auto}
+.forecast-values-head-v8{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 13px}
+.forecast-values-head-v8>div{display:grid;gap:3px}
+.forecast-values-head-v8 small,.forecast-values-head-v8>span{color:#75879e;font-size:12px;line-height:1.45}
+.forecast-values-head-v8 b{color:#f1f5f9;font-size:17px}
+.forecast-horizon-grid-v8{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.forecast-horizon-card-v8{min-width:0;overflow:hidden;border:1px solid rgba(51,65,85,.7);border-radius:16px;background:linear-gradient(145deg,rgba(7,24,39,.78),rgba(5,17,31,.64))}
+.forecast-horizon-time-v8{padding:12px 14px;border-bottom:1px solid rgba(51,65,85,.62);color:#67e8f9;font-size:15px;font-weight:900}
+.forecast-horizon-values-v8{display:grid}
+.forecast-horizon-metric-v8{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-top:1px solid rgba(51,65,85,.38)}
+.forecast-horizon-metric-v8:first-child{border-top:0}
+.forecast-horizon-metric-v8 span{color:#9aacbf;font-size:12px;font-weight:800}
+.forecast-horizon-metric-v8 b{min-width:0;color:#edf7ff;font-size:15px;font-weight:900;text-align:right;overflow-wrap:anywhere}
+.forecast-horizon-metric-v8.is-primary{background:rgba(8,145,178,.07)}
+.forecast-horizon-metric-v8.is-primary span,.forecast-horizon-metric-v8.is-primary b{color:#bff7ff}
+.forecast-horizon-card-v8.is-single .forecast-horizon-metric-v8{min-height:92px;display:grid;place-items:center;text-align:center}
+.forecast-horizon-card-v8.is-single .forecast-horizon-metric-v8 b{font-size:25px;text-align:center}
+.ai-forecast-details{font-size:14px!important}
+.ai-forecast-generated{font-size:12px!important;margin-top:13px!important}
+@media (min-width:600px) and (max-width:899px){
+  .historical-section .history-filter-row-v4{display:grid!important;grid-template-columns:minmax(145px,.9fr) minmax(180px,1.15fr) minmax(160px,1fr)!important;width:100%!important;gap:6px!important}
+  .historical-section .history-filter-row-v4>*{width:100%!important;min-width:0!important;flex:none!important;grid-column:auto!important}
+  .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important}
+  .forecast-horizon-time-v8{font-size:14px!important;padding:10px!important}
+  .forecast-horizon-metric-v8{padding:9px 10px!important;display:grid!important;gap:3px!important}
+  .forecast-horizon-metric-v8 span{font-size:11px!important}
+  .forecast-horizon-metric-v8 b{font-size:13px!important;text-align:left!important}
+  .period-compare-item-v4{min-height:118px!important;padding:15px!important}
+}
+@media (max-width:599px){
+  .historical-section .history-filter-row-v4{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important;gap:7px!important}
+  .historical-section .history-filter-row-v4>*{width:100%!important;min-width:0!important;flex:none!important}
+  .historical-section .history-filter-row-v4>.history-download-field{grid-column:1/-1!important;width:100%!important}
+  .forecast-horizon-grid-v8{grid-template-columns:1fr!important;gap:9px!important}
+  .forecast-horizon-card-v8{border-radius:14px!important}
+  .forecast-horizon-time-v8{font-size:15px!important;padding:11px 12px!important}
+  .forecast-horizon-metric-v8{padding:10px 12px!important}
+  .forecast-horizon-metric-v8 span{font-size:12px!important}
+  .forecast-horizon-metric-v8 b{font-size:14px!important}
+  .forecast-values-head-v8{align-items:flex-start!important;display:grid!important;gap:5px!important}
+  .forecast-values-head-v8 b{font-size:16px!important}
+  .forecast-fixed-legend-v8{gap:10px!important}
+  .forecast-fixed-legend-v8>span{font-size:12px!important}
+  .period-compare-item-v4{min-height:116px!important;padding:15px!important}
+  .period-compare-metric-v4{font-size:14px!important}
+  .period-compare-values-v4 b{font-size:19px!important}
+}
+@media (max-width:420px){
+  .historical-section .history-filter-row-v4{grid-template-columns:1fr!important}
+  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
+  .period-compare-item-v4{min-height:0!important}
+  .forecast-horizon-metric-v8 b{font-size:13px!important}
+}
