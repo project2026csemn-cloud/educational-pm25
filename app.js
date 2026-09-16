@@ -3397,11 +3397,13 @@ const actualLabels=
 parseDate(a)-
 parseDate(b)
 );
+const forecastBase=parseDate(aiForecastPayload?.generated_at);
+const forecastLabels=forecastBase
+?[10,20,30].map(min=>new Date(forecastBase.getTime()+min*60000).toISOString())
+:["+10 นาที","+20 นาที","+30 นาที"];
 const labels=[
 ...actualLabels,
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
+...forecastLabels
 ];
 const actualDatasets=[];
 const forecastDatasets=[];
@@ -3683,11 +3685,13 @@ const actualLabels=
 rows.map(
 r=>r.timestamp
 );
+const forecastBase=parseDate(aiForecastPayload?.generated_at);
+const forecastLabels=forecastBase
+?[10,20,30].map(min=>new Date(forecastBase.getTime()+min*60000).toISOString())
+:["+10 นาที","+20 นาที","+30 นาที"];
 const labels=[
 ...actualLabels,
-"+10 นาที",
-"+20 นาที",
-"+30 นาที"
+...forecastLabels
 ];
 const create=
 (canvasId,fields,yTitle)=>{
@@ -4839,9 +4843,7 @@ ${compareNote}
 </div>
 <div class="forecast-horizon-grid-v8">${cards}</div>`;
 }
-async function loadAIForecast(
-force=false
-){
+async function loadAIForecast(){
 if(
 aiForecastLoading
 ){
@@ -4852,23 +4854,10 @@ true;
 renderAIForecast(
 aiForecastPayload
 );
-const button=
-$("aiForecastRefreshButton");
-if(button){
-button.disabled=
-true;
-}
 try{
-const url=
-API.forecast+
-(
-force
-?"?refresh=1"
-:""
-);
 aiForecastPayload=
 await fetchJson(
-url
+API.forecast
 );
 forecastLastLoadFailed=false;
 aiForecastLastLoadedAt=
@@ -4879,10 +4868,6 @@ forecastLastLoadFailed=true;
 }finally{
 aiForecastLoading=
 false;
-if(button){
-button.disabled=
-false;
-}
 renderAIForecast(
 aiForecastPayload
 );
@@ -5390,15 +5375,6 @@ e.target?.classList?.contains(
 ){
 closeHistoryRangePicker();
 }
-}
-);
-$("aiForecastRefreshButton")
-?.addEventListener(
-"click",
-()=>{
-loadAIForecast(
-true
-);
 }
 );
 $("exportButton")
@@ -6523,7 +6499,7 @@ async function activateForecastSection(){
 if(!chartInteractiveViewerReady)setupChartZoomViewer();
 if(!historyActivated&&!historyLoading)await activateHistorySection(false);
 forecastSectionActivated=true;
-if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast(false);
+if(!aiForecastPayload&&!aiForecastLoading)loadAIForecast();
 else if(typeof drawCharts==="function")drawCharts();
 }
 function setupDeferredSections(){
@@ -8445,7 +8421,7 @@ function updateAccountUI(){
     document.querySelector(".account-management-section")?.classList.add("hidden");
     aiForecastPayload=null;
     if(typeof renderAIForecast==="function")renderAIForecast(null);
-    if(typeof loadAIForecast==="function")loadAIForecast(false);
+    if(typeof loadAIForecast==="function")loadAIForecast();
   }
   if(forecastSectionActivated&&typeof activateForecastSection==="function")activateForecastSection();
 }
