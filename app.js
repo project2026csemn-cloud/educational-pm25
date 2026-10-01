@@ -8147,10 +8147,10 @@ let currentHelpEditorKey="";
 let adminUsersCache=[];
 let adminAddMode=false;
 function authRoleThai(role){
-  return role==="owner"?"แอดมิน":role==="admin"?"พนักงาน":"ผู้ใช้งาน";
+  return role==="owner"?"เจ้าของระบบ":role==="admin"?"ผู้ดูแลระบบ":"ผู้ใช้งาน";
 }
 function authRoleLabel(role){
-  return role==="owner"?"Admin":role==="admin"?"Staff":"USER";
+  return role==="owner"?"OWNER":role==="admin"?"ADMIN":"USER";
 }
 function authProviderLabel(user){
   if(user?.auth_provider==="google") return "Google";
@@ -8357,14 +8357,14 @@ const PERMISSION_DEFINITIONS=[
 ];
 const ROLE_PERMISSION_DEFAULTS={
   user:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,false])),
-  staff:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true])),
-  admin:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
+  admin:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true])),
+  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
 };
 function normalizedClientPermissions(user){
   if(!user)return {};
-  const role=["user","staff","admin"].includes(user.role)?user.role:"user";
+  const role=["user","admin","owner"].includes(user.role)?user.role:"user";
   const base={...ROLE_PERMISSION_DEFAULTS[role]};
-  if(role!=="staff")return base;
+  if(role!=="admin")return base;
   const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
   PERMISSION_DEFINITIONS.forEach(({key})=>{
     if(typeof incoming[key]==="boolean")base[key]=incoming[key];
@@ -8376,7 +8376,7 @@ function hasPermission(key,user=authUser){
   return Boolean(normalizedClientPermissions(user)[key]);
 }
 function canViewUserDirectory(user=authUser){
-  return Boolean(authToken&&user&&["staff","admin"].includes(user.role));
+  return Boolean(authToken&&user&&["admin","owner"].includes(user.role));
 }
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
@@ -8806,7 +8806,7 @@ async function saveAnnouncement(){
   const payload={enabled:$("announcementEnabled")?.checked?"1":"0",severity:$("announcementSeverity")?.value||"info",title:$("announcementTitle")?.value||"",message:$("announcementMessage")?.value||""};const b=$("saveAnnouncementButton");if(b)b.disabled=true;setAuthMessage("announcementSaveMessage","กำลังบันทึก...");
   try{await apiJson(API.manageAnnouncement,{method:"POST",body:JSON.stringify(payload)});await loadPublicDisplayConfig();loadAnnouncementEditor();setAuthMessage("announcementSaveMessage","บันทึกประกาศแล้ว","success");}catch(e){setAuthMessage("announcementSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
-let adminUsersMeta={total:0,users:0,staffs:0,admins:0,returned:0};
+let adminUsersMeta={total:0,users:0,admins:0,owners:0,returned:0};
 async function loadAdminUsers(){
   const root=$("adminUserList");
   if(!root)return;
@@ -8817,11 +8817,11 @@ async function loadAdminUsers(){
     adminUsersMeta={
       total:Number(j?.meta?.total??adminUsersCache.length),
       users:Number(j?.meta?.users||0),
-      staffs:Number(j?.meta?.staffs||0),
       admins:Number(j?.meta?.admins||0),
+      owners:Number(j?.meta?.owners||0),
       returned:Number(j?.meta?.returned??adminUsersCache.length)
     };
-    $("addAdminModeButton")?.classList.toggle("hidden",authUser?.role!=="admin");
+    $("addAdminModeButton")?.classList.toggle("hidden",authUser?.role!=="owner");
     renderAdminUsers();
   }catch(e){
     root.innerHTML=`<div class="admin-empty">${esc(e.message)}</div>`;
@@ -8865,12 +8865,12 @@ function permissionEditorHtml(user){
 }
 function updateAdminRoleEditor(card,role){
   if(!card)return;
-  const isStaff=role==="staff";
-  card.querySelector(".admin-permission-admin-only")?.classList.toggle("hidden",!isStaff);
+  const isAdmin=role==="admin";
+  card.querySelector(".admin-permission-admin-only")?.classList.toggle("hidden",!isAdmin);
   const summary=card.querySelector(".admin-user-role-summary");
-  if(summary)summary.innerHTML=isStaff
-    ?"<b>พนักงาน</b><span>บัญชีนี้สามารถได้รับสิทธิ์จัดการระบบ เลือกสิทธิ์ที่ต้องการด้านล่าง</span>"
-    :"<b>ผู้ใช้งาน</b><span>ใช้งาน Dashboard สาธารณะได้ทั้งหมด เมื่อล็อกอินจะสามารถรับและตั้งค่าการแจ้งเตือนส่วนตัวได้</span>";
+  if(summary)summary.innerHTML=isAdmin
+    ?"<b>Admin</b><span>บัญชีนี้สามารถได้รับสิทธิ์จัดการระบบ เลือกสิทธิ์ที่ต้องการด้านล่าง</span>"
+    :"<b>User</b><span>ใช้งาน Dashboard สาธารณะได้ทั้งหมด เมื่อล็อกอินจะสามารถรับและตั้งค่าการแจ้งเตือนส่วนตัวได้</span>";
 }
 function applyRoleDefaultsToEditor(card,role){
   if(!card)return;
@@ -8901,7 +8901,7 @@ function renderAdminUsers(){
   if(!root)return;
   const users=filteredAdminUsers();
   renderAdminUserSummary(users.length);
-  const isAdmin=authUser?.role==="admin";
+  const isOwner=authUser?.role==="owner";
   const ownId=Number(authUser?.id||0);
   root.innerHTML=users.map(u=>{
     const self=Number(u.id)===ownId;
@@ -8910,11 +8910,11 @@ function renderAdminUsers(){
     let action="";
     if(self){
       action=`<div class="admin-user-self-lock">บัญชีของคุณ</div>`;
-    }else if(isAdmin&&adminAddMode){
-      action=u.role==="staff"
-        ?`<div class="admin-user-done">เป็นพนักงานแล้ว</div>`
-        :`<button class="admin-promote-button" type="button" data-promote-staff="${u.id}">ตั้งเป็นพนักงาน</button>`;
-    }else if(isAdmin){
+    }else if(isOwner&&adminAddMode){
+      action=u.role==="admin"
+        ?`<div class="admin-user-done">เป็น Admin แล้ว</div>`
+        :`<button class="admin-promote-button" type="button" data-promote-admin="${u.id}">ตั้งเป็น Admin</button>`;
+    }else if(isOwner){
       action=`<button class="admin-user-manage-button" type="button">⚙ จัดการบัญชี</button>`;
     }else{
       action=`<div class="admin-user-readonly">ดูอย่างเดียว</div>`;
@@ -8936,19 +8936,19 @@ function renderAdminUsers(){
         <div class="admin-user-action">${action}</div>
       </div>
 
-      ${(!self&&isAdmin&&!adminAddMode&&u.role!=="admin")?`
+      ${(!self&&isOwner&&!adminAddMode&&u.role!=="owner")?`
       <div class="admin-user-editor admin-user-editor-v35 hidden">
         <div class="admin-user-editor-top">
           <label>ระดับบัญชี
             <select class="admin-user-role">
-              <option value="user" ${u.role==="user"?"selected":""}>ผู้ใช้งาน</option>
-              <option value="staff" ${u.role==="staff"?"selected":""}>พนักงาน</option>
+              <option value="user" ${u.role==="user"?"selected":""}>User</option>
+              <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
             </select>
           </label>
         </div>
         <div class="admin-user-role-summary"></div>
-        <div class="admin-permission-admin-only ${u.role==="staff"?"":"hidden"}">
-          <div class="admin-permission-admin-head"><div><b>สิทธิ์การจัดการของพนักงาน</b><span>เลือกเฉพาะส่วนที่บัญชีนี้ต้องดูแล</span></div><button class="admin-permission-reset" type="button">↺ ค่าเริ่มต้นพนักงาน</button></div>
+        <div class="admin-permission-admin-only ${u.role==="admin"?"":"hidden"}">
+          <div class="admin-permission-admin-head"><div><b>สิทธิ์การจัดการของ Admin</b><span>เลือกเฉพาะส่วนที่บัญชีนี้ต้องดูแล</span></div><button class="admin-permission-reset" type="button">↺ ค่าเริ่มต้น Admin</button></div>
           <div class="admin-permission-grid">${permissionEditorHtml(u)}</div>
         </div>
         <div class="admin-user-danger-zone">
@@ -8956,7 +8956,7 @@ function renderAdminUsers(){
           <button class="admin-user-delete" type="button">ลบบัญชี</button>
         </div>
         <div class="admin-user-editor-footer">
-          <span>การเปลี่ยนระดับบัญชีและสิทธิ์พนักงานมีผลหลังบันทึก</span>
+          <span>การเปลี่ยนระดับบัญชีและสิทธิ์ Admin มีผลหลังบันทึก</span>
           <button class="admin-user-save" type="button">บันทึก</button>
         </div>
       </div>`:""}
@@ -8986,8 +8986,8 @@ function renderAdminUsers(){
   root.querySelectorAll(".admin-user-delete").forEach(btn=>{
     btn.addEventListener("click",()=>deleteAdminUser(btn.closest(".admin-user-card")));
   });
-  root.querySelectorAll("[data-promote-staff]").forEach(btn=>{
-    btn.addEventListener("click",()=>promoteUserToStaff(Number(btn.dataset.promoteStaff)));
+  root.querySelectorAll("[data-promote-admin]").forEach(btn=>{
+    btn.addEventListener("click",()=>promoteUserToAdmin(Number(btn.dataset.promoteAdmin)));
   });
   root.querySelectorAll(".admin-user-card").forEach(card=>{
     const role=card.querySelector(".admin-user-role")?.value;
@@ -8995,7 +8995,7 @@ function renderAdminUsers(){
   });
 }
 async function saveAdminUserRow(row){
-  if(!row||authUser?.role!=="admin")return;
+  if(!row||authUser?.role!=="owner")return;
   const btn=row.querySelector(".admin-user-save");
   if(btn)btn.disabled=true;
   try{
@@ -9018,7 +9018,7 @@ async function saveAdminUserRow(row){
   }
 }
 async function deleteAdminUser(row){
-  if(!row||authUser?.role!=="admin")return;
+  if(!row||authUser?.role!=="owner")return;
   const userId=Number(row.dataset.userId||0);
   const user=adminUsersCache.find(x=>Number(x.id)===userId);
   if(!user)return;
@@ -9031,16 +9031,16 @@ async function deleteAdminUser(row){
     await loadAdminUsers();
   }catch(e){setAuthMessage("userSaveMessage",e.message,"error");if(btn)btn.disabled=false;}
 }
-async function promoteUserToStaff(userId){
-  if(authUser?.role!=="admin"||!userId)return;
+async function promoteUserToAdmin(userId){
+  if(authUser?.role!=="owner"||!userId)return;
   const user=adminUsersCache.find(x=>Number(x.id)===Number(userId));
   if(!user)return;
   try{
     await apiJson(API.manageUsersUpdate,{
       method:"POST",
-      body:JSON.stringify({user_id:userId,role:"staff"})
+      body:JSON.stringify({user_id:userId,role:"admin"})
     });
-    setAuthMessage("userSaveMessage",`ตั้ง ${user.display_name||user.email} เป็นพนักงานแล้ว`,"success");
+    setAuthMessage("userSaveMessage",`ตั้ง ${user.display_name||user.email} เป็น Admin แล้ว`,"success");
     adminAddMode=false;
     $("adminAddModeBanner")?.classList.add("hidden");
     await loadAdminUsers();
@@ -9049,7 +9049,7 @@ async function promoteUserToStaff(userId){
   }
 }
 function setAdminAddMode(enabled){
-  adminAddMode=Boolean(enabled)&&authUser?.role==="admin";
+  adminAddMode=Boolean(enabled)&&authUser?.role==="owner";
   $("adminAddModeBanner")?.classList.toggle("hidden",!adminAddMode);
   if(adminAddMode){
     if($("adminUserRoleFilter"))$("adminUserRoleFilter").value="all";
@@ -9083,7 +9083,7 @@ function openAdminCenter(targetTab=null){
   if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
   if($("adminCenterEyebrow"))$("adminCenterEyebrow").textContent=userMode?"USER MANAGEMENT":"CONTENT MANAGEMENT";
   if($("adminCenterTitle"))$("adminCenterTitle").textContent=userMode?"จัดการผู้ใช้งาน":"จัดการเนื้อหา";
-  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"แอดมินดูรายชื่อผู้ใช้งานได้ทุกบัญชี และเป็นผู้กำหนดระดับบัญชีกับสิทธิ์การจัดการ":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
+  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"Admin ดูรายชื่อผู้ใช้งานได้ทุกบัญชี และ Owner เป็นผู้กำหนดระดับบัญชีกับสิทธิ์การจัดการ":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
   document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
   document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!canManageAnyDevice());
   document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
@@ -9728,9 +9728,9 @@ function setupRemoteWiFiManagement(){
     });
     $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
     $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
-    $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้างแอดมินคนแรก";});
+    $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง Owner คนแรก";});
     $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
-    $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้างแอดมิน...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้างแอดมินแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
+    $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง Owner...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง Owner แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
     $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
     $("notificationInboxSettings")?.addEventListener("click",()=>{closeNotificationInbox();openNotificationSettings();});
     $("notificationInboxClose")?.addEventListener("click",closeNotificationInbox);
