@@ -8146,11 +8146,11 @@ let managedHelpCache={};
 let currentHelpEditorKey="";
 let adminUsersCache=[];
 let adminAddMode=false;
-function authRoleThai(role){
-  return role==="admin"?"แอดมิน":role==="staff"?"พนักงาน":"ผู้ใช้งาน";
-}
-function authRoleLabel(role){
-  return role==="admin"?"แอดมิน":role==="staff"?"พนักงาน":"ผู้ใช้งาน";
+function authRoleThai(role) { 
+  return role === 'owner' ? 'แอดมิน' : role === 'admin' ? 'พนักงาน' : 'ผู้ใช้งาน'; 
+} 
+function authRoleLabel(role) { 
+  return role === 'owner' ? 'ADMIN' : role === 'admin' ? 'STAFF' : 'USER'; 
 }
 function authProviderLabel(user){
   if(user?.auth_provider==="google") return "Google";
