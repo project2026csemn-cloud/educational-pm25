@@ -15,7 +15,7 @@ authLogin:`${BASE}/api/auth/login`,
 authRegister:`${BASE}/api/auth/register`,
 authMe:`${BASE}/api/auth/me`,
 authLogout:`${BASE}/api/auth/logout`,
-authBootstrapแอดมิน:`${BASE}/api/auth/bootstrap_owner`,
+authBootstrapOwner:`${BASE}/api/auth/bootstrap_owner`,
 authChangePassword:`${BASE}/api/auth/change_password`,
 authForgotPassword:`${BASE}/api/auth/forgot_password`,
 authResetPassword:`${BASE}/api/auth/reset_password`,
@@ -23,8 +23,8 @@ authProfileImage:`${BASE}/api/auth/profile_image`,
 manageHelp:`${BASE}/api/manage/help`,
 manageDevices:`${BASE}/api/manage/devices`,
 manageAnnouncement:`${BASE}/api/manage/announcement`,
-manageผู้ใช้งานs:`${BASE}/api/manage/users`,
-manageผู้ใช้งานsUpdate:`${BASE}/api/manage/users/update`,
+manageUsers:`${BASE}/api/manage/users`,
+manageUsersUpdate:`${BASE}/api/manage/users/update`,
 notificationPreferences:`${BASE}/api/auth/notification_preferences`,
 notifications:`${BASE}/api/auth/notifications`,
 notificationRead:`${BASE}/api/auth/notifications/read`,
@@ -824,7 +824,7 @@ if(authToken){
   localStorage.setItem(AUTH_TOKEN_KEY,authToken);
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
-let authผู้ใช้งาน=null;
+let authUser=null;
 let authGoogleClientId="";
 let googleIdentityReady=false;
 async function fetchJson(url,timeoutMs=15000){
@@ -6551,7 +6551,7 @@ let adminDeviceMap=null;
 let adminDeviceMarker=null;
 let adminBaseLayers={street:null,satellite:null};
 let adminBasemapMode=localStorage.getItem("admin-basemap-mode")==="satellite"?"satellite":"street";
-let activeพนักงานDeviceId="Number 1";
+let activeAdminDeviceId="Number 1";
 let adminMediaDragIndex=null;
 let notificationCheckBusy=false;
 async function loadInitial(){
@@ -7508,8 +7508,8 @@ function deviceDisplayName(deviceId){
 }
 const MONITORING_MAP_FALLBACK_CENTER=[13.7563,100.5018];
 const MONITORING_WORLD_BOUNDS=[[-85.05112878,-180],[85.05112878,180]];
-const พนักงาน_DEVICE_MAX_IMAGES=5;
-const พนักงาน_DEVICE_IMAGE_DATA_MAX=100000;
+const ADMIN_DEVICE_MAX_IMAGES=5;
+const ADMIN_DEVICE_IMAGE_DATA_MAX=100000;
 function finiteCoordinate(value,min,max){
   if(value===null||value===undefined||value==="")return null;
   const n=Number(value);
@@ -7888,13 +7888,13 @@ function setupMonitoringMapUi(){
   if(currentDashboardPage==="monitoring")scheduleMonitoringMapRefresh({fit:true});
 }
 function adminMapSelectedDeviceId(){
-  return activeพนักงานDeviceId||"Number 1";
+  return activeAdminDeviceId||"Number 1";
 }
 function adminMapSelectedCard(){
   const id=adminMapSelectedDeviceId();
   return [...document.querySelectorAll(".admin-device-card")].find(x=>x.dataset.deviceId===id)||null;
 }
-function setพนักงานBasemap(mode){
+function setAdminBasemap(mode){
   if(!adminDeviceMap)return;
   adminBasemapMode=mode==="satellite"?"satellite":"street";
   Object.values(adminBaseLayers).forEach(layer=>{if(layer&&adminDeviceMap.hasLayer(layer))adminDeviceMap.removeLayer(layer);});
@@ -7902,34 +7902,34 @@ function setพนักงานBasemap(mode){
   localStorage.setItem("admin-basemap-mode",adminBasemapMode);
   document.querySelectorAll("[data-admin-basemap]").forEach(btn=>btn.classList.toggle("active",btn.dataset.adminBasemap===adminBasemapMode));
 }
-function ensureพนักงานDeviceMap(){
+function ensureAdminDeviceMap(){
   const root=$("adminDeviceMap");
   if(!root||typeof L==="undefined")return null;
   if(adminDeviceMap){setTimeout(()=>adminDeviceMap.invalidateSize(),0);return adminDeviceMap;}
   adminDeviceMap=L.map(root,{zoomControl:true,minZoom:1,maxZoom:22,worldCopyJump:false,maxBounds:MONITORING_WORLD_BOUNDS,maxBoundsViscosity:1}).setView(MONITORING_MAP_FALLBACK_CENTER,15);
   adminBaseLayers={street:createMonitoringStreetLayer(),satellite:createMonitoringSatelliteLayer()};
-  setพนักงานBasemap(adminBasemapMode);
-  adminDeviceMap.on("click",e=>{if(hasPermission("manage_device_location"))setพนักงานMapCoordinates(e.latlng.lat,e.latlng.lng);});
-  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{btn.onclick=()=>setพนักงานBasemap(btn.dataset.adminBasemap);});
+  setAdminBasemap(adminBasemapMode);
+  adminDeviceMap.on("click",e=>{if(hasPermission("manage_device_location"))setAdminMapCoordinates(e.latlng.lat,e.latlng.lng);});
+  document.querySelectorAll("[data-admin-basemap]").forEach(btn=>{btn.onclick=()=>setAdminBasemap(btn.dataset.adminBasemap);});
   return adminDeviceMap;
 }
-function setพนักงานMapCoordinates(lat,lng){
+function setAdminMapCoordinates(lat,lng){
   if(!hasPermission("manage_device_location"))return;
   const card=adminMapSelectedCard();if(!card)return;
   const latInput=card.querySelector(".admin-device-latitude"),lngInput=card.querySelector(".admin-device-longitude");
   if(latInput)latInput.value=Number(lat).toFixed(7);
   if(lngInput)lngInput.value=Number(lng).toFixed(7);
-  refreshพนักงานMapEditor({keepZoom:true});
+  refreshAdminMapEditor({keepZoom:true});
 }
-function refreshพนักงานMapEditor({keepZoom=false}={}){
-  const map=ensureพนักงานDeviceMap(),card=adminMapSelectedCard();if(!map||!card)return;
+function refreshAdminMapEditor({keepZoom=false}={}){
+  const map=ensureAdminDeviceMap(),card=adminMapSelectedCard();if(!map||!card)return;
   const lat=finiteCoordinate(card.querySelector(".admin-device-latitude")?.value,-90,90);
   const lng=finiteCoordinate(card.querySelector(".admin-device-longitude")?.value,-180,180);
   const valid=lat!==null&&lng!==null,canPin=hasPermission("manage_device_location");
   if(adminDeviceMarker){adminDeviceMarker.remove();adminDeviceMarker=null;}
   if(valid){
     adminDeviceMarker=L.marker([lat,lng],{draggable:canPin,icon:monitoringMarkerIcon(mapDeviceNumber(card.dataset.deviceId),true)}).addTo(map);
-    if(canPin)adminDeviceMarker.on("dragend",()=>{const p=adminDeviceMarker.getLatLng();setพนักงานMapCoordinates(p.lat,p.lng);});
+    if(canPin)adminDeviceMarker.on("dragend",()=>{const p=adminDeviceMarker.getLatLng();setAdminMapCoordinates(p.lat,p.lng);});
     if(!keepZoom)map.setView([lat,lng],19);else map.panTo([lat,lng],{animate:true});
   }else if(!keepZoom){map.setView(MONITORING_MAP_FALLBACK_CENTER,15);}
   if($("adminDeviceLatPreview"))$("adminDeviceLatPreview").textContent=valid?lat.toFixed(7):"ยังไม่ปักหมุด";
@@ -7938,7 +7938,7 @@ function refreshพนักงานMapEditor({keepZoom=false}={}){
   if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=(card.querySelector(".admin-device-display")?.value||card.dataset.deviceId).trim();
   setTimeout(()=>map.invalidateSize(),60);
 }
-function syncพนักงานMapSelectOptions(){}
+function syncAdminMapSelectOptions(){}
 function applyPublicDisplayConfig(){
 for(let i=1;i<=3;i++){
 const d=configDevice(`Number ${i}`)||{};
@@ -8144,13 +8144,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-v18-help]"
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("v18InfoModal")?.classList.contains("active"))v18CloseInfo();});
 let managedHelpCache={};
 let currentHelpEditorKey="";
-let adminผู้ใช้งานsCache=[];
+let adminUsersCache=[];
 let adminAddMode=false;
 function authRoleThai(role){
-  return role==="owner"?"แอดมิน":role==="admin"?"พนักงาน":"ผู้ใช้งาน";
+  return role==="admin"?"แอดมิน":role==="staff"?"พนักงาน":"ผู้ใช้งาน";
 }
 function authRoleLabel(role){
-  return role==="owner"?"แอดมิน":role==="admin"?"พนักงาน":"USER";
+  return role==="admin"?"แอดมิน":role==="staff"?"พนักงาน":"ผู้ใช้งาน";
 }
 function authProviderLabel(user){
   if(user?.auth_provider==="google") return "Google";
@@ -8304,7 +8304,7 @@ async function saveProfileEditor(){
     if(message)message.textContent="";
     const image=buildCroppedProfileImage();
     const j=await apiJson(API.authProfileImage,{method:"POST",body:JSON.stringify({profile_image:image})});
-    authผู้ใช้งาน=j.user||authผู้ใช้งาน;
+    authUser=j.user||authUser;
     updateAccountUI();
     $("accountDropdown")?.classList.add("hidden");
     closeProfileEditor();
@@ -8357,58 +8357,58 @@ const PERMISSION_DEFINITIONS=[
 ];
 const ROLE_PERMISSION_DEFAULTS={
   user:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,false])),
-  admin:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true])),
-  owner:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
+  staff:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true])),
+  admin:Object.fromEntries(PERMISSION_DEFINITIONS.map(x=>[x.key,true]))
 };
 function normalizedClientPermissions(user){
   if(!user)return {};
-  const role=["user","admin","owner"].includes(user.role)?user.role:"user";
+  const role=["user","staff","admin"].includes(user.role)?user.role:"user";
   const base={...ROLE_PERMISSION_DEFAULTS[role]};
-  if(role!=="admin")return base;
+  if(role!=="staff")return base;
   const incoming=user.permissions&&typeof user.permissions==="object"?user.permissions:{};
   PERMISSION_DEFINITIONS.forEach(({key})=>{
     if(typeof incoming[key]==="boolean")base[key]=incoming[key];
   });
   return base;
 }
-function hasPermission(key,user=authผู้ใช้งาน){
+function hasPermission(key,user=authUser){
   if(!user||!authToken)return false;
   return Boolean(normalizedClientPermissions(user)[key]);
 }
-function canViewผู้ใช้งานDirectory(user=authผู้ใช้งาน){
-  return Boolean(authToken&&user&&["admin","owner"].includes(user.role));
+function canViewUserDirectory(user=authUser){
+  return Boolean(authToken&&user&&["staff","admin"].includes(user.role));
 }
 function updateAccountUI(){
   const button=$("accountButton"),text=$("accountButtonText"),chev=$("accountChevron"),badge=$("accountRoleBadge");
   const menu=$("accountDropdown");
-  const contentBtn=$("openContentManagementButton"),usersBtn=$("openผู้ใช้งานManagementButton"),wifiBtn=$("openWiFiManagementButton");
+  const contentBtn=$("openContentManagementButton"),usersBtn=$("openUserManagementButton"),wifiBtn=$("openWiFiManagementButton");
   const header=document.querySelector(".site-header");
   if(!button||!text)return;
-  header?.classList.toggle("is-authenticated",Boolean(authผู้ใช้งาน));
-  header?.classList.toggle("is-guest",!authผู้ใช้งาน);
-  if(authผู้ใช้งาน){
-    text.textContent=authผู้ใช้งาน.display_name||authผู้ใช้งาน.email||"บัญชีของฉัน";
-    setAvatar("accountAvatarImage","accountAvatarFallback",authผู้ใช้งาน);
-    setAvatar("accountMenuAvatarImage","accountMenuAvatarFallback",authผู้ใช้งาน);
+  header?.classList.toggle("is-authenticated",Boolean(authUser));
+  header?.classList.toggle("is-guest",!authUser);
+  if(authUser){
+    text.textContent=authUser.display_name||authUser.email||"บัญชีของฉัน";
+    setAvatar("accountAvatarImage","accountAvatarFallback",authUser);
+    setAvatar("accountMenuAvatarImage","accountMenuAvatarFallback",authUser);
     chev?.classList.remove("hidden");
     if(badge){
-      badge.textContent=authRoleLabel(authผู้ใช้งาน.role);
+      badge.textContent=authRoleLabel(authUser.role);
       badge.classList.remove("hidden");
     }
     $("headerNotificationButton")?.classList.remove("hidden");
     const mn=$("accountMenuName"),mr=$("accountMenuRole"),mp=$("accountMenuProvider");
-    if(mn)mn.textContent=authผู้ใช้งาน.display_name||authผู้ใช้งาน.email;
-    if($("accountMenuEmail"))$("accountMenuEmail").textContent=authผู้ใช้งาน.email||"";
-    if(mr)mr.textContent=authRoleLabel(authผู้ใช้งาน.role);
-    if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authผู้ใช้งาน)}`;
+    if(mn)mn.textContent=authUser.display_name||authUser.email;
+    if($("accountMenuEmail"))$("accountMenuEmail").textContent=authUser.email||"";
+    if(mr)mr.textContent=authRoleLabel(authUser.role);
+    if(mp)mp.textContent=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
     const canManageContent=["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement"].some(key=>hasPermission(key));
-    const canManageผู้ใช้งานs=canViewผู้ใช้งานDirectory();
+    const canManageUsers=canViewUserDirectory();
     const canManageWiFi=hasPermission("manage_mother_wifi");
     contentBtn?.classList.toggle("hidden",!canManageContent);
-    usersBtn?.classList.toggle("hidden",!canManageผู้ใช้งานs);
+    usersBtn?.classList.toggle("hidden",!canManageUsers);
     wifiBtn?.classList.toggle("hidden",!canManageWiFi);
     const managementSection=document.querySelector(".account-management-section");
-    managementSection?.classList.toggle("hidden",!(canManageContent||canManageผู้ใช้งานs||canManageWiFi));
+    managementSection?.classList.toggle("hidden",!(canManageContent||canManageUsers||canManageWiFi));
     syncMyAccountUI();
   }else{
     text.textContent="เข้าสู่ระบบ";
@@ -8478,15 +8478,15 @@ function clearResetTokenFromUrl(){const u=new URL(location.href);u.searchParams.
 async function loadAuthStatus(){
   try{const j=await apiJson(API.authStatus);$("ownerBootstrapBox")?.classList.toggle("hidden",!!j.owner_exists);}catch(_){$("ownerBootstrapBox")?.classList.add("hidden");}
 }
-async function refreshAuthผู้ใช้งานAfterLogin(){
+async function refreshAuthUserAfterLogin(){
   if(!authToken)return null;
   try{
     const j=await apiJson(API.authMe);
-    if(j?.user)authผู้ใช้งาน=j.user;
+    if(j?.user)authUser=j.user;
   }catch(_){
   }
   updateAccountUI();
-  return authผู้ใช้งาน;
+  return authUser;
 }
 async function loadAuthConfig(){
   try{
@@ -8584,9 +8584,9 @@ async function handleGoogleCredential(response){
   try{
     const j=await apiJson(API.authGoogle,{method:"POST",body:JSON.stringify({credential})});
     authToken=String(j.token||"");
-    authผู้ใช้งาน=j.user||null;
+    authUser=j.user||null;
     localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-    await refreshAuthผู้ใช้งานAfterLogin();
+    await refreshAuthUserAfterLogin();
     setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");
     setTimeout(closeAuthModal,250);
   }catch(e){
@@ -8595,19 +8595,19 @@ async function handleGoogleCredential(response){
 }
 async function restoreAuthSession(){
   if(!authToken){
-    authผู้ใช้งาน=null;
+    authUser=null;
     updateAccountUI();
     return;
   }
   try{
     const j=await apiJson(API.authMe);
-    authผู้ใช้งาน=j.user||authผู้ใช้งาน||null;
+    authUser=j.user||authUser||null;
     updateAccountUI();
   }catch(err){
     // ล้าง session เฉพาะเมื่อ server ยืนยันว่า token ใช้ไม่ได้จริง
     if(err?.status===401||err?.status===403){
       authToken="";
-      authผู้ใช้งาน=null;
+      authUser=null;
       localStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       updateAccountUI();
@@ -8619,9 +8619,9 @@ async function restoreAuthSession(){
 async function doLogin(email,password){
   const j=await apiJson(API.authLogin,{method:"POST",body:JSON.stringify({email,password})});
   authToken=String(j.token||"");
-  authผู้ใช้งาน=j.user||null;
+  authUser=j.user||null;
   localStorage.setItem(AUTH_TOKEN_KEY,authToken);
-  await refreshAuthผู้ใช้งานAfterLogin();
+  await refreshAuthUserAfterLogin();
   return j;
 }
 function applyManagedHelpOverrides(help){
@@ -8714,28 +8714,28 @@ async function saveHelpEditor(){
   catch(e){setAuthMessage("helpSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
 function adminDeviceImagesFromCard(card){
-  return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,พนักงาน_DEVICE_MAX_IMAGES);
+  return (card?.querySelector(".admin-device-images")?.value||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES);
 }
-function setพนักงานDeviceImagesToCard(card,images){const f=card?.querySelector(".admin-device-images");if(f)f.value=(images||[]).filter(Boolean).slice(0,พนักงาน_DEVICE_MAX_IMAGES).join("\n");}
-function switchพนักงานDevice(id){
-  activeพนักงานDeviceId=id;
+function setAdminDeviceImagesToCard(card,images){const f=card?.querySelector(".admin-device-images");if(f)f.value=(images||[]).filter(Boolean).slice(0,ADMIN_DEVICE_MAX_IMAGES).join("\n");}
+function switchAdminDevice(id){
+  activeAdminDeviceId=id;
   document.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.classList.toggle("active",b.dataset.adminDeviceTab===id));
   document.querySelectorAll(".admin-device-card").forEach(c=>c.classList.toggle("active",c.dataset.deviceId===id));
-  syncพนักงานActiveMediaFields();renderพนักงานMediaManager();refreshพนักงานMapEditor();
+  syncAdminActiveMediaFields();renderAdminMediaManager();refreshAdminMapEditor();
 }
-function syncพนักงานActiveMediaFields(){
+function syncAdminActiveMediaFields(){
   const c=adminMapSelectedCard();if(!c)return;
   const title=(c.querySelector(".admin-device-display")?.value||c.dataset.deviceId).trim();
   if($("adminMediaActiveTitle"))$("adminMediaActiveTitle").textContent=`รูปของ ${title}`;
   if($("adminMapActiveTitle"))$("adminMapActiveTitle").textContent=title;
 }
-function renderพนักงานDevices(){
+function renderAdminDevices(){
   const root=$("adminDeviceList"),tabs=$("adminDeviceTabs");if(!root||!tabs)return;
   const devices=Array.isArray(publicDisplayConfig?.devices)?publicDisplayConfig.devices:[];
-  if(!devices.some(d=>d.device_id===activeพนักงานDeviceId))activeพนักงานDeviceId=devices[0]?.device_id||"Number 1";
+  if(!devices.some(d=>d.device_id===activeAdminDeviceId))activeAdminDeviceId=devices[0]?.device_id||"Number 1";
   const canText=hasPermission("manage_devices"),canPin=hasPermission("manage_device_location"),canMedia=hasPermission("manage_device_media");
-  tabs.innerHTML=devices.map((d,i)=>`<button type="button" class="admin-device-tab${d.device_id===activeพนักงานDeviceId?" active":""}" data-admin-device-tab="${esc(d.device_id)}"><span>${i+1}</span><b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b></button>`).join("");
-  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card${d.device_id===activeพนักงานDeviceId?" active":""}" data-device-id="${esc(d.device_id)}">
+  tabs.innerHTML=devices.map((d,i)=>`<button type="button" class="admin-device-tab${d.device_id===activeAdminDeviceId?" active":""}" data-admin-device-tab="${esc(d.device_id)}"><span>${i+1}</span><b>${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</b></button>`).join("");
+  root.innerHTML=devices.map((d,i)=>`<div class="admin-device-card${d.device_id===activeAdminDeviceId?" active":""}" data-device-id="${esc(d.device_id)}">
     <div class="admin-device-card-head"><h4>📍 ${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}</h4><div class="admin-device-id">รหัสข้อมูล: ${esc(d.device_id)} • เปลี่ยนไม่ได้</div></div>
     <label class="admin-field">ชื่อที่แสดง<input class="admin-device-display" maxlength="60" value="${esc(d.display_name||`จุดตรวจวัด ${i+1}`)}" ${canText?"":"disabled"}></label>
     <label class="admin-field">ชื่อตำแหน่ง<input class="admin-device-location" maxlength="100" value="${esc(d.location_name||"")}" ${canText?"":"disabled"}></label>
@@ -8744,45 +8744,45 @@ function renderพนักงานDevices(){
     <div class="admin-device-map-fields"><label class="admin-field">Latitude<input class="admin-device-latitude" inputmode="decimal" value="${esc(d.latitude??"")}" ${canPin?"":"disabled"}></label><label class="admin-field">Longitude<input class="admin-device-longitude" inputmode="decimal" value="${esc(d.longitude??"")}" ${canPin?"":"disabled"}></label></div>
     <textarea class="admin-device-images hidden">${esc(deviceImageList(d).slice(0,5).join("\n"))}</textarea>
   </div>`).join("");
-  tabs.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.onclick=()=>switchพนักงานDevice(b.dataset.adminDeviceTab));
-  root.querySelectorAll(".admin-device-display").forEach(el=>el.oninput=()=>{syncพนักงานActiveMediaFields();refreshพนักงานMapEditor({keepZoom:true});});
-  root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>el.onchange=()=>refreshพนักงานMapEditor());
-  setupพนักงานMediaManager();
+  tabs.querySelectorAll("[data-admin-device-tab]").forEach(b=>b.onclick=()=>switchAdminDevice(b.dataset.adminDeviceTab));
+  root.querySelectorAll(".admin-device-display").forEach(el=>el.oninput=()=>{syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});});
+  root.querySelectorAll(".admin-device-latitude,.admin-device-longitude").forEach(el=>el.onchange=()=>refreshAdminMapEditor());
+  setupAdminMediaManager();
   $("adminChooseImagesButton")?.toggleAttribute("disabled",!canMedia);$("adminImageUrlInput")?.toggleAttribute("disabled",!canMedia);$("adminAddImageUrlButton")?.toggleAttribute("disabled",!canMedia);$("adminMediaDropzone")?.classList.toggle("is-disabled",!canMedia);
-  switchพนักงานDevice(activeพนักงานDeviceId);
+  switchAdminDevice(activeAdminDeviceId);
 }
-function renderพนักงานDevicePreview(){syncพนักงานActiveMediaFields();refreshพนักงานMapEditor({keepZoom:true});}
+function renderAdminDevicePreview(){syncAdminActiveMediaFields();refreshAdminMapEditor({keepZoom:true});}
 function adminMediaSetMessage(t,type=""){const e=$("adminMediaMessage");if(!e)return;e.textContent=t||"";e.classList.toggle("is-error",type==="error");e.classList.toggle("is-success",type==="success");}
-function renderพนักงานMediaManager(){
+function renderAdminMediaManager(){
   const g=$("adminMediaGallery"),c=adminMapSelectedCard();if(!g||!c)return;const a=adminDeviceImagesFromCard(c),can=hasPermission("manage_device_media");
   if($("adminMediaCount"))$("adminMediaCount").textContent=`${a.length} / 5 ภาพ`;
   if(!a.length){g.innerHTML=`<div class="admin-media-empty"><b>ยังไม่มีรูปของจุดนี้</b><span>${can?"เพิ่มรูปจากเครื่อง ลากวาง หรือ Ctrl+V ได้":"บัญชีนี้ไม่มีสิทธิ์จัดการรูปภาพ"}</span></div>`;return;}
   g.innerHTML=a.map((src,i)=>`<article class="admin-media-item${i===0?" is-cover":""}" data-media-index="${i}"><div class="admin-media-thumb"><img src="${esc(src)}" alt="รูปที่ ${i+1}" loading="lazy">${i===0?'<span class="admin-media-cover-badge">★ ภาพหลัก</span>':""}</div><div class="admin-media-item-actions"><button data-cover="${i}" ${!can||i===0?"disabled":""}>★ หลัก</button><button data-left="${i}" ${!can||i===0?"disabled":""}>←</button><button data-right="${i}" ${!can||i===a.length-1?"disabled":""}>→</button><button class="danger" data-del="${i}" ${can?"":"disabled"}>ลบ</button></div></article>`).join("");
   if(!can)return;
-  const move=(f,t)=>{const n=adminDeviceImagesFromCard(c);if(f<0||t<0||f>=n.length||t>=n.length||f===t)return;const [x]=n.splice(f,1);n.splice(t,0,x);setพนักงานDeviceImagesToCard(c,n);renderพนักงานMediaManager();};
-  g.querySelectorAll("[data-cover]").forEach(b=>b.onclick=()=>{const i=+b.dataset.cover,n=adminDeviceImagesFromCard(c);if(i>0){const[x]=n.splice(i,1);n.unshift(x);setพนักงานDeviceImagesToCard(c,n);renderพนักงานMediaManager();}});
-  g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const n=adminDeviceImagesFromCard(c);n.splice(+b.dataset.del,1);setพนักงานDeviceImagesToCard(c,n);renderพนักงานMediaManager();});
+  const move=(f,t)=>{const n=adminDeviceImagesFromCard(c);if(f<0||t<0||f>=n.length||t>=n.length||f===t)return;const [x]=n.splice(f,1);n.splice(t,0,x);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();};
+  g.querySelectorAll("[data-cover]").forEach(b=>b.onclick=()=>{const i=+b.dataset.cover,n=adminDeviceImagesFromCard(c);if(i>0){const[x]=n.splice(i,1);n.unshift(x);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();}});
+  g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const n=adminDeviceImagesFromCard(c);n.splice(+b.dataset.del,1);setAdminDeviceImagesToCard(c,n);renderAdminMediaManager();});
   g.querySelectorAll("[data-left]").forEach(b=>b.onclick=()=>move(+b.dataset.left,+b.dataset.left-1));g.querySelectorAll("[data-right]").forEach(b=>b.onclick=()=>move(+b.dataset.right,+b.dataset.right+1));
 }
-function loadพนักงานImageFromFile(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("อ่านรูปภาพไม่สำเร็จ"))};i.src=u;});}
-async function optimizeพนักงานLocationImage(file){
+function loadAdminImageFromFile(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("อ่านรูปภาพไม่สำเร็จ"))};i.src=u;});}
+async function optimizeAdminLocationImage(file){
   if(!file||!/^image\/(?:jpeg|png|webp)$/i.test(file.type||""))throw new Error("รองรับ JPG, PNG และ WEBP");if(file.size>10*1024*1024)throw new Error("รูปใหญ่เกิน 10 MB");
-  const img=await loadพนักงานImageFromFile(file);let side=1200,q=.76;
-  for(let p=0;p<7;p++){const s=Math.min(1,side/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(img.naturalWidth*s));cv.height=Math.max(1,Math.round(img.naturalHeight*s));const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,0,cv.width,cv.height);const d=cv.toDataURL("image/jpeg",q);if(d.length<=พนักงาน_DEVICE_IMAGE_DATA_MAX)return d;side=Math.round(side*.82);q=Math.max(.55,q-.05);}throw new Error("รูปยังใหญ่เกินไปหลังย่อ");
+  const img=await loadAdminImageFromFile(file);let side=1200,q=.76;
+  for(let p=0;p<7;p++){const s=Math.min(1,side/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(img.naturalWidth*s));cv.height=Math.max(1,Math.round(img.naturalHeight*s));const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,0,cv.width,cv.height);const d=cv.toDataURL("image/jpeg",q);if(d.length<=ADMIN_DEVICE_IMAGE_DATA_MAX)return d;side=Math.round(side*.82);q=Math.max(.55,q-.05);}throw new Error("รูปยังใหญ่เกินไปหลังย่อ");
 }
-async function addพนักงานImageFiles(list){
+async function addAdminImageFiles(list){
   if(!hasPermission("manage_device_media"))return;const c=adminMapSelectedCard();if(!c)return;const a=adminDeviceImagesFromCard(c),files=[...(list||[])].filter(f=>String(f.type||"").startsWith("image/"));let added=0;adminMediaSetMessage("กำลังเตรียมรูป...");
-  for(const f of files){if(a.length>=5)break;try{a.push(await optimizeพนักงานLocationImage(f));added++;}catch(e){adminMediaSetMessage(e.message,"error");}}
-  setพนักงานDeviceImagesToCard(c,a);renderพนักงานMediaManager();if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึก`,"success");if(a.length>=5&&files.length>added)adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");
+  for(const f of files){if(a.length>=5)break;try{a.push(await optimizeAdminLocationImage(f));added++;}catch(e){adminMediaSetMessage(e.message,"error");}}
+  setAdminDeviceImagesToCard(c,a);renderAdminMediaManager();if(added)adminMediaSetMessage(`เพิ่ม ${added} รูปแล้ว กรุณากดบันทึก`,"success");if(a.length>=5&&files.length>added)adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");
 }
-function addพนักงานImageUrl(raw){if(!hasPermission("manage_device_media"))return;const u=String(raw||"").trim(),c=adminMapSelectedCard();if(!c)return;if(!/^https?:\/\//i.test(u)){adminMediaSetMessage("URL ต้องขึ้นต้นด้วย http:// หรือ https://","error");return;}const a=adminDeviceImagesFromCard(c);if(a.length>=5){adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");return;}a.push(u);setพนักงานDeviceImagesToCard(c,a);renderพนักงานMediaManager();}
-function setupพนักงานMediaManager(){
+function addAdminImageUrl(raw){if(!hasPermission("manage_device_media"))return;const u=String(raw||"").trim(),c=adminMapSelectedCard();if(!c)return;if(!/^https?:\/\//i.test(u)){adminMediaSetMessage("URL ต้องขึ้นต้นด้วย http:// หรือ https://","error");return;}const a=adminDeviceImagesFromCard(c);if(a.length>=5){adminMediaSetMessage("จุดตรวจวัดเพิ่มรูปได้สูงสุด 5 ภาพ","error");return;}a.push(u);setAdminDeviceImagesToCard(c,a);renderAdminMediaManager();}
+function setupAdminMediaManager(){
   const input=$("adminImageFileInput"),choose=$("adminChooseImagesButton"),drop=$("adminMediaDropzone"),url=$("adminImageUrlInput"),add=$("adminAddImageUrlButton");
-  if(choose)choose.onclick=()=>hasPermission("manage_device_media")&&input?.click();if(input)input.onchange=async()=>{await addพนักงานImageFiles(input.files);input.value="";};if(add)add.onclick=()=>{addพนักงานImageUrl(url?.value);if(url)url.value="";};
-  if(drop&&!drop.dataset.ready){drop.dataset.ready="1";["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.add("is-dragover");}));["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.remove("is-dragover");}));drop.addEventListener("drop",async e=>{await addพนักงานImageFiles(e.dataTransfer?.files||[])});drop.onclick=()=>hasPermission("manage_device_media")&&input?.click();}
-  if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if(!hasPermission("manage_device_media")||$("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const f=[...(e.clipboardData?.files||[])].filter(x=>String(x.type||"").startsWith("image/"));if(f.length){e.preventDefault();await addพนักงานImageFiles(f);}});}
+  if(choose)choose.onclick=()=>hasPermission("manage_device_media")&&input?.click();if(input)input.onchange=async()=>{await addAdminImageFiles(input.files);input.value="";};if(add)add.onclick=()=>{addAdminImageUrl(url?.value);if(url)url.value="";};
+  if(drop&&!drop.dataset.ready){drop.dataset.ready="1";["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.add("is-dragover");}));["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{if(!hasPermission("manage_device_media"))return;e.preventDefault();drop.classList.remove("is-dragover");}));drop.addEventListener("drop",async e=>{await addAdminImageFiles(e.dataTransfer?.files||[])});drop.onclick=()=>hasPermission("manage_device_media")&&input?.click();}
+  if(!document.body.dataset.adminMediaPasteReady){document.body.dataset.adminMediaPasteReady="1";document.addEventListener("paste",async e=>{if(!hasPermission("manage_device_media")||$("adminCenter")?.classList.contains("hidden"))return;const p=document.querySelector('[data-admin-panel="devices"].active');if(!p)return;const f=[...(e.clipboardData?.files||[])].filter(x=>String(x.type||"").startsWith("image/"));if(f.length){e.preventDefault();await addAdminImageFiles(f);}});}
 }
-async function saveพนักงานDevices(){
+async function saveAdminDevices(){
   const d=adminMapSelectedCard();
   if(!d){setAuthMessage("deviceSaveMessage","ไม่พบจุดตรวจวัดที่กำลังแก้ไข","error");return;}
   const device={device_id:d.dataset.deviceId,display_name:d.querySelector(".admin-device-display")?.value||"",location_name:d.querySelector(".admin-device-location")?.value||"",description:d.querySelector(".admin-device-description")?.value||"",map_description:d.querySelector(".admin-device-map-description")?.value||"",latitude:d.querySelector(".admin-device-latitude")?.value||null,longitude:d.querySelector(".admin-device-longitude")?.value||null,images:adminDeviceImagesFromCard(d)};
@@ -8791,7 +8791,7 @@ async function saveพนักงานDevices(){
     const j=await apiJson(API.manageDevices,{method:"POST",body:JSON.stringify({devices:[device]})});
     const saved=Array.isArray(j?.data)?j.data.find(x=>x.device_id===device.device_id):null;
     if(saved){const idx=(publicDisplayConfig?.devices||[]).findIndex(x=>x.device_id===device.device_id);if(idx>=0)publicDisplayConfig.devices[idx]={...publicDisplayConfig.devices[idx],...saved};}
-    await loadPublicDisplayConfig();activeพนักงานDeviceId=device.device_id;renderพนักงานDevices();setAuthMessage("deviceSaveMessage",`บันทึก ${device.display_name||device.device_id} เรียบร้อย • รูป ${device.images.length}/5 ภาพ`,"success");
+    await loadPublicDisplayConfig();activeAdminDeviceId=device.device_id;renderAdminDevices();setAuthMessage("deviceSaveMessage",`บันทึก ${device.display_name||device.device_id} เรียบร้อย • รูป ${device.images.length}/5 ภาพ`,"success");
   }catch(e){setAuthMessage("deviceSaveMessage",e.message||"บันทึกไม่สำเร็จ","error");}
   finally{if(b)b.disabled=false;}
 }
@@ -8806,31 +8806,31 @@ async function saveAnnouncement(){
   const payload={enabled:$("announcementEnabled")?.checked?"1":"0",severity:$("announcementSeverity")?.value||"info",title:$("announcementTitle")?.value||"",message:$("announcementMessage")?.value||""};const b=$("saveAnnouncementButton");if(b)b.disabled=true;setAuthMessage("announcementSaveMessage","กำลังบันทึก...");
   try{await apiJson(API.manageAnnouncement,{method:"POST",body:JSON.stringify(payload)});await loadPublicDisplayConfig();loadAnnouncementEditor();setAuthMessage("announcementSaveMessage","บันทึกประกาศแล้ว","success");}catch(e){setAuthMessage("announcementSaveMessage",e.message,"error");}finally{if(b)b.disabled=false;}
 }
-let adminผู้ใช้งานsMeta={total:0,users:0,admins:0,owners:0,returned:0};
-async function loadพนักงานผู้ใช้งานs(){
-  const root=$("adminผู้ใช้งานList");
+let adminUsersMeta={total:0,users:0,staffs:0,admins:0,returned:0};
+async function loadAdminUsers(){
+  const root=$("adminUserList");
   if(!root)return;
   root.innerHTML='<div class="admin-empty">กำลังโหลด...</div>';
   try{
-    const j=await apiJson(API.manageผู้ใช้งานs);
-    adminผู้ใช้งานsCache=Array.isArray(j.data)?j.data:[];
-    adminผู้ใช้งานsMeta={
-      total:Number(j?.meta?.total??adminผู้ใช้งานsCache.length),
+    const j=await apiJson(API.manageUsers);
+    adminUsersCache=Array.isArray(j.data)?j.data:[];
+    adminUsersMeta={
+      total:Number(j?.meta?.total??adminUsersCache.length),
       users:Number(j?.meta?.users||0),
+      staffs:Number(j?.meta?.staffs||0),
       admins:Number(j?.meta?.admins||0),
-      owners:Number(j?.meta?.owners||0),
-      returned:Number(j?.meta?.returned??adminผู้ใช้งานsCache.length)
+      returned:Number(j?.meta?.returned??adminUsersCache.length)
     };
-    $("addพนักงานModeButton")?.classList.toggle("hidden",authผู้ใช้งาน?.role!=="owner");
-    renderพนักงานผู้ใช้งานs();
+    $("addAdminModeButton")?.classList.toggle("hidden",authUser?.role!=="admin");
+    renderAdminUsers();
   }catch(e){
     root.innerHTML=`<div class="admin-empty">${esc(e.message)}</div>`;
   }
 }
-function filteredพนักงานผู้ใช้งานs(){
-  const q=String($("adminผู้ใช้งานSearch")?.value||"").trim().toLowerCase();
-  const role=$("adminผู้ใช้งานRoleFilter")?.value||"all";
-  return adminผู้ใช้งานsCache.filter(u=>{
+function filteredAdminUsers(){
+  const q=String($("adminUserSearch")?.value||"").trim().toLowerCase();
+  const role=$("adminUserRoleFilter")?.value||"all";
+  return adminUsersCache.filter(u=>{
     const matchesText=!q||
       String(u.display_name||"").toLowerCase().includes(q)||
       String(u.email||"").toLowerCase().includes(q);
@@ -8863,12 +8863,12 @@ function permissionEditorHtml(user){
     </section>`;
   }).join("");
 }
-function updateพนักงานRoleEditor(card,role){
+function updateAdminRoleEditor(card,role){
   if(!card)return;
-  const isพนักงาน=role==="admin";
-  card.querySelector(".admin-permission-admin-only")?.classList.toggle("hidden",!isพนักงาน);
+  const isStaff=role==="staff";
+  card.querySelector(".admin-permission-admin-only")?.classList.toggle("hidden",!isStaff);
   const summary=card.querySelector(".admin-user-role-summary");
-  if(summary)summary.innerHTML=isพนักงาน
+  if(summary)summary.innerHTML=isStaff
     ?"<b>พนักงาน</b><span>บัญชีนี้สามารถได้รับสิทธิ์จัดการระบบ เลือกสิทธิ์ที่ต้องการด้านล่าง</span>"
     :"<b>ผู้ใช้งาน</b><span>ใช้งาน Dashboard สาธารณะได้ทั้งหมด เมื่อล็อกอินจะสามารถรับและตั้งค่าการแจ้งเตือนส่วนตัวได้</span>";
 }
@@ -8879,30 +8879,30 @@ function applyRoleDefaultsToEditor(card,role){
     input.checked=Boolean(defaults[input.dataset.permissionKey]);
     input.disabled=false;
   });
-  updateพนักงานRoleEditor(card,role);
+  updateAdminRoleEditor(card,role);
 }
-function adminผู้ใช้งานAvatarHtml(user,self=false){
+function adminUserAvatarHtml(user,self=false){
   const fallback=esc((user?.display_name||user?.email||"U").slice(0,1).toUpperCase());
-  const raw=String((self?authผู้ใช้งาน?.profile_image_url:"")||user?.profile_image_url||"").trim();
+  const raw=String((self?authUser?.profile_image_url:"")||user?.profile_image_url||"").trim();
   const src=/^(?:data:image\/(?:jpeg|png|webp);base64,|https:\/\/)/i.test(raw)?raw:"";
   if(!src)return `<div class="admin-user-avatar"><span>${fallback}</span></div>`;
   return `<div class="admin-user-avatar has-image"><img src="${esc(src)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.opacity='1'"><span>${fallback}</span></div>`;
 }
-function renderพนักงานผู้ใช้งานSummary(visible){
-  const total=$("adminผู้ใช้งานTotalCount"),shown=$("adminผู้ใช้งานVisibleCount");
-  if(total)total.textContent=String(adminผู้ใช้งานsMeta.total||0);
+function renderAdminUserSummary(visible){
+  const total=$("adminUserTotalCount"),shown=$("adminUserVisibleCount");
+  if(total)total.textContent=String(adminUsersMeta.total||0);
   if(shown){
-    const filtered=visible!==adminผู้ใช้งานsMeta.total;
-    shown.textContent=filtered?`กำลังแสดง ${visible} จาก ${adminผู้ใช้งานsMeta.total} บัญชี`:`กำลังแสดง ${visible} บัญชี`;
+    const filtered=visible!==adminUsersMeta.total;
+    shown.textContent=filtered?`กำลังแสดง ${visible} จาก ${adminUsersMeta.total} บัญชี`:`กำลังแสดง ${visible} บัญชี`;
   }
 }
-function renderพนักงานผู้ใช้งานs(){
-  const root=$("adminผู้ใช้งานList");
+function renderAdminUsers(){
+  const root=$("adminUserList");
   if(!root)return;
-  const users=filteredพนักงานผู้ใช้งานs();
-  renderพนักงานผู้ใช้งานSummary(users.length);
-  const isแอดมิน=authผู้ใช้งาน?.role==="owner";
-  const ownId=Number(authผู้ใช้งาน?.id||0);
+  const users=filteredAdminUsers();
+  renderAdminUserSummary(users.length);
+  const isAdmin=authUser?.role==="admin";
+  const ownId=Number(authUser?.id||0);
   root.innerHTML=users.map(u=>{
     const self=Number(u.id)===ownId;
     const provider=u.auth_provider==="google"?"Google":u.google_linked?"Email + Google":"Email";
@@ -8910,18 +8910,18 @@ function renderพนักงานผู้ใช้งานs(){
     let action="";
     if(self){
       action=`<div class="admin-user-self-lock">บัญชีของคุณ</div>`;
-    }else if(isแอดมิน&&adminAddMode){
-      action=u.role==="admin"
-        ?`<div class="admin-user-done">เป็น พนักงาน แล้ว</div>`
-        :`<button class="admin-promote-button" type="button" data-promote-admin="${u.id}">ตั้งเป็น พนักงาน</button>`;
-    }else if(isแอดมิน){
+    }else if(isAdmin&&adminAddMode){
+      action=u.role==="staff"
+        ?`<div class="admin-user-done">เป็นพนักงานแล้ว</div>`
+        :`<button class="admin-promote-button" type="button" data-promote-staff="${u.id}">ตั้งเป็นพนักงาน</button>`;
+    }else if(isAdmin){
       action=`<button class="admin-user-manage-button" type="button">⚙ จัดการบัญชี</button>`;
     }else{
       action=`<div class="admin-user-readonly">ดูอย่างเดียว</div>`;
     }
     return `<article class="admin-user-card" data-user-id="${u.id}">
       <div class="admin-user-main">
-        ${adminผู้ใช้งานAvatarHtml(u,self)}
+        ${adminUserAvatarHtml(u,self)}
         <div class="admin-user-identity">
           <div class="admin-user-title-row">
             <b>${esc(u.display_name||"ผู้ใช้งาน")}</b>
@@ -8936,19 +8936,19 @@ function renderพนักงานผู้ใช้งานs(){
         <div class="admin-user-action">${action}</div>
       </div>
 
-      ${(!self&&isแอดมิน&&!adminAddMode&&u.role!=="owner")?`
+      ${(!self&&isAdmin&&!adminAddMode&&u.role!=="admin")?`
       <div class="admin-user-editor admin-user-editor-v35 hidden">
         <div class="admin-user-editor-top">
           <label>ระดับบัญชี
             <select class="admin-user-role">
               <option value="user" ${u.role==="user"?"selected":""}>ผู้ใช้งาน</option>
-              <option value="admin" ${u.role==="admin"?"selected":""}>พนักงาน</option>
+              <option value="staff" ${u.role==="staff"?"selected":""}>พนักงาน</option>
             </select>
           </label>
         </div>
         <div class="admin-user-role-summary"></div>
-        <div class="admin-permission-admin-only ${u.role==="admin"?"":"hidden"}">
-          <div class="admin-permission-admin-head"><div><b>สิทธิ์การจัดการของ พนักงาน</b><span>เลือกเฉพาะส่วนที่บัญชีนี้ต้องดูแล</span></div><button class="admin-permission-reset" type="button">↺ ค่าเริ่มต้น พนักงาน</button></div>
+        <div class="admin-permission-admin-only ${u.role==="staff"?"":"hidden"}">
+          <div class="admin-permission-admin-head"><div><b>สิทธิ์การจัดการของพนักงาน</b><span>เลือกเฉพาะส่วนที่บัญชีนี้ต้องดูแล</span></div><button class="admin-permission-reset" type="button">↺ ค่าเริ่มต้นพนักงาน</button></div>
           <div class="admin-permission-grid">${permissionEditorHtml(u)}</div>
         </div>
         <div class="admin-user-danger-zone">
@@ -8956,7 +8956,7 @@ function renderพนักงานผู้ใช้งานs(){
           <button class="admin-user-delete" type="button">ลบบัญชี</button>
         </div>
         <div class="admin-user-editor-footer">
-          <span>การเปลี่ยนระดับบัญชีและสิทธิ์ พนักงาน มีผลหลังบันทึก</span>
+          <span>การเปลี่ยนระดับบัญชีและสิทธิ์พนักงานมีผลหลังบันทึก</span>
           <button class="admin-user-save" type="button">บันทึก</button>
         </div>
       </div>`:""}
@@ -8981,25 +8981,25 @@ function renderพนักงานผู้ใช้งานs(){
     });
   });
   root.querySelectorAll(".admin-user-save").forEach(btn=>{
-    btn.addEventListener("click",()=>saveพนักงานผู้ใช้งานRow(btn.closest(".admin-user-card")));
+    btn.addEventListener("click",()=>saveAdminUserRow(btn.closest(".admin-user-card")));
   });
   root.querySelectorAll(".admin-user-delete").forEach(btn=>{
-    btn.addEventListener("click",()=>deleteพนักงานผู้ใช้งาน(btn.closest(".admin-user-card")));
+    btn.addEventListener("click",()=>deleteAdminUser(btn.closest(".admin-user-card")));
   });
-  root.querySelectorAll("[data-promote-admin]").forEach(btn=>{
-    btn.addEventListener("click",()=>promoteผู้ใช้งานToพนักงาน(Number(btn.dataset.promoteพนักงาน)));
+  root.querySelectorAll("[data-promote-staff]").forEach(btn=>{
+    btn.addEventListener("click",()=>promoteUserToStaff(Number(btn.dataset.promoteStaff)));
   });
   root.querySelectorAll(".admin-user-card").forEach(card=>{
     const role=card.querySelector(".admin-user-role")?.value;
-    if(role)updateพนักงานRoleEditor(card,role);
+    if(role)updateAdminRoleEditor(card,role);
   });
 }
-async function saveพนักงานผู้ใช้งานRow(row){
-  if(!row||authผู้ใช้งาน?.role!=="owner")return;
+async function saveAdminUserRow(row){
+  if(!row||authUser?.role!=="admin")return;
   const btn=row.querySelector(".admin-user-save");
   if(btn)btn.disabled=true;
   try{
-    await apiJson(API.manageผู้ใช้งานsUpdate,{
+    await apiJson(API.manageUsersUpdate,{
       method:"POST",
       body:JSON.stringify({
         user_id:Number(row.dataset.userId),
@@ -9010,57 +9010,57 @@ async function saveพนักงานผู้ใช้งานRow(row){
       })
     });
     setAuthMessage("userSaveMessage","อัปเดตสิทธิ์เรียบร้อย","success");
-    await loadพนักงานผู้ใช้งานs();
+    await loadAdminUsers();
   }catch(e){
     setAuthMessage("userSaveMessage",e.message,"error");
   }finally{
     if(btn)btn.disabled=false;
   }
 }
-async function deleteพนักงานผู้ใช้งาน(row){
-  if(!row||authผู้ใช้งาน?.role!=="owner")return;
+async function deleteAdminUser(row){
+  if(!row||authUser?.role!=="admin")return;
   const userId=Number(row.dataset.userId||0);
-  const user=adminผู้ใช้งานsCache.find(x=>Number(x.id)===userId);
+  const user=adminUsersCache.find(x=>Number(x.id)===userId);
   if(!user)return;
   const label=user.display_name||user.email||"บัญชีนี้";
   if(!confirm(`ต้องการลบบัญชี “${label}” หรือไม่?\n\nบัญชีและเซสชันทั้งหมดจะถูกลบอย่างถาวร และไม่สามารถย้อนกลับได้`))return;
   const btn=row.querySelector(".admin-user-delete"); if(btn)btn.disabled=true;
   try{
-    await apiJson(`${API.manageผู้ใช้งานs}/delete`,{method:"POST",body:JSON.stringify({user_id:userId})});
+    await apiJson(`${API.manageUsers}/delete`,{method:"POST",body:JSON.stringify({user_id:userId})});
     setAuthMessage("userSaveMessage",`ลบบัญชี ${label} เรียบร้อย`,"success");
-    await loadพนักงานผู้ใช้งานs();
+    await loadAdminUsers();
   }catch(e){setAuthMessage("userSaveMessage",e.message,"error");if(btn)btn.disabled=false;}
 }
-async function promoteผู้ใช้งานToพนักงาน(userId){
-  if(authผู้ใช้งาน?.role!=="owner"||!userId)return;
-  const user=adminผู้ใช้งานsCache.find(x=>Number(x.id)===Number(userId));
+async function promoteUserToStaff(userId){
+  if(authUser?.role!=="admin"||!userId)return;
+  const user=adminUsersCache.find(x=>Number(x.id)===Number(userId));
   if(!user)return;
   try{
-    await apiJson(API.manageผู้ใช้งานsUpdate,{
+    await apiJson(API.manageUsersUpdate,{
       method:"POST",
-      body:JSON.stringify({user_id:userId,role:"admin"})
+      body:JSON.stringify({user_id:userId,role:"staff"})
     });
-    setAuthMessage("userSaveMessage",`ตั้ง ${user.display_name||user.email} เป็น พนักงาน แล้ว`,"success");
+    setAuthMessage("userSaveMessage",`ตั้ง ${user.display_name||user.email} เป็นพนักงานแล้ว`,"success");
     adminAddMode=false;
     $("adminAddModeBanner")?.classList.add("hidden");
-    await loadพนักงานผู้ใช้งานs();
+    await loadAdminUsers();
   }catch(e){
     setAuthMessage("userSaveMessage",e.message,"error");
   }
 }
-function setพนักงานAddMode(enabled){
-  adminAddMode=Boolean(enabled)&&authผู้ใช้งาน?.role==="owner";
+function setAdminAddMode(enabled){
+  adminAddMode=Boolean(enabled)&&authUser?.role==="admin";
   $("adminAddModeBanner")?.classList.toggle("hidden",!adminAddMode);
   if(adminAddMode){
-    if($("adminผู้ใช้งานRoleFilter"))$("adminผู้ใช้งานRoleFilter").value="all";
-    $("adminผู้ใช้งานSearch")?.focus();
+    if($("adminUserRoleFilter"))$("adminUserRoleFilter").value="all";
+    $("adminUserSearch")?.focus();
   }
-  renderพนักงานผู้ใช้งานs();
+  renderAdminUsers();
 }
 function hasAnyManagementPermission(){
-  return canViewผู้ใช้งานDirectory()||["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement","manage_mother_wifi"].some(key=>hasPermission(key));
+  return canViewUserDirectory()||["manage_help","manage_devices","manage_device_location","manage_device_media","manage_announcement","manage_mother_wifi"].some(key=>hasPermission(key));
 }
-function openพนักงานCenter(targetTab=null){
+function openAdminCenter(targetTab=null){
   if(!hasAnyManagementPermission())return;
   clearTransientUiMessages([
     "helpSaveMessage",
@@ -9070,7 +9070,7 @@ function openพนักงานCenter(targetTab=null){
   ]);
   const m=$("adminCenter");if(!m)return;
   const userMode=targetTab==="users";
-  if(userMode&&!canViewผู้ใช้งานDirectory())return;
+  if(userMode&&!canViewUserDirectory())return;
   const contentTabs=["help","devices","announcement"];
   const canManageAnyDevice=()=>["manage_devices","manage_device_location","manage_device_media"].some(key=>hasPermission(key));
   const permissionMap={help:"manage_help",announcement:"manage_announcement"};
@@ -9080,18 +9080,18 @@ function openพนักงานCenter(targetTab=null){
   m.classList.toggle("admin-content-page",!userMode);
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
   $("accountDropdown")?.classList.add("hidden");
-  if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authผู้ใช้งาน.role);
+  if($("adminRolePill"))$("adminRolePill").textContent=authRoleLabel(authUser.role);
   if($("adminCenterEyebrow"))$("adminCenterEyebrow").textContent=userMode?"USER MANAGEMENT":"CONTENT MANAGEMENT";
   if($("adminCenterTitle"))$("adminCenterTitle").textContent=userMode?"จัดการผู้ใช้งาน":"จัดการเนื้อหา";
-  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"พนักงาน ดูรายชื่อผู้ใช้งานได้ทุกบัญชี และ แอดมิน เป็นผู้กำหนดระดับบัญชีกับสิทธิ์การจัดการ":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
+  if($("adminCenterSubtitle"))$("adminCenterSubtitle").textContent=userMode?"แอดมินดูรายชื่อผู้ใช้งานได้ทุกบัญชี และเป็นผู้กำหนดระดับบัญชีกับสิทธิ์การจัดการ":"จัดการคำอธิบาย จุดตรวจวัด และประกาศของ Dashboard";
   document.querySelector('[data-admin-tab="help"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_help"));
   document.querySelector('[data-admin-tab="devices"]')?.classList.toggle("hidden",userMode||!canManageAnyDevice());
   document.querySelector('[data-admin-tab="announcement"]')?.classList.toggle("hidden",userMode||!hasPermission("manage_announcement"));
   document.querySelector('[data-admin-tab="users"]')?.classList.toggle("hidden",!userMode);
-  if(userMode){loadพนักงานผู้ใช้งานs();switchพนักงานTab("users");}
-  else{if(hasPermission("manage_help"))populateHelpKeySelect();if(canManageAnyDevice())renderพนักงานDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchพนักงานTab(allowedContent);}
+  if(userMode){loadAdminUsers();switchAdminTab("users");}
+  else{if(hasPermission("manage_help"))populateHelpKeySelect();if(canManageAnyDevice())renderAdminDevices();if(hasPermission("manage_announcement"))loadAnnouncementEditor();switchAdminTab(allowedContent);}
 }
-function closeพนักงานCenter(){
+function closeAdminCenter(){
   const m=$("adminCenter");if(!m)return;
   clearTransientUiMessages([
     "helpSaveMessage",
@@ -9101,7 +9101,7 @@ function closeพนักงานCenter(){
   ]);
   m.classList.add("hidden");m.setAttribute("aria-hidden","true");
 }
-function switchพนักงานTab(tab){
+function switchAdminTab(tab){
   clearTransientUiMessages([
     "helpSaveMessage",
     "deviceSaveMessage",
@@ -9110,23 +9110,23 @@ function switchพนักงานTab(tab){
   ]);
   document.querySelectorAll(".admin-nav").forEach(b=>b.classList.toggle("active",b.dataset.adminTab===tab));
   document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.dataset.adminPanel===tab));
-  if(tab==="users")loadพนักงานผู้ใช้งานs();
+  if(tab==="users")loadAdminUsers();
   if(tab==="announcement")loadAnnouncementEditor();
-  if(tab==="devices")renderพนักงานDevices();
+  if(tab==="devices")renderAdminDevices();
 }
 function syncMyAccountUI(){
-  if(!authผู้ใช้งาน)return;
-  setAvatar("myAccountAvatarImage","myAccountAvatarFallback",authผู้ใช้งาน);
-  const name=authผู้ใช้งาน.display_name||authผู้ใช้งาน.email||"ผู้ใช้งาน";
-  const email=authผู้ใช้งาน.email||"--";
-  const role=authRoleLabel(authผู้ใช้งาน.role);
-  const provider=`เข้าสู่ระบบด้วย ${authProviderLabel(authผู้ใช้งาน)}`;
-  [["myAccountName",name],["myAccountEmail",email],["myAccountDisplayName",name],["myAccountEmailDetail",email],["myAccountRole",role],["myAccountRoleDetail",role],["myAccountProvider",authProviderLabel(authผู้ใช้งาน)],["myAccountProviderDetail",provider]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value;});
-  $("myAccountChangePassword")?.classList.toggle("hidden",authผู้ใช้งาน.auth_provider==="google");
-  $("myAccountUseGooglePhoto")?.classList.toggle("hidden",!authผู้ใช้งาน.google_picture_url||!authผู้ใช้งาน.profile_image_url);
+  if(!authUser)return;
+  setAvatar("myAccountAvatarImage","myAccountAvatarFallback",authUser);
+  const name=authUser.display_name||authUser.email||"ผู้ใช้งาน";
+  const email=authUser.email||"--";
+  const role=authRoleLabel(authUser.role);
+  const provider=`เข้าสู่ระบบด้วย ${authProviderLabel(authUser)}`;
+  [["myAccountName",name],["myAccountEmail",email],["myAccountDisplayName",name],["myAccountEmailDetail",email],["myAccountRole",role],["myAccountRoleDetail",role],["myAccountProvider",authProviderLabel(authUser)],["myAccountProviderDetail",provider]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value;});
+  $("myAccountChangePassword")?.classList.toggle("hidden",authUser.auth_provider==="google");
+  $("myAccountUseGooglePhoto")?.classList.toggle("hidden",!authUser.google_picture_url||!authUser.profile_image_url);
 }
 function openMyAccount(){
-  if(!authผู้ใช้งาน){openAuthModal("login");return;}
+  if(!authUser){openAuthModal("login");return;}
   clearTransientUiMessages(["profileEditorMessage","accountSecurityMessage"]);
   syncMyAccountUI();
   const m=$("myAccountCenter");if(!m)return;
@@ -9138,7 +9138,7 @@ function closeMyAccount(){
   m.classList.add("hidden");m.setAttribute("aria-hidden","true");
 }
 function reopenAccountMenu(){
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   const menu=$("accountDropdown");
   if(menu){
     menu.classList.remove("hidden");
@@ -9150,7 +9150,7 @@ function backFromMyAccount(){
   reopenAccountMenu();
 }
 function openAccountSecurity(){
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   const m=$("accountSecurityModal");if(!m)return;
   $("accountSecurityForm")?.reset();if($("accountSecurityMessage"))$("accountSecurityMessage").textContent="";
   m.classList.remove("hidden");m.setAttribute("aria-hidden","false");
@@ -9185,7 +9185,7 @@ function updateNotificationBadge(unread=0){
   if(!badge)return;
   const n=Math.max(0,Number(unread)||0);
   badge.textContent=n>9?"9+":String(n);
-  badge.classList.toggle("hidden",n===0||!authผู้ใช้งาน);
+  badge.classList.toggle("hidden",n===0||!authUser);
 }
 function notificationTargetFor(item){
   if(String(item?.event_type||"").toLowerCase()==="mother"||String(item?.device_id||"").toLowerCase()==="mother")return "system";
@@ -9259,7 +9259,7 @@ function processBrowserNotificationInbox(items){
   fresh.slice(-3).forEach(showBrowserNotificationItem);
 }
 async function loadNotificationInbox({silent=false}={}){
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   const root=$("notificationInboxList");
   if(!silent&&root)root.innerHTML=`<div class="notification-inbox-empty">กำลังโหลดการแจ้งเตือน...</div>`;
   try{
@@ -9273,7 +9273,7 @@ async function loadNotificationInbox({silent=false}={}){
   }
 }
 async function markNotificationRead(id=null,all=false,{reload=true}={}){
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   try{
     const j=await apiJson(API.notificationRead,{method:"POST",body:JSON.stringify(all?{all:true}:{id})});
     updateNotificationBadge(j.unread_count||0);
@@ -9286,7 +9286,7 @@ function closeNotificationInbox(){
   $("headerNotificationButton")?.setAttribute("aria-expanded","false");
 }
 async function openNotificationInbox(){
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   const box=$("notificationInbox");if(!box)return;
   const opening=box.classList.contains("hidden");
   if(!opening){closeNotificationInbox();return;}
@@ -9296,7 +9296,7 @@ async function openNotificationInbox(){
   await loadNotificationInbox();
 }
 async function openNotificationById(id,{markRead=true,fromBrowser=false}={}){
-  if(!authผู้ใช้งาน||!Number(id))return false;
+  if(!authUser||!Number(id))return false;
   let item=notificationInboxItems.find(x=>Number(x.id)===Number(id))||null;
   try{
     if(!item){
@@ -9320,25 +9320,25 @@ async function openInboxNotificationDetail(id){
 }
 function startNotificationInboxPolling(){
   if(notificationInboxTimer)clearInterval(notificationInboxTimer);
-  if(!authผู้ใช้งาน)return;
+  if(!authUser)return;
   loadNotificationInbox({silent:true});
   notificationInboxTimer=setInterval(()=>{
-    if(authผู้ใช้งาน&&document.visibilityState==="visible"){
+    if(authUser&&document.visibilityState==="visible"){
       loadNotificationInbox({silent:true});
     }
   },60000);
 }
-function notificationStorageKey(){return `pm25-notification-state-${authผู้ใช้งาน?.id||"guest"}`;}
+function notificationStorageKey(){return `pm25-notification-state-${authUser?.id||"guest"}`;}
 function notificationEventKey(device,type){return `${device}:${type}`;}
 function readNotificationStates(){try{return JSON.parse(localStorage.getItem(notificationStorageKey())||"{}");}catch(_){return {};}}
 function writeNotificationStates(v){try{localStorage.setItem(notificationStorageKey(),JSON.stringify(v));}catch(_){}}
 async function ensureNotificationPreferences(){
-  if(!authผู้ใช้งาน)return false;
-  if(notificationPrefsLoadedFor===authผู้ใช้งาน.id)return true;
+  if(!authUser)return false;
+  if(notificationPrefsLoadedFor===authUser.id)return true;
   try{
     const j=await apiJson(API.notificationPreferences);
     notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...(j.preferences||{})};
-    notificationPrefsLoadedFor=authผู้ใช้งาน.id;
+    notificationPrefsLoadedFor=authUser.id;
     return true;
   }catch(_){return false;}
 }
@@ -9358,7 +9358,7 @@ function updateNotificationMasterUI(){
   });
 }
 async function openNotificationSettings(){
-  if(!authผู้ใช้งาน){openAuthModal("login");return;}
+  if(!authUser){openAuthModal("login");return;}
   $("accountDropdown")?.classList.add("hidden");
   await ensureNotificationPreferences();
   syncNotificationSettingsUI();
@@ -9370,8 +9370,8 @@ function backFromNotificationSettings(){
   closeNotificationSettings();
   reopenAccountMenu();
 }
-function backFromพนักงานCenter(){
-  closeพนักงานCenter();
+function backFromAdminCenter(){
+  closeAdminCenter();
   reopenAccountMenu();
 }
 function backFromNotificationDetail(){
@@ -9411,7 +9411,7 @@ async function saveNotificationPreferences(){
   const status=$("notificationSaveStatus");
   const next={enabled:!!$("notificationMaster")?.checked,dust:!!$("notifyDust")?.checked,temperature:!!$("notifyTemperature")?.checked,humidity:!!$("notifyHumidity")?.checked,heat_index:!!$("notifyHeatIndex")?.checked,device:!!$("notifyDevice")?.checked,mother:!!$("notifyMother")?.checked};
   if(status)status.textContent="กำลังบันทึก...";
-  try{const j=await apiJson(API.notificationPreferences,{method:"POST",body:JSON.stringify({preferences:next})});notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...j.preferences};notificationPrefsLoadedFor=authผู้ใช้งาน?.id||null;if(status)status.textContent="บันทึกแล้ว ✓";setTimeout(()=>{if(status)status.textContent="";},1800);}
+  try{const j=await apiJson(API.notificationPreferences,{method:"POST",body:JSON.stringify({preferences:next})});notificationPrefs={...DEFAULT_NOTIFICATION_PREFS,...j.preferences};notificationPrefsLoadedFor=authUser?.id||null;if(status)status.textContent="บันทึกแล้ว ✓";setTimeout(()=>{if(status)status.textContent="";},1800);}
   catch(err){if(status)status.textContent=err.message;}
 }
 async function registerNotificationServiceWorker(){
@@ -9437,7 +9437,7 @@ async function showSituationNotification(evt){
   lastNotificationDetail={...evt,time:new Date().toISOString()};
 }
 async function checkSituationNotifications(){
-  if(notificationCheckBusy||!authผู้ใช้งาน||!Array.isArray(latestNodes)||!latestNodes.length)return;
+  if(notificationCheckBusy||!authUser||!Array.isArray(latestNodes)||!latestNodes.length)return;
   notificationCheckBusy=true;
   try{
     if(!(await ensureNotificationPreferences())||notificationPrefs.enabled===false)return;
@@ -9457,7 +9457,7 @@ async function checkSituationNotifications(){
 async function openNotificationDetailFromUrl(){
   const q=new URLSearchParams(location.search);
   const id=Number(q.get("notification_id")||0);
-  if(id&&authผู้ใช้งาน){
+  if(id&&authUser){
     await openNotificationById(id,{markRead:true,fromBrowser:true});
     return;
   }
@@ -9477,7 +9477,7 @@ function wifiEscapeHtml(value){
     .replace(/'/g,"&#039;");
 }
 function canManageMotherWiFi(){
-  return Boolean(authผู้ใช้งาน&&authToken&&hasPermission("manage_mother_wifi"));
+  return Boolean(authUser&&authToken&&hasPermission("manage_mother_wifi"));
 }
 function wifiCommandLabel(status){
   const map={
@@ -9675,7 +9675,7 @@ function setupRemoteWiFiManagement(){
     // Bind account controls first; verify a saved session after the first screen renders.
     const restoreSavedSession=async()=>{
       await restoreAuthSession();
-      if(authผู้ใช้งาน){
+      if(authUser){
         ensureNotificationPreferences();
         startNotificationInboxPolling();
       }
@@ -9684,14 +9684,14 @@ function setupRemoteWiFiManagement(){
     if(authToken){
       setTimeout(()=>restoreSavedSession().catch(e=>console.warn("Auth restore error:",e)),250);
     }else{
-      authผู้ใช้งาน=null;
+      authUser=null;
       updateAccountUI();
       setTimeout(openNotificationDetailFromUrl,250);
     }
-    $("accountButton")?.addEventListener("click",()=>{if(!authผู้ใช้งาน){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
+    $("accountButton")?.addEventListener("click",()=>{if(!authUser){openAuthModal("login");return;}const m=$("accountDropdown");m?.classList.toggle("hidden");$("accountButton")?.setAttribute("aria-expanded",String(!m?.classList.contains("hidden")));});
     document.querySelectorAll("[data-auth-close]").forEach(x=>x.addEventListener("click",closeAuthModal));
-    document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeพนักงานCenter));
-    document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromพนักงานCenter));
+    document.querySelectorAll("[data-admin-close]").forEach(x=>x.addEventListener("click",closeAdminCenter));
+    document.querySelectorAll("[data-admin-back]").forEach(x=>x.addEventListener("click",backFromAdminCenter));
     document.querySelectorAll("[data-auth-mode]").forEach(x=>x.addEventListener("click",()=>setAuthMode(x.dataset.authMode)));
     document.querySelectorAll("[data-toggle-password]").forEach(button=>button.addEventListener("click",()=>{
       const input=$(button.dataset.togglePassword);
@@ -9721,16 +9721,16 @@ function setupRemoteWiFiManagement(){
     $("myAccountUseGooglePhoto")?.addEventListener("click",async()=>{
       try{
         const j=await apiJson(API.authProfileImage,{method:"DELETE"});
-        authผู้ใช้งาน=j.user||authผู้ใช้งาน;
+        authUser=j.user||authUser;
         updateAccountUI();
         syncMyAccountUI();
       }catch(err){alert(err.message);}
     });
     $("loginForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("loginMessage","กำลังเข้าสู่ระบบ...");try{await doLogin($("loginEmail").value,$("loginPassword").value);setAuthMessage("loginMessage","เข้าสู่ระบบสำเร็จ","success");setTimeout(closeAuthModal,350);}catch(err){setAuthMessage("loginMessage",err.message,"error");}});
     $("registerForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("registerMessage","กำลังสร้างบัญชี...");try{await apiJson(API.authRegister,{method:"POST",body:JSON.stringify({display_name:$("registerName").value,email:$("registerEmail").value,password:$("registerPassword").value})});setAuthMessage("registerMessage","สร้างบัญชีแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),500);}catch(err){setAuthMessage("registerMessage",err.message,"error");}});
-    $("openแอดมินSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้าง แอดมิน คนแรก";});
-    $("cancelแอดมินSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
-    $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้าง แอดมิน...");try{await apiJson(API.authBootstrapแอดมิน,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้าง แอดมิน แล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
+    $("openOwnerSetupButton")?.addEventListener("click",()=>{$("authTabs")?.classList.add("hidden");$("loginForm")?.classList.add("hidden");$("registerForm")?.classList.add("hidden");$("ownerSetupForm")?.classList.remove("hidden");if($("authTitle"))$("authTitle").textContent="สร้างแอดมินคนแรก";});
+    $("cancelOwnerSetupButton")?.addEventListener("click",()=>setAuthMode("login"));
+    $("ownerSetupForm")?.addEventListener("submit",async e=>{e.preventDefault();setAuthMessage("ownerSetupMessage","กำลังสร้างแอดมิน...");try{await apiJson(API.authBootstrapOwner,{method:"POST",body:JSON.stringify({display_name:$("ownerName").value,email:$("ownerEmail").value,password:$("ownerPassword").value,bootstrap_password:$("ownerBootstrapPassword").value})});setAuthMessage("ownerSetupMessage","สร้างแอดมินแล้ว กรุณาเข้าสู่ระบบ","success");setTimeout(()=>setAuthMode("login"),600);}catch(err){setAuthMessage("ownerSetupMessage",err.message,"error");}});
     $("openNotificationSettingsButton")?.addEventListener("click",openNotificationSettings);
     $("notificationInboxSettings")?.addEventListener("click",()=>{closeNotificationInbox();openNotificationSettings();});
     $("notificationInboxClose")?.addEventListener("click",closeNotificationInbox);
@@ -9749,19 +9749,19 @@ function setupRemoteWiFiManagement(){
       if(target==="system")document.querySelector('[data-go-page="overview"]')?.click();
       else if(target==="monitoring")document.querySelector('[data-go-page="monitoring"]')?.click();
     });
-    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authผู้ใช้งาน=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
+    $("logoutButton")?.addEventListener("click",async()=>{try{await apiJson(API.authLogout,{method:"POST"});}catch(_){}authToken="";authUser=null;notificationPrefsLoadedFor=null;if(notificationInboxTimer){clearInterval(notificationInboxTimer);notificationInboxTimer=null;}notificationInboxItems=[];browserNotificationSeeded=false;browserNotificationSeenIds.clear();updateNotificationBadge(0);localStorage.removeItem(AUTH_TOKEN_KEY);sessionStorage.removeItem(AUTH_TOKEN_KEY);updateAccountUI();$("accountDropdown")?.classList.add("hidden");});
     $("openMyAccountButton")?.addEventListener("click",openMyAccount);
-    $("openContentManagementButton")?.addEventListener("click",()=>openพนักงานCenter("content"));
-    $("openผู้ใช้งานManagementButton")?.addEventListener("click",()=>openพนักงานCenter("users"));
+    $("openContentManagementButton")?.addEventListener("click",()=>openAdminCenter("content"));
+    $("openUserManagementButton")?.addEventListener("click",()=>openAdminCenter("users"));
     document.querySelectorAll("[data-my-account-close]").forEach(x=>x.addEventListener("click",closeMyAccount));
     document.querySelectorAll("[data-account-back]").forEach(x=>x.addEventListener("click",backFromMyAccount));
     document.querySelectorAll("[data-security-close]").forEach(x=>x.addEventListener("click",closeAccountSecurity));
     document.querySelectorAll("[data-security-back]").forEach(x=>x.addEventListener("click",closeAccountSecurity));
     $("myAccountChangePassword")?.addEventListener("click",openAccountSecurity);
-    $("adminผู้ใช้งานSearch")?.addEventListener("input",renderพนักงานผู้ใช้งานs);
-    $("adminผู้ใช้งานRoleFilter")?.addEventListener("change",renderพนักงานผู้ใช้งานs);
-    $("addพนักงานModeButton")?.addEventListener("click",()=>setพนักงานAddMode(true));
-    $("cancelAddพนักงานMode")?.addEventListener("click",()=>setพนักงานAddMode(false));
+    $("adminUserSearch")?.addEventListener("input",renderAdminUsers);
+    $("adminUserRoleFilter")?.addEventListener("change",renderAdminUsers);
+    $("addAdminModeButton")?.addEventListener("click",()=>setAdminAddMode(true));
+    $("cancelAddAdminMode")?.addEventListener("click",()=>setAdminAddMode(false));
     $("accountSecurityForm")?.addEventListener("submit",async e=>{
       e.preventDefault();
       const current=$("accountCurrentPassword")?.value||"",next=$("accountNewPassword")?.value||"",confirm=$("accountConfirmPassword")?.value||"";
@@ -9775,13 +9775,13 @@ function setupRemoteWiFiManagement(){
       const box=$("notificationInbox"),bell=$("headerNotificationButton");
       if(box&&!box.classList.contains("hidden")&&!box.contains(e.target)&&!bell?.contains(e.target))closeNotificationInbox();
     });
-    document.addEventListener("click",e=>{const dd=$("accountDropdown"),btn=$("accountButton");if(authผู้ใช้งาน&&dd&&!dd.classList.contains("hidden")&&!dd.contains(e.target)&&!btn?.contains(e.target))dd.classList.add("hidden");});
-    document.querySelectorAll(".admin-nav").forEach(b=>b.addEventListener("click",()=>switchพนักงานTab(b.dataset.adminTab)));
+    document.addEventListener("click",e=>{const dd=$("accountDropdown"),btn=$("accountButton");if(authUser&&dd&&!dd.classList.contains("hidden")&&!dd.contains(e.target)&&!btn?.contains(e.target))dd.classList.add("hidden");});
+    document.querySelectorAll(".admin-nav").forEach(b=>b.addEventListener("click",()=>switchAdminTab(b.dataset.adminTab)));
     $("helpKeySelect")?.addEventListener("change",e=>loadHelpEditor(e.target.value));
     $("helpEditorTitle")?.addEventListener("input",renderHelpPreview);
     $("addHelpBlockButton")?.addEventListener("click",()=>{const root=$("helpBlockList");if(!root)return;root.appendChild(createHelpBlockElement({id:`block-${Date.now()}`,heading:"",description:""},root.children.length));renumberHelpBlocks();renderHelpPreview();});
     $("saveHelpButton")?.addEventListener("click",saveHelpEditor);
-    $("saveDevicesButton")?.addEventListener("click",saveพนักงานDevices);
+    $("saveDevicesButton")?.addEventListener("click",saveAdminDevices);
     ["announcementEnabled","announcementSeverity","announcementTitle","announcementMessage"].forEach(id=>$(id)?.addEventListener(id==="announcementEnabled"||id==="announcementSeverity"?"change":"input",renderAnnouncementPreview));
     $("saveAnnouncementButton")?.addEventListener("click",saveAnnouncement);
   };
