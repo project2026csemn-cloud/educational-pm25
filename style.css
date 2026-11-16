@@ -6570,10 +6570,10 @@ body > #historyRangePanel.history-range-panel *{
     .current-environment-detail,
     .ai-intelligence-statusline,
     .credit-label {
-        font-size: 12px !important;
+        font-
+    .dashboard-nsize: 12px !important;
         line-height: 1.5 !important;
-    }
-    .dashboard-nav-link,
+    }av-link,
     button, select, input {
         min-height: 42px;
     }
@@ -6608,11 +6608,10 @@ body > #historyRangePanel.history-range-panel *{
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
-.history-toolbar .history-metric-select{min-width:150px;}
 #historyNode{min-width:190px;}
 .metric-chart-grid-3{align-items:start;}
 @media(max-width:760px){
-  .history-toolbar .history-metric-select,#historyNode{width:100%;min-width:0;}
+  #historyNode{width:100%;min-width:0;}
 }
 .about-section-lead{
     margin-top:8px;
@@ -12020,20 +12019,6 @@ body.history-range-modal-open{
     width:170px!important;
     min-width:170px!important;
   }
-  .historical-section #historyRangePicker{
-    flex:0 0 170px!important;
-    width:170px!important;
-    min-width:170px!important;
-  }
-  .historical-section #historyRangeButton{
-    width:170px!important;
-    min-width:170px!important;
-  }
-  .historical-section #exportButton{
-    flex:0 0 128px!important;
-    width:128px!important;
-    min-width:128px!important;
-  }
 }
 @media (min-width: 1024px) and (max-width: 1280px){
   .historical-section .history-toolbar{
@@ -12577,50 +12562,6 @@ body.history-range-modal-open{
     height:32px!important;padding:4px 5px!important;border-radius:7px!important;font-size:7.5px!important
   }
   .history-range-custom-input-field>small{display:none}
-}
-.historical-section #historyRangePicker{
-  flex:0 0 220px!important;
-  width:220px!important;
-  min-width:220px!important;
-}
-.historical-section #historyRangeButton{
-  width:220px!important;
-  min-width:220px!important;
-  max-width:220px!important;
-  overflow:hidden!important;
-}
-.historical-section #historyRangeButtonLabel{
-  display:block!important;
-  min-width:0!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-}
-.historical-section #exportButton{
-  flex:0 0 140px!important;
-  width:140px!important;
-  min-width:140px!important;
-}
-@media (min-width:1024px) and (max-width:1280px){
-  .historical-section #historyRangePicker,
-  .historical-section #historyRangeButton{
-    width:100%!important;
-    min-width:0!important;
-    max-width:none!important;
-  }
-  .historical-section #exportButton{
-    width:100%!important;
-    min-width:0!important;
-  }
-}
-@media (max-width:760px){
-  .historical-section #historyRangePicker,
-  .historical-section #historyRangeButton,
-  .historical-section #exportButton{
-    width:100%!important;
-    min-width:0!important;
-    max-width:none!important;
-  }
 }
 #chartZoomResolution{
   color:#67e8f9;
@@ -20416,20 +20357,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   color:#94a3b8;
   line-height:1.55;
 }
-.monitoring-map-reset{
-  flex:0 0 auto;
-  border:1px solid rgba(34,211,238,.28);
-  background:rgba(6,182,212,.09);
-  color:#a5f3fc;
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:800;
-  cursor:pointer;
-}
-.monitoring-map-reset:hover{
-  background:rgba(6,182,212,.16);
-  border-color:rgba(34,211,238,.5);
-}
 .monitoring-map-node-tabs{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -22855,26 +22782,18 @@ html body .site-header.is-authenticated #accountRoleBadge{
     justify-content:stretch!important;
   }
   .historical-section .history-toolbar > *,
-  .historical-section .history-toolbar > select,
-  .historical-section .history-toolbar > button,
-  .historical-section #historyNode,
-  .historical-section #metric,
-  .historical-section #historyRangePicker,
-  .historical-section #historyRangeButton,
-  .historical-section #exportButton{
+.historical-section .history-toolbar > select,
+.historical-section .history-toolbar > button,
+.historical-section #historyNode,
+.historical-section #metric{
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
     flex:none!important;
   }
-  .historical-section #historyRangeButton,
-  .historical-section #exportButton,
   .historical-section .history-metric-select{
     min-height:48px!important;
     height:48px!important;
-  }
-  .historical-section #exportButton{
-    justify-content:center!important;
   }
   .historical-section > .soft .grid.grid-cols-5{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -23484,13 +23403,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .node-view-dot-1{background:#22d3ee}
 .node-view-dot-2{background:#a78bfa}
 .node-view-dot-3{background:#f59e0b}
-.history-filter-row-v4{
-  display:grid!important;
-  grid-template-columns:minmax(170px,.8fr) minmax(220px,1fr) minmax(170px,.72fr)!important;
-  gap:10px!important;
-  min-width:0!important;
-  align-items:end!important;
-}
 .history-control-field,.forecast-metric-field-v4{
   display:grid;
   gap:6px;
@@ -23502,30 +23414,13 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-weight:800;
   letter-spacing:.04em;
 }
-.history-control-field .history-metric-select,
-.forecast-metric-field-v4 .history-metric-select,
-.history-control-field #historyRangeButton,
-.history-download-field #exportButton{
+.forecast-metric-field-v4 .history-metric-select{
   width:100%!important;
   min-width:0!important;
   max-width:none!important;
   height:46px!important;
   min-height:46px!important;
   border-radius:12px!important;
-}
-.history-download-field #exportButton{
-  justify-content:center!important;
-}
-.historical-section #historyRangePicker.history-range-picker-v4{
-  width:100%!important;
-  min-width:0!important;
-  max-width:none!important;
-  flex:none!important;
-}
-.historical-section #historyRangePicker.history-range-picker-v4 #historyRangeButton{
-  width:100%!important;
-  min-width:0!important;
-  max-width:none!important;
 }
 .history-summary-v4{
   display:grid!important;
@@ -23726,12 +23621,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .node-view-switch{
     grid-template-columns:repeat(5,minmax(0,1fr));
   }
-  .history-filter-row-v4{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-  .history-download-field{
-    grid-column:1/-1;
-  }
   .forecast-filter-grid-v4{
     grid-template-columns:1fr;
   }
@@ -23766,14 +23655,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   }
   .node-view-option:first-child{min-width:145px!important}
   .node-view-option:nth-child(2){min-width:126px!important}
-  .history-filter-row-v4{
-    grid-template-columns:1fr!important;
-  }
-  .history-download-field{grid-column:auto}
-  .history-control-field .history-metric-select,
-  .forecast-metric-field-v4 .history-metric-select,
-  .history-control-field #historyRangeButton,
-  .history-download-field #exportButton{
+  .forecast-metric-field-v4 .history-metric-select{
     height:48px!important;
     min-height:48px!important;
     font-size:16px!important;
@@ -23814,8 +23696,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   justify-content:stretch!important;
   gap:14px!important;
 }
-.historical-section .history-toolbar.history-toolbar-v4>.history-view-control,
-.historical-section .history-toolbar.history-toolbar-v4>.history-filter-row-v4{
+.historical-section .history-toolbar.history-toolbar-v4>.history-view-control{
   width:100%!important;
   min-width:0!important;
   max-width:none!important;
@@ -23840,10 +23721,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .node-view-option:first-child,.node-view-option:nth-child(2){min-width:0!important}
 .node-view-icon{width:22px!important;height:22px!important;flex-basis:22px!important;font-size:13px!important}
 .node-view-dot{width:9px!important;height:9px!important;flex-basis:9px!important}
-.historical-section .history-filter-row-v4{
-  display:grid!important;grid-template-columns:minmax(0,1fr) 230px 190px!important;
-  justify-content:start!important;align-items:end!important;gap:10px!important
-}
 .history-control-field,.forecast-metric-field-v4{gap:7px!important}
 .history-control-label,.forecast-metric-field-v4>span{
   color:#8da0b8!important;font-size:12px!important;font-weight:850!important;letter-spacing:.01em!important
@@ -23864,12 +23741,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   background:linear-gradient(180deg,rgba(8,145,178,.27),rgba(14,116,144,.14))
 }
 .metric-option-v6:focus-visible{outline:2px solid rgba(103,232,249,.78);outline-offset:2px}
-.history-control-field #historyRangeButton,.history-download-field #exportButton{
-  width:100%!important;min-width:0!important;max-width:none!important;height:48px!important;min-height:48px!important;
-  border-radius:12px!important;font-size:14px!important
-}
-.history-download-field{display:flex!important;align-items:flex-end!important}
-.history-download-field #exportButton{justify-content:center!important}
 .history-summary-title-v4{font-size:16px!important}.history-summary-current-v4{font-size:12px!important}
 .history-stat-v4{padding:14px 15px!important}.history-stat-v4 span{font-size:12px!important;color:#8497ae!important}.history-stat-v4 b{font-size:23px!important}
 .period-compare-head-v4 b{font-size:15px!important}.period-compare-head-v4 span{font-size:11px!important;line-height:1.55!important}
@@ -23899,16 +23770,12 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .chart-series-show-all.is-active,.chart-series-button.is-active{color:#ecfeff!important;border-color:rgba(34,211,238,.48)!important;background:linear-gradient(180deg,rgba(8,145,178,.25),rgba(14,116,144,.14))!important;box-shadow:inset 0 0 0 1px rgba(34,211,238,.05)!important}
 .chart-series-show-all:disabled{opacity:1!important;cursor:pointer!important}.chart-series-color{width:10px;height:10px;flex:0 0 10px;border-radius:999px;box-shadow:0 0 0 3px rgba(148,163,184,.06)}.chart-series-check{display:none!important}.chart-series-single-label{font-size:12px!important;min-height:38px!important}
 @media(max-width:1100px){
-  .historical-section .history-filter-row-v4{grid-template-columns:1fr 1fr!important}
-  .history-metric-field-v6{grid-column:1/-1!important}.history-download-field{grid-column:auto!important}
   .forecast-value-row-v6{grid-template-columns:minmax(120px,1fr) repeat(3,minmax(90px,.8fr))}
 }
 @media(max-width:760px){
   .history-view-control,.forecast-filter-panel-v4{padding:11px!important}.history-control-heading,.forecast-filter-head-v4{align-items:flex-start!important}.history-control-heading>small,.forecast-filter-head-v4 span{display:block!important;font-size:11px!important}
   .node-view-switch,.node-view-switch-forecast{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;overflow:visible!important}
   .node-view-option{min-height:46px!important;font-size:12px!important;padding:8px!important;white-space:normal!important;line-height:1.25!important}
-  .historical-section .history-filter-row-v4{grid-template-columns:1fr 1fr!important;gap:9px!important}
-  .history-metric-field-v6{grid-column:1/-1!important}.history-control-field #historyRangeButton,.history-download-field #exportButton{font-size:14px!important}
   .metric-switch-v6{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px!important}.metric-option-v6{width:100%!important;min-width:0!important;padding:7px 5px!important;font-size:11px!important;white-space:normal!important}
   #page-forecast .forecast-display-controls{display:grid!important;grid-template-columns:1fr!important;gap:9px!important}#page-forecast .forecast-actual-legend,#page-forecast .forecast-toggle-wrap{width:100%!important;justify-content:space-between!important}
   .forecast-values-head-v6{align-items:flex-start}.forecast-value-row-v6{grid-template-columns:minmax(96px,1fr) repeat(3,minmax(68px,.75fr))}.forecast-value-row-v6>div{padding:9px 6px;font-size:11px}.forecast-value-row-v6.is-head>div{font-size:9px}.forecast-value-metric-v6 b{font-size:11px}.forecast-value-metric-v6 small{font-size:8px}
@@ -23917,33 +23784,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
 }
 @media(max-width:480px){
   .node-view-switch,.node-view-switch-forecast{grid-template-columns:repeat(2,minmax(0,1fr))!important}.node-view-option:first-child{grid-column:1/-1!important}
-  .historical-section .history-filter-row-v4{grid-template-columns:1fr!important}.history-metric-field-v6{grid-column:auto!important}.history-download-field{grid-column:auto!important}
   .metric-switch-v6{grid-template-columns:repeat(2,minmax(0,1fr))!important}.metric-option-v6{min-height:40px!important;font-size:12px!important}
   .history-stats-grid-v4{grid-template-columns:1fr 1fr!important}.period-compare-content-v4.is-multi{grid-template-columns:1fr!important}.chart-open-hint{font-size:10px!important}
   .forecast-values-table-v6{overflow-x:auto}.forecast-value-row-v6{min-width:390px}
 }
-
-/* V7: compact controls and no horizontal selector scrolling. */
-.historical-section .history-filter-row-v4{
-  display:grid!important;
-  grid-template-columns:190px 230px 200px!important;
-  width:max-content!important;
-  max-width:100%!important;
-  justify-content:start!important;
-  align-items:end!important;
-  gap:10px!important;
-}
-.history-filter-row-v4>.history-control-field,
-.history-filter-row-v4>.history-download-field{
-  width:100%!important;
-  min-width:0!important;
-  max-width:none!important;
-  grid-column:auto!important;
-}
-.history-metric-field-v7 .history-metric-select,
-.forecast-metric-field-v4 .history-metric-select,
-.history-control-field #historyRangeButton,
-.history-download-field #exportButton{
+.forecast-metric-field-v4 .history-metric-select{
   width:100%!important;
   min-width:0!important;
   max-width:none!important;
@@ -23952,8 +23797,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   font-size:14px!important;
   border-radius:12px!important;
 }
-.history-download-field{display:flex!important;align-items:flex-end!important}
-.history-download-field #exportButton{justify-content:center!important}
 .metric-native-control-v6{display:none!important}
 
 .node-view-switch,
@@ -23996,22 +23839,7 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .forecast-metric-field-v4{max-width:230px!important}
 }
 
-@media (max-width:700px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-    width:100%!important;
-    gap:8px!important;
-  }
-  .history-download-field{grid-column:1/-1!important}
-  .history-download-field #exportButton{width:100%!important}
-}
-
 @media (orientation:landscape) and (min-width:621px) and (max-width:900px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(150px,190px) minmax(180px,220px) minmax(160px,190px)!important;
-    width:max-content!important;
-  }
-  .history-download-field{grid-column:auto!important}
   .node-view-switch,.node-view-switch-forecast{
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
   }
@@ -24026,27 +23854,11 @@ html body .site-header.is-authenticated #accountRoleBadge{
 }
 
 @media (max-width:430px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:1fr!important;
-    width:100%!important;
-  }
-  .history-download-field{grid-column:auto!important}
-  .history-metric-field-v7 .history-metric-select,
-  .history-control-field #historyRangeButton,
-  .history-download-field #exportButton,
   .forecast-metric-field-v4 .history-metric-select{
     min-height:48px!important;
     font-size:16px!important;
   }
 }
-/* V8 UX: compact history controls, larger summaries, clearer forecast cards. */
-.historical-section .history-filter-row-v4{
-  display:flex!important;width:max-content!important;max-width:100%!important;
-  align-items:flex-end!important;justify-content:flex-start!important;gap:6px!important
-}
-.historical-section .history-filter-row-v4>.history-control-field:nth-child(1){width:180px!important;flex:0 0 180px!important}
-.historical-section .history-filter-row-v4>.history-control-field:nth-child(2){width:220px!important;flex:0 0 220px!important}
-.historical-section .history-filter-row-v4>.history-download-field{width:190px!important;flex:0 0 190px!important}
 .period-compare-content-v4,.period-compare-content-v4.is-multi{gap:11px!important}
 .period-compare-item-v4{min-height:126px!important;padding:17px 18px!important;border-radius:15px!important}
 .period-compare-content-v4.is-multi .period-compare-item-v4{gap:10px!important}
@@ -24082,8 +23894,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
 .ai-forecast-details{font-size:14px!important}
 .ai-forecast-generated{font-size:12px!important;margin-top:13px!important}
 @media (min-width:600px) and (max-width:899px){
-  .historical-section .history-filter-row-v4{display:grid!important;grid-template-columns:minmax(145px,.9fr) minmax(180px,1.15fr) minmax(160px,1fr)!important;width:100%!important;gap:6px!important}
-  .historical-section .history-filter-row-v4>*{width:100%!important;min-width:0!important;flex:none!important;grid-column:auto!important}
   .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important}
   .forecast-horizon-time-v8{font-size:14px!important;padding:10px!important}
   .forecast-horizon-metric-v8{padding:9px 10px!important;display:grid!important;gap:3px!important}
@@ -24092,9 +23902,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .period-compare-item-v4{min-height:118px!important;padding:15px!important}
 }
 @media (max-width:599px){
-  .historical-section .history-filter-row-v4{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important;gap:7px!important}
-  .historical-section .history-filter-row-v4>*{width:100%!important;min-width:0!important;flex:none!important}
-  .historical-section .history-filter-row-v4>.history-download-field{grid-column:1/-1!important;width:100%!important}
   .forecast-horizon-grid-v8{grid-template-columns:1fr!important;gap:9px!important}
   .forecast-horizon-card-v8{border-radius:14px!important}
   .forecast-horizon-time-v8{font-size:15px!important;padding:11px 12px!important}
@@ -24110,8 +23917,6 @@ html body .site-header.is-authenticated #accountRoleBadge{
   .period-compare-values-v4 b{font-size:19px!important}
 }
 @media (max-width:420px){
-  .historical-section .history-filter-row-v4{grid-template-columns:1fr!important}
-  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
   .period-compare-item-v4{min-height:0!important}
   .forecast-horizon-metric-v8 b{font-size:13px!important}
 }
@@ -24141,21 +23946,6 @@ img,svg,canvas,video{max-width:100%}
 @media (max-height:520px) and (orientation:landscape) and (max-width:960px){
   .forecast-horizon-grid-v8{grid-template-columns:repeat(3,minmax(0,1fr))!important}
   .forecast-horizon-values-v8{grid-template-columns:1fr!important}
-}
-
-/* V9.1 — history spacing, summary readability and forecast guide alignment */
-.historical-section .history-filter-row-v4{
-  display:grid!important;
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  width:100%!important;
-  max-width:100%!important;
-  gap:clamp(8px,1vw,12px)!important;
-}
-.historical-section .history-filter-row-v4>.history-control-field,
-.historical-section .history-filter-row-v4>.history-download-field{
-  width:100%!important;
-  min-width:0!important;
-  flex:none!important;
 }
 .history-summary-v4{gap:clamp(14px,1.3vw,20px)!important}
 .history-summary-title-v4{font-size:clamp(17px,1.15vw,21px)!important;line-height:1.35!important}
@@ -24190,47 +23980,25 @@ img,svg,canvas,video{max-width:100%}
 .forecast-fixed-legend-v8>.chart-open-hint{margin-left:auto;flex:0 0 auto}
 
 @media (max-width:899px){
-  .historical-section .history-filter-row-v4{grid-template-columns:repeat(3,minmax(0,1fr))!important}
   .history-stats-grid-v4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 @media (max-width:680px){
-  .historical-section .history-filter-row-v4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .historical-section .history-filter-row-v4>.history-download-field{grid-column:1/-1!important}
   .forecast-fixed-legend-v8{align-items:flex-start!important}
   .forecast-fixed-legend-v8>.chart-open-hint{margin-left:0}
 }
 @media (max-width:430px){
-  .historical-section .history-filter-row-v4{grid-template-columns:1fr!important}
-  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
   .history-stats-grid-v4{grid-template-columns:1fr 1fr!important;gap:8px!important}
   .history-summary-v4{padding:13px!important}
   .forecast-fixed-legend-items-v9{display:grid;gap:8px;width:100%}
   .forecast-fixed-legend-v8>.chart-open-hint{width:max-content;max-width:100%;white-space:normal}
 }
 @media (orientation:landscape) and (max-height:520px) and (min-width:600px){
-  .historical-section .history-filter-row-v4{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  .historical-section .history-filter-row-v4>.history-download-field{grid-column:auto!important}
   .history-stats-grid-v4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
   .forecast-fixed-legend-v8{flex-wrap:nowrap!important}
 }
 
 /* V9.2 — history desktop balance */
 @media (min-width:900px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:180px 220px 190px!important;
-    width:max-content!important;
-    max-width:100%!important;
-    justify-content:start!important;
-    align-items:end!important;
-    gap:clamp(10px,.9vw,14px)!important;
-  }
-  .historical-section .history-filter-row-v4>.history-control-field,
-  .historical-section .history-filter-row-v4>.history-download-field{
-    width:100%!important;
-    min-width:0!important;
-    flex:none!important;
-  }
   .period-compare-content-v4.is-multi .period-compare-item-v4{
     display:grid!important;
     grid-template-columns:minmax(0,1fr) auto!important;
@@ -24257,35 +24025,6 @@ img,svg,canvas,video{max-width:100%}
   .period-compare-content-v4.is-multi .period-compare-result-v4{
     justify-content:flex-start!important;
     text-align:left;
-  }
-}
-
-@media (min-width:600px) and (max-width:899px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:minmax(150px,180px) minmax(185px,220px) minmax(165px,190px)!important;
-    width:max-content!important;
-    max-width:100%!important;
-    justify-content:start!important;
-    gap:10px!important;
-  }
-  .historical-section .history-filter-row-v4>*{
-    width:100%!important;
-    min-width:0!important;
-    grid-column:auto!important;
-  }
-}
-
-@media (max-width:599px){
-  .historical-section .history-filter-row-v4{
-    width:100%!important;
-    gap:10px!important;
-  }
-}
-
-@media (orientation:landscape) and (max-height:520px) and (min-width:600px) and (max-width:899px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(145px,180px) minmax(180px,215px) minmax(160px,185px)!important;
   }
 }
 
@@ -24362,49 +24101,15 @@ img,svg,canvas,video{max-width:100%}
 
 /* V9.4 — History controls: mobile 2 + 1 layout */
 @media (max-width:599px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    align-items:end!important;
-    width:100%!important;
-    max-width:100%!important;
-    gap:12px 10px!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field{
-    width:100%!important;
-    min-width:0!important;
-    margin:0!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2){
-    grid-column:auto!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1 / -1!important;
-  }
-  .historical-section .history-metric-select,
-  .historical-section .history-range-picker-v4,
-  .historical-section .history-range-picker-v4 > .history-toolbar-button,
-  .historical-section .history-download-field .history-export-button{
+  .historical-section .history-metric-select{
     width:100%!important;
     min-width:0!important;
     max-width:none!important;
   }
-  .historical-section .history-download-field .history-export-button{
-    justify-content:center!important;
-  }
 }
 
 @media (max-width:360px){
-  .historical-section .history-filter-row-v4{
-    gap:10px 8px!important;
-  }
-  .historical-section .history-filter-row-v4 .history-control-label{
-    font-size:11px!important;
-  }
-  .historical-section .history-metric-select,
-  .historical-section .history-range-picker-v4 > .history-toolbar-button,
-  .historical-section .history-download-field .history-export-button{
+  .historical-section .history-metric-select{
     min-height:46px!important;
     padding-left:10px!important;
     padding-right:10px!important;
@@ -24414,53 +24119,10 @@ img,svg,canvas,video{max-width:100%}
 
 /* V9.5 — History responsive regression fixes */
 @media (max-width:599px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-    column-gap:10px!important;
-    row-gap:12px!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field{
+  .historical-section .history-metric-select{
     width:100%!important;
     max-width:none!important;
     min-width:0!important;
-    flex:none!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1/-1!important;
-    display:block!important;
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-  }
-  .historical-section #exportButton{
-    display:flex!important;
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-    justify-content:center!important;
-    align-items:center!important;
-    margin:0!important;
-  }
-  .historical-section .history-metric-select,
-  .historical-section .history-range-picker-v4,
-  .historical-section #historyRangeButton{
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-  }
-  .historical-section #historyRangeButton{
-    display:grid!important;
-    grid-template-columns:auto minmax(0,1fr) auto!important;
-    align-items:center!important;
-    gap:7px!important;
-    overflow:hidden!important;
-  }
-  .historical-section #historyRangeButtonLabel{
-    min-width:0!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
-    text-align:center!important;
   }
   .historical-section .history-control-arrow{
     flex:none!important;
@@ -24468,18 +24130,11 @@ img,svg,canvas,video{max-width:100%}
 }
 
 @media (max-width:380px){
-  .historical-section .history-filter-row-v4{
-    column-gap:7px!important;
-  }
-  .historical-section .history-metric-select,
-  .historical-section #historyRangeButton{
+  .historical-section .history-metric-select{
     min-height:46px!important;
     padding-left:9px!important;
     padding-right:9px!important;
     font-size:clamp(12px,3.7vw,13px)!important;
-  }
-  .historical-section #historyRangeButton{
-    gap:5px!important;
   }
   .historical-section .history-control-icon,
   .historical-section .history-control-arrow{
@@ -24512,9 +24167,6 @@ img,svg,canvas,video{max-width:100%}
     min-height:40px!important;
     padding:7px 6px!important;
   }
-  .historical-section .history-filter-row-v4{
-    margin-top:10px!important;
-  }
 }
 
 /* V9.6 — responsive polish from device regression tests */
@@ -24523,28 +24175,9 @@ img,svg,canvas,video{max-width:100%}
     align-items:flex-start!important;
     gap:4px 10px!important;
   }
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-    column-gap:clamp(7px,2.4vw,10px)!important;
-    row-gap:12px!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1/-1!important;
-  }
-  .historical-section .history-metric-select,
-  .historical-section #historyRangeButton,
-  .historical-section #exportButton{
+  .historical-section .history-metric-select{
     min-width:0!important;
     max-width:none!important;
-  }
-  .historical-section #historyRangeButton{
-    grid-template-columns:12px minmax(0,1fr) 10px!important;
-    gap:clamp(4px,1.5vw,7px)!important;
-  }
-  .historical-section #historyRangeButtonLabel{
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
   }
 }
 
@@ -24575,54 +24208,15 @@ img,svg,canvas,video{max-width:100%}
     font-size:10.5px!important;
     line-height:1.2!important;
   }
-  .historical-section .history-filter-row-v4{
-    column-gap:6px!important;
-  }
   .historical-section .history-control-label{
     font-size:10px!important;
   }
-  .historical-section .history-metric-select,
-  .historical-section #historyRangeButton{
+  .historical-section .history-metric-select{
     min-height:44px!important;
     height:44px!important;
     padding-left:8px!important;
     padding-right:8px!important;
     font-size:12px!important;
-  }
-  .historical-section #historyRangeButton{
-    grid-template-columns:11px minmax(0,1fr) 8px!important;
-    gap:3px!important;
-  }
-  .historical-section #exportButton{
-    min-height:44px!important;
-    height:44px!important;
-    padding-left:10px!important;
-    padding-right:10px!important;
-    font-size:12px!important;
-  }
-}
-
-@media (min-width:600px) and (max-width:719px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-    gap:10px!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1/-1!important;
-  }
-}
-
-@media (min-width:720px) and (max-width:980px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:minmax(0,.92fr) minmax(0,1.12fr) minmax(0,.96fr)!important;
-    gap:10px!important;
-  }
-  .historical-section .history-filter-row-v4 > *{
-    grid-column:auto!important;
-    width:100%!important;
-    min-width:0!important;
   }
 }
 
@@ -24645,293 +24239,385 @@ img,svg,canvas,video{max-width:100%}
   .forecast-section .node-view-option:first-child{
     grid-column:auto!important;
   }
-  .historical-section .history-filter-row-v4{
-    margin-top:9px!important;
-  }
 }
-/* =========================================================
-   FINAL FIX — HISTORY METRIC + DATE RANGE RESPONSIVE
-   Scope: only "ข้อมูลที่แสดง" and "ช่วงเวลาย้อนหลัง"
-   ========================================================= */
 
-/* Prevent both controls from inheriting fixed widths at any viewport. */
-.historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-.historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) {
+/* =========================================================
+   HISTORICAL DATA — unified responsive three-control toolbar
+   Controls: metric / date range / download
+   ========================================================= */
+.historical-section .history-filter-row-v4 {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr) !important;
+    align-items: end !important;
+    justify-content: stretch !important;
+    gap: clamp(10px, 1.35vw, 16px) !important;
+    width: 100% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
+    max-width: 1040px !important;
     box-sizing: border-box !important;
 }
 
-.historical-section .history-filter-row-v4 > .history-control-field:nth-child(1) .history-metric-select,
-.historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) .history-range-picker-v4,
-.historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) #historyRangeButton {
+.historical-section .history-filter-row-v4 > .history-control-field,
+.historical-section .history-filter-row-v4 > .history-download-field {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.historical-section .history-filter-row-v4 > .history-control-field {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-content: end !important;
+    gap: 7px !important;
+}
+
+.historical-section .history-filter-row-v4 > .history-download-field {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: stretch !important;
+}
+
+.historical-section .history-filter-row-v4 .history-control-label {
+    display: block !important;
+    min-width: 0 !important;
+    min-height: 16px !important;
+    line-height: 16px !important;
+    white-space: nowrap !important;
+}
+
+.historical-section .history-metric-field-v7 .history-metric-select,
+.historical-section .history-range-field-v7 #historyRangeButton,
+.historical-section .history-download-field #exportButton {
+    align-items: center !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+}
+
+.historical-section .history-metric-field-v7 .history-metric-select {
+    display: block !important;
+    padding-left: 12px !important;
+    padding-right: 32px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.historical-section .history-range-field-v7 #historyRangePicker {
+    display: block !important;
+    position: relative !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
 }
 
-.historical-section #historyRangeButton {
+.historical-section .history-range-field-v7 #historyRangeButton {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    justify-content: stretch !important;
+    gap: clamp(4px, .7vw, 8px) !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
     overflow: hidden !important;
+    white-space: nowrap !important;
 }
 
-.historical-section #historyRangeButtonLabel {
+.historical-section .history-range-field-v7 #historyRangeButtonLabel {
+    display: block !important;
     min-width: 0 !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    text-align: center !important;
 }
 
-/* Phone portrait + narrow phone landscape: keep the two controls side by side. */
-@media (max-width: 599px) {
+.historical-section .history-download-field #exportButton {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Tablet: keep all three controls on one row and allow each column to shrink. */
+@media (min-width: 600px) and (max-width: 899px) {
     .historical-section .history-filter-row-v4 {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        column-gap: clamp(6px, 2vw, 10px) !important;
-        row-gap: 12px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        align-items: end !important;
+        grid-template-columns: minmax(0, .95fr) minmax(0, 1.1fr) minmax(0, .95fr) !important;
+        gap: clamp(7px, 1.2vw, 12px) !important;
     }
 
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-        flex: none !important;
-        margin: 0 !important;
+    .historical-section .history-metric-field-v7 .history-metric-select,
+    .historical-section .history-range-field-v7 #historyRangeButton,
+    .historical-section .history-download-field #exportButton {
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+        font-size: 13px !important;
+    }
+}
+
+/* Mobile: two compact selectors, then a full-width download action. */
+@media (max-width: 599px) {
+    .historical-section .history-filter-row-v4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        align-items: end !important;
+        column-gap: clamp(8px, 2.5vw, 12px) !important;
+        row-gap: 12px !important;
     }
 
     .historical-section .history-filter-row-v4 > .history-download-field {
         grid-column: 1 / -1 !important;
     }
-
-    .historical-section #historyRangeButton {
-        display: grid !important;
-        grid-template-columns: auto minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: clamp(3px, 1.3vw, 7px) !important;
-        padding-left: clamp(7px, 2.4vw, 11px) !important;
-        padding-right: clamp(7px, 2.4vw, 11px) !important;
-    }
 }
 
-/* Very narrow phones: preserve two columns but reduce only these controls. */
+/* Extra-narrow phones: reduce padding and type size without horizontal scrolling. */
 @media (max-width: 380px) {
     .historical-section .history-filter-row-v4 {
-        column-gap: 6px !important;
+        column-gap: 7px !important;
     }
 
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1) .history-control-label,
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) .history-control-label {
+    .historical-section .history-filter-row-v4 .history-control-label {
         font-size: 10px !important;
-        line-height: 1.3 !important;
+        line-height: 14px !important;
+        min-height: 14px !important;
     }
 
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1) .history-metric-select,
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) #historyRangeButton {
-        height: 44px !important;
-        min-height: 44px !important;
+    .historical-section .history-metric-field-v7 .history-metric-select,
+    .historical-section .history-range-field-v7 #historyRangeButton,
+    .historical-section .history-download-field #exportButton {
+        height: 46px !important;
+        min-height: 46px !important;
         padding-left: 8px !important;
         padding-right: 8px !important;
-        font-size: clamp(12px, 3.6vw, 13px) !important;
+        font-size: 12px !important;
     }
 
-    .historical-section #historyRangeButton {
+    .historical-section .history-range-field-v7 #historyRangeButton {
         grid-template-columns: 11px minmax(0, 1fr) 8px !important;
         gap: 3px !important;
     }
-}
 
-/* Tablet portrait: remove fixed child widths while retaining the page's tablet layout. */
-@media (min-width: 600px) and (max-width: 899px) and (orientation: portrait) {
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) {
-        min-width: 0 !important;
-        max-width: 100% !important;
+    .historical-section .history-control-icon,
+    .historical-section .history-control-arrow {
+        font-size: 10px !important;
     }
 }
 
-/* Phone/tablet landscape: prevent date/metric controls from forcing horizontal overflow. */
-@media (orientation: landscape) and (max-width: 960px) {
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) {
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1) .history-metric-select,
-    .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) #historyRangeButton {
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-}
-
-
-/* =========================================================
-   FINAL HISTORY CONTROLS RESPONSIVE OVERRIDE
-   Scope: metric / date range / download layout only.
-   ========================================================= */
-.historical-section .history-filter-row-v4{
-  box-sizing:border-box!important;
-  min-width:0!important;
-}
-.historical-section .history-filter-row-v4 > .history-control-field,
-.historical-section .history-filter-row-v4 > .history-download-field{
-  box-sizing:border-box!important;
-  min-width:0!important;
-  max-width:none!important;
-  margin:0!important;
-}
-.historical-section .history-filter-row-v4 .history-metric-select,
-.historical-section .history-filter-row-v4 .history-range-picker-v4,
-.historical-section .history-filter-row-v4 #historyRangeButton,
-.historical-section .history-filter-row-v4 #exportButton{
-  box-sizing:border-box!important;
-  width:100%!important;
-  min-width:0!important;
-  max-width:100%!important;
-}
-.historical-section #historyRangeButton{
-  display:grid!important;
-  grid-template-columns:auto minmax(0,1fr) auto!important;
-  align-items:center!important;
-}
-.historical-section #historyRangeButtonLabel{
-  min-width:0!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  text-align:center!important;
-}
-
-/* Wide desktop: three balanced controls on one row. */
-@media (min-width:900px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:minmax(180px,215px) minmax(210px,260px) minmax(190px,1fr)!important;
-    align-items:end!important;
-    gap:clamp(12px,2vw,28px)!important;
-    width:100%!important;
-    max-width:100%!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2),
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    width:100%!important;
-    flex:none!important;
-  }
-}
-
-/* Tablet / medium width: metric and date stay together; download moves below. */
-@media (min-width:600px) and (max-width:899px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    align-items:end!important;
-    column-gap:clamp(12px,3vw,24px)!important;
-    row-gap:12px!important;
-    width:100%!important;
-    max-width:100%!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2){
-    width:100%!important;
-    flex:none!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1/-1!important;
-    width:min(100%,220px)!important;
-    justify-self:start!important;
-    flex:none!important;
-  }
-}
-
-/* Phones: two equal controls; download on its own row. */
-@media (max-width:599px){
-  .historical-section .history-filter-row-v4{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    align-items:end!important;
-    column-gap:clamp(8px,2.5vw,12px)!important;
-    row-gap:12px!important;
-    width:100%!important;
-    max-width:100%!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1),
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2){
-    width:100%!important;
-    flex:none!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:1/-1!important;
-    width:max-content!important;
-    max-width:100%!important;
-    justify-self:start!important;
-    flex:none!important;
-  }
-  .historical-section #historyRangeButton{
-    gap:clamp(3px,1.3vw,6px)!important;
-    padding-left:clamp(8px,2vw,11px)!important;
-    padding-right:clamp(8px,2vw,11px)!important;
-  }
-}
-
-/* Very narrow portrait phones: keep two columns, only compact the controls. */
-@media (max-width:380px) and (orientation:portrait){
-  .historical-section .history-filter-row-v4{
-    column-gap:6px!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(1) .history-control-label,
-  .historical-section .history-filter-row-v4 > .history-control-field:nth-child(2) .history-control-label{
-    font-size:10px!important;
-    line-height:1.3!important;
-  }
-  .historical-section .history-filter-row-v4 .history-metric-select,
-  .historical-section .history-filter-row-v4 #historyRangeButton{
-    min-height:44px!important;
-    height:44px!important;
-    padding-left:7px!important;
-    padding-right:7px!important;
-    font-size:clamp(12px,3.6vw,13px)!important;
-  }
-  .historical-section #historyRangeButton{
-    grid-template-columns:10px minmax(0,1fr) 8px!important;
-    gap:3px!important;
-  }
-}
-
-/* Short landscape devices: use available horizontal space efficiently. */
-@media (orientation:landscape) and (max-height:520px) and (min-width:600px) and (max-width:899px){
-  .historical-section .history-filter-row-v4{
-    grid-template-columns:minmax(145px,190px) minmax(180px,230px) minmax(160px,200px)!important;
-    gap:10px!important;
-    width:max-content!important;
-    max-width:100%!important;
-  }
-  .historical-section .history-filter-row-v4 > .history-download-field{
-    grid-column:auto!important;
-    width:100%!important;
-    justify-self:stretch!important;
-  }
-}
-
-/* =========================================================
-   HISTORY — EXPORT BUTTON FULL WIDTH
-   ========================================================= */
-.historical-section .history-download-field {
+/* Fix: Make Data Selection equal width to other controls */
+.historical-section .history-filter-row-v4 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     width: 100% !important;
-    max-width: none !important;
-    grid-column: 1 / -1 !important;
-    flex: 0 0 100% !important;
+    gap: 16px !important;
 }
 
-.historical-section .history-download-field #exportButton {
+.historical-section .history-filter-row-v4 > .history-metric-field-v7 {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+.historical-section .history-filter-row-v4 #metric {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Keep mobile layout unchanged */
+@media (max-width: 599px) {
+    .historical-section .history-filter-row-v4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .historical-section .history-filter-row-v4 > .history-download-field {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+/* History time summary: horizontal timeline */
+#historyRangeCaption.history-range-caption {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100%;
+}
+
+/* Start */
+#historyRangeCaption .history-range-edge-start {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    text-align: left !important;
+}
+
+/* Latest data */
+#historyRangeCaption .history-range-center {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    text-align: center !important;
+    min-width: 0;
+}
+
+/* End */
+#historyRangeCaption .history-range-edge-end {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    text-align: right !important;
+}
+
+/* Date and time */
+#historyRangeCaption .history-range-edge b {
+    font-size: 11px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+#historyRangeCaption .history-range-center small {
+    font-size: 10px;
+    white-space: normal !important;
+    line-height: 1.5;
+}
+
+/* Small mobile */
+@media (max-width: 359px) {
+    #historyRangeCaption.history-range-caption {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    #historyRangeCaption .history-range-center {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 !important;
+    }
+
+    #historyRangeCaption .history-range-edge-start {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+    }
+
+    #historyRangeCaption .history-range-edge-end {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+    }
+}
+
+/* ==========================================
+   FINAL FIX V10 — THREE EQUAL HISTORY CONTROLS
+   ========================================== */
+
+/* Desktop + Tablet: 3 equal columns */
+.historical-section .history-filter-row-v4 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
+
+    justify-content: stretch !important;
+    align-items: end !important;
+
+    gap: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* All three wrappers must have identical width */
+.historical-section .history-filter-row-v4 > .history-control-field,
+.historical-section .history-filter-row-v4 > .history-download-field {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    grid-column: auto !important;
+    flex: none !important;
+
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* All three actual controls */
+.historical-section .history-filter-row-v4 .history-metric-select,
+.historical-section .history-filter-row-v4 #historyRangeButton,
+.historical-section .history-filter-row-v4 #exportButton {
     display: flex !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: 48px !important;
+    min-height: 48px !important;
+
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* Date picker */
+.historical-section .history-range-picker-v4 {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Download button */
+.historical-section .history-download-field {
+    display: grid !important;
+    grid-column: auto !important;
+    flex: none !important;
+}
+
+.historical-section #exportButton {
     justify-content: center !important;
     align-items: center !important;
+}
+
+/* Tablet: retain 3 equal columns */
+@media (min-width: 600px) and (max-width: 899px) {
+    .historical-section .history-filter-row-v4 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 9px !important;
+    }
+}
+
+/* Mobile: two selectors + full-width download */
+@media (max-width: 599px) {
+    .historical-section .history-filter-row-v4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .historical-section .history-filter-row-v4 > .history-download-field {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+}
+
+/* Map presentation refinement — reference layout */
+#monitoringMapLayout.monitoring-map-layout{
+  min-height:640px;
+  height:clamp(520px,68vh,760px);
+  border-radius:18px;
+  overflow:hidden;
+  background:#f1efe9;
+}
+#monitoringMapLayout .monitoring-map-wrap,
+#monitoringMapLayout .monitoring-map{min-height:0;height:100%}
+#monitoringMapLayout .leaflet-container{
+  width:100%;height:100%;background:#f1efe9;font-family:inherit;
+}
+#monitoringMapLayout .leaflet-control-zoom{
+  margin:12px!important;border:1px solid rgba(15,23,42,.22)!important;
+  box-shadow:0 2px 8px rgba(15,23,42,.18)!important;
+}
+#monitoringMapLayout .leaflet-control-attribution{font-size:10px}
+@media(max-width:700px){
+  #monitoringMapLayout.monitoring-map-layout{height:clamp(430px,65vh,620px);min-height:430px}
 }
